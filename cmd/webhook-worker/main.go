@@ -10,7 +10,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/segfaultsyndicate/kalakriti/pkg/webhook"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 )
 
 func main() {

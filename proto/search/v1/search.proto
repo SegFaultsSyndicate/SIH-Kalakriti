@@ -6,7 +6,7 @@ package search.v1;
 import "catalog/v1/catalog.proto";
 import "common/v1/common.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/search/v1;searchv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1;searchv1";
 
 // SearchService is the buyer-facing discovery surface over the pgvector index.
 service SearchService {

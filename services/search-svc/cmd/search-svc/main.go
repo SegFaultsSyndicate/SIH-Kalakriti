@@ -23,18 +23,18 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/config"
-	pkgkafka "github.com/segfaultsyndicate/kalakriti/pkg/kafka"
-	"github.com/segfaultsyndicate/kalakriti/pkg/logger"
-	searchv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/search/v1"
-	pkgpostgres "github.com/segfaultsyndicate/kalakriti/pkg/postgres"
-	pkgredis "github.com/segfaultsyndicate/kalakriti/pkg/redis"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
+	searchv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1"
+	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/client"
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/handler"
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/repo"
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/service"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/client"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/handler"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/service"
 )
 
 const (

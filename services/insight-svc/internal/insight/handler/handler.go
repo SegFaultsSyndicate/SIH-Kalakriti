@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/proto/common/v1"
-	insightv1 "github.com/segfaultsyndicate/kalakriti/proto/insight/v1"
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/service"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/proto/common/v1"
+	insightv1 "github.com/ZoroNewbie00/kalakriti/proto/insight/v1"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/service"
 )
 
 type Handler struct {

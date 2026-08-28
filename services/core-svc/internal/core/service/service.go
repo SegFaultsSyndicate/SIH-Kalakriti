@@ -13,11 +13,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
-	"github.com/segfaultsyndicate/kalakriti/pkg/outbox"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // Tx is the transactional surface the service writes through. It embeds

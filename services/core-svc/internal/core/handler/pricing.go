@@ -4,12 +4,12 @@ package handler
 import (
 	"context"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
-	pricingv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/pricing/v1"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
+	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/service"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
 
 // Pricing implements pricing.v1.PricingService: the Fair Price Advisory. It

@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // IndexStore is the write side of listing_search plus the reads that build a

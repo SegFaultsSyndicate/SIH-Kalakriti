@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/repo/db"
 )
 
 // --- amendments (Tx) ---------------------------------------------------------

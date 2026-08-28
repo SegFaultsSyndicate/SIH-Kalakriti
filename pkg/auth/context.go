@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 type ctxKey int

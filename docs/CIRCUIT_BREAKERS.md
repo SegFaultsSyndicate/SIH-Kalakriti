@@ -114,7 +114,7 @@ When replacing stubs with real external API clients, follow this pattern:
 ### 1. Add Circuit Breaker to Client Struct
 
 ```go
-import "github.com/segfaultsyndicate/kalakriti/pkg/breaker"
+import "github.com/ZoroNewbie00/kalakriti/pkg/breaker"
 
 type WhatsAppClient struct {
     apiURL  string

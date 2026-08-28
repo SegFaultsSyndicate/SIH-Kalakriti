@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/domain"
 )
 
 // Test aggregate correctness with minimum bucket size suppression.

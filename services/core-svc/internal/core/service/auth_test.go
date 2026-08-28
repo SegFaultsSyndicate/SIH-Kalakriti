@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 func TestRequestOtpValidatesPhone(t *testing.T) {

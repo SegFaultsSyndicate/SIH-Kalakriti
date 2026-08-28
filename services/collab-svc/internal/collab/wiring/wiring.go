@@ -8,8 +8,8 @@ package wiring
 import (
 	"context"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/repo"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/service"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/service"
 )
 
 // Store binds a repository to service.Store. Every read method is promoted

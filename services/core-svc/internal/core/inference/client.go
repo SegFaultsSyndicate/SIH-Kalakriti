@@ -11,10 +11,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
-	inferencev1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/inference/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	inferencev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/inference/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // Client wraps the ml-svc stub.

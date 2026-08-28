@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/httpx"
-	"github.com/segfaultsyndicate/kalakriti/pkg/idempotency"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/idempotency"
 )
 
 // IdempotencyStore adapts the BFF's idempotency persistence (typically Postgres

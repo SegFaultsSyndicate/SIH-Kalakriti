@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	segmentio "github.com/segmentio/kafka-go"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/kafka"
+	"github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/service"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/service"
 )
 
 // envelope is the outbox envelope every Kalakriti event is wrapped in.

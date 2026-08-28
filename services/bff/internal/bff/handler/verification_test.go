@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // fakeCatalogClient is a test double for CatalogService.

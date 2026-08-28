@@ -1,4 +1,4 @@
-module github.com/segfaultsyndicate/kalakriti/pkg
+module github.com/ZoroNewbie00/kalakriti/pkg
 
 go 1.23.0
 

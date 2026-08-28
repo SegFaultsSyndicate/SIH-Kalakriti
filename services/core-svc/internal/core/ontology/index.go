@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // maxAliasWords caps how many input words one alias may span. Nothing in the

@@ -20,12 +20,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/logger"
-	pkgpostgres "github.com/segfaultsyndicate/kalakriti/pkg/postgres"
-	pkgredis "github.com/segfaultsyndicate/kalakriti/pkg/redis"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
+	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/ontology"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/ontology"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo"
 )
 
 // seedTimeout bounds the whole load; a few hundred upserts is a matter of seconds.

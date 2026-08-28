@@ -10,11 +10,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 const testPhone = "+919876543210"

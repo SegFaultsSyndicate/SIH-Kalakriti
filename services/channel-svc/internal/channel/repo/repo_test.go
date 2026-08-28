@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/segfaultsyndicate/kalakriti/services/channel-svc/internal/channel/notification"
-	"github.com/segfaultsyndicate/kalakriti/services/channel-svc/internal/channel/sqlc"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/sqlc"
 )
 
 func setupTestDB(t *testing.T) *sql.DB {

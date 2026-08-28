@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // JSON writes v as an application/json response with the given status code.

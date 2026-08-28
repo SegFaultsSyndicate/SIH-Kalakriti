@@ -40,7 +40,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	
-	"github.com/segfaultsyndicate/kalakriti/pkg/logger"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 )
 
 // UnaryClientRequestID propagates request_id from context into gRPC metadata.
@@ -84,7 +84,7 @@ func UnaryServerRequestID() grpc.UnaryServerInterceptor {
 // services/bff/cmd/bff/main.go (when wiring gRPC clients)
 import (
 	"google.golang.org/grpc"
-	"github.com/segfaultsyndicate/kalakriti/pkg/grpcx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcx"
 )
 
 conn, err := grpc.NewClient(
@@ -99,7 +99,7 @@ conn, err := grpc.NewClient(
 // services/core-svc/cmd/core-svc/main.go
 import (
 	"google.golang.org/grpc"
-	"github.com/segfaultsyndicate/kalakriti/pkg/grpcx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcx"
 )
 
 grpcServer := grpc.NewServer(

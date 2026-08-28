@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/segfaultsyndicate/kalakriti/services/channel-svc/internal/channel/notification"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
 )
 
 // FollowFanout consumes catalog.listing.published and notifies followers.

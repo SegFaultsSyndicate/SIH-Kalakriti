@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // cachedResult is the on-the-wire form of a cached page. Only what the buyer

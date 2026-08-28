@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
 )
 
 func main() {

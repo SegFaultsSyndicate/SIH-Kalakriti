@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // TTL is how long a key is honoured before it may be reused for a new request.

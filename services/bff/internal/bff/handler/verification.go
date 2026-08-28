@@ -13,8 +13,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/httpx"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 )
 
 // VerificationHandler serves the public provenance verification page.

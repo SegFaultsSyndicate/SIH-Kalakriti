@@ -5,10 +5,10 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	catalogv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // defaultCurrency is what a listing is priced in when the wire message leaves

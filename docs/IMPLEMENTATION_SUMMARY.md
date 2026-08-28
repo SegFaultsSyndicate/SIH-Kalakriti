@@ -251,7 +251,7 @@ SERVICE=core-svc bash scripts/chaos/service-crash.sh
 
 3. **Add i18n middleware to BFF:**
    ```go
-   import "github.com/segfaultsyndicate/kalakriti/pkg/i18n"
+   import "github.com/ZoroNewbie00/kalakriti/pkg/i18n"
    r.Use(i18n.Middleware)
    ```
 

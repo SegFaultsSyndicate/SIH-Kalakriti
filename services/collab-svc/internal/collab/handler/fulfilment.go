@@ -8,13 +8,13 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
-	fulfilmentv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/service"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/service"
 )
 
 // EventBroker is what WatchOrder needs to subscribe to one order's live

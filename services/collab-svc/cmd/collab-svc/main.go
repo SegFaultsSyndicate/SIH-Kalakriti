@@ -28,18 +28,18 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/config"
-	pkgkafka "github.com/segfaultsyndicate/kalakriti/pkg/kafka"
-	"github.com/segfaultsyndicate/kalakriti/pkg/logger"
-	"github.com/segfaultsyndicate/kalakriti/pkg/outbox"
-	fulfilmentv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1"
-	pkgpostgres "github.com/segfaultsyndicate/kalakriti/pkg/postgres"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
+	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
+	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/handler"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/repo"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/service"
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/wiring"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/handler"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/service"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/wiring"
 )
 
 // drainTimeout bounds how long shutdown waits for in-flight work before

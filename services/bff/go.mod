@@ -1,11 +1,11 @@
-module github.com/segfaultsyndicate/kalakriti/services/bff
+module github.com/ZoroNewbie00/kalakriti/services/bff
 
 go 1.23.0
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/redis/go-redis/v9 v9.6.1
-	github.com/segfaultsyndicate/kalakriti/pkg v0.0.0
+	github.com/ZoroNewbie00/kalakriti/pkg v0.0.0
 	github.com/stretchr/testify v1.12.1
 )
 
@@ -23,4 +23,4 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 )
 
-replace github.com/segfaultsyndicate/kalakriti/pkg => ../../pkg
+replace github.com/ZoroNewbie00/kalakriti/pkg => ../../pkg

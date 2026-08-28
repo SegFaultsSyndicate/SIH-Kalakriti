@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/outbox"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // Tx satisfies pkg/outbox.Enqueuer, so outbox.Enqueue can write an event row

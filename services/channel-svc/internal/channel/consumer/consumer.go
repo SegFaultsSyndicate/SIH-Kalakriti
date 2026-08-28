@@ -5,8 +5,8 @@ package consumer
 import (
 	"context"
 
-	pkgkafka "github.com/segfaultsyndicate/kalakriti/pkg/kafka"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 )
 
 // Run starts the fanout consumer loop.

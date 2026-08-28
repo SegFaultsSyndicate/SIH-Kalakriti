@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // pricePattern catches the way buyers actually write a budget: "under 2000",

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // Translator translates message keys to localized strings.

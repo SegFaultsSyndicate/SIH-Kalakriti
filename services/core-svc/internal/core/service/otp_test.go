@@ -10,7 +10,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // recordingSender captures what the provider was asked to deliver.

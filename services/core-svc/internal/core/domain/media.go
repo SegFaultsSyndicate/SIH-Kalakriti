@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // MediaState is where an asset sits between the app asking for an upload URL and

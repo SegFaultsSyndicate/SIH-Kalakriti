@@ -6,10 +6,10 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	catalogv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/service"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
 
 // Ontology implements catalog.v1.OntologyService.

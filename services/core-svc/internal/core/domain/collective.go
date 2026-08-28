@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // ClusterMemberRole is an artisan's standing inside a cluster. Values match the

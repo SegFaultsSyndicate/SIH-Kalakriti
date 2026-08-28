@@ -12,9 +12,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // fakePricingStore is a hand-configured PricingStore; each field a test needs

@@ -15,9 +15,9 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // candidatesPerLeg is how deep each retrieval leg goes before fusion. Fifty is

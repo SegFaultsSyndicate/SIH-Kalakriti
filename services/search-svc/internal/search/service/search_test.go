@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // --- fakes ---------------------------------------------------------------------

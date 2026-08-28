@@ -5,7 +5,7 @@ package pricing.v1;
 
 import "common/v1/common.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/pricing/v1;pricingv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1;pricingv1";
 
 // PricingService computes the Fair Price Advisory. It never sets or enforces a
 // listing's price — every response is advice the artisan is free to ignore.

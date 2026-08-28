@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 func TestAuthReturns401ForMissingToken(t *testing.T) {

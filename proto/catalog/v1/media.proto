@@ -6,7 +6,7 @@ package catalog.v1;
 import "common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1;catalogv1";
 
 // MediaService is the upload entry point. Bytes never pass through the service:
 // it mints presigned URLs and the client talks to the bucket directly.

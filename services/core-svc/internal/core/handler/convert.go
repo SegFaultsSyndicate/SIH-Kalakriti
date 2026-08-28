@@ -7,13 +7,13 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	catalogv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
-	identityv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/identity/v1"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // parseUUID converts a request field to a UUID, reporting a field-named

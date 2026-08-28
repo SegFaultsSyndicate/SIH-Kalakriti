@@ -351,7 +351,7 @@ Add to calendar: **First Monday of every month, 10:00 AM**
 
 **Recovery:**
 1. Provision new server, install dependencies
-2. Clone repo: `git clone https://github.com/segfaultsyndicate/kalakriti.git`
+2. Clone repo: `git clone https://github.com/ZoroNewbie00/kalakriti.git`
 3. Start infrastructure: `docker compose up -d postgres redis kafka`
 4. Restore from S3: `./scripts/restore.sh --from-s3 --force kalakriti-YYYYMMDD-HHMMSS.sql.gz`
 5. Start services: `make demo-up`

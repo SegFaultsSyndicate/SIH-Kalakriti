@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // Querier is the exact slice of the sqlc-generated query set that core-svc uses.

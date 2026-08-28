@@ -15,10 +15,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pgvector/pgvector-go"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/repo/db"
 )
 
 // Repo owns the connection pool.

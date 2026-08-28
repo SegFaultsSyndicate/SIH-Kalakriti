@@ -13,8 +13,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	"github.com/segfaultsyndicate/kalakriti/services/bff/internal/bff"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
 )
 
 const drainTimeout = 15 * time.Second

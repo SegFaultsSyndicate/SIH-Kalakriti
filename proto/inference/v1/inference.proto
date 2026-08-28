@@ -6,7 +6,7 @@ package inference.v1;
 import "common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/inference/v1;inferencev1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/inference/v1;inferencev1";
 
 // InferenceService is the Python ml-svc surface; every RPC is stateless and idempotent.
 service InferenceService {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // ProvenanceRecord is the frozen, hash-chained evidence that a listing is what it claims.

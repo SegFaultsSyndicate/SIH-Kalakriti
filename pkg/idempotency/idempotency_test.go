@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // fakeStore is an in-memory Store for tests; GetOrInsert is guarded by a mutex to

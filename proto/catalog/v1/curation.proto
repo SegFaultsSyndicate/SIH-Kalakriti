@@ -6,7 +6,7 @@ package catalog.v1;
 import "catalog/v1/catalog.proto";
 import "common/v1/common.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1;catalogv1";
 
 // CurationService carries the writes that shape a listing after it exists:
 // attributes, copy, media, and the operator's suspend and reinstate.

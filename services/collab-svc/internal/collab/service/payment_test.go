@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/domain"
 )
 
 // seedOrderWithLots wires up a bulk order plus listing directly (bypassing

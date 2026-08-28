@@ -12,9 +12,9 @@ import (
 	"github.com/google/uuid"
 	goredis "github.com/redis/go-redis/v9"
 
-	pkgredis "github.com/segfaultsyndicate/kalakriti/pkg/redis"
+	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // Store is what the registry reads the ontology from. It is the whole graph in

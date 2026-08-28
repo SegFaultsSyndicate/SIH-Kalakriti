@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // CreateArtisan inserts an artisan row and its craft edges. It is a Tx method

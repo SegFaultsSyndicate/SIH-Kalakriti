@@ -1,4 +1,4 @@
-module github.com/segfaultsyndicate/kalakriti/services/search-svc
+module github.com/ZoroNewbie00/kalakriti/services/search-svc
 
 go 1.23.0
 
@@ -7,7 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/pgvector/pgvector-go v0.2.2
 	github.com/redis/go-redis/v9 v9.6.1
-	github.com/segfaultsyndicate/kalakriti/pkg v0.0.0
+	github.com/ZoroNewbie00/kalakriti/pkg v0.0.0
 	github.com/segmentio/kafka-go v0.4.47
 	golang.org/x/sync v0.8.0
 	golang.org/x/text v0.17.0
@@ -16,4 +16,4 @@ require (
 
 require github.com/stretchr/testify v1.9.0
 
-replace github.com/segfaultsyndicate/kalakriti/pkg => ../../pkg
+replace github.com/ZoroNewbie00/kalakriti/pkg => ../../pkg

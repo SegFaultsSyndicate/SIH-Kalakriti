@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // fakeCatalogStore is an in-memory CatalogStore + CatalogTx. Like fakeStore it

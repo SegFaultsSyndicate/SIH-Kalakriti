@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
 	"golang.org/x/crypto/blake2b"
 )
 

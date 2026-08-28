@@ -10,13 +10,13 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	catalogv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
-	searchv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/search/v1"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	searchv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/service"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/service"
 )
 
 // Search implements search.v1.SearchService.

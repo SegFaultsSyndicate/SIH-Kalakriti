@@ -6,7 +6,7 @@ package fulfilment.v1;
 import "common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1;fulfilmentv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1;fulfilmentv1";
 
 // FulfilmentService splits a bulk order across artisans and drives it to delivery.
 service FulfilmentService {

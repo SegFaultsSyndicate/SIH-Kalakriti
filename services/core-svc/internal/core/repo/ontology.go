@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/ontology"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/ontology"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // The repo is both halves of the ontology's persistence: the registry's read

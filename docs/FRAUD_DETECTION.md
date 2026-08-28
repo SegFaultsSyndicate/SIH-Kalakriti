@@ -187,7 +187,7 @@ FROM fraud_flags;
 ### Check for Active Fraud Flags
 
 ```go
-import "github.com/segfaultsyndicate/kalakriti/pkg/fraud"
+import "github.com/ZoroNewbie00/kalakriti/pkg/fraud"
 
 detector := fraud.New(db)
 

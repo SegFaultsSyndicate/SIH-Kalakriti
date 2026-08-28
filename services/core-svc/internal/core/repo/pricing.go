@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/pgvector/pgvector-go"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // candidatesPerLeg bounds how many nearest-embedding rows the market band

@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/breaker"
+	"github.com/ZoroNewbie00/kalakriti/pkg/breaker"
 )
 
 // Client sends ONDC payloads to the gateway.

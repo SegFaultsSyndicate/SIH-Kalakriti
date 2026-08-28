@@ -18,7 +18,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/logger"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 )
 
 // Config controls the middleware stack Mux assembles.

@@ -8,9 +8,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	fulfilmentv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1"
+	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/repo"
 )
 
 // HistoryStore adapts the repo to handler.EventHistory, so WatchOrder can

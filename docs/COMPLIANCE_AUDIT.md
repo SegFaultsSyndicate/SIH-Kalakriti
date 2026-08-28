@@ -45,7 +45,7 @@ CREATE TRIGGER trigger_audit_payment_split_created
 For audits that need context triggers lack (actor ID, IP address):
 
 ```go
-import "github.com/segfaultsyndicate/kalakriti/pkg/audit"
+import "github.com/ZoroNewbie00/kalakriti/pkg/audit"
 
 auditor := audit.New(db)
 

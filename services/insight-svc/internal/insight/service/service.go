@@ -11,13 +11,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/jung-kurt/gofpdf"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/crypto"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
-	"github.com/segfaultsyndicate/kalakriti/pkg/qrcode"
-	"github.com/segfaultsyndicate/kalakriti/pkg/shortcode"
-	"github.com/segfaultsyndicate/kalakriti/pkg/storage"
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
+	"github.com/ZoroNewbie00/kalakriti/pkg/qrcode"
+	"github.com/ZoroNewbie00/kalakriti/pkg/shortcode"
+	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/domain"
 )
 
 type Store interface {

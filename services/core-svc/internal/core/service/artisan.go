@@ -8,13 +8,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
-	"github.com/segfaultsyndicate/kalakriti/pkg/outbox"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // artisanRegistered mirrors events.v1.ArtisanRegistered's payload fields.

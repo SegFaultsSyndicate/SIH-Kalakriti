@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/segfaultsyndicate/kalakriti/services/channel-svc/internal/channel/notification"
-	"github.com/segfaultsyndicate/kalakriti/services/channel-svc/internal/channel/sqlc"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/sqlc"
 )
 
 // Repo implements the notification service repository.

@@ -5,7 +5,7 @@ package common.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1;commonv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1;commonv1";
 
 // Money is a fixed-point currency amount; never use a float for money anywhere.
 message Money {

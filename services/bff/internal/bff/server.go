@@ -8,11 +8,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/auth"
-	"github.com/segfaultsyndicate/kalakriti/pkg/httpx"
-	"github.com/segfaultsyndicate/kalakriti/pkg/i18n"
-	"github.com/segfaultsyndicate/kalakriti/services/bff/internal/bff/handler"
-	"github.com/segfaultsyndicate/kalakriti/services/bff/internal/bff/middleware"
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
 )
 
 // Config holds all dependencies the BFF needs.

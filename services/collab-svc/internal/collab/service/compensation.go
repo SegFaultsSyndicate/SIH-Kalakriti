@@ -15,12 +15,12 @@ import (
 
 	"github.com/google/uuid"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
-	"github.com/segfaultsyndicate/kalakriti/pkg/outbox"
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/domain"
 )
 
 // --- ProposeAmendment / DecideAmendment --------------------------------------

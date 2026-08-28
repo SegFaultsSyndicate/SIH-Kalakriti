@@ -45,7 +45,7 @@ Buyers subscribe to webhooks to receive real-time notifications when orders are 
 ### Create Subscription
 
 ```go
-import "github.com/segfaultsyndicate/kalakriti/pkg/webhook"
+import "github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 
 manager := webhook.NewManager(db)
 
@@ -130,7 +130,7 @@ User-Agent: Kalakriti-Webhooks/1.0
 
 **Verification (Go):**
 ```go
-import "github.com/segfaultsyndicate/kalakriti/pkg/webhook"
+import "github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
     body, _ := io.ReadAll(r.Body)
@@ -228,7 +228,7 @@ import (
     "time"
 
     _ "github.com/lib/pq"
-    "github.com/segfaultsyndicate/kalakriti/pkg/webhook"
+    "github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 )
 
 func main() {

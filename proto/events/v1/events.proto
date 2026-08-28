@@ -9,7 +9,7 @@ import "fulfilment/v1/fulfilment.proto";
 import "google/protobuf/timestamp.proto";
 import "inference/v1/inference.proto";
 
-option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/events/v1;eventsv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/events/v1;eventsv1";
 
 // EventHeader is the first field of every envelope; consumers dedupe on idempotency_key.
 message EventHeader {

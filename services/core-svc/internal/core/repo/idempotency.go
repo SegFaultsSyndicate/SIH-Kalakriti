@@ -5,10 +5,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/idempotency"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/idempotency"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
 )
 
 // IdempotencyStore adapts core-svc's idempotency_key queries to

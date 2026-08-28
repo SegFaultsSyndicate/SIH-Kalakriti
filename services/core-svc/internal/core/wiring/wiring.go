@@ -13,11 +13,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/storage"
+	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
 
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/repo"
-	"github.com/segfaultsyndicate/kalakriti/services/core-svc/internal/core/service"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
 
 // Store binds a repository to service.Store. Every read method is promoted from

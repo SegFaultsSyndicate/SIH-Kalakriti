@@ -85,7 +85,7 @@ import (
     "time"
 
     _ "github.com/lib/pq"
-    "github.com/segfaultsyndicate/kalakriti/pkg/webhook"
+    "github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 )
 
 func main() {
@@ -171,7 +171,7 @@ else
     echo "Edit: $BFF_MAIN"
     echo ""
     echo "Add import:"
-    echo '  "github.com/segfaultsyndicate/kalakriti/pkg/i18n"'
+    echo '  "github.com/ZoroNewbie00/kalakriti/pkg/i18n"'
     echo ""
     echo "Add middleware (before route handlers):"
     echo "  r.Use(i18n.Middleware)"

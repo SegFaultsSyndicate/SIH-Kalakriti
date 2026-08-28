@@ -13,12 +13,12 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
-	catalogv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1"
-	commonv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1"
-	inferencev1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/inference/v1"
-	pkgredis "github.com/segfaultsyndicate/kalakriti/pkg/redis"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	inferencev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/inference/v1"
+	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 
-	"github.com/segfaultsyndicate/kalakriti/services/search-svc/internal/search/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/search-svc/internal/search/domain"
 )
 
 // Inference is search-svc's view of ml-svc: three RPCs, no model types.

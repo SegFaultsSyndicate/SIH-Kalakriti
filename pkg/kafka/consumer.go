@@ -10,7 +10,7 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/topics"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 )
 
 // HandlerFunc processes one message. An error means "retry"; after MaxRetries

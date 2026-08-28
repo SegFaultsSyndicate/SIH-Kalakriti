@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/segfaultsyndicate/kalakriti/pkg/idempotency"
+	"github.com/ZoroNewbie00/kalakriti/pkg/idempotency"
 )
 
 // IdempotencyRecord is re-exported from pkg/idempotency for the Store interface.

@@ -13,8 +13,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
-	"github.com/segfaultsyndicate/kalakriti/pkg/ids"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
 )
 
 // DevOTPCode is the well-known code the stub provider accepts. It works only

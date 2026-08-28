@@ -14,9 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	pkgdomain "github.com/segfaultsyndicate/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 
-	"github.com/segfaultsyndicate/kalakriti/services/collab-svc/internal/collab/repo/db"
+	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/repo/db"
 )
 
 // Repo owns the connection pool and hands out query sets bound either to the

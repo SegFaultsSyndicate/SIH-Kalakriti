@@ -1,4 +1,4 @@
-module github.com/segfaultsyndicate/kalakriti/proto
+module github.com/ZoroNewbie00/kalakriti/proto
 
 go 1.23.0
 

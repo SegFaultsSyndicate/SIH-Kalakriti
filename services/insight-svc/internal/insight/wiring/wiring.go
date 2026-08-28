@@ -6,9 +6,9 @@ import (
 	"github.com/google/uuid"
 	"time"
 
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/domain"
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/repo"
-	"github.com/segfaultsyndicate/kalakriti/services/insight-svc/internal/insight/service"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/service"
 )
 
 // Store wraps *repo.Repo and adapts InTx from concrete *repo.Tx to service.Tx.

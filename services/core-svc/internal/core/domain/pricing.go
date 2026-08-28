@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/segfaultsyndicate/kalakriti/pkg/money"
+	"github.com/ZoroNewbie00/kalakriti/pkg/money"
 )
 
 // AnomalyLevel flags where a chosen price sits relative to the floor and band.

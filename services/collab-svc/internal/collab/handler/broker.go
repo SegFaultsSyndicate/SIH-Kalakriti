@@ -10,7 +10,7 @@ import (
 	segmentio "github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	fulfilmentv1 "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1"
+	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
 )
 
 // envelope is the outbox envelope every Kalakriti event is wrapped in.
