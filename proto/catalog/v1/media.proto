@@ -1,0 +1,147 @@
+// proto/catalog/v1/media.proto
+syntax = "proto3";
+
+package catalog.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+
+// MediaService is the upload entry point. Bytes never pass through the service:
+// it mints presigned URLs and the client talks to the bucket directly.
+service MediaService {
+  // Ask for a presigned PUT URL and the media id it will be stored under.
+  rpc RequestUpload(RequestUploadRequest) returns (RequestUploadResponse);
+  // Tell the service the bytes have landed; it verifies them against the bucket.
+  rpc ConfirmUpload(ConfirmUploadRequest) returns (ConfirmUploadResponse);
+  // Fetch one media row's metadata and lifecycle state.
+  rpc GetMedia(GetMediaRequest) returns (GetMediaResponse);
+  // Get a time-limited download URL for an asset.
+  rpc GetMediaURL(GetMediaURLRequest) returns (GetMediaURLResponse);
+}
+
+// MediaState is where an asset sits between the upload URL being issued and the
+// buyer being able to see it.
+enum MediaState {
+  // Unset.
+  MEDIA_STATE_UNSPECIFIED = 0;
+  // A row whose bytes have not arrived yet.
+  MEDIA_STATE_PENDING = 1;
+  // The object is in the bucket and matches what was declared.
+  MEDIA_STATE_UPLOADED = 2;
+  // The enhancement pipeline has the asset.
+  MEDIA_STATE_PROCESSING = 3;
+  // The asset is servable to buyers.
+  MEDIA_STATE_READY = 4;
+  // The asset cannot be used; failure_reason says why.
+  MEDIA_STATE_FAILED = 5;
+}
+
+// Media is one stored asset and its lifecycle state.
+message Media {
+  // UUIDv7.
+  string id = 1;
+  // Artisan who uploaded it.
+  string artisan_id = 2;
+  // Product it belongs to, when it has been attached to one.
+  optional string product_id = 3;
+  // Bucket holding the object.
+  string bucket = 4;
+  // Object key of the artisan's original.
+  string object_key = 5;
+  // Object key of the enhanced rendition; empty until enhancement finishes.
+  optional string enhanced_object_key = 6;
+  // What kind of asset this is.
+  common.v1.MediaKind kind = 7;
+  // IANA media type, e.g. "image/jpeg".
+  string mime_type = 8;
+  // Size in bytes: as declared while PENDING, as measured afterwards.
+  int64 size_bytes = 9;
+  // Lowercase hex SHA-256 of the bytes, when the client supplied one.
+  optional string sha256_hex = 10;
+  // Where the asset is in its lifecycle.
+  MediaState state = 11;
+  // Why the asset was rejected, when it was.
+  optional string failure_reason = 12;
+  // When the upload was verified against the bucket.
+  optional google.protobuf.Timestamp confirmed_at = 13;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 14;
+}
+
+// RequestUploadRequest asks for somewhere to put an asset's bytes.
+message RequestUploadRequest {
+  // Artisan the asset belongs to.
+  string artisan_id = 1;
+  // IANA media type; must be on the allowlist.
+  string content_type = 2;
+  // Size in bytes the client is about to send; checked against the caps and
+  // against the object itself at confirmation.
+  int64 size_bytes = 3;
+  // Client's own SHA-256 of the bytes. Optional, but supplying it lets an
+  // identical re-upload be deduplicated without sending anything.
+  optional string sha256_hex = 4;
+  // Product to attach the asset to, when it is already known.
+  optional string product_id = 5;
+  // Client name, e.g. "artisan-app" or "cluster-desk".
+  string source = 6;
+  // Caller-generated key.
+  string idempotency_key = 7;
+}
+
+// RequestUploadResponse returns where to PUT the bytes.
+message RequestUploadResponse {
+  // Media id the object will be stored under.
+  string media_id = 1;
+  // Object key inside the bucket.
+  string object_key = 2;
+  // Presigned PUT URL; empty when deduplicated is true.
+  string upload_url = 3;
+  // When the URL stops working.
+  google.protobuf.Timestamp expires_at = 4;
+  // True when these bytes were already stored, in which case media_id names the
+  // existing asset and nothing needs to be uploaded.
+  bool deduplicated = 5;
+}
+
+// ConfirmUploadRequest reports that the bytes have been PUT.
+message ConfirmUploadRequest {
+  // Media id from the upload ticket.
+  string media_id = 1;
+  // Caller-generated key.
+  string idempotency_key = 2;
+}
+
+// ConfirmUploadResponse returns the verified row.
+message ConfirmUploadResponse {
+  // The media, now UPLOADED.
+  Media media = 1;
+}
+
+// GetMediaRequest fetches one media row.
+message GetMediaRequest {
+  // Media to fetch.
+  string media_id = 1;
+}
+
+// GetMediaResponse returns one media row.
+message GetMediaResponse {
+  // The media.
+  Media media = 1;
+}
+
+// GetMediaURLRequest asks for a download URL.
+message GetMediaURLRequest {
+  // Media to serve.
+  string media_id = 1;
+}
+
+// GetMediaURLResponse returns a time-limited download URL.
+message GetMediaURLResponse {
+  // Presigned GET URL for the enhanced rendition when there is one, and for the
+  // artisan's original otherwise.
+  string url = 1;
+  // When the URL stops working.
+  google.protobuf.Timestamp expires_at = 2;
+}

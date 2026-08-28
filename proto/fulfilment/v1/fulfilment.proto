@@ -1,0 +1,505 @@
+// proto/fulfilment/v1/fulfilment.proto
+syntax = "proto3";
+
+package fulfilment.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/fulfilment/v1;fulfilmentv1";
+
+// FulfilmentService splits a bulk order across artisans and drives it to delivery.
+service FulfilmentService {
+  // Register a buyer's bulk requirement; allocation happens asynchronously.
+  rpc CreateBulkOrder(CreateBulkOrderRequest) returns (CreateBulkOrderResponse);
+  // Propose a split of the order into lots, honouring declared capacity.
+  rpc ProposeAllocation(ProposeAllocationRequest) returns (ProposeAllocationResponse);
+  // Artisan accepts or declines an offered lot.
+  rpc RespondToLot(RespondToLotRequest) returns (RespondToLotResponse);
+  // Artisan reports production progress against an accepted lot.
+  rpc ReportProgress(ReportProgressRequest) returns (ReportProgressResponse);
+  // Record a quality inspection outcome for a lot.
+  rpc SubmitQC(SubmitQCRequest) returns (SubmitQCResponse);
+  // Follow one bulk order's events until the caller disconnects.
+  rpc WatchOrder(WatchOrderRequest) returns (stream WatchOrderResponse);
+  // Cancel a bulk order before production has started. Not available once
+  // any lot has entered IN_PRODUCTION — see CancelBulkOrderResponse.
+  rpc CancelBulkOrder(CancelBulkOrderRequest) returns (CancelBulkOrderResponse);
+}
+
+// BulkOrder is one buyer requirement for many units of a single listing.
+message BulkOrder {
+  // UUIDv7.
+  string id = 1;
+  // Buyer subject id.
+  string buyer_id = 2;
+  // Listing being ordered.
+  string listing_id = 3;
+  // Item the listing offers, pinned at order time.
+  string product_id = 4;
+  // Total units required.
+  int32 quantity = 5;
+  // Agreed unit price, pinned at order time.
+  common.v1.Money unit_price = 6;
+  // quantity multiplied by unit_price, stored so it never has to be recomputed.
+  common.v1.Money total_value = 7;
+  // Date the buyer needs delivery by.
+  google.protobuf.Timestamp required_by = 8;
+  // Where the order sits in its lifecycle.
+  BulkOrderState state = 9;
+  // Lots the order has been split into.
+  repeated OrderLot lots = 10;
+  // Units already covered by accepted lots.
+  int32 allocated_quantity = 11;
+  // Buyer's customisation selections, keyed by CustomisationOption name.
+  map<string, string> customisations = 12;
+  // Free-text buyer instructions.
+  optional string notes = 13;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 14;
+}
+
+// OrderLot is the slice of a bulk order offered to one artisan.
+message OrderLot {
+  // UUIDv7.
+  string id = 1;
+  // Parent order.
+  string bulk_order_id = 2;
+  // Artisan the lot is offered to.
+  string artisan_id = 3;
+  // Cluster the artisan belongs to, pinned at offer time.
+  optional string cluster_id = 4;
+  // Units in this lot.
+  int32 quantity = 5;
+  // Unit price for this artisan; may differ from the buyer price after commission.
+  common.v1.Money unit_price = 6;
+  // quantity multiplied by unit_price.
+  common.v1.Money lot_value = 7;
+  // Where the lot sits in its lifecycle.
+  LotState state = 8;
+  // When the offer was made.
+  google.protobuf.Timestamp offered_at = 9;
+  // Offer lapses to EXPIRED after this instant.
+  google.protobuf.Timestamp responds_by = 10;
+  // When the artisan accepted; unset until then.
+  optional google.protobuf.Timestamp accepted_at = 11;
+  // Ship date the artisan committed to on acceptance.
+  optional google.protobuf.Timestamp promised_ship_date = 12;
+  // Whole-percentage production progress, 0 to 100.
+  int32 progress_pct = 13;
+  // Capacity held for this lot; released on decline or expiry.
+  optional string capacity_reservation_id = 14;
+  // Reason given when the lot was declined.
+  optional string decline_reason = 15;
+  // Lot this one replaces after a reallocation.
+  optional string reallocated_from_lot_id = 16;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 17;
+}
+
+// CapacityReservation holds part of an artisan's monthly capacity against a lot.
+message CapacityReservation {
+  // UUIDv7.
+  string id = 1;
+  // Artisan whose capacity is held.
+  string artisan_id = 2;
+  // Listing the capacity belongs to.
+  string listing_id = 3;
+  // Lot the hold is for.
+  string lot_id = 4;
+  // Units held.
+  int32 units = 5;
+  // First instant of the capacity month, UTC.
+  google.protobuf.Timestamp period_start = 6;
+  // First instant of the following month, UTC; the interval is half-open.
+  google.protobuf.Timestamp period_end = 7;
+  // Whether the hold is live, consumed or given back.
+  ReservationState state = 8;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 9;
+}
+
+// PaymentSplitLine is one payee's share of a bulk order's proceeds.
+message PaymentSplitLine {
+  // Artisan or self-help group receiving the money.
+  string payee_id = 1;
+  // What kind of party the payee is.
+  PayeeType payee_type = 2;
+  // Lot this line pays for.
+  string lot_id = 3;
+  // Gross owed to this payee before commission.
+  common.v1.Money gross_amount = 4;
+  // Platform commission deducted from gross_amount.
+  common.v1.Money commission = 5;
+  // gross_amount minus commission; what actually moves.
+  common.v1.Money net_amount = 6;
+  // Payout instrument reference, e.g. a UPI VPA or a tokenised bank account.
+  string payout_ref = 7;
+}
+
+// PaymentSplit is the full payout instruction for one bulk order.
+message PaymentSplit {
+  // UUIDv7.
+  string id = 1;
+  // Order being paid out.
+  string bulk_order_id = 2;
+  // Per-payee shares; the net amounts must sum to net_total.
+  repeated PaymentSplitLine lines = 3;
+  // Total collected from the buyer.
+  common.v1.Money gross_total = 4;
+  // Total platform commission across all lines.
+  common.v1.Money commission_total = 5;
+  // Total moving to payees.
+  common.v1.Money net_total = 6;
+  // When the split actually settled; unset while pending.
+  optional google.protobuf.Timestamp settled_at = 7;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 8;
+}
+
+// EscrowMilestone is one tranche of buyer funds released on a production event.
+message EscrowMilestone {
+  // UUIDv7.
+  string id = 1;
+  // Order the escrow belongs to.
+  string bulk_order_id = 2;
+  // Lot whose progress releases this tranche; unset for order-level milestones.
+  optional string lot_id = 3;
+  // What has to happen for the tranche to release.
+  MilestoneTrigger trigger = 4;
+  // Amount held in this tranche.
+  common.v1.Money amount = 5;
+  // Whether the tranche has been released.
+  bool released = 6;
+  // When it released; unset while held.
+  optional google.protobuf.Timestamp released_at = 7;
+  // Payment-processor reference for the release.
+  optional string release_ref = 8;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 9;
+}
+
+// QCDefect is one fault found during inspection.
+message QCDefect {
+  // Defect code from the QC rubric, e.g. "colour_bleed".
+  string code = 1;
+  // What the inspector saw.
+  string description = 2;
+  // How bad it is.
+  DefectSeverity severity = 3;
+  // Photographs of the defect.
+  repeated common.v1.MediaRef media = 4;
+  // Units in the lot affected.
+  int32 affected_units = 5;
+}
+
+// OrderEvent is one state change on a bulk order, delivered to WatchOrder subscribers.
+message OrderEvent {
+  // UUIDv7 of the event.
+  string event_id = 1;
+  // Order the event belongs to.
+  string bulk_order_id = 2;
+  // When the change happened, UTC.
+  google.protobuf.Timestamp occurred_at = 3;
+  // Exactly one payload is set.
+  oneof payload {
+    // A lot was offered to an artisan.
+    OrderLot lot_offered = 4;
+    // An artisan accepted a lot.
+    OrderLot lot_accepted = 5;
+    // An artisan declined a lot.
+    OrderLot lot_declined = 6;
+    // A lot offer lapsed.
+    OrderLot lot_expired = 7;
+    // An artisan reported progress.
+    OrderLot lot_progressed = 8;
+    // A quality inspection was recorded.
+    QCResult qc_recorded = 9;
+    // The order itself moved state.
+    BulkOrderState order_state_changed = 10;
+    // The payout instruction settled.
+    PaymentSplit payment_settled = 11;
+  }
+}
+
+// QCResult is the recorded outcome of one lot inspection.
+message QCResult {
+  // UUIDv7.
+  string id = 1;
+  // Lot inspected.
+  string lot_id = 2;
+  // Whether the lot passed.
+  bool passed = 3;
+  // Faults found; empty on a pass.
+  repeated QCDefect defects = 4;
+  // Inspection photographs.
+  repeated common.v1.MediaRef media = 5;
+  // Subject id of the inspector.
+  string inspector_id = 6;
+  // Free-text inspector notes.
+  optional string notes = 7;
+  // When the inspection happened, UTC.
+  google.protobuf.Timestamp inspected_at = 8;
+}
+
+// CreateBulkOrderRequest registers a buyer's bulk requirement.
+message CreateBulkOrderRequest {
+  // Buyer subject id.
+  string buyer_id = 1;
+  // Listing being ordered.
+  string listing_id = 2;
+  // Total units required.
+  int32 quantity = 3;
+  // Date the buyer needs delivery by.
+  google.protobuf.Timestamp required_by = 4;
+  // Customisation selections, keyed by CustomisationOption name.
+  map<string, string> customisations = 5;
+  // Free-text buyer instructions.
+  optional string notes = 6;
+  // Caller-generated key; replaying it returns the first result rather than ordering twice.
+  string idempotency_key = 7;
+}
+
+// CreateBulkOrderResponse returns the registered order.
+message CreateBulkOrderResponse {
+  // The created order, in ALLOCATING.
+  BulkOrder order = 1;
+}
+
+// ProposeAllocationRequest asks for a split of an order into lots.
+message ProposeAllocationRequest {
+  // Order to allocate.
+  string bulk_order_id = 1;
+  // Strategy to use.
+  AllocationStrategy strategy = 2;
+  // Restrict candidates to these artisans; empty considers every eligible artisan.
+  repeated string preferred_artisan_ids = 3;
+  // Largest lot any one artisan may be offered; zero means no cap.
+  optional int32 max_units_per_artisan = 4;
+  // Hours an artisan gets to respond before the offer lapses.
+  optional int32 response_window_hours = 5;
+  // Compute the split without persisting or offering it.
+  bool dry_run = 6;
+  // Caller-generated key.
+  string idempotency_key = 7;
+}
+
+// ProposeAllocationResponse returns the proposed lots and what could not be covered.
+message ProposeAllocationResponse {
+  // Proposed lots, persisted and offered unless dry_run was set.
+  repeated OrderLot lots = 1;
+  // Units no eligible artisan could cover.
+  int32 unallocated_quantity = 2;
+  // Why coverage fell short, when it did.
+  optional string shortfall_reason = 3;
+}
+
+// RespondToLotRequest carries an artisan's accept or decline.
+message RespondToLotRequest {
+  // Lot being answered.
+  string lot_id = 1;
+  // Artisan answering; must own the lot.
+  string artisan_id = 2;
+  // True to accept, false to decline.
+  bool accept = 3;
+  // Ship date committed to; required when accepting.
+  optional google.protobuf.Timestamp promised_ship_date = 4;
+  // Reason for declining; required when declining.
+  optional string decline_reason = 5;
+  // Caller-generated key.
+  string idempotency_key = 6;
+}
+
+// RespondToLotResponse returns the lot in its new state.
+message RespondToLotResponse {
+  // The updated lot.
+  OrderLot lot = 1;
+}
+
+// ReportProgressRequest records production progress against an accepted lot.
+message ReportProgressRequest {
+  // Lot being updated.
+  string lot_id = 1;
+  // Artisan reporting; must own the lot.
+  string artisan_id = 2;
+  // Whole-percentage progress, 0 to 100; 100 moves the lot to QC_PENDING.
+  int32 progress_pct = 3;
+  // Work-in-progress photographs.
+  repeated common.v1.MediaRef media = 4;
+  // Free-text update in the artisan's own language.
+  optional string note = 5;
+  // Caller-generated key.
+  string idempotency_key = 6;
+}
+
+// ReportProgressResponse returns the lot in its new state.
+message ReportProgressResponse {
+  // The updated lot.
+  OrderLot lot = 1;
+}
+
+// SubmitQCRequest records a quality inspection outcome.
+message SubmitQCRequest {
+  // Lot inspected; must be in QC_PENDING.
+  string lot_id = 1;
+  // Subject id of the inspector.
+  string inspector_id = 2;
+  // Whether the lot passed.
+  bool passed = 3;
+  // Faults found; must be empty when passed is true.
+  repeated QCDefect defects = 4;
+  // Inspection photographs.
+  repeated common.v1.MediaRef media = 5;
+  // Free-text inspector notes.
+  optional string notes = 6;
+  // Caller-generated key.
+  string idempotency_key = 7;
+}
+
+// SubmitQCResponse returns the recorded inspection and the resulting lot state.
+message SubmitQCResponse {
+  // The recorded inspection.
+  QCResult result = 1;
+  // The lot, now COMPLETED or QC_FAILED.
+  OrderLot lot = 2;
+}
+
+// WatchOrderRequest subscribes to one order's event stream.
+message WatchOrderRequest {
+  // Order to follow.
+  string bulk_order_id = 1;
+  // Replay events that occurred after this instant before streaming live ones.
+  optional google.protobuf.Timestamp since = 2;
+}
+
+// WatchOrderResponse is one frame of the order event stream.
+message WatchOrderResponse {
+  // The event.
+  OrderEvent event = 1;
+}
+
+message CancelBulkOrderRequest {
+  // Order to cancel.
+  string bulk_order_id = 1;
+  // Free-text cancellation reason, shown to affected artisans.
+  string reason = 2;
+  // Caller-generated key.
+  string idempotency_key = 3;
+}
+
+message CancelBulkOrderResponse {
+  // The cancelled order.
+  BulkOrder order = 1;
+  // Lots that were OFFERED and had their reservation released as a result.
+  repeated string released_lot_ids = 2;
+}
+
+// LotState is where one artisan's slice of an order sits.
+enum LotState {
+  // Unset.
+  LOT_STATE_UNSPECIFIED = 0;
+  // Offered to the artisan, awaiting an answer.
+  LOT_STATE_OFFERED = 1;
+  // Artisan committed to producing it.
+  LOT_STATE_ACCEPTED = 2;
+  // Artisan turned it down.
+  LOT_STATE_DECLINED = 3;
+  // Offer lapsed without an answer.
+  LOT_STATE_EXPIRED = 4;
+  // Being made.
+  LOT_STATE_IN_PRODUCTION = 5;
+  // Made, awaiting inspection.
+  LOT_STATE_QC_PENDING = 6;
+  // Failed inspection; either rework or reallocate.
+  LOT_STATE_QC_FAILED = 7;
+  // Passed inspection and handed over.
+  LOT_STATE_COMPLETED = 8;
+  // Superseded by a fresh lot offered to a different artisan.
+  LOT_STATE_REALLOCATED = 9;
+}
+
+// BulkOrderState is where a whole buyer order sits.
+enum BulkOrderState {
+  // Unset.
+  BULK_ORDER_STATE_UNSPECIFIED = 0;
+  // Looking for artisans to cover the quantity.
+  BULK_ORDER_STATE_ALLOCATING = 1;
+  // Some units covered, some still unallocated.
+  BULK_ORDER_STATE_PARTIALLY_ALLOCATED = 2;
+  // Every unit covered by an accepted lot.
+  BULK_ORDER_STATE_CONFIRMED = 3;
+  // At least one lot is being made.
+  BULK_ORDER_STATE_IN_PRODUCTION = 4;
+  // A quantity or date change is waiting on buyer sign-off.
+  BULK_ORDER_STATE_AMENDMENT_PENDING = 5;
+  // Every lot delivered and inspected.
+  BULK_ORDER_STATE_COMPLETED = 6;
+  // Abandoned; any escrow is refunded.
+  BULK_ORDER_STATE_CANCELLED = 7;
+}
+
+// ReservationState is whether a capacity hold is live, spent or returned.
+enum ReservationState {
+  // Unset.
+  RESERVATION_STATE_UNSPECIFIED = 0;
+  // Capacity is held against an offered or accepted lot.
+  RESERVATION_STATE_HELD = 1;
+  // Capacity was used by a completed lot.
+  RESERVATION_STATE_CONSUMED = 2;
+  // Capacity was given back after a decline, expiry or cancellation.
+  RESERVATION_STATE_RELEASED = 3;
+}
+
+// PayeeType says what kind of party receives a payment split line.
+enum PayeeType {
+  // Unset.
+  PAYEE_TYPE_UNSPECIFIED = 0;
+  // An individual maker.
+  PAYEE_TYPE_ARTISAN = 1;
+  // A registered self-help group paying its members onward.
+  PAYEE_TYPE_SELF_HELP_GROUP = 2;
+  // A cluster-level cooperative.
+  PAYEE_TYPE_CLUSTER = 3;
+}
+
+// MilestoneTrigger is the production event that releases an escrow tranche.
+enum MilestoneTrigger {
+  // Unset.
+  MILESTONE_TRIGGER_UNSPECIFIED = 0;
+  // Released on acceptance, funding materials.
+  MILESTONE_TRIGGER_ADVANCE = 1;
+  // Released when the artisan reports production has begun.
+  MILESTONE_TRIGGER_PRODUCTION_START = 2;
+  // Released when the lot passes inspection.
+  MILESTONE_TRIGGER_QC_PASSED = 3;
+  // Released when the shipment leaves.
+  MILESTONE_TRIGGER_DISPATCH = 4;
+  // Released when the buyer confirms delivery.
+  MILESTONE_TRIGGER_DELIVERY = 5;
+}
+
+// DefectSeverity grades a QC fault.
+enum DefectSeverity {
+  // Unset.
+  DEFECT_SEVERITY_UNSPECIFIED = 0;
+  // Cosmetic; the lot still passes.
+  DEFECT_SEVERITY_MINOR = 1;
+  // Needs rework before the lot can pass.
+  DEFECT_SEVERITY_MAJOR = 2;
+  // Unsaleable; the lot is reallocated.
+  DEFECT_SEVERITY_CRITICAL = 3;
+}
+
+// AllocationStrategy selects how an order is split across artisans.
+enum AllocationStrategy {
+  // Unset; the server picks, currently BALANCED.
+  ALLOCATION_STRATEGY_UNSPECIFIED = 0;
+  // Spread work evenly so no artisan is starved.
+  ALLOCATION_STRATEGY_BALANCED = 1;
+  // Fewest artisans that can cover it, for consistency of finish.
+  ALLOCATION_STRATEGY_FEWEST_LOTS = 2;
+  // Fastest promised completion, ignoring evenness.
+  ALLOCATION_STRATEGY_FASTEST = 3;
+  // Prefer artisans in one cluster so QC and pickup are one trip.
+  ALLOCATION_STRATEGY_CLUSTER_FIRST = 4;
+}

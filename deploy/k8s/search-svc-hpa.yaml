@@ -1,0 +1,104 @@
+# deploy/k8s/search-svc-hpa.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-svc
+  labels:
+    app: search-svc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: search-svc
+  template:
+    metadata:
+      labels:
+        app: search-svc
+    spec:
+      containers:
+      - name: search-svc
+        image: kalakriti/search-svc:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8082
+          name: grpc
+        - containerPort: 9092
+          name: metrics
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: database-url
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: redis-addr
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: kafka-brokers
+        - name: OTLP_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: otlp-endpoint
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9092
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9092
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search-svc
+spec:
+  selector:
+    app: search-svc
+  ports:
+  - name: grpc
+    port: 8082
+    targetPort: 8082
+  - name: metrics
+    port: 9092
+    targetPort: 9092
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: search-svc-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: search-svc
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

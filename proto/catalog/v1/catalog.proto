@@ -1,0 +1,462 @@
+// proto/catalog/v1/catalog.proto
+syntax = "proto3";
+
+package catalog.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "inference/v1/inference.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+
+// CatalogService owns the craft ontology, artisan identity and everything sellable.
+service CatalogService {
+  // Register a physical item; attributes may still be empty at this point.
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  // Create or replace the sellable offer for a product, leaving it in DRAFT.
+  rpc UpsertListing(UpsertListingRequest) returns (UpsertListingResponse);
+  // Move a draft to PENDING_ARTISAN_APPROVAL once AI-generated copy is attached.
+  rpc SubmitForApproval(SubmitForApprovalRequest) returns (SubmitForApprovalResponse);
+  // Artisan accepts the generated copy and the listing goes live.
+  rpc ApproveListing(ApproveListingRequest) returns (ApproveListingResponse);
+  // Fetch one listing, optionally hydrated with product and provenance.
+  rpc GetListing(GetListingRequest) returns (GetListingResponse);
+  // Page through listings under the usual filters.
+  rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
+  // Freeze the provenance evidence for a listing and mint its certificate.
+  rpc SealProvenance(SealProvenanceRequest) returns (SealProvenanceResponse);
+}
+
+// Craft is one node of the craft ontology, e.g. "assam-muga-weaving".
+message Craft {
+  // UUIDv7.
+  string id = 1;
+  // Stable slug used in URLs and by the ML models.
+  string code = 2;
+  // Canonical English name.
+  string display_name = 3;
+  // Parent node; empty for a root craft family.
+  optional string parent_craft_id = 4;
+  // Regions where the craft is practised.
+  repeated common.v1.GeoRegion regions = 5;
+  // Geographical Indication registration number, when the craft carries one.
+  optional string gi_registration_no = 6;
+  // Techniques recognised for this craft, as ontology slugs.
+  repeated string techniques = 7;
+  // Materials recognised for this craft, as ontology slugs.
+  repeated string materials = 8;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 9;
+}
+
+// CraftAlias is a vernacular or misspelt name that resolves to a Craft.
+message CraftAlias {
+  // UUIDv7.
+  string id = 1;
+  // Craft this alias resolves to.
+  string craft_id = 2;
+  // The alias itself, as buyers or artisans actually type it.
+  string alias = 3;
+  // Language the alias belongs to.
+  common.v1.Language language = 4;
+  // Where the alias came from, e.g. "gi-registry", "search-log", "curator".
+  string source = 5;
+}
+
+// Artisan is one maker, the unit that owns products and accepts order lots.
+message Artisan {
+  // UUIDv7.
+  string id = 1;
+  // Identity subject when the artisan has an app login; empty for proxy-registered makers.
+  optional string user_id = 2;
+  // Full name as the artisan gives it.
+  string display_name = 3;
+  // E.164 phone number, the primary identifier in the field.
+  string phone_e164 = 4;
+  // Crafts the artisan practises.
+  repeated string craft_ids = 5;
+  // Cluster the artisan belongs to; empty for independents.
+  optional string cluster_id = 6;
+  // Self-help group the artisan belongs to; empty when none.
+  optional string self_help_group_id = 7;
+  // Languages the artisan can be addressed in, most fluent first.
+  repeated common.v1.Language languages = 8;
+  // Where the artisan works.
+  common.v1.GeoRegion region = 9;
+  // Years practising the primary craft.
+  optional int32 years_of_experience = 10;
+  // Short bio in the artisan's own words.
+  optional string bio = 11;
+  // Profile photograph.
+  optional common.v1.MediaRef photo = 12;
+  // True once a cluster officer or GI body has vouched for the artisan.
+  bool verified = 13;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 14;
+}
+
+// Cluster is a geographic concentration of artisans sharing a craft and a market.
+message Cluster {
+  // UUIDv7.
+  string id = 1;
+  // Cluster name, usually the village or block plus the craft.
+  string name = 2;
+  // Crafts practised in the cluster.
+  repeated string craft_ids = 3;
+  // Where the cluster sits.
+  common.v1.GeoRegion region = 4;
+  // Number of registered artisans; denormalised for listing pages.
+  int32 artisan_count = 5;
+  // Contact phone for the cluster coordinator.
+  optional string coordinator_phone_e164 = 6;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 7;
+}
+
+// SelfHelpGroup is the registered collective that fronts finance and bulk acceptance.
+message SelfHelpGroup {
+  // UUIDv7.
+  string id = 1;
+  // Registered name.
+  string name = 2;
+  // State registration number.
+  string registration_no = 3;
+  // Cluster the group operates in.
+  optional string cluster_id = 4;
+  // Member artisans.
+  repeated string member_artisan_ids = 5;
+  // Artisan id of the group's authorised signatory.
+  optional string signatory_artisan_id = 6;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 7;
+}
+
+// Product is the physical item; a Product may be offered by more than one Listing over time.
+message Product {
+  // UUIDv7.
+  string id = 1;
+  // Maker.
+  string artisan_id = 2;
+  // Craft ontology node.
+  string craft_id = 3;
+  // Working title, before AI copy is generated.
+  string working_title = 4;
+  // Imagery and video of the item.
+  repeated common.v1.MediaRef media = 5;
+  // Attributes accepted by the artisan; the AI proposal lives on the event stream, not here.
+  inference.v1.AttributeSet attributes = 6;
+  // Physical size as measured, not as inferred.
+  common.v1.Dimensions dimensions = 7;
+  // Materials as ontology slugs, artisan-confirmed.
+  repeated string materials = 8;
+  // Techniques as ontology slugs, artisan-confirmed.
+  repeated string techniques = 9;
+  // Colours as ontology slugs, artisan-confirmed.
+  repeated string colours = 10;
+  // Motifs as ontology slugs, artisan-confirmed.
+  repeated string motifs = 11;
+  // Artisan voice note describing the piece.
+  optional common.v1.MediaRef voice_note = 12;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 13;
+}
+
+// MadeToOrderTerms are the commitments an artisan makes when a listing is not ready stock.
+message MadeToOrderTerms {
+  // Working days from accepted order to dispatch-ready.
+  int32 lead_time_days = 1;
+  // Units the artisan can produce per calendar month for this listing.
+  int32 capacity_per_month = 2;
+  // False pauses new orders without unpublishing the listing.
+  bool accepting_orders = 3;
+  // Advance payable before production starts, as a whole percentage of order value.
+  int32 advance_pct = 4;
+  // What the buyer may vary, and what it costs.
+  repeated CustomisationOption customisation_options = 5;
+}
+
+// CustomisationOption is one buyer-selectable variation on a made-to-order listing.
+message CustomisationOption {
+  // Option name, e.g. "border colour".
+  string name = 1;
+  // Permitted values.
+  repeated string values = 2;
+  // Extra charge for choosing this option at all.
+  optional common.v1.Money surcharge = 3;
+  // Extra working days this option adds to the lead time.
+  optional int32 extra_lead_time_days = 4;
+}
+
+// PackagingMeta drives freight quoting and warns the buyer before checkout.
+message PackagingMeta {
+  // Needs fragile handling, e.g. terracotta or glass.
+  bool fragile = 1;
+  // Exceeds standard parcel dimensions, e.g. a rolled dhurrie.
+  bool oversized = 2;
+  // Cannot ship without a purpose-built crate; blocks instant freight quotes.
+  bool requires_custom_crating = 3;
+  // Packed extent, which is what the carrier actually charges on.
+  optional common.v1.Dimensions packed_dimensions = 4;
+}
+
+// ListingTranslation is the buyer-facing copy for one listing in one language.
+message ListingTranslation {
+  // Language of this copy.
+  common.v1.Language language = 1;
+  // Listing title.
+  string title = 2;
+  // Long-form description.
+  string description = 3;
+  // Short bullet highlights.
+  repeated string highlights = 4;
+  // True when the copy came from the model and has not been edited by a human.
+  bool machine_generated = 5;
+  // Subject id of the human who last edited the copy; empty while untouched.
+  optional string edited_by = 6;
+}
+
+// Listing is the sellable offer: one product, one price, one commercial posture.
+message Listing {
+  // UUIDv7.
+  string id = 1;
+  // Item being offered.
+  string product_id = 2;
+  // Maker, denormalised so the buyer surface needs one read.
+  string artisan_id = 3;
+  // Ready stock or made to order.
+  ListingType type = 4;
+  // Where the listing sits in its approval lifecycle.
+  ListingState state = 5;
+  // Unit price.
+  common.v1.Money price = 6;
+  // Units on hand; meaningful only for READY_STOCK.
+  optional int32 stock_quantity = 7;
+  // Smallest order the artisan will take.
+  int32 min_order_quantity = 8;
+  // Commitments for made-to-order listings; absent for ready stock.
+  optional MadeToOrderTerms made_to_order_terms = 9;
+  // Freight and handling flags.
+  PackagingMeta packaging = 10;
+  // Buyer-facing copy, one entry per language.
+  repeated ListingTranslation translations = 11;
+  // Sealed provenance record; empty until SealProvenance succeeds.
+  optional string provenance_id = 12;
+  // True when the underlying craft carries a Geographical Indication and this item qualifies.
+  bool gi_certified = 13;
+  // When the listing first reached PUBLISHED.
+  optional google.protobuf.Timestamp published_at = 14;
+  // Why the listing was suspended, when it is.
+  optional string suspension_reason = 15;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 16;
+}
+
+// ProvenanceRecord is the frozen, hash-chained evidence that a listing is what it claims.
+message ProvenanceRecord {
+  // UUIDv7.
+  string id = 1;
+  // Listing this record vouches for.
+  string listing_id = 2;
+  // Product the listing offers, pinned at seal time.
+  string product_id = 3;
+  // Process evidence: loom close-ups, in-progress video, artisan-with-item shots.
+  repeated common.v1.MediaRef media = 4;
+  // Model judgement on the declared technique at seal time.
+  inference.v1.TechniqueVerdict technique_verdict = 5;
+  // Weave judgement, present only for textile crafts.
+  optional inference.v1.LoomVerdict loom_verdict = 6;
+  // Lowercase hex SHA-256 over the canonical serialisation of the sealed fields.
+  string content_hash = 7;
+  // content_hash of the artisan's previous sealed record; empty for their first.
+  optional string previous_hash = 8;
+  // Detached signature over content_hash.
+  bytes signature = 9;
+  // Signature scheme, e.g. "ed25519".
+  string signature_algorithm = 10;
+  // Payload encoded into the printed QR, a verification URL carrying the record id.
+  string qr_code = 11;
+  // Generated PDF certificate in the media bucket.
+  optional common.v1.MediaRef certificate = 12;
+  // When the record was frozen, UTC. Nothing above may change after this.
+  google.protobuf.Timestamp sealed_at = 13;
+  // Creation and mutation trail.
+  common.v1.AuditMeta audit = 14;
+}
+
+// CreateProductRequest registers a physical item against an artisan.
+message CreateProductRequest {
+  // Maker.
+  string artisan_id = 1;
+  // Craft ontology node the artisan declares.
+  string craft_id = 2;
+  // Working title in the artisan's own words.
+  string working_title = 3;
+  // Imagery already uploaded to the media bucket.
+  repeated common.v1.MediaRef media = 4;
+  // Measured size, when the artisan supplied it.
+  optional common.v1.Dimensions dimensions = 5;
+  // Artisan voice note describing the piece.
+  optional common.v1.MediaRef voice_note = 6;
+  // Caller-generated key; replaying it returns the first result rather than creating twice.
+  string idempotency_key = 7;
+}
+
+// CreateProductResponse returns the stored product.
+message CreateProductResponse {
+  // The created product.
+  Product product = 1;
+}
+
+// UpsertListingRequest creates or replaces the offer for a product.
+message UpsertListingRequest {
+  // Existing listing to replace; empty creates a new one.
+  optional string listing_id = 1;
+  // Item being offered.
+  string product_id = 2;
+  // Ready stock or made to order.
+  ListingType type = 3;
+  // Unit price.
+  common.v1.Money price = 4;
+  // Units on hand; required for READY_STOCK.
+  optional int32 stock_quantity = 5;
+  // Smallest order the artisan will take.
+  int32 min_order_quantity = 6;
+  // Commitments for made-to-order listings.
+  optional MadeToOrderTerms made_to_order_terms = 7;
+  // Freight and handling flags.
+  PackagingMeta packaging = 8;
+  // Buyer-facing copy; replaces the stored set wholesale.
+  repeated ListingTranslation translations = 9;
+  // Caller-generated key; replaying it returns the first result rather than writing twice.
+  string idempotency_key = 10;
+}
+
+// UpsertListingResponse returns the stored listing.
+message UpsertListingResponse {
+  // The created or replaced listing.
+  Listing listing = 1;
+}
+
+// SubmitForApprovalRequest hands a draft to the artisan for sign-off.
+message SubmitForApprovalRequest {
+  // Listing to submit; must be in DRAFT.
+  string listing_id = 1;
+  // Languages the artisan should be asked to review.
+  repeated common.v1.Language review_languages = 2;
+  // Caller-generated key.
+  string idempotency_key = 3;
+}
+
+// SubmitForApprovalResponse returns the listing in its new state.
+message SubmitForApprovalResponse {
+  // The listing, now PENDING_ARTISAN_APPROVAL.
+  Listing listing = 1;
+}
+
+// ApproveListingRequest records the artisan's sign-off and publishes.
+message ApproveListingRequest {
+  // Listing to approve; must be in PENDING_ARTISAN_APPROVAL.
+  string listing_id = 1;
+  // Artisan approving; must own the underlying product.
+  string artisan_id = 2;
+  // Copy edits made during review; replaces the stored set when non-empty.
+  repeated ListingTranslation edited_translations = 3;
+  // Caller-generated key.
+  string idempotency_key = 4;
+}
+
+// ApproveListingResponse returns the published listing.
+message ApproveListingResponse {
+  // The listing, now PUBLISHED.
+  Listing listing = 1;
+}
+
+// GetListingRequest fetches one listing.
+message GetListingRequest {
+  // Listing to fetch.
+  string listing_id = 1;
+  // Language to return copy in; unspecified returns every translation.
+  common.v1.Language language = 2;
+  // Also return the underlying product.
+  bool include_product = 3;
+  // Also return the sealed provenance record.
+  bool include_provenance = 4;
+}
+
+// GetListingResponse returns the listing and whatever hydration was asked for.
+message GetListingResponse {
+  // The listing.
+  Listing listing = 1;
+  // The product, when include_product was set.
+  optional Product product = 2;
+  // The provenance record, when include_provenance was set and the listing is sealed.
+  optional ProvenanceRecord provenance = 3;
+}
+
+// ListListingsRequest pages through listings under the usual filters.
+message ListListingsRequest {
+  // Restrict to one maker.
+  optional string artisan_id = 1;
+  // Restrict to one cluster.
+  optional string cluster_id = 2;
+  // Restrict to one craft.
+  optional string craft_id = 3;
+  // Restrict to one lifecycle state.
+  ListingState state = 4;
+  // Restrict to one commercial posture.
+  ListingType type = 5;
+  // Cursor and page size.
+  common.v1.PageRequest page = 6;
+}
+
+// ListListingsResponse returns one page of listings.
+message ListListingsResponse {
+  // Listings in the page.
+  repeated Listing listings = 1;
+  // Cursor for the next page.
+  common.v1.PageResponse page = 2;
+}
+
+// SealProvenanceRequest freezes provenance evidence and mints the certificate.
+message SealProvenanceRequest {
+  // Listing to seal; must be PUBLISHED.
+  string listing_id = 1;
+  // Process evidence to freeze.
+  repeated common.v1.MediaRef media = 2;
+  // Technique the artisan declares, checked against the model before sealing.
+  string claimed_technique = 3;
+  // Skip the loom check for non-textile crafts.
+  bool skip_loom_check = 4;
+  // Caller-generated key.
+  string idempotency_key = 5;
+}
+
+// SealProvenanceResponse returns the frozen record.
+message SealProvenanceResponse {
+  // The sealed record.
+  ProvenanceRecord provenance = 1;
+}
+
+// ListingType is the commercial posture of a listing.
+enum ListingType {
+  // Unset.
+  LISTING_TYPE_UNSPECIFIED = 0;
+  // Produced after the order is accepted, against declared capacity.
+  LISTING_TYPE_MADE_TO_ORDER = 1;
+  // Already made and on hand.
+  LISTING_TYPE_READY_STOCK = 2;
+}
+
+// ListingState is where a listing sits in its approval lifecycle.
+enum ListingState {
+  // Unset.
+  LISTING_STATE_UNSPECIFIED = 0;
+  // Being assembled; not visible to buyers.
+  LISTING_STATE_DRAFT = 1;
+  // Waiting for the artisan to sign off on AI-generated copy.
+  LISTING_STATE_PENDING_ARTISAN_APPROVAL = 2;
+  // Live and searchable.
+  LISTING_STATE_PUBLISHED = 3;
+  // Withdrawn by an operator; recoverable, unlike deletion.
+  LISTING_STATE_SUSPENDED = 4;
+}

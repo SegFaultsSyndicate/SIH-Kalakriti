@@ -1,0 +1,31 @@
+# Dockerfile.core-svc
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /build
+
+COPY go.work go.work.sum ./
+COPY pkg/go.mod pkg/go.sum ./pkg/
+COPY services/core-svc/go.mod services/core-svc/go.sum ./services/core-svc/
+
+RUN go work sync
+RUN cd services/core-svc && go mod download
+
+COPY pkg/ ./pkg/
+COPY services/core-svc/ ./services/core-svc/
+
+RUN cd services/core-svc && CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /build/core-svc ./cmd/core-svc
+
+FROM alpine:3.18
+
+RUN apk --no-cache add ca-certificates && \
+    adduser -D -u 10001 appuser
+
+WORKDIR /app
+
+COPY --from=builder /build/core-svc .
+
+USER appuser
+
+EXPOSE 8080 9090
+
+CMD ["./core-svc"]

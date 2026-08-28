@@ -1,0 +1,513 @@
+// proto/events/v1/events.proto
+syntax = "proto3";
+
+package events.v1;
+
+import "catalog/v1/catalog.proto";
+import "common/v1/common.proto";
+import "fulfilment/v1/fulfilment.proto";
+import "google/protobuf/timestamp.proto";
+import "inference/v1/inference.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/events/v1;eventsv1";
+
+// EventHeader is the first field of every envelope; consumers dedupe on idempotency_key.
+message EventHeader {
+  // UUIDv7 of this event; unique per emission, not per business fact.
+  string event_id = 1;
+  // When the fact became true, UTC. Not when it was published.
+  google.protobuf.Timestamp occurred_at = 2;
+  // Id of the aggregate the event is about; also the Kafka partition key.
+  string aggregate_id = 3;
+  // Stable across retries of the same business fact; this is what consumers dedupe on.
+  string idempotency_key = 4;
+  // Envelope schema version, bumped on any breaking change to the payload.
+  int32 schema_version = 5;
+  // Service that produced the event, e.g. "core-svc".
+  string producer = 6;
+  // Request correlation id threaded from the originating call.
+  optional string correlation_id = 7;
+}
+
+// MediaUploaded is emitted on topic media.uploaded once an object lands in the bucket.
+message MediaUploaded {
+  // Envelope; aggregate_id is the media id.
+  EventHeader header = 1;
+  // The stored object.
+  common.v1.MediaRef media = 2;
+  // Artisan the upload belongs to.
+  string artisan_id = 3;
+  // Product the upload is attached to; empty for standalone uploads.
+  optional string product_id = 4;
+  // Where the upload came from, e.g. "artisan-app", "cluster-kiosk", "bulk-import".
+  string source = 5;
+}
+
+// MediaEnhanced is emitted on topic media.enhanced after ml-svc cleans an image.
+message MediaEnhanced {
+  // Envelope; aggregate_id is the source media id.
+  EventHeader header = 1;
+  // Original object.
+  common.v1.MediaRef source = 2;
+  // Cleaned object.
+  common.v1.MediaRef enhanced = 3;
+  // Operations applied, in order.
+  repeated string operations_applied = 4;
+  // Model bundle that produced the output.
+  string model_version = 5;
+}
+
+// CatalogAttributesExtracted is emitted on topic catalog.attributes.extracted.
+message CatalogAttributesExtracted {
+  // Envelope; aggregate_id is the product id.
+  EventHeader header = 1;
+  // Product the attributes describe.
+  string product_id = 2;
+  // Inferred attributes with per-field confidence.
+  inference.v1.AttributeSet attributes = 3;
+  // Media the inference ran over.
+  repeated common.v1.MediaRef media = 4;
+}
+
+// CatalogListingDrafted is emitted on topic catalog.listing.drafted.
+message CatalogListingDrafted {
+  // Envelope; aggregate_id is the listing id.
+  EventHeader header = 1;
+  // Listing created.
+  string listing_id = 2;
+  // Item being offered.
+  string product_id = 3;
+  // Maker.
+  string artisan_id = 4;
+  // Commercial posture chosen.
+  catalog.v1.ListingType listing_type = 5;
+  // Languages copy still has to be generated for.
+  repeated common.v1.Language pending_languages = 6;
+}
+
+// CatalogListingPublished is emitted on topic catalog.listing.published.
+message CatalogListingPublished {
+  // Envelope; aggregate_id is the listing id.
+  EventHeader header = 1;
+  // Listing now live.
+  string listing_id = 2;
+  // Item being offered.
+  string product_id = 3;
+  // Maker.
+  string artisan_id = 4;
+  // Craft ontology node.
+  string craft_id = 5;
+  // Commercial posture.
+  catalog.v1.ListingType listing_type = 6;
+  // Unit price at publication.
+  common.v1.Money price = 7;
+  // Languages copy exists in.
+  repeated common.v1.Language languages = 8;
+}
+
+// CatalogProvenanceSealed is emitted on topic catalog.provenance.sealed.
+message CatalogProvenanceSealed {
+  // Envelope; aggregate_id is the provenance record id.
+  EventHeader header = 1;
+  // Sealed record.
+  string provenance_id = 2;
+  // Listing it vouches for.
+  string listing_id = 3;
+  // Maker.
+  string artisan_id = 4;
+  // Hash over the sealed fields.
+  string content_hash = 5;
+  // Previous link in the artisan's chain; empty for their first record.
+  optional string previous_hash = 6;
+  // Whether the model agreed with the declared technique.
+  bool technique_matched = 7;
+  // When the record was frozen, UTC.
+  google.protobuf.Timestamp sealed_at = 8;
+}
+
+// SearchIndexRequested is emitted on topic search.index.requested.
+message SearchIndexRequested {
+  // Envelope; aggregate_id is the listing id.
+  EventHeader header = 1;
+  // Listing to index.
+  string listing_id = 2;
+  // Why reindexing is needed.
+  IndexReason reason = 3;
+  // Rebuild vectors as well as the lexical row.
+  bool reembed = 4;
+}
+
+// OrderBulkRequested is emitted on topic order.bulk.requested.
+message OrderBulkRequested {
+  // Envelope; aggregate_id is the bulk order id.
+  EventHeader header = 1;
+  // Order created.
+  string bulk_order_id = 2;
+  // Buyer.
+  string buyer_id = 3;
+  // Listing ordered.
+  string listing_id = 4;
+  // Units required.
+  int32 quantity = 5;
+  // Order value at creation.
+  common.v1.Money total_value = 6;
+  // Date the buyer needs delivery by.
+  google.protobuf.Timestamp required_by = 7;
+}
+
+// OrderLotOffered is emitted on topic order.lot.offered.
+message OrderLotOffered {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot offered.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan the lot went to.
+  string artisan_id = 4;
+  // Units offered.
+  int32 quantity = 5;
+  // Value of the lot to the artisan.
+  common.v1.Money lot_value = 6;
+  // Offer lapses after this instant.
+  google.protobuf.Timestamp responds_by = 7;
+}
+
+// OrderLotAccepted is emitted on topic order.lot.accepted.
+message OrderLotAccepted {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot accepted.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan accepting.
+  string artisan_id = 4;
+  // Units committed.
+  int32 quantity = 5;
+  // Ship date committed to.
+  google.protobuf.Timestamp promised_ship_date = 6;
+  // Capacity hold created for the lot.
+  string capacity_reservation_id = 7;
+}
+
+// OrderLotDeclined is emitted on topic order.lot.declined.
+message OrderLotDeclined {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot declined.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan declining.
+  string artisan_id = 4;
+  // Units now needing another home.
+  int32 quantity = 5;
+  // Reason the artisan gave.
+  string reason = 6;
+}
+
+// OrderLotExpired is emitted on topic order.lot.expired when an offer lapses unanswered.
+message OrderLotExpired {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot that lapsed.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan who did not answer.
+  string artisan_id = 4;
+  // Units now needing another home.
+  int32 quantity = 5;
+  // When the offer lapsed, UTC.
+  google.protobuf.Timestamp expired_at = 6;
+}
+
+// OrderLotProgressed is emitted on topic order.lot.progressed.
+message OrderLotProgressed {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot updated.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan reporting.
+  string artisan_id = 4;
+  // Whole-percentage progress, 0 to 100.
+  int32 progress_pct = 5;
+  // Lot state after the update.
+  fulfilment.v1.LotState state = 6;
+  // Work-in-progress photographs.
+  repeated common.v1.MediaRef media = 7;
+  // Free-text update from the artisan.
+  optional string note = 8;
+}
+
+// OrderLotCompleted is emitted on topic order.lot.completed once a lot passes QC.
+message OrderLotCompleted {
+  // Envelope; aggregate_id is the lot id.
+  EventHeader header = 1;
+  // Lot completed.
+  string lot_id = 2;
+  // Parent order.
+  string bulk_order_id = 3;
+  // Artisan who made it.
+  string artisan_id = 4;
+  // Units actually delivered.
+  int32 quantity_delivered = 5;
+  // Value payable for the lot.
+  common.v1.Money lot_value = 6;
+  // When the lot completed, UTC.
+  google.protobuf.Timestamp completed_at = 7;
+}
+
+// OrderFulfilmentCompleted is emitted on topic order.fulfilment.completed.
+message OrderFulfilmentCompleted {
+  // Envelope; aggregate_id is the bulk order id.
+  EventHeader header = 1;
+  // Order completed.
+  string bulk_order_id = 2;
+  // Buyer.
+  string buyer_id = 3;
+  // Lots that made it up.
+  repeated string lot_ids = 4;
+  // Units delivered across all lots.
+  int32 quantity_delivered = 5;
+  // Final order state, kept explicit so late consumers need no lookup.
+  fulfilment.v1.BulkOrderState final_state = 6;
+  // When the last lot completed, UTC.
+  google.protobuf.Timestamp completed_at = 7;
+}
+
+message OrderBulkCancelled {
+  // Envelope; aggregate_id is the bulk order id.
+  EventHeader header = 1;
+  // Order cancelled.
+  string bulk_order_id = 2;
+  // Buyer.
+  string buyer_id = 3;
+  // Free-text cancellation reason.
+  string reason = 4;
+  // Lots whose offer or acceptance was released as a result.
+  repeated string released_lot_ids = 5;
+  // When the cancellation took effect, UTC.
+  google.protobuf.Timestamp cancelled_at = 6;
+}
+
+// PaymentSplitRequested is emitted on topic payment.split.requested.
+message PaymentSplitRequested {
+  // Envelope; aggregate_id is the payment split id.
+  EventHeader header = 1;
+  // Split to execute.
+  string payment_split_id = 2;
+  // Order being paid out.
+  string bulk_order_id = 3;
+  // Total collected from the buyer.
+  common.v1.Money gross_total = 4;
+  // Total moving to payees.
+  common.v1.Money net_total = 5;
+  // Number of payees in the split.
+  int32 line_count = 6;
+}
+
+// PaymentSettled is emitted on topic payment.settled, once per payee line.
+message PaymentSettled {
+  // Envelope; aggregate_id is the payment split id.
+  EventHeader header = 1;
+  // Split the line belongs to.
+  string payment_split_id = 2;
+  // Order being paid out.
+  string bulk_order_id = 3;
+  // Payee.
+  string payee_id = 4;
+  // What kind of party the payee is.
+  fulfilment.v1.PayeeType payee_type = 5;
+  // Lot the money is for.
+  string lot_id = 6;
+  // Amount that actually moved.
+  common.v1.Money net_amount = 7;
+  // Payment-processor reference for reconciliation.
+  string settlement_ref = 8;
+  // When settlement confirmed, UTC.
+  google.protobuf.Timestamp settled_at = 9;
+}
+
+// EscrowMilestoneReleased is emitted on topic escrow.milestone.released.
+message EscrowMilestoneReleased {
+  // Envelope; aggregate_id is the milestone id.
+  EventHeader header = 1;
+  // Milestone released.
+  string milestone_id = 2;
+  // Order the escrow belongs to.
+  string bulk_order_id = 3;
+  // Lot whose progress released it; empty for order-level milestones.
+  optional string lot_id = 4;
+  // What triggered the release.
+  fulfilment.v1.MilestoneTrigger trigger = 5;
+  // Amount released.
+  common.v1.Money amount = 6;
+  // Payment-processor reference for the release.
+  string release_ref = 7;
+}
+
+// ArtisanRegistered is emitted on topic artisan.registered.
+message ArtisanRegistered {
+  // Envelope; aggregate_id is the artisan id.
+  EventHeader header = 1;
+  // Artisan registered.
+  string artisan_id = 2;
+  // Display name.
+  string display_name = 3;
+  // Crafts practised.
+  repeated string craft_ids = 4;
+  // Cluster joined; empty for independents.
+  optional string cluster_id = 5;
+  // Self-help group joined; empty when none.
+  optional string self_help_group_id = 6;
+  // Languages the artisan can be addressed in.
+  repeated common.v1.Language languages = 7;
+  // Where the artisan works.
+  common.v1.GeoRegion region = 8;
+}
+
+// ArtisanFollowed is emitted on topic artisan.followed when a buyer follows a maker.
+message ArtisanFollowed {
+  // Envelope; aggregate_id is the artisan id.
+  EventHeader header = 1;
+  // Artisan followed.
+  string artisan_id = 2;
+  // Subject id of the follower.
+  string follower_id = 3;
+  // Where the follow happened, e.g. "listing-page", "provenance-qr".
+  string source = 4;
+}
+
+// DisputeRaised is emitted on topic dispute.raised.
+message DisputeRaised {
+  // Envelope; aggregate_id is the dispute id.
+  EventHeader header = 1;
+  // Dispute opened.
+  string dispute_id = 2;
+  // Order in dispute.
+  string bulk_order_id = 3;
+  // Lot in dispute; empty for order-level disputes.
+  optional string lot_id = 4;
+  // Subject id of whoever raised it.
+  string raised_by = 5;
+  // What the dispute is about.
+  DisputeCategory category = 6;
+  // Complainant's account in their own words.
+  string description = 7;
+  // Supporting evidence.
+  repeated common.v1.MediaRef media = 8;
+}
+
+// DisputeResolved is emitted on topic dispute.resolved.
+message DisputeResolved {
+  // Envelope; aggregate_id is the dispute id.
+  EventHeader header = 1;
+  // Dispute closed.
+  string dispute_id = 2;
+  // Order that was in dispute.
+  string bulk_order_id = 3;
+  // How it was settled.
+  DisputeResolution resolution = 4;
+  // Subject id of the resolver.
+  string resolved_by = 5;
+  // Money moved as part of the settlement; zero when none was.
+  common.v1.Money adjustment = 6;
+  // Rationale recorded for audit.
+  string rationale = 7;
+}
+
+// ShipmentDispatched is emitted on topic shipment.dispatched.
+message ShipmentDispatched {
+  // Envelope; aggregate_id is the shipment id.
+  EventHeader header = 1;
+  // Shipment created.
+  string shipment_id = 2;
+  // Lot being shipped.
+  string lot_id = 3;
+  // Parent order.
+  string bulk_order_id = 4;
+  // Carrier name, e.g. "india-post", "delhivery".
+  string carrier = 5;
+  // Carrier tracking number.
+  string tracking_no = 6;
+  // Units in the shipment.
+  int32 quantity = 7;
+  // Carrier's estimated delivery date.
+  optional google.protobuf.Timestamp expected_delivery = 8;
+  // When the parcel left, UTC.
+  google.protobuf.Timestamp dispatched_at = 9;
+}
+
+// ShipmentDelivered is emitted on topic shipment.delivered.
+message ShipmentDelivered {
+  // Envelope; aggregate_id is the shipment id.
+  EventHeader header = 1;
+  // Shipment delivered.
+  string shipment_id = 2;
+  // Lot delivered.
+  string lot_id = 3;
+  // Parent order.
+  string bulk_order_id = 4;
+  // Name the carrier recorded at handover.
+  optional string received_by = 5;
+  // Proof-of-delivery imagery.
+  repeated common.v1.MediaRef media = 6;
+  // When the parcel arrived, UTC.
+  google.protobuf.Timestamp delivered_at = 7;
+}
+
+// IndexReason says why a listing needs reindexing.
+enum IndexReason {
+  // Unset.
+  INDEX_REASON_UNSPECIFIED = 0;
+  // Listing has just been published for the first time.
+  INDEX_REASON_PUBLISHED = 1;
+  // Copy, price or attributes changed.
+  INDEX_REASON_UPDATED = 2;
+  // Provenance was sealed, which changes the gi and provenance filters.
+  INDEX_REASON_PROVENANCE_SEALED = 3;
+  // Listing was suspended and must leave the index.
+  INDEX_REASON_SUSPENDED = 4;
+  // Operator-triggered rebuild, typically after a model upgrade.
+  INDEX_REASON_BACKFILL = 5;
+}
+
+// DisputeCategory is what a dispute is about.
+enum DisputeCategory {
+  // Unset.
+  DISPUTE_CATEGORY_UNSPECIFIED = 0;
+  // Delivered goods do not match the listing.
+  DISPUTE_CATEGORY_QUALITY = 1;
+  // Delivered late or not at all.
+  DISPUTE_CATEGORY_DELAY = 2;
+  // Wrong or short quantity.
+  DISPUTE_CATEGORY_QUANTITY = 3;
+  // Payment did not reach the payee.
+  DISPUTE_CATEGORY_PAYMENT = 4;
+  // Provenance or GI claim challenged.
+  DISPUTE_CATEGORY_AUTHENTICITY = 5;
+  // Damaged in transit.
+  DISPUTE_CATEGORY_DAMAGE = 6;
+}
+
+// DisputeResolution is how a dispute was settled.
+enum DisputeResolution {
+  // Unset.
+  DISPUTE_RESOLUTION_UNSPECIFIED = 0;
+  // Buyer refunded in full.
+  DISPUTE_RESOLUTION_REFUND_FULL = 1;
+  // Buyer refunded in part.
+  DISPUTE_RESOLUTION_REFUND_PARTIAL = 2;
+  // Goods to be remade at the artisan's cost.
+  DISPUTE_RESOLUTION_REWORK = 3;
+  // Reassigned to another artisan.
+  DISPUTE_RESOLUTION_REALLOCATE = 4;
+  // Complaint not upheld.
+  DISPUTE_RESOLUTION_REJECTED = 5;
+  // Parties agreed terms between themselves.
+  DISPUTE_RESOLUTION_MUTUAL_AGREEMENT = 6;
+}

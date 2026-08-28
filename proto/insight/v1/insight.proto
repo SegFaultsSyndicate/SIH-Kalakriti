@@ -1,0 +1,172 @@
+syntax = "proto3";
+
+package insight.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/proto/insight/v1;insightv1";
+
+service InsightService {
+  // Ministry dashboard aggregates (MINISTRY role only).
+  rpc GetArtisansByCategory(GetArtisansByCategoryRequest) returns (GetArtisansByCategoryResponse);
+  rpc GetListingsByCraftMonth(GetListingsByCraftMonthRequest) returns (GetListingsByCraftMonthResponse);
+  rpc GetEarningsByDistrict(GetEarningsByDistrictRequest) returns (GetEarningsByDistrictResponse);
+  rpc GetIncomeComparison(GetIncomeComparisonRequest) returns (GetIncomeComparisonResponse);
+  rpc GetDyingCrafts(GetDyingCraftsRequest) returns (GetDyingCraftsResponse);
+
+  // Manual refresh (MINISTRY role only).
+  rpc RefreshMaterializedViews(RefreshMaterializedViewsRequest) returns (RefreshMaterializedViewsResponse);
+
+  // Income statement generation and retrieval (artisan self-only).
+  rpc GenerateIncomeStatement(GenerateIncomeStatementRequest) returns (GenerateIncomeStatementResponse);
+  rpc GetIncomeStatements(GetIncomeStatementsRequest) returns (GetIncomeStatementsResponse);
+
+  // Public verification (no auth required).
+  rpc VerifyIncomeStatement(VerifyIncomeStatementRequest) returns (VerifyIncomeStatementResponse);
+}
+
+message GetArtisansByCategoryRequest {
+  optional string state_code = 1;
+  optional string district = 2;
+}
+
+message ArtisanCategoryRow {
+  string state_code = 1;
+  string district = 2;
+  string social_category = 3;
+  int32 artisan_count = 4;
+  int32 verified_count = 5;
+}
+
+message GetArtisansByCategoryResponse {
+  repeated ArtisanCategoryRow rows = 1;
+}
+
+message GetListingsByCraftMonthRequest {
+  optional google.protobuf.Timestamp from_date = 1;
+  optional google.protobuf.Timestamp to_date = 2;
+  optional string craft_id = 3;
+}
+
+message ListingCraftMonthRow {
+  string craft_id = 1;
+  string craft_name = 2;
+  google.protobuf.Timestamp month = 3;
+  int32 listing_count = 4;
+  int32 artisan_count = 5;
+}
+
+message GetListingsByCraftMonthResponse {
+  repeated ListingCraftMonthRow rows = 1;
+}
+
+message GetEarningsByDistrictRequest {
+  optional string state_code = 1;
+  optional string district = 2;
+}
+
+message EarningsDistrictRow {
+  string state_code = 1;
+  string district = 2;
+  common.v1.Money total_gmv = 3;
+  common.v1.Money total_net = 4;
+  int32 artisan_count = 5;
+  common.v1.Money avg_earnings = 6;
+}
+
+message GetEarningsByDistrictResponse {
+  repeated EarningsDistrictRow rows = 1;
+}
+
+message GetIncomeComparisonRequest {
+  optional string state_code = 1;
+  optional string district = 2;
+}
+
+message IncomeComparisonRow {
+  string state_code = 1;
+  string district = 2;
+  common.v1.Money median_before = 3;
+  common.v1.Money median_after = 4;
+  int32 artisan_count = 5;
+}
+
+message GetIncomeComparisonResponse {
+  repeated IncomeComparisonRow rows = 1;
+}
+
+message GetDyingCraftsRequest {
+  int32 limit = 1;
+}
+
+message DyingCraftRow {
+  string craft_id = 1;
+  string craft_name = 2;
+  float decline_rate = 3;
+  int32 peak_artisans = 4;
+  int32 current_artisans = 5;
+}
+
+message GetDyingCraftsResponse {
+  repeated DyingCraftRow rows = 1;
+}
+
+message RefreshMaterializedViewsRequest {}
+
+message RefreshMaterializedViewsResponse {
+  google.protobuf.Timestamp refreshed_at = 1;
+}
+
+message GenerateIncomeStatementRequest {
+  string artisan_id = 1;
+  google.protobuf.Timestamp period_start = 2;
+  google.protobuf.Timestamp period_end = 3;
+}
+
+message GenerateIncomeStatementResponse {
+  string statement_id = 1;
+  string short_code = 2;
+  string download_url = 3;
+  string verification_url = 4;
+}
+
+message GetIncomeStatementsRequest {
+  string artisan_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message IncomeStatementSummary {
+  string statement_id = 1;
+  google.protobuf.Timestamp period_start = 2;
+  google.protobuf.Timestamp period_end = 3;
+  int32 order_count = 4;
+  common.v1.Money gross_amount = 5;
+  common.v1.Money net_amount = 6;
+  common.v1.Money fee_amount = 7;
+  string short_code = 8;
+  string download_url = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message GetIncomeStatementsResponse {
+  repeated IncomeStatementSummary statements = 1;
+}
+
+message VerifyIncomeStatementRequest {
+  string short_code = 1;
+}
+
+message VerifyIncomeStatementResponse {
+  bool valid = 1;
+  string artisan_id = 2;
+  string artisan_name = 3;
+  google.protobuf.Timestamp period_start = 4;
+  google.protobuf.Timestamp period_end = 5;
+  int32 order_count = 6;
+  common.v1.Money gross_amount = 7;
+  common.v1.Money net_amount = 8;
+  common.v1.Money fee_amount = 9;
+  google.protobuf.Timestamp issued_at = 10;
+}

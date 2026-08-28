@@ -1,0 +1,11 @@
+go 1.23.0
+
+use (
+	./pkg
+	./services/bff
+	./services/channel-svc
+	./services/collab-svc
+	./services/core-svc
+	./services/insight-svc
+	./services/search-svc
+)

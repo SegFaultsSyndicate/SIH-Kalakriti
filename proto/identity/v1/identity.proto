@@ -1,0 +1,444 @@
+// proto/identity/v1/identity.proto
+syntax = "proto3";
+
+package identity.v1;
+
+import "catalog/v1/catalog.proto";
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/identity/v1;identityv1";
+
+// IdentityService owns who an artisan is, how they log in, and which collectives
+// they belong to. Artisan, Cluster and SelfHelpGroup entity messages are reused
+// from catalog.v1 rather than redefined, so a listing and a profile describe the
+// same maker with the same type.
+service IdentityService {
+  // RequestOtp sends a one-time code to a phone number, creating a challenge.
+  rpc RequestOtp(RequestOtpRequest) returns (RequestOtpResponse);
+  // VerifyOtp exchanges a challenge and code for an access/refresh token pair.
+  rpc VerifyOtp(VerifyOtpRequest) returns (VerifyOtpResponse);
+  // RefreshToken exchanges a valid refresh token for a fresh pair.
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  // RegisterArtisan creates an artisan profile for a verified phone number.
+  rpc RegisterArtisan(RegisterArtisanRequest) returns (RegisterArtisanResponse);
+  // GetArtisan fetches one artisan by id.
+  rpc GetArtisan(GetArtisanRequest) returns (GetArtisanResponse);
+  // GetArtisanByPhone fetches one artisan by E.164 phone number.
+  rpc GetArtisanByPhone(GetArtisanByPhoneRequest) returns (GetArtisanByPhoneResponse);
+  // UpdateArtisanProfile patches the mutable fields of an artisan profile.
+  rpc UpdateArtisanProfile(UpdateArtisanProfileRequest) returns (UpdateArtisanProfileResponse);
+  // ListArtisansByCluster pages the artisans whose primary cluster is the given one.
+  rpc ListArtisansByCluster(ListArtisansByClusterRequest) returns (ListArtisansByClusterResponse);
+  // CreateCluster registers a geographic artisan cluster.
+  rpc CreateCluster(CreateClusterRequest) returns (CreateClusterResponse);
+  // GetCluster fetches one cluster by id.
+  rpc GetCluster(GetClusterRequest) returns (GetClusterResponse);
+  // UpdateCluster patches the mutable fields of a cluster.
+  rpc UpdateCluster(UpdateClusterRequest) returns (UpdateClusterResponse);
+  // AddClusterMember adds an artisan to a cluster, or updates their role.
+  rpc AddClusterMember(AddClusterMemberRequest) returns (AddClusterMemberResponse);
+  // RemoveClusterMember removes an artisan from a cluster.
+  rpc RemoveClusterMember(RemoveClusterMemberRequest) returns (RemoveClusterMemberResponse);
+  // ListClusterMembers pages the members of a cluster.
+  rpc ListClusterMembers(ListClusterMembersRequest) returns (ListClusterMembersResponse);
+  // CreateSelfHelpGroup registers an SHG and its founding members' shares.
+  rpc CreateSelfHelpGroup(CreateSelfHelpGroupRequest) returns (CreateSelfHelpGroupResponse);
+  // GetSelfHelpGroup fetches one SHG by id.
+  rpc GetSelfHelpGroup(GetSelfHelpGroupRequest) returns (GetSelfHelpGroupResponse);
+  // SetSelfHelpGroupMembers replaces the member roster and share split wholesale.
+  rpc SetSelfHelpGroupMembers(SetSelfHelpGroupMembersRequest) returns (SetSelfHelpGroupMembersResponse);
+  // ListSelfHelpGroupMembers lists an SHG's members and their share percentages.
+  rpc ListSelfHelpGroupMembers(ListSelfHelpGroupMembersRequest) returns (ListSelfHelpGroupMembersResponse);
+}
+
+// Role is the authorisation role carried in an access token.
+enum Role {
+  // Unset; a token carrying this is rejected.
+  ROLE_UNSPECIFIED = 0;
+  // A maker: owns products, accepts order lots.
+  ROLE_ARTISAN = 1;
+  // A purchaser, individual or institutional.
+  ROLE_BUYER = 2;
+  // Field staff who verify artisans and administer clusters.
+  ROLE_CLUSTER_OFFICER = 3;
+  // Read-only oversight across every cluster.
+  ROLE_MINISTRY = 4;
+}
+
+// ClusterMemberRole is an artisan's standing inside a cluster.
+enum ClusterMemberRole {
+  // Unset; treated as MEMBER on write.
+  CLUSTER_MEMBER_ROLE_UNSPECIFIED = 0;
+  // Ordinary member.
+  CLUSTER_MEMBER_ROLE_MEMBER = 1;
+  // Coordinates the cluster and vouches for new members.
+  CLUSTER_MEMBER_ROLE_COORDINATOR = 2;
+  // Master craftsperson recognised for technique verification.
+  CLUSTER_MEMBER_ROLE_MASTER = 3;
+}
+
+// TokenPair is what a successful login or refresh returns.
+message TokenPair {
+  // Short-lived bearer token presented on every call.
+  string access_token = 1;
+  // Long-lived token used only against RefreshToken.
+  string refresh_token = 2;
+  // When access_token stops being accepted, UTC.
+  google.protobuf.Timestamp access_expires_at = 3;
+  // When refresh_token stops being accepted, UTC.
+  google.protobuf.Timestamp refresh_expires_at = 4;
+  // Always "Bearer"; present so clients need not hardcode it.
+  string token_type = 5;
+}
+
+// ClusterMember is one artisan's membership row in a cluster.
+message ClusterMember {
+  // Cluster the membership belongs to.
+  string cluster_id = 1;
+  // Artisan holding the membership.
+  string artisan_id = 2;
+  // Display name, denormalised so a roster needs one call.
+  string display_name = 3;
+  // Standing inside the cluster.
+  ClusterMemberRole role = 4;
+  // When the artisan joined, UTC.
+  google.protobuf.Timestamp joined_at = 5;
+}
+
+// SelfHelpGroupMember is one artisan's membership and payout share in an SHG.
+message SelfHelpGroupMember {
+  // Self-help group the membership belongs to.
+  string self_help_group_id = 1;
+  // Artisan holding the membership.
+  string artisan_id = 2;
+  // Display name, denormalised so a roster needs one call.
+  string display_name = 3;
+  // Whole-percent share of group earnings; the roster's shares sum to exactly 100.
+  int32 share_pct = 4;
+  // When the artisan joined, UTC.
+  google.protobuf.Timestamp joined_at = 5;
+}
+
+// RequestOtpRequest asks for a login code to be sent to a phone number.
+message RequestOtpRequest {
+  // E.164 phone number, e.g. "+919876543210".
+  string phone_e164 = 1;
+  // Language the code's message should be written in.
+  common.v1.Language language = 2;
+}
+
+// RequestOtpResponse acknowledges that a challenge exists.
+message RequestOtpResponse {
+  // Opaque challenge id echoed back to VerifyOtp.
+  string challenge_id = 1;
+  // When the challenge stops being redeemable, UTC.
+  google.protobuf.Timestamp expires_at = 2;
+  // True when the server is running a stub OTP provider and will accept the
+  // well-known development code. Never true outside local and demo builds.
+  bool dev_mode = 3;
+}
+
+// VerifyOtpRequest redeems a challenge for tokens.
+message VerifyOtpRequest {
+  // Challenge id from RequestOtp.
+  string challenge_id = 1;
+  // E.164 phone number the challenge was issued for.
+  string phone_e164 = 2;
+  // The code the artisan received.
+  string code = 3;
+}
+
+// VerifyOtpResponse carries the token pair and whether a profile exists yet.
+message VerifyOtpResponse {
+  // Issued tokens.
+  TokenPair tokens = 1;
+  // Artisan id when a profile already exists; empty when registration is still needed.
+  optional string artisan_id = 2;
+  // False when the caller must still call RegisterArtisan.
+  bool registered = 3;
+}
+
+// RefreshTokenRequest exchanges a refresh token for a fresh pair.
+message RefreshTokenRequest {
+  // The refresh token issued by VerifyOtp or a prior RefreshToken.
+  string refresh_token = 1;
+}
+
+// RefreshTokenResponse carries the newly issued pair.
+message RefreshTokenResponse {
+  // Issued tokens.
+  TokenPair tokens = 1;
+}
+
+// RegisterArtisanRequest creates a profile for an already-verified phone number.
+message RegisterArtisanRequest {
+  // Full name as the artisan gives it.
+  string display_name = 1;
+  // E.164 phone number; must match the verified phone in the caller's token.
+  string phone_e164 = 2;
+  // Crafts the artisan practises; at least one is required.
+  repeated string craft_ids = 3;
+  // Languages the artisan can be addressed in, most fluent first.
+  repeated common.v1.Language languages = 4;
+  // Where the artisan works; state_code is required.
+  common.v1.GeoRegion region = 5;
+  // Cluster to join at registration; empty for independents.
+  optional string cluster_id = 6;
+  // Pehchan artisan card number issued by the Ministry of Textiles.
+  optional string pehchan_id = 7;
+  // PM Vishwakarma beneficiary id.
+  optional string pm_vishwakarma_id = 8;
+  // Years practising the primary craft.
+  optional int32 years_of_experience = 9;
+  // Short bio in the artisan's own words.
+  optional string bio = 10;
+  // Caller-supplied key making a retried registration a no-op.
+  string idempotency_key = 11;
+}
+
+// RegisterArtisanResponse returns the created profile.
+message RegisterArtisanResponse {
+  // The registered artisan.
+  catalog.v1.Artisan artisan = 1;
+}
+
+// GetArtisanRequest fetches one artisan by id.
+message GetArtisanRequest {
+  // UUIDv7 of the artisan.
+  string artisan_id = 1;
+}
+
+// GetArtisanResponse returns the artisan.
+message GetArtisanResponse {
+  // The artisan.
+  catalog.v1.Artisan artisan = 1;
+}
+
+// GetArtisanByPhoneRequest fetches one artisan by phone number.
+message GetArtisanByPhoneRequest {
+  // E.164 phone number.
+  string phone_e164 = 1;
+}
+
+// GetArtisanByPhoneResponse returns the artisan.
+message GetArtisanByPhoneResponse {
+  // The artisan.
+  catalog.v1.Artisan artisan = 1;
+}
+
+// UpdateArtisanProfileRequest patches mutable profile fields; unset fields are left alone.
+message UpdateArtisanProfileRequest {
+  // UUIDv7 of the artisan to patch.
+  string artisan_id = 1;
+  // New display name.
+  optional string display_name = 2;
+  // New languages, replacing the stored list wholesale.
+  repeated common.v1.Language languages = 3;
+  // New region; unset leaves every geo field alone.
+  optional common.v1.GeoRegion region = 4;
+  // New primary cluster.
+  optional string cluster_id = 5;
+  // New years of experience.
+  optional int32 years_of_experience = 6;
+  // New bio.
+  optional string bio = 7;
+  // Media id of a new profile photograph.
+  optional string photo_media_id = 8;
+  // Caller-supplied key making a retried update a no-op.
+  string idempotency_key = 9;
+}
+
+// UpdateArtisanProfileResponse returns the patched profile.
+message UpdateArtisanProfileResponse {
+  // The updated artisan.
+  catalog.v1.Artisan artisan = 1;
+}
+
+// ListArtisansByClusterRequest pages a cluster's artisans.
+message ListArtisansByClusterRequest {
+  // UUIDv7 of the cluster.
+  string cluster_id = 1;
+  // Cursor and page size.
+  common.v1.PageRequest page = 2;
+}
+
+// ListArtisansByClusterResponse returns one page of artisans.
+message ListArtisansByClusterResponse {
+  // The artisans on this page.
+  repeated catalog.v1.Artisan artisans = 1;
+  // Cursor for the next page.
+  common.v1.PageResponse page = 2;
+}
+
+// CreateClusterRequest registers a cluster.
+message CreateClusterRequest {
+  // Cluster name, usually the village or block plus the craft.
+  string name = 1;
+  // Where the cluster sits; state_code is required.
+  common.v1.GeoRegion region = 2;
+  // Contact phone for the cluster coordinator.
+  optional string coordinator_phone_e164 = 3;
+  // Caller-supplied key making a retried create a no-op.
+  string idempotency_key = 4;
+}
+
+// CreateClusterResponse returns the created cluster.
+message CreateClusterResponse {
+  // The created cluster.
+  catalog.v1.Cluster cluster = 1;
+}
+
+// GetClusterRequest fetches one cluster by id.
+message GetClusterRequest {
+  // UUIDv7 of the cluster.
+  string cluster_id = 1;
+}
+
+// GetClusterResponse returns the cluster.
+message GetClusterResponse {
+  // The cluster.
+  catalog.v1.Cluster cluster = 1;
+}
+
+// UpdateClusterRequest patches mutable cluster fields; unset fields are left alone.
+message UpdateClusterRequest {
+  // UUIDv7 of the cluster to patch.
+  string cluster_id = 1;
+  // New name.
+  optional string name = 2;
+  // New region.
+  optional common.v1.GeoRegion region = 3;
+  // New coordinator phone.
+  optional string coordinator_phone_e164 = 4;
+  // Caller-supplied key making a retried update a no-op.
+  string idempotency_key = 5;
+}
+
+// UpdateClusterResponse returns the patched cluster.
+message UpdateClusterResponse {
+  // The updated cluster.
+  catalog.v1.Cluster cluster = 1;
+}
+
+// AddClusterMemberRequest adds an artisan to a cluster or changes their role.
+message AddClusterMemberRequest {
+  // UUIDv7 of the cluster.
+  string cluster_id = 1;
+  // UUIDv7 of the artisan.
+  string artisan_id = 2;
+  // Standing to grant; unspecified means MEMBER.
+  ClusterMemberRole role = 3;
+  // Caller-supplied key making a retried add a no-op.
+  string idempotency_key = 4;
+}
+
+// AddClusterMemberResponse returns the resulting membership.
+message AddClusterMemberResponse {
+  // The membership row.
+  ClusterMember member = 1;
+}
+
+// RemoveClusterMemberRequest removes an artisan from a cluster.
+message RemoveClusterMemberRequest {
+  // UUIDv7 of the cluster.
+  string cluster_id = 1;
+  // UUIDv7 of the artisan.
+  string artisan_id = 2;
+  // Caller-supplied key making a retried removal a no-op.
+  string idempotency_key = 3;
+}
+
+// RemoveClusterMemberResponse acknowledges the removal.
+message RemoveClusterMemberResponse {
+  // False when the artisan was not a member to begin with.
+  bool removed = 1;
+}
+
+// ListClusterMembersRequest pages a cluster's roster.
+message ListClusterMembersRequest {
+  // UUIDv7 of the cluster.
+  string cluster_id = 1;
+  // Cursor and page size.
+  common.v1.PageRequest page = 2;
+}
+
+// ListClusterMembersResponse returns one page of memberships.
+message ListClusterMembersResponse {
+  // The memberships on this page.
+  repeated ClusterMember members = 1;
+  // Cursor for the next page.
+  common.v1.PageResponse page = 2;
+}
+
+// CreateSelfHelpGroupRequest registers an SHG and its founding share split.
+message CreateSelfHelpGroupRequest {
+  // Registered name.
+  string name = 1;
+  // State registration number.
+  string registration_no = 2;
+  // Cluster the group operates in.
+  optional string cluster_id = 3;
+  // Artisan id of the group's authorised signatory.
+  optional string signatory_artisan_id = 4;
+  // Founding members and their shares; share_pct must sum to exactly 100.
+  repeated SelfHelpGroupMemberInput members = 5;
+  // Caller-supplied key making a retried create a no-op.
+  string idempotency_key = 6;
+}
+
+// SelfHelpGroupMemberInput is one member's share on write.
+message SelfHelpGroupMemberInput {
+  // UUIDv7 of the artisan.
+  string artisan_id = 1;
+  // Whole-percent share of group earnings.
+  int32 share_pct = 2;
+}
+
+// CreateSelfHelpGroupResponse returns the created group.
+message CreateSelfHelpGroupResponse {
+  // The created group.
+  catalog.v1.SelfHelpGroup self_help_group = 1;
+  // The founding roster.
+  repeated SelfHelpGroupMember members = 2;
+}
+
+// GetSelfHelpGroupRequest fetches one SHG by id.
+message GetSelfHelpGroupRequest {
+  // UUIDv7 of the group.
+  string self_help_group_id = 1;
+}
+
+// GetSelfHelpGroupResponse returns the group.
+message GetSelfHelpGroupResponse {
+  // The group.
+  catalog.v1.SelfHelpGroup self_help_group = 1;
+}
+
+// SetSelfHelpGroupMembersRequest replaces an SHG roster and its share split wholesale.
+message SetSelfHelpGroupMembersRequest {
+  // UUIDv7 of the group.
+  string self_help_group_id = 1;
+  // The complete new roster; share_pct must sum to exactly 100.
+  repeated SelfHelpGroupMemberInput members = 2;
+  // Caller-supplied key making a retried write a no-op.
+  string idempotency_key = 3;
+}
+
+// SetSelfHelpGroupMembersResponse returns the stored roster.
+message SetSelfHelpGroupMembersResponse {
+  // The new roster.
+  repeated SelfHelpGroupMember members = 1;
+}
+
+// ListSelfHelpGroupMembersRequest lists an SHG's roster.
+message ListSelfHelpGroupMembersRequest {
+  // UUIDv7 of the group.
+  string self_help_group_id = 1;
+}
+
+// ListSelfHelpGroupMembersResponse returns the roster.
+message ListSelfHelpGroupMembersResponse {
+  // The members and their shares.
+  repeated SelfHelpGroupMember members = 1;
+}

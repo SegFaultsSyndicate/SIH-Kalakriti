@@ -1,0 +1,31 @@
+# Dockerfile.insight-svc
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /build
+
+COPY go.work go.work.sum ./
+COPY pkg/go.mod pkg/go.sum ./pkg/
+COPY services/insight-svc/go.mod services/insight-svc/go.sum ./services/insight-svc/
+
+RUN go work sync
+RUN cd services/insight-svc && go mod download
+
+COPY pkg/ ./pkg/
+COPY services/insight-svc/ ./services/insight-svc/
+
+RUN cd services/insight-svc && CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /build/insight-svc ./cmd/insight-svc
+
+FROM alpine:3.18
+
+RUN apk --no-cache add ca-certificates && \
+    adduser -D -u 10001 appuser
+
+WORKDIR /app
+
+COPY --from=builder /build/insight-svc .
+
+USER appuser
+
+EXPOSE 8085 9094
+
+CMD ["./insight-svc"]

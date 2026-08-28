@@ -1,0 +1,70 @@
+// proto/pricing/v1/pricing.proto
+syntax = "proto3";
+
+package pricing.v1;
+
+import "common/v1/common.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/pricing/v1;pricingv1";
+
+// PricingService computes the Fair Price Advisory. It never sets or enforces a
+// listing's price — every response is advice the artisan is free to ignore.
+service PricingService {
+  // GetAdvisory returns the cost floor, market band and timing signal for one
+  // listing, plus an anomaly check when the artisan's chosen price is supplied.
+  rpc GetAdvisory(GetAdvisoryRequest) returns (GetAdvisoryResponse);
+}
+
+message GetAdvisoryRequest {
+  // Listing the advisory is for; its craft, size, materials, GI status and
+  // embedding drive the market band and timing signal.
+  string listing_id = 1;
+  // The artisan's own material cost input for this piece.
+  common.v1.Money material_cost = 2;
+  // Hours of skilled labour the artisan reports for this piece.
+  double hours = 3;
+  // The artisan's currently chosen price, if any. Supplying it runs the
+  // anomaly check; omitting it skips that check.
+  optional common.v1.Money chosen_price = 4;
+}
+
+// Driver is one number behind the advisory. name identifies which one;
+// value carries it as a client-formattable string; explanation_key is what the
+// client looks up to render the sentence in the artisan's language. The
+// service never returns English prose itself.
+message Driver {
+  string name = 1;
+  string value = 2;
+  string explanation_key = 3;
+}
+
+// AnomalyLevel flags where a chosen price sits relative to the floor and band.
+enum AnomalyLevel {
+  ANOMALY_LEVEL_UNSPECIFIED = 0;
+  // No anomaly: at or above the floor, at or below 1.5x the market p75.
+  ANOMALY_LEVEL_NONE = 1;
+  // Strictly below the cost floor.
+  ANOMALY_LEVEL_UNDERPRICED = 2;
+  // Strictly above 1.5x the market p75. Informational only, never blocking.
+  ANOMALY_LEVEL_OVERPRICED = 3;
+}
+
+message Anomaly {
+  AnomalyLevel level = 1;
+  // How much the chosen price is below the floor, in paise. Zero unless
+  // UNDERPRICED.
+  int64 shortfall_paise = 2;
+  string explanation_key = 3;
+}
+
+message GetAdvisoryResponse {
+  // The advisory never recommends below the cost floor: recommended_min is
+  // always >= the cost_floor driver's value.
+  common.v1.Money recommended_min = 1;
+  common.v1.Money recommended_max = 2;
+  // Every number behind the recommendation, cost floor through timing signal,
+  // as a named, keyed driver — see Driver.
+  repeated Driver drivers = 3;
+  // Set only when the request carried a chosen_price.
+  optional Anomaly anomaly = 4;
+}

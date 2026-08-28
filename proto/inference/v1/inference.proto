@@ -1,0 +1,292 @@
+// proto/inference/v1/inference.proto
+syntax = "proto3";
+
+package inference.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/inference/v1;inferencev1";
+
+// InferenceService is the Python ml-svc surface; every RPC is stateless and idempotent.
+service InferenceService {
+  // Denoise, colour-correct and optionally matte a raw artisan photograph.
+  rpc EnhanceImage(EnhanceImageRequest) returns (EnhanceImageResponse);
+  // Read craft attributes out of product imagery.
+  rpc ExtractAttributes(ExtractAttributesRequest) returns (ExtractAttributesResponse);
+  // Write buyer-facing copy from a verified attribute set.
+  rpc GenerateDescription(GenerateDescriptionRequest) returns (GenerateDescriptionResponse);
+  // Check whether the observed technique matches what the artisan claimed.
+  rpc VerifyTechnique(VerifyTechniqueRequest) returns (VerifyTechniqueResponse);
+  // Distinguish handloom from powerloom weave using FFT periodicity.
+  rpc DetectHandloom(DetectHandloomRequest) returns (DetectHandloomResponse);
+  // Produce vectors for text or imagery, for pgvector search.
+  rpc Embed(EmbedRequest) returns (EmbedResponse);
+  // Reorder candidate listings against a query using a cross-encoder.
+  rpc Rerank(RerankRequest) returns (RerankResponse);
+  // Transcribe an artisan voice note, streaming partial hypotheses as they settle.
+  rpc Transcribe(TranscribeRequest) returns (stream TranscribeResponse);
+}
+
+// ScoredString is one inferred value with the model's confidence in it.
+message ScoredString {
+  // The inferred value; empty when the model abstained.
+  string value = 1;
+  // Confidence in [0,1].
+  float confidence = 2;
+}
+
+// ScoredStrings is an inferred set of values sharing one confidence.
+message ScoredStrings {
+  // Inferred values, most confident first.
+  repeated string values = 1;
+  // Confidence in [0,1] for the set as a whole.
+  float confidence = 2;
+}
+
+// ScoredDimensions is an inferred physical size with the model's confidence in it.
+message ScoredDimensions {
+  // Inferred extent.
+  common.v1.Dimensions value = 1;
+  // Confidence in [0,1].
+  float confidence = 2;
+}
+
+// AttributeSet is everything the vision stack believes about one product, field by field.
+message AttributeSet {
+  // Craft ontology id the item was matched to.
+  ScoredString craft_id = 1;
+  // Primary material, e.g. "muga silk".
+  ScoredString material = 2;
+  // Primary technique, e.g. "bandhani".
+  ScoredString technique = 3;
+  // Dominant colours as ontology colour ids.
+  ScoredStrings colours = 4;
+  // Recognised motifs, e.g. "kalka", "jaapi".
+  ScoredStrings motifs = 5;
+  // Estimated physical size.
+  ScoredDimensions dimensions = 6;
+  // Model bundle that produced this set, for reproducibility.
+  string model_version = 7;
+  // When inference ran, UTC.
+  google.protobuf.Timestamp generated_at = 8;
+}
+
+// LoomVerdict is the handloom-versus-powerloom judgement for a woven item.
+message LoomVerdict {
+  // True when the weave is judged hand-made.
+  bool is_handloom = 1;
+  // Confidence in [0,1].
+  float confidence = 2;
+  // Ratio of the dominant FFT peak to the local mean; powerloom weave is far more periodic.
+  float fft_peak_ratio = 3;
+  // One-sentence rationale suitable for showing a buyer.
+  string explanation = 4;
+  // Model bundle that produced the verdict.
+  string model_version = 5;
+}
+
+// TechniqueVerdict compares the artisan's declared technique against what the model observed.
+message TechniqueVerdict {
+  // Technique the artisan declared.
+  string claimed = 1;
+  // Technique the model observed.
+  string observed = 2;
+  // True when claimed and observed agree closely enough to seal provenance.
+  bool matches = 3;
+  // Confidence in [0,1].
+  float confidence = 4;
+  // One-sentence rationale.
+  optional string explanation = 5;
+  // Model bundle that produced the verdict.
+  string model_version = 6;
+}
+
+// EnhanceImageRequest asks for a cleaned-up version of one uploaded photograph.
+message EnhanceImageRequest {
+  // Source object; must already exist in the media bucket.
+  common.v1.MediaRef source = 1;
+  // Strip the background to a neutral studio matte.
+  bool remove_background = 2;
+  // Correct white balance under mixed indoor light.
+  bool auto_white_balance = 3;
+  // Upscale factor; 1 leaves resolution untouched.
+  optional int32 upscale_factor = 4;
+}
+
+// EnhanceImageResponse returns the enhanced object and what was done to it.
+message EnhanceImageResponse {
+  // Enhanced object, written back to the media bucket.
+  common.v1.MediaRef enhanced = 1;
+  // Operations actually applied, in order.
+  repeated string operations_applied = 2;
+  // Model bundle that produced the output.
+  string model_version = 3;
+}
+
+// ExtractAttributesRequest asks the vision stack to describe a product from its imagery.
+message ExtractAttributesRequest {
+  // One or more views of the same product.
+  repeated common.v1.MediaRef media = 1;
+  // Craft the artisan declared, used as a prior; empty means "no prior".
+  optional string declared_craft_id = 2;
+  // Free-text hint from the artisan, in any supported language.
+  optional string artisan_hint = 3;
+}
+
+// ExtractAttributesResponse returns the inferred attribute set.
+message ExtractAttributesResponse {
+  // Inferred attributes with per-field confidence.
+  AttributeSet attributes = 1;
+}
+
+// GenerateDescriptionRequest asks for buyer-facing copy in one language.
+message GenerateDescriptionRequest {
+  // Verified attributes to write from; the model must not invent beyond these.
+  AttributeSet attributes = 1;
+  // Craft ontology id, for craft-specific vocabulary.
+  string craft_id = 2;
+  // Target language.
+  common.v1.Language language = 3;
+  // Artisan's own words, to preserve voice.
+  optional string artisan_note = 4;
+  // Soft cap on description length in characters.
+  optional int32 max_chars = 5;
+}
+
+// GenerateDescriptionResponse returns copy ready for artisan approval.
+message GenerateDescriptionResponse {
+  // Listing title.
+  string title = 1;
+  // Long-form description.
+  string description = 2;
+  // Short bullet highlights.
+  repeated string highlights = 3;
+  // Search keywords, not shown to buyers.
+  repeated string keywords = 4;
+  // Language actually produced; may differ from the request when a model is unavailable.
+  common.v1.Language language = 5;
+  // Model bundle that produced the copy.
+  string model_version = 6;
+  // Attribute keys the copy actually draws on, so a reviewer can trace every
+  // claim back to something the artisan confirmed.
+  repeated string attribute_keys_used = 7;
+}
+
+// VerifyTechniqueRequest asks whether imagery supports the artisan's technique claim.
+message VerifyTechniqueRequest {
+  // Close-up imagery of the work surface.
+  repeated common.v1.MediaRef media = 1;
+  // Technique the artisan declared.
+  string claimed_technique = 2;
+  // Craft ontology id, to narrow the classifier head.
+  string craft_id = 3;
+}
+
+// VerifyTechniqueResponse returns the technique judgement.
+message VerifyTechniqueResponse {
+  // The judgement.
+  TechniqueVerdict verdict = 1;
+}
+
+// DetectHandloomRequest asks for a weave-periodicity analysis of a textile close-up.
+message DetectHandloomRequest {
+  // Macro shot of the weave; a full-garment photo will not do.
+  common.v1.MediaRef media = 1;
+  // Threads per inch declared by the artisan, used to calibrate the expected peak.
+  optional int32 declared_thread_count = 2;
+}
+
+// DetectHandloomResponse returns the loom judgement.
+message DetectHandloomResponse {
+  // The judgement.
+  LoomVerdict verdict = 1;
+}
+
+// Embedding is one dense vector plus the model that produced it.
+message Embedding {
+  // Vector components; length must equal dimensions.
+  repeated float values = 1;
+  // Vector width, mirrored so consumers can validate without counting.
+  int32 dimensions = 2;
+  // Model bundle that produced the vector; vectors from different bundles are not comparable.
+  string model_version = 3;
+}
+
+// EmbedRequest asks for vectors over text, imagery, or both.
+message EmbedRequest {
+  // Texts to embed, in request order.
+  repeated string texts = 1;
+  // Media to embed, in request order, appended after the texts in the response.
+  repeated common.v1.MediaRef media = 2;
+  // Language of the texts, when known.
+  common.v1.Language language = 3;
+}
+
+// EmbedResponse returns one vector per input, texts first then media.
+message EmbedResponse {
+  // Vectors in the same order as the request inputs.
+  repeated Embedding embeddings = 1;
+}
+
+// RerankCandidate is one retrieval candidate offered to the cross-encoder.
+message RerankCandidate {
+  // Opaque id echoed back in the result.
+  string id = 1;
+  // Text the reranker should score, typically title plus description.
+  string text = 2;
+}
+
+// RerankRequest asks the cross-encoder to reorder retrieval candidates.
+message RerankRequest {
+  // Buyer query.
+  string query = 1;
+  // Query language.
+  common.v1.Language language = 2;
+  // Candidates from the first-stage retriever.
+  repeated RerankCandidate candidates = 3;
+  // Keep only this many results; zero returns all candidates.
+  optional int32 top_k = 4;
+}
+
+// RerankResult is one candidate with its cross-encoder score.
+message RerankResult {
+  // Candidate id from the request.
+  string id = 1;
+  // Relevance score; comparable only within one response.
+  float score = 2;
+}
+
+// RerankResponse returns candidates sorted by descending score.
+message RerankResponse {
+  // Reordered candidates, best first.
+  repeated RerankResult results = 1;
+  // Model bundle that produced the scores.
+  string model_version = 2;
+}
+
+// TranscribeRequest asks for speech-to-text over an already-uploaded voice note.
+message TranscribeRequest {
+  // Audio object in the media bucket.
+  common.v1.MediaRef audio = 1;
+  // Expected language; unspecified asks the model to detect it.
+  common.v1.Language language = 2;
+  // Emit interim hypotheses as well as settled ones.
+  bool interim_results = 3;
+}
+
+// TranscribeResponse is one chunk of the streamed transcript.
+message TranscribeResponse {
+  // Transcript text for this chunk.
+  string text = 1;
+  // False while the chunk may still be revised.
+  bool is_final = 2;
+  // Offset of this chunk from the start of the audio.
+  int32 start_ms = 3;
+  // End offset of this chunk from the start of the audio.
+  int32 end_ms = 4;
+  // Confidence in [0,1] for a final chunk; meaningless for interim chunks.
+  float confidence = 5;
+  // Language the model settled on.
+  common.v1.Language language = 6;
+}

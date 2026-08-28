@@ -1,0 +1,108 @@
+# sqlc.yaml
+# One gen block per service; each service compiles only the queries it owns.
+# `schema` globs the numbered migrations so migrations/queries/ is not read as schema.
+version: "2"
+sql:
+  - name: core
+    engine: postgresql
+    schema: "migrations/0*.sql"
+    queries:
+      - "migrations/queries/artisan.sql"
+      - "migrations/queries/identity.sql"
+      - "migrations/queries/ontology.sql"
+      - "migrations/queries/listing.sql"
+      - "migrations/queries/media.sql"
+      - "migrations/queries/pricing.sql"
+      - "migrations/queries/outbox.sql"
+      - "migrations/queries/idempotency.sql"
+    gen:
+      go:
+        package: "db"
+        out: "services/core-svc/internal/core/repo/db"
+        sql_package: "pgx/v5"
+        output_files_suffix: ".gen"
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        emit_pointers_for_null_types: true
+        overrides: &go_overrides
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true
+          - db_type: "vector"
+            go_type: "github.com/pgvector/pgvector-go.Vector"
+          - db_type: "vector"
+            nullable: true
+            go_type:
+              import: "github.com/pgvector/pgvector-go"
+              package: "pgvector"
+              type: "Vector"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+
+  - name: search
+    engine: postgresql
+    schema: "migrations/0*.sql"
+    queries:
+      - "migrations/queries/search.sql"
+    gen:
+      go:
+        package: "db"
+        out: "services/search-svc/internal/search/repo/db"
+        sql_package: "pgx/v5"
+        output_files_suffix: ".gen"
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        emit_pointers_for_null_types: true
+        overrides: *go_overrides
+
+  - name: collab
+    engine: postgresql
+    schema: "migrations/0*.sql"
+    queries:
+      - "migrations/queries/orders.sql"
+      - "migrations/queries/fulfilment_saga.sql"
+      - "migrations/queries/payments.sql"
+      - "migrations/queries/outbox.sql"
+      - "migrations/queries/idempotency.sql"
+    gen:
+      go:
+        package: "db"
+        out: "services/collab-svc/internal/collab/repo/db"
+        sql_package: "pgx/v5"
+        output_files_suffix: ".gen"
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        emit_pointers_for_null_types: true
+        overrides: *go_overrides
+
+  - name: insight
+    engine: postgresql
+    schema: "migrations/0*.sql"
+    queries:
+      - "migrations/queries/insight.sql"
+    gen:
+      go:
+        package: "db"
+        out: "services/insight-svc/internal/insight/repo/db"
+        sql_package: "pgx/v5"
+        output_files_suffix: ".gen"
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        emit_pointers_for_null_types: true
+        overrides: *go_overrides

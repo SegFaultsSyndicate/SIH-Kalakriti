@@ -1,0 +1,83 @@
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+deploy/k8s/secret.yaml
+*.local
+*.secret
+*.secret.yaml
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Go build output and test artifacts
+bin/
+**/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# Generated protobuf and sqlc output
+/pkg/pb/*
+!/pkg/pb/doc.go
+/services/ml-svc/pb/*
+!/services/ml-svc/pb/__init__.py
+/services/core-svc/internal/core/repo/db/
+/services/search-svc/internal/search/repo/db/
+/services/collab-svc/internal/collab/repo/db/
+/services/insight-svc/internal/insight/repo/db/
+
+# Python caches, environments, and packaging output
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+dist/
+build/
+htmlcov/
+.coverage
+
+# JavaScript tooling and load-test output
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Logs, temporary files, and generated demo artifacts
+*.log
+*.tmp
+*.temp
+*.bak
+qr-sheet.pdf
+qr_*.png
+
+# Local database and export files
+*.db
+*.sqlite
+*.sqlite3
+exports/

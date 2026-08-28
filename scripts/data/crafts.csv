@@ -1,0 +1,15 @@
+code,display_name,parent_code,gi_registration_no,techniques,materials
+block-printing,Block Printing,,,hand-block-printing|resist-dyeing,cotton|natural-dye
+ajrakh-block-printing,Ajrakh Block Printing,block-printing,,hand-block-printing|resist-dyeing|indigo-dyeing,cotton|natural-indigo|madder
+bagru-block-printing,Bagru Block Printing,block-printing,,hand-block-printing|dabu-mud-resist,cotton|natural-dye
+handloom-weaving,Handloom Weaving,,,pit-loom-weaving|throw-shuttle-weaving,silk|cotton
+assam-muga-weaving,Assam Muga Weaving,handloom-weaving,,pit-loom-weaving|extra-weft-weaving,muga-silk
+banarasi-brocade-weaving,Banarasi Brocade Weaving,handloom-weaving,,jacquard-weaving|zari-brocade,silk|zari
+pashmina-weaving,Kashmir Pashmina Weaving,handloom-weaving,,hand-spinning|twill-weaving,pashmina-wool
+pottery,Pottery,,,wheel-throwing|glazing,clay
+blue-pottery,Jaipur Blue Pottery,pottery,,quartz-body-moulding|cobalt-glazing,quartz|fullers-earth|cobalt-oxide
+bandhani,Bandhani,,,tie-resist-dyeing,cotton|silk|natural-dye
+madhubani-painting,Madhubani Painting,,,line-drawing|natural-pigment-painting,handmade-paper|natural-pigment
+pattachitra,Pattachitra,,,cloth-canvas-preparation|natural-pigment-painting,tussar-silk|natural-pigment
+channapatna-toys,Channapatna Toys,,,wood-lathe-turning|lac-turnery,ivory-wood|lac|vegetable-dye
+dhokra-casting,Dhokra Metal Casting,,,lost-wax-casting,brass|beeswax

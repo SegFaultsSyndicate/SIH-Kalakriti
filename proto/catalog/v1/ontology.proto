@@ -1,0 +1,121 @@
+// proto/catalog/v1/ontology.proto
+syntax = "proto3";
+
+package catalog.v1;
+
+import "catalog/v1/catalog.proto";
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+
+// OntologyService resolves free text to crafts and administers the cached index.
+service OntologyService {
+  // Link craft mentions in a fragment of text, reporting the span of each mention.
+  rpc ResolveCraftAlias(ResolveCraftAliasRequest) returns (ResolveCraftAliasResponse);
+  // Fetch one craft by id or by slug.
+  rpc GetCraft(GetCraftRequest) returns (GetCraftResponse);
+  // Fetch the whole ontology; it is a few hundred rows and is served from memory.
+  rpc ListCrafts(ListCraftsRequest) returns (ListCraftsResponse);
+  // Rebuild the alias index from Postgres across the fleet, without a restart.
+  rpc RefreshCraftIndex(RefreshCraftIndexRequest) returns (RefreshCraftIndexResponse);
+}
+
+// MatchSource says how a craft was arrived at from the input text.
+enum MatchSource {
+  // Unset.
+  MATCH_SOURCE_UNSPECIFIED = 0;
+  // The normalised input matched a stored alias verbatim.
+  MATCH_SOURCE_EXACT = 1;
+  // A transliteration of the input matched a stored alias.
+  MATCH_SOURCE_TRANSLITERATED = 2;
+}
+
+// CraftMatch is one craft found inside a fragment of text.
+message CraftMatch {
+  // Craft the mention resolves to.
+  string craft_id = 1;
+  // Craft slug, denormalised so the caller needs no second lookup.
+  string craft_code = 2;
+  // Canonical English name of the craft.
+  string display_name = 3;
+  // Stored spelling that matched.
+  string alias = 4;
+  // Exact substring of the input, before normalisation.
+  string matched_text = 5;
+  // Byte offset of the mention in the request text.
+  int32 start_offset = 6;
+  // Byte offset one past the end of the mention.
+  int32 end_offset = 7;
+  // ISO 15924 script code of the matched alias.
+  string script = 8;
+  // Language the matched alias belongs to.
+  common.v1.Language language = 9;
+  // Confidence in [0,1]; an exact alias hit scores 1.
+  float score = 10;
+  // How the match was arrived at.
+  MatchSource source = 11;
+}
+
+// ResolveCraftAliasRequest asks which crafts a fragment of text mentions.
+message ResolveCraftAliasRequest {
+  // Text to scan: a search query, a voice transcript, an artisan's working title.
+  string text = 1;
+  // Caller's language, which biases which alias is preferred; it never restricts matching.
+  common.v1.Language language = 2;
+}
+
+// ResolveCraftAliasResponse returns the mentions found, in input order.
+message ResolveCraftAliasResponse {
+  // Non-overlapping matches, longest alias first, ordered by position.
+  repeated CraftMatch matches = 1;
+  // Content hash of the index that produced these matches.
+  string index_version = 2;
+}
+
+// GetCraftRequest fetches one craft. Exactly one of the fields is set.
+message GetCraftRequest {
+  // Craft id.
+  string craft_id = 1;
+  // Craft slug, e.g. "ajrakh-block-printing".
+  string code = 2;
+}
+
+// GetCraftResponse returns one craft.
+message GetCraftResponse {
+  // The craft.
+  Craft craft = 1;
+}
+
+// ListCraftsRequest asks for the whole ontology.
+message ListCraftsRequest {}
+
+// ListCraftsResponse returns every craft, ordered by slug.
+message ListCraftsResponse {
+  // The ontology.
+  repeated Craft crafts = 1;
+}
+
+// CraftIndexStats describes a loaded alias index.
+message CraftIndexStats {
+  // Content hash; two replicas reporting the same version hold the same graph.
+  string version = 1;
+  // Crafts indexed.
+  int32 craft_count = 2;
+  // Alias spellings indexed, including slugs and display names.
+  int32 alias_count = 3;
+  // When the index was built, UTC.
+  google.protobuf.Timestamp built_at = 4;
+}
+
+// RefreshCraftIndexRequest rebuilds the index from the database.
+message RefreshCraftIndexRequest {
+  // Caller-generated key.
+  string idempotency_key = 1;
+}
+
+// RefreshCraftIndexResponse returns what the rebuilt index holds.
+message RefreshCraftIndexResponse {
+  // Stats for the index this replica now serves.
+  CraftIndexStats stats = 1;
+}

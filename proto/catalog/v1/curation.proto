@@ -1,0 +1,152 @@
+// proto/catalog/v1/curation.proto
+syntax = "proto3";
+
+package catalog.v1;
+
+import "catalog/v1/catalog.proto";
+import "common/v1/common.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/catalog/v1;catalogv1";
+
+// CurationService carries the writes that shape a listing after it exists:
+// attributes, copy, media, and the operator's suspend and reinstate.
+service CurationService {
+  // Store typed attribute rows; an artisan value is never overwritten by the model.
+  rpc UpsertListingAttributes(UpsertListingAttributesRequest) returns (UpsertListingAttributesResponse);
+  // Store buyer-facing copy for one language.
+  rpc UpsertListingTranslation(UpsertListingTranslationRequest) returns (UpsertListingTranslationResponse);
+  // Replace a listing's media set, ordered, with its designated image and video.
+  rpc AttachListingMedia(AttachListingMediaRequest) returns (AttachListingMediaResponse);
+  // Withdraw a published listing, recoverably.
+  rpc SuspendListing(SuspendListingRequest) returns (SuspendListingResponse);
+  // Return a suspended listing to PUBLISHED and re-announce it to search.
+  rpc ReinstateListing(ReinstateListingRequest) returns (ReinstateListingResponse);
+}
+
+// AttributeSource says who supplied an attribute value.
+enum AttributeSource {
+  // Unset.
+  ATTRIBUTE_SOURCE_UNSPECIFIED = 0;
+  // The vision or language stack's proposal.
+  ATTRIBUTE_SOURCE_MODEL = 1;
+  // The maker's own answer, which outranks the model's.
+  ATTRIBUTE_SOURCE_ARTISAN = 2;
+  // A human curator's correction, which also outranks the model's.
+  ATTRIBUTE_SOURCE_CURATOR = 3;
+}
+
+// ListingMediaRole is the part a media asset plays on a listing.
+enum ListingMediaRole {
+  // Unset; treated as GALLERY.
+  LISTING_MEDIA_ROLE_UNSPECIFIED = 0;
+  // An ordinary gallery asset.
+  LISTING_MEDIA_ROLE_GALLERY = 1;
+  // The one image used as the listing's thumbnail.
+  LISTING_MEDIA_ROLE_PRIMARY_IMAGE = 2;
+  // The one clip showing the craft being practised.
+  LISTING_MEDIA_ROLE_PROCESS_VIDEO = 3;
+}
+
+// ListingAttribute is one typed fact about a listing.
+message ListingAttribute {
+  // Attribute name, e.g. "material".
+  string name = 1;
+  // Attribute value, e.g. "ajrakh cotton".
+  string value = 2;
+  // Confidence in [0,1]; an artisan's answer is 1.
+  float confidence = 3;
+  // Who asserted this value.
+  AttributeSource source = 4;
+}
+
+// ListingMediaItem is one media asset attached to a listing, in display order.
+message ListingMediaItem {
+  // Media row to attach.
+  string media_id = 1;
+  // Display position; unique within the listing.
+  int32 ordinal = 2;
+  // Part this asset plays.
+  ListingMediaRole role = 3;
+  // Kind of the underlying asset, returned on reads.
+  common.v1.MediaKind kind = 4;
+}
+
+// UpsertListingAttributesRequest writes attribute rows from one source.
+message UpsertListingAttributesRequest {
+  // Listing to write to.
+  string listing_id = 1;
+  // Attributes to store; each row's own source field is ignored in favour of the request's.
+  repeated ListingAttribute attributes = 2;
+  // Who is asserting these values.
+  AttributeSource source = 3;
+  // Caller-generated key.
+  string idempotency_key = 4;
+}
+
+// UpsertListingAttributesResponse returns the listing's attributes after the write.
+message UpsertListingAttributesResponse {
+  // Every attribute now stored, including values this call left untouched.
+  repeated ListingAttribute attributes = 1;
+}
+
+// UpsertListingTranslationRequest stores copy for one language.
+message UpsertListingTranslationRequest {
+  // Listing to write to.
+  string listing_id = 1;
+  // Copy to store.
+  ListingTranslation translation = 2;
+  // Caller-generated key.
+  string idempotency_key = 3;
+}
+
+// UpsertListingTranslationResponse returns the stored copy.
+message UpsertListingTranslationResponse {
+  // The stored translation.
+  ListingTranslation translation = 1;
+}
+
+// AttachListingMediaRequest replaces a listing's media set wholesale.
+message AttachListingMediaRequest {
+  // Listing to attach to.
+  string listing_id = 1;
+  // The complete set; anything absent is detached.
+  repeated ListingMediaItem items = 2;
+  // Caller-generated key.
+  string idempotency_key = 3;
+}
+
+// AttachListingMediaResponse returns the stored set in display order.
+message AttachListingMediaResponse {
+  // The listing's media, ordered.
+  repeated ListingMediaItem items = 1;
+}
+
+// SuspendListingRequest withdraws a published listing.
+message SuspendListingRequest {
+  // Listing to suspend; must be PUBLISHED.
+  string listing_id = 1;
+  // Why, shown to the artisan and recorded on the row.
+  string reason = 2;
+  // Caller-generated key.
+  string idempotency_key = 3;
+}
+
+// SuspendListingResponse returns the suspended listing.
+message SuspendListingResponse {
+  // The listing, now SUSPENDED.
+  Listing listing = 1;
+}
+
+// ReinstateListingRequest returns a suspended listing to PUBLISHED.
+message ReinstateListingRequest {
+  // Listing to reinstate; must be SUSPENDED.
+  string listing_id = 1;
+  // Caller-generated key.
+  string idempotency_key = 2;
+}
+
+// ReinstateListingResponse returns the republished listing.
+message ReinstateListingResponse {
+  // The listing, now PUBLISHED.
+  Listing listing = 1;
+}

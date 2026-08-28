@@ -1,0 +1,182 @@
+// proto/common/v1/common.proto
+syntax = "proto3";
+
+package common.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/common/v1;commonv1";
+
+// Money is a fixed-point currency amount; never use a float for money anywhere.
+message Money {
+  // Amount in the currency's minor unit. INR is the only supported currency, so this is paise.
+  int64 amount_paise = 1;
+  // ISO 4217 alphabetic code. Always "INR" today; the field exists so the wire format survives a second currency.
+  string currency_code = 2;
+}
+
+// PageRequest asks for one page of a collection using an opaque forward-only cursor.
+message PageRequest {
+  // Maximum items to return. Servers clamp this to their own ceiling.
+  int32 page_size = 1;
+  // Cursor returned by the previous PageResponse; empty means "from the start".
+  string page_token = 2;
+}
+
+// PageResponse carries the cursor for the next page of a collection.
+message PageResponse {
+  // Empty when the caller has reached the end of the collection.
+  string next_page_token = 1;
+  // Approximate total; omitted whenever counting would cost a full scan.
+  optional int32 total_size = 2;
+}
+
+// AuditMeta is the creation and mutation trail attached to every persisted aggregate.
+message AuditMeta {
+  // When the row was first written, UTC.
+  google.protobuf.Timestamp created_at = 1;
+  // When the row was last mutated, UTC.
+  google.protobuf.Timestamp updated_at = 2;
+  // Subject id of the actor that created the row; "system" for pipeline writes.
+  string created_by = 3;
+}
+
+// Dimensions describes physical extent; all fields optional so "unknown" differs from zero.
+message Dimensions {
+  // Longest edge in millimetres.
+  optional int32 length_mm = 1;
+  // Second edge in millimetres.
+  optional int32 width_mm = 2;
+  // Third edge in millimetres.
+  optional int32 height_mm = 3;
+  // Net weight in grams.
+  optional int32 weight_g = 4;
+}
+
+// GeoRegion locates an artisan, cluster or craft to the Indian administrative hierarchy.
+message GeoRegion {
+  // ISO 3166-2:IN subdivision code, e.g. "IN-AS".
+  string state_code = 1;
+  // District name as printed by the census; free text because spellings vary.
+  optional string district = 2;
+  // Block or taluka.
+  optional string block = 3;
+  // Village or town.
+  optional string village = 4;
+  // Six-digit postal code.
+  optional string pincode = 5;
+}
+
+// MediaRef points at an object in the media bucket; bytes never travel inside a message.
+message MediaRef {
+  // UUIDv7 of the media row.
+  string id = 1;
+  // Bucket holding the object.
+  string bucket = 2;
+  // Object key within the bucket.
+  string object_key = 3;
+  // What kind of asset this is.
+  MediaKind kind = 4;
+  // IANA media type, e.g. "image/jpeg".
+  string mime_type = 5;
+  // Object size in bytes.
+  int64 size_bytes = 6;
+  // Lowercase hex SHA-256 of the object; the provenance chain hashes this, not the URL.
+  string sha256_hex = 7;
+  // Pixel width for image and video assets.
+  optional int32 width_px = 8;
+  // Pixel height for image and video assets.
+  optional int32 height_px = 9;
+  // Duration for audio and video assets.
+  optional int32 duration_ms = 10;
+  // When the object was accepted into the bucket, UTC.
+  google.protobuf.Timestamp uploaded_at = 11;
+}
+
+// FieldViolation is one failed constraint on one request field.
+message FieldViolation {
+  // Dotted path to the offending field, e.g. "listing.price.amount_paise".
+  string field = 1;
+  // Machine-readable constraint name, e.g. "required", "gte", "oneof".
+  string constraint = 2;
+  // Human-readable explanation, already localised where possible.
+  string message = 3;
+}
+
+// ErrorDetail is the structured payload attached to INVALID_ARGUMENT and FAILED_PRECONDITION.
+message ErrorDetail {
+  // Stable application error code, e.g. "listing_not_editable".
+  string code = 1;
+  // Summary safe to show an end user.
+  string message = 2;
+  // Per-field failures; empty for errors that are not validation failures.
+  repeated FieldViolation violations = 3;
+  // Request correlation id, echoed from the inbound metadata.
+  optional string correlation_id = 4;
+}
+
+// MediaKind is the coarse asset type of a MediaRef.
+enum MediaKind {
+  // Unset.
+  MEDIA_KIND_UNSPECIFIED = 0;
+  // Still photograph.
+  MEDIA_KIND_IMAGE = 1;
+  // Moving footage, typically a craft-process clip.
+  MEDIA_KIND_VIDEO = 2;
+  // Audio, typically an artisan voice note.
+  MEDIA_KIND_AUDIO = 3;
+  // PDF or scanned certificate.
+  MEDIA_KIND_DOCUMENT = 4;
+}
+
+// Language covers the 22 languages of the Eighth Schedule plus English, in BCP-47 terms.
+enum Language {
+  // Undetermined; equivalent to BCP-47 "und". Detect before writing anything user-visible.
+  LANGUAGE_UNSPECIFIED = 0;
+  // as
+  LANGUAGE_ASSAMESE = 1;
+  // bn
+  LANGUAGE_BENGALI = 2;
+  // brx
+  LANGUAGE_BODO = 3;
+  // doi
+  LANGUAGE_DOGRI = 4;
+  // gu
+  LANGUAGE_GUJARATI = 5;
+  // hi
+  LANGUAGE_HINDI = 6;
+  // kn
+  LANGUAGE_KANNADA = 7;
+  // ks
+  LANGUAGE_KASHMIRI = 8;
+  // kok
+  LANGUAGE_KONKANI = 9;
+  // mai
+  LANGUAGE_MAITHILI = 10;
+  // ml
+  LANGUAGE_MALAYALAM = 11;
+  // mni
+  LANGUAGE_MANIPURI = 12;
+  // mr
+  LANGUAGE_MARATHI = 13;
+  // ne
+  LANGUAGE_NEPALI = 14;
+  // or
+  LANGUAGE_ODIA = 15;
+  // pa
+  LANGUAGE_PUNJABI = 16;
+  // sa
+  LANGUAGE_SANSKRIT = 17;
+  // sat
+  LANGUAGE_SANTALI = 18;
+  // sd
+  LANGUAGE_SINDHI = 19;
+  // ta
+  LANGUAGE_TAMIL = 20;
+  // te
+  LANGUAGE_TELUGU = 21;
+  // ur
+  LANGUAGE_URDU = 22;
+  // en — not in the Eighth Schedule, but the platform's buyer-facing default.
+  LANGUAGE_ENGLISH = 23;
+}

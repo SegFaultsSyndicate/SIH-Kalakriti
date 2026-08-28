@@ -1,0 +1,43 @@
+[project]
+name = "ml-svc"
+version = "0.1.0"
+description = "Kalakriti ML gRPC service: enhancement, attribute extraction, copy, embeddings, provenance checks"
+requires-python = "==3.11.*"
+
+# Mock mode is the default, so the default install is small enough to start in a
+# second and to run in CI. Real weights come from the `real` extra.
+dependencies = [
+    "grpcio==1.64.1",
+    "grpcio-health-checking==1.64.1",
+    "grpcio-reflection==1.64.1",
+    "protobuf==5.27.1",
+    "prometheus-client==0.20.0",
+]
+
+[project.optional-dependencies]
+real = [
+    "numpy==1.26.4",
+    "pillow==10.4.0",
+    "torch==2.4.0",
+    "transformers==4.44.2",
+    "sentence-transformers==3.0.1",
+    "rembg[cli]==2.0.59",
+    "opencv-python-headless==4.10.0.84",
+    "minio==7.2.7",
+    "httpx==0.27.0",
+]
+dev = [
+    "grpcio-tools==1.64.1",
+    "pytest==8.3.2",
+    "pytest-asyncio==0.24.0",
+]
+
+[project.scripts]
+ml-svc = "app.server:main"
+
+[tool.setuptools.packages.find]
+include = ["app*", "pb*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

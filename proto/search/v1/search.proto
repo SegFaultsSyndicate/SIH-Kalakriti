@@ -1,0 +1,206 @@
+// proto/search/v1/search.proto
+syntax = "proto3";
+
+package search.v1;
+
+import "catalog/v1/catalog.proto";
+import "common/v1/common.proto";
+
+option go_package = "github.com/segfaultsyndicate/kalakriti/pkg/pb/search/v1;searchv1";
+
+// SearchService is the buyer-facing discovery surface over the pgvector index.
+service SearchService {
+  // Hybrid lexical and semantic search with structured filters.
+  rpc Search(SearchRequest) returns (SearchResponse);
+  // Type-ahead completions over crafts, motifs, materials and clusters.
+  rpc Suggest(SuggestRequest) returns (SuggestResponse);
+  // Stream a spoken query in and get one result set back.
+  rpc VoiceSearch(stream VoiceSearchRequest) returns (VoiceSearchResponse);
+}
+
+// StructuredFilters narrow a search to a subset of the catalogue.
+message StructuredFilters {
+  // Restrict to these crafts; empty means all crafts.
+  repeated string craft_ids = 1;
+  // Restrict to these colour ontology slugs.
+  repeated string colours = 2;
+  // Restrict to these material ontology slugs.
+  repeated string materials = 3;
+  // Lowest acceptable unit price, inclusive.
+  optional common.v1.Money min_price = 4;
+  // Highest acceptable unit price, inclusive.
+  optional common.v1.Money max_price = 5;
+  // Restrict to makers in this region; only the fields set are matched.
+  optional common.v1.GeoRegion region = 6;
+  // Restrict to one commercial posture.
+  catalog.v1.ListingType listing_type = 7;
+  // Return only items whose craft carries a Geographical Indication.
+  bool gi_only = 8;
+  // Return only items with a sealed provenance record.
+  bool provenance_sealed_only = 9;
+  // Restrict to makers who can start production within this many days.
+  optional int32 max_lead_time_days = 10;
+}
+
+// SearchRequest is one buyer query with its filters and cursor.
+message SearchRequest {
+  // Free-text query; may be empty when filters alone drive the result.
+  string query = 1;
+  // Language the query is written in; unspecified asks the server to detect it.
+  common.v1.Language language = 2;
+  // Structured narrowing.
+  StructuredFilters filters = 3;
+  // Cursor and page size.
+  common.v1.PageRequest page = 4;
+  // How lexical and vector retrieval are combined.
+  SearchMode mode = 5;
+  // Hydrate each hit with its full listing; costs an extra join.
+  bool include_listings = 6;
+}
+
+// SearchHit is one matched listing with the reasons it matched.
+message SearchHit {
+  // Matched listing.
+  string listing_id = 1;
+  // Item the listing offers.
+  string product_id = 2;
+  // Maker.
+  string artisan_id = 3;
+  // Fused relevance score; comparable only within one response.
+  float score = 4;
+  // Query terms that matched lexically.
+  repeated string matched_terms = 5;
+  // One-sentence rationale suitable for showing a buyer.
+  optional string explanation = 6;
+  // The full listing, when include_listings was set.
+  optional catalog.v1.Listing listing = 7;
+}
+
+// FacetValue is one bucket of a search facet.
+message FacetValue {
+  // Ontology slug or literal value.
+  string value = 1;
+  // Listings matching this bucket under the current filters.
+  int32 count = 2;
+}
+
+// Facet is one refinable dimension of the current result set.
+message Facet {
+  // Field the facet refines, e.g. "craft_id", "colours".
+  string field = 1;
+  // Buckets, largest first.
+  repeated FacetValue values = 2;
+}
+
+// SearchResponse returns one page of hits plus refinement facets.
+message SearchResponse {
+  // Matched listings, best first.
+  repeated SearchHit hits = 1;
+  // Cursor for the next page.
+  common.v1.PageResponse page = 2;
+  // Refinable dimensions over the unpaginated result set.
+  repeated Facet facets = 3;
+  // Language the server decided the query was in.
+  common.v1.Language detected_language = 4;
+  // Opaque id for click-through analytics.
+  string query_id = 5;
+  // Craft names substituted when the original query matched nothing, so the
+  // buyer is told the page is adjacent to what they asked for rather than being
+  // shown an empty result set. Empty when the hits are for the query as typed.
+  repeated string did_you_mean = 6;
+}
+
+// SuggestRequest asks for type-ahead completions on a partial query.
+message SuggestRequest {
+  // What the buyer has typed so far.
+  string prefix = 1;
+  // Language of the prefix.
+  common.v1.Language language = 2;
+  // Maximum suggestions to return.
+  optional int32 limit = 3;
+}
+
+// Suggestion is one type-ahead completion.
+message Suggestion {
+  // Text to show and to submit.
+  string text = 1;
+  // What kind of thing the suggestion points at.
+  SuggestionKind kind = 2;
+  // Entity the suggestion resolves to, when it resolves to one.
+  optional string entity_id = 3;
+  // Ranking score; comparable only within one response.
+  float score = 4;
+}
+
+// SuggestResponse returns ranked completions.
+message SuggestResponse {
+  // Completions, best first.
+  repeated Suggestion suggestions = 1;
+}
+
+// VoiceSearchConfig is the first message of a VoiceSearch stream; audio follows it.
+message VoiceSearchConfig {
+  // Language the buyer is speaking; unspecified asks the server to detect it.
+  common.v1.Language language = 1;
+  // Sample rate of the audio frames, e.g. 16000.
+  int32 sample_rate_hz = 2;
+  // Frame encoding, e.g. "LINEAR16", "OPUS".
+  string encoding = 3;
+  // Structured narrowing to apply to the transcribed query.
+  StructuredFilters filters = 4;
+  // Cursor and page size for the result set.
+  common.v1.PageRequest page = 5;
+}
+
+// VoiceSearchRequest is one frame of the client stream: config once, then audio.
+message VoiceSearchRequest {
+  // Exactly one of these is set per frame.
+  oneof frame {
+    // Stream configuration; must be the first frame.
+    VoiceSearchConfig config = 1;
+    // Raw audio bytes in the declared encoding.
+    bytes audio = 2;
+  }
+}
+
+// VoiceSearchResponse returns the transcript and the results it produced.
+message VoiceSearchResponse {
+  // What the server heard.
+  string transcript = 1;
+  // Language the server settled on.
+  common.v1.Language detected_language = 2;
+  // Transcription confidence in [0,1].
+  float transcript_confidence = 3;
+  // Results for the transcribed query.
+  SearchResponse results = 4;
+}
+
+// SearchMode selects how lexical and vector retrieval are combined.
+enum SearchMode {
+  // Unset; the server picks, currently HYBRID.
+  SEARCH_MODE_UNSPECIFIED = 0;
+  // Reciprocal-rank fusion of trigram and vector retrieval, then cross-encoder rerank.
+  SEARCH_MODE_HYBRID = 1;
+  // Trigram and full-text only; deterministic, used for exact-code lookups.
+  SEARCH_MODE_LEXICAL = 2;
+  // pgvector nearest-neighbour only; used for "more like this".
+  SEARCH_MODE_SEMANTIC = 3;
+}
+
+// SuggestionKind says what a type-ahead completion points at.
+enum SuggestionKind {
+  // Unset.
+  SUGGESTION_KIND_UNSPECIFIED = 0;
+  // A craft ontology node.
+  SUGGESTION_KIND_CRAFT = 1;
+  // A material ontology slug.
+  SUGGESTION_KIND_MATERIAL = 2;
+  // A motif ontology slug.
+  SUGGESTION_KIND_MOTIF = 3;
+  // An artisan cluster.
+  SUGGESTION_KIND_CLUSTER = 4;
+  // A named artisan.
+  SUGGESTION_KIND_ARTISAN = 5;
+  // A previously successful free-text query.
+  SUGGESTION_KIND_QUERY = 6;
+}
