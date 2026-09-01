@@ -4,6 +4,7 @@ package consumer
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -40,13 +41,8 @@ func TestFollowFanoutCreatesNotifications(t *testing.T) {
 	}
 	notifSvc := &fakeNotificationService{}
 
-	fanout := NewFollowFanout(&notification.Service{}, followRepo, nil)
-	fanout.notificationSvc = &notification.Service{}
-	// Override with fake.
-	fanout.notificationSvc = nil // ponytail: inject via interface when test count > 3
-
-	// Manually wire fake.
 	fanoutWithFake := &FollowFanout{
+		notificationSvc: notifSvc,
 		followRepo:      followRepo,
 		dedupeWindow:    1 * time.Hour,
 		recent:          make(map[string]time.Time),
@@ -131,6 +127,7 @@ func TestFollowFanoutDedupeIsPerRecipient(t *testing.T) {
 		notificationSvc: notifSvc,
 		followRepo:      followRepo,
 		dedupeWindow:    1 * time.Hour,
+		log:             slog.Default(),
 		recent:          make(map[string]time.Time),
 	}
 	// user-1 was already notified about this artisan within the window.

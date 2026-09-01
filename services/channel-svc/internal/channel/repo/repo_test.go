@@ -3,7 +3,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/sqlc"
 )
 
-func setupTestDB(t *testing.T) *sql.DB {
+func setupTestDB(t *testing.T) sqlc.DBTX {
 	// Skip test if no postgres available - integration tests need real DB
 	t.Skip("integration test requires postgres")
 	return nil

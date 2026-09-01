@@ -36,6 +36,9 @@ type FollowRepo interface {
 
 // NewFollowFanout creates a fanout consumer.
 func NewFollowFanout(notificationSvc Notifier, followRepo FollowRepo, log *slog.Logger) *FollowFanout {
+	if log == nil {
+		log = slog.Default()
+	}
 	return &FollowFanout{
 		notificationSvc: notificationSvc,
 		followRepo:      followRepo,

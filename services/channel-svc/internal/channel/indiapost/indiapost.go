@@ -28,6 +28,9 @@ type Config struct {
 
 // NewClient creates an India Post client.
 func NewClient(cfg Config, log *slog.Logger) *Client {
+	if log == nil {
+		log = slog.Default()
+	}
 	return &Client{
 		log:    log,
 		apiURL: cfg.APIURL,

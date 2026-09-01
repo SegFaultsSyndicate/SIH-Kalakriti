@@ -23,6 +23,9 @@ type Config struct {
 
 // NewClient creates a WhatsApp client stub.
 func NewClient(cfg Config, log *slog.Logger) *Client {
+	if log == nil {
+		log = slog.Default()
+	}
 	return &Client{
 		log:    log,
 		dryRun: true, // ponytail: always dry-run until whatsmeow session store exists

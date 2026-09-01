@@ -4,7 +4,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -39,8 +38,8 @@ func (r *Repo) InsertNotification(ctx context.Context, n notification.Notificati
 	_, err := r.queries.InsertNotification(ctx, sqlc.InsertNotificationParams{
 		ID:          n.ID,
 		RecipientID: n.RecipientID,
-		Kind:        string(n.Kind),
-		Language:    string(n.Language),
+		Kind:        sqlc.NotificationKind(n.Kind),
+		Language:    sqlc.LanguageCode(n.Language),
 		Title:       n.Title,
 		Body:        n.Body,
 		Payload:     payloadBytes,
@@ -98,7 +97,7 @@ func (r *Repo) ListUnreadNotificationsForUser(ctx context.Context, recipientID s
 func (r *Repo) MarkNotificationRead(ctx context.Context, id uuid.UUID, readAt time.Time) error {
 	return r.queries.MarkNotificationRead(ctx, sqlc.MarkNotificationReadParams{
 		ID:     id,
-		ReadAt: sql.NullTime{Time: readAt, Valid: true},
+		ReadAt: &readAt,
 	})
 }
 
@@ -129,19 +128,15 @@ func (r *Repo) InsertDelivery(ctx context.Context, d notification.Delivery) (not
 
 // UpdateDeliveryStatus updates delivery status.
 func (r *Repo) UpdateDeliveryStatus(ctx context.Context, id uuid.UUID, status notification.DeliveryStatus, sentAt *time.Time, lastError string) error {
-	var sentAtSQL sql.NullTime
-	if sentAt != nil {
-		sentAtSQL = sql.NullTime{Time: *sentAt, Valid: true}
-	}
-	var lastErrorSQL sql.NullString
+	var lastErrorPtr *string
 	if lastError != "" {
-		lastErrorSQL = sql.NullString{String: lastError, Valid: true}
+		lastErrorPtr = &lastError
 	}
 	return r.queries.UpdateDeliveryStatus(ctx, sqlc.UpdateDeliveryStatusParams{
 		ID:        id,
 		Status:    string(status),
-		SentAt:    sentAtSQL,
-		LastError: lastErrorSQL,
+		SentAt:    sentAt,
+		LastError: lastErrorPtr,
 	})
 }
 
@@ -169,8 +164,8 @@ func (r *Repo) GetFollowers(ctx context.Context, artisanID uuid.UUID) ([]string,
 
 func toNotification(row sqlc.Notification) notification.Notification {
 	var readAt *time.Time
-	if row.ReadAt.Valid {
-		readAt = &row.ReadAt.Time
+	if row.ReadAt != nil {
+		readAt = row.ReadAt
 	}
 	return notification.Notification{
 		ID:          row.ID,
@@ -185,13 +180,9 @@ func toNotification(row sqlc.Notification) notification.Notification {
 }
 
 func toDelivery(row sqlc.NotificationDelivery) notification.Delivery {
-	var sentAt *time.Time
-	if row.SentAt.Valid {
-		sentAt = &row.SentAt.Time
-	}
 	lastError := ""
-	if row.LastError.Valid {
-		lastError = row.LastError.String
+	if row.LastError != nil {
+		lastError = *row.LastError
 	}
 	return notification.Delivery{
 		ID:             row.ID,
@@ -201,7 +192,7 @@ func toDelivery(row sqlc.NotificationDelivery) notification.Delivery {
 		Status:         notification.DeliveryStatus(row.Status),
 		AttemptCount:   int(row.AttemptCount),
 		LastError:      lastError,
-		SentAt:         sentAt,
+		SentAt:         row.SentAt,
 		CreatedAt:      row.CreatedAt,
 	}
 }
