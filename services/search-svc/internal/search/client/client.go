@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
@@ -172,7 +173,7 @@ type Transliterator struct {
 }
 
 // NewTransliterator builds the cached canonicaliser.
-func NewTransliterator(ontology *Ontology, client pkgredis.Cmdable) *Transliterator {
+func NewTransliterator(ontology *Ontology, client redis.Cmdable) *Transliterator {
 	return &Transliterator{ontology: ontology, cache: pkgredis.NewCache[string](client, "translit")}
 }
 

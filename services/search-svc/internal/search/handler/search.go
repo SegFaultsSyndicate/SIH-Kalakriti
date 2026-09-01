@@ -150,7 +150,7 @@ func responseToProto(result service.Result) *searchv1.SearchResponse {
 		DetectedLanguage: languageToProto(result.DetectedLanguage),
 		QueryId:          result.QueryID,
 		DidYouMean:       result.DidYouMean,
-		Page:             &commonv1.PageResponse{NextCursor: ""},
+		Page:             &commonv1.PageResponse{NextPageToken: ""},
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 // Money represents an amount in paise (1/100 of rupee).
 type Money int64
 
-// NewMoney creates Money from paise.
-func NewMoney(paise int64) Money {
+// New creates Money from paise.
+func New(paise int64) Money {
 	return Money(paise)
 }
 

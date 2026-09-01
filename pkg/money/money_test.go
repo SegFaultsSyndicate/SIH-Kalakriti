@@ -8,14 +8,14 @@ import (
 )
 
 func TestMoney_Add(t *testing.T) {
-	m := NewMoney(1000)
-	result := m.Add(NewMoney(500))
+	m := New(1000)
+	result := m.Add(New(500))
 	assert.Equal(t, int64(1500), result.Paise())
 }
 
 func TestMoney_Sub(t *testing.T) {
-	m := NewMoney(1000)
-	result := m.Sub(NewMoney(300))
+	m := New(1000)
+	result := m.Sub(New(300))
 	assert.Equal(t, int64(700), result.Paise())
 }
 
@@ -26,9 +26,9 @@ func TestMoney_MulPct(t *testing.T) {
 		pct      int
 		expected int64
 	}{
-		{"10% of 1000", NewMoney(1000), 10, 100},
-		{"25% of 8000", NewMoney(8000), 25, 2000},
-		{"33% of 100 rounds down", NewMoney(100), 33, 33},
+		{"10% of 1000", New(1000), 10, 100},
+		{"25% of 8000", New(8000), 25, 2000},
+		{"33% of 100 rounds down", New(100), 33, 33},
 	}
 
 	for _, tt := range tests {
@@ -48,31 +48,31 @@ func TestMoney_Split(t *testing.T) {
 	}{
 		{
 			"1000 split 3 ways",
-			NewMoney(1000),
+			New(1000),
 			3,
 			[]int64{334, 333, 333},
 		},
 		{
 			"100 split 3 ways",
-			NewMoney(100),
+			New(100),
 			3,
 			[]int64{34, 33, 33},
 		},
 		{
 			"1000 split 1 way",
-			NewMoney(1000),
+			New(1000),
 			1,
 			[]int64{1000},
 		},
 		{
 			"10 split 4 ways",
-			NewMoney(10),
+			New(10),
 			4,
 			[]int64{3, 3, 2, 2},
 		},
 		{
 			"500 split 2 ways",
-			NewMoney(500),
+			New(500),
 			2,
 			[]int64{250, 250},
 		},
@@ -105,7 +105,7 @@ func TestMoney_Split_NoPaisaLost(t *testing.T) {
 
 	for _, amt := range amounts {
 		for _, n := range splits {
-			m := NewMoney(amt)
+			m := New(amt)
 			parts := m.Split(n)
 
 			sum := int64(0)
@@ -132,14 +132,14 @@ func TestMoney_Format(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
-			m := NewMoney(tt.paise)
+			m := New(tt.paise)
 			assert.Equal(t, tt.expected, m.Format())
 		})
 	}
 }
 
 func TestMoney_Split_InvalidInput(t *testing.T) {
-	m := NewMoney(1000)
+	m := New(1000)
 	assert.Nil(t, m.Split(0))
 	assert.Nil(t, m.Split(-1))
 }

@@ -139,8 +139,7 @@ func SizeBand(referenceMM int32) (min, max int32) {
 // advisory never recommends below this.
 func ComputeCostFloor(in CostFloorInput, wage WageRate) money.Money {
 	labourPaise := int64(math.Round(in.Hours * float64(wage.PaisePerHour)))
-	floor, _ := in.MaterialCost.Add(money.New(labourPaise)) // both default to INR
-	return floor
+	return in.MaterialCost.Add(money.New(labourPaise)) // both default to INR
 }
 
 // BuildAdvisory folds the three independently computed components into a
@@ -202,7 +201,7 @@ func BuildAdvisory(floor money.Money, wage WageRate, band MarketBand, timing Tim
 // a price exactly at either boundary is not flagged.
 func CheckAnomaly(chosen, floor, p75 money.Money) Anomaly {
 	if chosen.Paise() < floor.Paise() {
-		shortfall, _ := floor.Sub(chosen)
+		shortfall := floor.Sub(chosen)
 		return Anomaly{Level: AnomalyUnderpriced, ShortfallPaise: shortfall.Paise(), ExplanationKey: "pricing.anomaly.underpriced"}
 	}
 	if ceiling := p75.MulPct(150); chosen.Paise() > ceiling.Paise() {
