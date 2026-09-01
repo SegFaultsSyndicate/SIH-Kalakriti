@@ -23,11 +23,8 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/consumer"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/export"
-	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/indiapost"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
-	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/ondc"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/repo"
-	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/whatsapp"
 )
 
 const serviceName = "channel-svc"
@@ -153,27 +150,30 @@ func run() error {
 	// Notification service
 	notifSvc := notification.NewService(r, log)
 
-	// ONDC adapter
-	ondcAdapter, err := ondc.NewAdapter(ondc.Config{
-		PrivateKeyHex:  cfg.ondc.PrivateKeyHex,
-		KeyID:          cfg.ondc.KeyID,
-		SubscriberID:   cfg.ondc.SubscriberID,
-		SubscriberURL:  cfg.ondc.SubscriberURL,
-		DryRun:         cfg.ondc.DryRun,
-	})
-	if err != nil {
-		log.Warn("ondc adapter unavailable", "error", err)
-	}
-
-	// WhatsApp client
-	waClient := whatsapp.NewClient(whatsapp.Config{DryRun: cfg.whatsapp.DryRun}, log)
-
-	// India Post client
-	ipClient := indiapost.NewClient(indiapost.Config{
-		APIURL: cfg.indiaPost.APIURL,
-		APIKey: cfg.indiaPost.APIKey,
-		Stub:   cfg.indiaPost.Stub,
-	}, log)
+	// ONDC adapter, WhatsApp client, India Post client: none is wired to a
+	// caller yet. ondc.Client.PublishOnSearch needs a hydrated []ondc.Listing
+	// (title, price, media, GI status...) that the bare
+	// catalog.listing.published event this service already consumes doesn't
+	// carry, so publishing on that trigger means first giving channel-svc a
+	// core-svc catalog client to fetch listing detail -- a real cross-service
+	// wiring decision, not a one-line fix. WhatsApp/India Post are still
+	// log-only stubs (see their package docs) with nothing to dispatch to
+	// yet. Left uninstantiated rather than wired to a guessed-at consumer.
+	//
+	// ondcAdapter, err := ondc.NewAdapter(ondc.Config{
+	//     PrivateKeyHex: cfg.ondc.PrivateKeyHex,
+	//     KeyID:         cfg.ondc.KeyID,
+	//     SubscriberID:  cfg.ondc.SubscriberID,
+	//     SubscriberURL: cfg.ondc.SubscriberURL,
+	//     DryRun:        cfg.ondc.DryRun,
+	// })
+	// ondcClient := ondc.NewClient(ondcAdapter, cfg.ondc.SubscriberURL, log)
+	// waClient := whatsapp.NewClient(whatsapp.Config{DryRun: cfg.whatsapp.DryRun}, log)
+	// ipClient := indiapost.NewClient(indiapost.Config{
+	//     APIURL: cfg.indiaPost.APIURL,
+	//     APIKey: cfg.indiaPost.APIKey,
+	//     Stub:   cfg.indiaPost.Stub,
+	// }, log)
 
 	// Follow fanout consumer
 	fanout := consumer.NewFollowFanout(notifSvc, r, log)

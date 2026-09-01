@@ -16,11 +16,17 @@ import (
 
 // FollowFanout consumes catalog.listing.published and notifies followers.
 type FollowFanout struct {
-	notificationSvc *notification.Service
+	notificationSvc Notifier
 	followRepo      FollowRepo
 	dedupeWindow    time.Duration
 	log             *slog.Logger
 	recent          map[string]time.Time // ponytail: in-memory dedupe, upgrade to Redis when cross-instance
+}
+
+// Notifier creates a notification; satisfied by *notification.Service, seamed
+// as an interface so fanout logic is testable without a database.
+type Notifier interface {
+	Create(ctx context.Context, in notification.CreateInput) (notification.Notification, error)
 }
 
 // FollowRepo queries follows.
@@ -29,7 +35,7 @@ type FollowRepo interface {
 }
 
 // NewFollowFanout creates a fanout consumer.
-func NewFollowFanout(notificationSvc *notification.Service, followRepo FollowRepo, log *slog.Logger) *FollowFanout {
+func NewFollowFanout(notificationSvc Notifier, followRepo FollowRepo, log *slog.Logger) *FollowFanout {
 	return &FollowFanout{
 		notificationSvc: notificationSvc,
 		followRepo:      followRepo,
@@ -71,14 +77,6 @@ func (f *FollowFanout) Handle(ctx context.Context, eventBytes []byte) error {
 		return fmt.Errorf("fanout: invalid artisan_id: %w", err)
 	}
 
-	// Dedupe: one notification per artisan per hour.
-	dedupeKey := evt.Payload.ArtisanID
-	if last, ok := f.recent[dedupeKey]; ok && time.Since(last) < f.dedupeWindow {
-		f.log.Info("fanout_dedupe", "artisan_id", evt.Payload.ArtisanID, "last", last)
-		return nil
-	}
-	f.recent[dedupeKey] = time.Now()
-
 	// Get followers.
 	followers, err := f.followRepo.GetFollowers(ctx, artisanID)
 	if err != nil {
@@ -90,8 +88,17 @@ func (f *FollowFanout) Handle(ctx context.Context, eventBytes []byte) error {
 		return nil
 	}
 
-	// Enqueue notifications.
+	// Enqueue notifications, deduped per recipient per artisan per hour so one
+	// follower doesn't get flooded by the same artisan publishing repeatedly,
+	// while every other follower still gets notified independently.
 	for _, followerID := range followers {
+		dedupeKey := followerID + ":" + evt.Payload.ArtisanID
+		if last, ok := f.recent[dedupeKey]; ok && time.Since(last) < f.dedupeWindow {
+			f.log.Info("fanout_dedupe", "artisan_id", evt.Payload.ArtisanID, "follower_id", followerID, "last", last)
+			continue
+		}
+		f.recent[dedupeKey] = time.Now()
+
 		_, err := f.notificationSvc.Create(ctx, notification.CreateInput{
 			RecipientID: followerID,
 			Kind:        notification.ArtisanFollowed,

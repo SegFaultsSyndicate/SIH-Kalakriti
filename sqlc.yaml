@@ -13,6 +13,7 @@ sql:
       - "migrations/queries/listing.sql"
       - "migrations/queries/media.sql"
       - "migrations/queries/pricing.sql"
+      - "migrations/queries/provenance.sql"
       - "migrations/queries/outbox.sql"
       - "migrations/queries/idempotency.sql"
     gen:
@@ -101,6 +102,23 @@ sql:
         out: "services/insight-svc/internal/insight/repo/db"
         sql_package: "pgx/v5"
         output_files_suffix: ".gen"
+        emit_interface: true
+        emit_empty_slices: true
+        emit_json_tags: false
+        emit_pointers_for_null_types: true
+        overrides: *go_overrides
+
+  - name: channel
+    engine: postgresql
+    schema: "migrations/0*.sql"
+    queries:
+      - "migrations/queries/notification_delivery.sql"
+      - "migrations/queries/social.sql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "services/channel-svc/internal/channel/sqlc"
+        sql_package: "pgx/v5"
         emit_interface: true
         emit_empty_slices: true
         emit_json_tags: false

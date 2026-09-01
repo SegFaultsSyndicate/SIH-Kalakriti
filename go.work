@@ -1,6 +1,7 @@
 go 1.23.0
 
 use (
+	./cmd/webhook-worker
 	./pkg
 	./services/bff
 	./services/channel-svc

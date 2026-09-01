@@ -5,7 +5,7 @@ package insight.v1;
 import "common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/ZoroNewbie00/kalakriti/proto/insight/v1;insightv1";
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1;insightv1";
 
 service InsightService {
   // Ministry dashboard aggregates (MINISTRY role only).

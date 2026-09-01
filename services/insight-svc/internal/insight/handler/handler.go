@@ -11,8 +11,7 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/money"
-	commonv1 "github.com/ZoroNewbie00/kalakriti/proto/common/v1"
-	insightv1 "github.com/ZoroNewbie00/kalakriti/proto/insight/v1"
+	insightv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1"
 	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/service"
 )
 

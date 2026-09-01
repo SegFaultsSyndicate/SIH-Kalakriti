@@ -48,7 +48,7 @@ LIMIT $1;
 -- name: GetArtisanEarningsByPeriod :one
 SELECT
     a.id,
-    a.name_primary,
+    a.display_name,
     COUNT(DISTINCT ol.id) AS order_count,
     COALESCE(SUM(psl.gross_amount_paise), 0) AS gross_paise,
     COALESCE(SUM(psl.net_amount_paise), 0) AS net_paise,
@@ -61,7 +61,7 @@ LEFT JOIN payment_split_line psl ON psl.lot_id = ol.id
     AND psl.settled_at >= $2
     AND psl.settled_at < $3
 WHERE a.id = $1
-GROUP BY a.id, a.name_primary;
+GROUP BY a.id, a.display_name;
 
 -- name: GetArtisanEarningsMonthly :many
 SELECT
@@ -95,7 +95,7 @@ SELECT
     s.id, s.artisan_id, s.period_start, s.period_end, s.order_count,
     s.gross_paise, s.net_paise, s.fee_paise, s.signature, s.signature_algo,
     s.public_key_id, s.short_code, s.s3_key, s.created_at,
-    a.name_primary AS artisan_name
+    a.display_name AS artisan_name
 FROM income_statement s
 JOIN artisan a ON a.id = s.artisan_id
 WHERE s.short_code = $1;

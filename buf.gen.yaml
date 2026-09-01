@@ -1,0 +1,16 @@
+# buf.gen.yaml
+# Run from the repo root: `buf generate proto`. Every proto's go_package points
+# under github.com/ZoroNewbie00/kalakriti/pkg/pb/..., so "module" mode strips
+# that module prefix and writes the rest under ./pkg, landing generated code
+# at pkg/pb/<domain>/v1 to match every existing hand-written import.
+version: v2
+plugins:
+  - local: protoc-gen-go
+    out: pkg
+    opt:
+      - module=github.com/ZoroNewbie00/kalakriti/pkg
+  - local: protoc-gen-go-grpc
+    out: pkg
+    opt:
+      - module=github.com/ZoroNewbie00/kalakriti/pkg
+      - require_unimplemented_servers=true
