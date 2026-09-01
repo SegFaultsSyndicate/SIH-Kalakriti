@@ -107,7 +107,7 @@ func (s *Provenance) SealProvenance(ctx context.Context, in domain.SealProvenanc
 	if err != nil {
 		return domain.ProvenanceRecord{}, err
 	}
-	if principal.ArtisanID == nil || *principal.ArtisanID != listing.ArtisanID {
+	if principal.Role != auth.RoleArtisan || principal.Subject != listing.ArtisanID.String() {
 		return domain.ProvenanceRecord{}, fmt.Errorf(
 			"only the listing's artisan may seal provenance: %w", pkgdomain.ErrForbidden)
 	}

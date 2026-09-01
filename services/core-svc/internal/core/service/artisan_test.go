@@ -33,7 +33,7 @@ func TestRegisterArtisanWritesArtisanAndOutboxEventInOneTx(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	artisan, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "idem-1")
+	artisan, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
 	if err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestRegisterArtisanWritesArtisanAndOutboxEventInOneTx(t *testing.T) {
 func TestRegisterArtisanTwiceWithSamePhoneReturnsConflict(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
-	ctx := artisanCtx("", testPhone)
+	ctx := artisanPhoneCtx("", testPhone)
 
 	if _, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-1"); err != nil {
 		t.Fatalf("first registration should succeed: %v", err)
@@ -132,7 +132,7 @@ func TestRegisterArtisanConflictDetectedAtTheDatabaseAlsoSurfaces(t *testing.T) 
 	store.createArtisanErr = pkgdomain.ErrConflict
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	_, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "idem-1")
+	_, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
 	if !errors.Is(err, pkgdomain.ErrConflict) {
 		t.Fatalf("want ErrConflict, got %v", err)
 	}
@@ -146,7 +146,7 @@ func TestRegisterArtisanRollsBackEverythingWhenTheCommitFails(t *testing.T) {
 	store.failInTxAfterCallback = errors.New("commit failed")
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	if _, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "idem-1"); err == nil {
+	if _, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1"); err == nil {
 		t.Fatal("expected the commit failure to surface")
 	}
 	if len(store.artisans) != 0 {
@@ -166,7 +166,7 @@ func TestRegisterArtisanJoinsClusterWhenGiven(t *testing.T) {
 	in := validRegisterInput()
 	in.ClusterID = &clusterID
 
-	artisan, err := svc.RegisterArtisan(artisanCtx("", testPhone), in, "idem-1")
+	artisan, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), in, "idem-1")
 	if err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
@@ -205,7 +205,7 @@ func TestRegisterArtisanValidation(t *testing.T) {
 			in := validRegisterInput()
 			tt.mutate(&in)
 
-			_, err := svc.RegisterArtisan(artisanCtx("", in.PhoneE164), in, "idem-1")
+			_, err := svc.RegisterArtisan(artisanPhoneCtx("", in.PhoneE164), in, "idem-1")
 			if err == nil {
 				t.Fatalf("expected a validation error mentioning %q", tt.want)
 			}
@@ -224,7 +224,7 @@ func TestRegisterArtisanValidation(t *testing.T) {
 
 func TestRegisterArtisanRequiresIdempotencyKey(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
-	_, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "")
+	_, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "")
 	if !errors.Is(err, pkgdomain.ErrInvalidInput) {
 		t.Fatalf("want ErrInvalidInput, got %v", err)
 	}
@@ -234,7 +234,7 @@ func TestRegisterArtisanRejectsAPhoneTheCallerDidNotVerify(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
 
 	// The caller verified a different number than the one they are registering.
-	ctx := artisanCtx("", "+919000000000")
+	ctx := artisanPhoneCtx("", "+919000000000")
 	_, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-1")
 	if !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
@@ -251,7 +251,7 @@ func TestRegisterArtisanAllowsAnOfficerToRegisterByProxy(t *testing.T) {
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
 	// An officer has no verified phone of their own, but may register others.
-	artisan, err := svc.RegisterArtisan(officerCtx("officer-1"), validRegisterInput(), "idem-1")
+	artisan, err := svc.RegisterArtisan(officerSubjectCtx("officer-1"), validRegisterInput(), "idem-1")
 	if err != nil {
 		t.Fatalf("officer proxy registration should be allowed: %v", err)
 	}
@@ -264,22 +264,22 @@ func TestGetArtisanByPhoneHidesOtherArtisansProfiles(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	created, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "idem-1")
+	created, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
 	if err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
 
 	// The artisan themselves can look their own number up.
-	if _, err := svc.GetArtisanByPhone(artisanCtx(created.ID.String(), testPhone), testPhone); err != nil {
+	if _, err := svc.GetArtisanByPhone(artisanPhoneCtx(created.ID.String(), testPhone), testPhone); err != nil {
 		t.Fatalf("self lookup should be allowed: %v", err)
 	}
 	// An officer can look anyone up.
-	if _, err := svc.GetArtisanByPhone(officerCtx("officer-1"), testPhone); err != nil {
+	if _, err := svc.GetArtisanByPhone(officerSubjectCtx("officer-1"), testPhone); err != nil {
 		t.Fatalf("officer lookup should be allowed: %v", err)
 	}
 	// Another artisan cannot, and is told not-found rather than forbidden, so
 	// the endpoint cannot be used to test whether a number is registered.
-	other := artisanCtx(uuid.New().String(), "+919000000001")
+	other := artisanPhoneCtx(uuid.New().String(), "+919000000001")
 	_, err = svc.GetArtisanByPhone(other, testPhone)
 	if !errors.Is(err, pkgdomain.ErrNotFound) {
 		t.Fatalf("want ErrNotFound for an unrelated artisan, got %v", err)
@@ -289,7 +289,7 @@ func TestGetArtisanByPhoneHidesOtherArtisansProfiles(t *testing.T) {
 func TestUpdateArtisanProfileAuthorisation(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
-	created, err := svc.RegisterArtisan(artisanCtx("", testPhone), validRegisterInput(), "idem-1")
+	created, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
 	if err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
@@ -297,15 +297,15 @@ func TestUpdateArtisanProfileAuthorisation(t *testing.T) {
 	in := domain.UpdateArtisanInput{ArtisanID: created.ID, DisplayName: ptr("Rukmini B.")}
 
 	// Self is allowed.
-	if _, err := svc.UpdateArtisanProfile(artisanCtx(created.ID.String(), testPhone), in); err != nil {
+	if _, err := svc.UpdateArtisanProfile(artisanPhoneCtx(created.ID.String(), testPhone), in); err != nil {
 		t.Fatalf("self update should be allowed: %v", err)
 	}
 	// An officer is allowed.
-	if _, err := svc.UpdateArtisanProfile(officerCtx("officer-1"), in); err != nil {
+	if _, err := svc.UpdateArtisanProfile(officerSubjectCtx("officer-1"), in); err != nil {
 		t.Fatalf("officer update should be allowed: %v", err)
 	}
 	// A different artisan is not.
-	other := artisanCtx(uuid.New().String(), "+919000000001")
+	other := artisanPhoneCtx(uuid.New().String(), "+919000000001")
 	if _, err := svc.UpdateArtisanProfile(other, in); !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
 	}
@@ -318,7 +318,7 @@ func TestUpdateArtisanProfileAuthorisation(t *testing.T) {
 
 func TestListArtisansByClusterRejectsAnUnknownCluster(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
-	_, err := svc.ListArtisansByCluster(officerCtx("o1"), uuid.New(), domain.Page{})
+	_, err := svc.ListArtisansByCluster(officerSubjectCtx("o1"), uuid.New(), domain.Page{})
 	if !errors.Is(err, pkgdomain.ErrNotFound) {
 		t.Fatalf("want ErrNotFound, got %v", err)
 	}

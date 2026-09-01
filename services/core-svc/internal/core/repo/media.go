@@ -138,7 +138,7 @@ func (r *Repo) ListStalePendingMedia(ctx context.Context, before time.Time, batc
 	return out, nil
 }
 
-func mediaFromRow(row db.Media) domain.Media {
+func mediaFromRow(row db.Medium) domain.Media {
 	return domain.Media{
 		ID:                row.ID,
 		ArtisanID:         row.ArtisanID,

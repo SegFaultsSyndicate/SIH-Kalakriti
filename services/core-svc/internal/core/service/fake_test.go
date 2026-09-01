@@ -405,7 +405,7 @@ func newTestIdentity(store *fakeStore, tokens *fakeTokens, otp *fakeOTP) *Identi
 }
 
 // artisanCtx builds a context for a logged-in artisan who verified phone.
-func artisanCtx(subject, phone string) context.Context {
+func artisanPhoneCtx(subject, phone string) context.Context {
 	return auth.ContextWithPrincipal(context.Background(), auth.Principal{
 		Subject:   subject,
 		Role:      auth.RoleArtisan,
@@ -414,7 +414,7 @@ func artisanCtx(subject, phone string) context.Context {
 }
 
 // officerCtx builds a context for a cluster officer.
-func officerCtx(subject string) context.Context {
+func officerSubjectCtx(subject string) context.Context {
 	return auth.ContextWithPrincipal(context.Background(), auth.Principal{
 		Subject: subject,
 		Role:    auth.RoleClusterOfficer,

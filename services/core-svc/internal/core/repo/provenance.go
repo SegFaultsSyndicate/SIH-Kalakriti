@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
@@ -61,7 +61,7 @@ func (t *Tx) GetLatestProvenanceForArtisan(ctx context.Context, artisanID uuid.U
 	row, err := t.q.GetLatestProvenanceForArtisan(ctx, artisanID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrNotFound
+			return nil, pkgdomain.ErrNotFound
 		}
 		return nil, fmt.Errorf("fetching latest provenance: %w", err)
 	}
@@ -73,7 +73,7 @@ func (t *Tx) GetLatestProvenanceForArtisan(ctx context.Context, artisanID uuid.U
 func (t *Tx) SetListingProvenance(ctx context.Context, listingID, provenanceID uuid.UUID) error {
 	_, err := t.q.SetListingProvenance(ctx, db.SetListingProvenanceParams{
 		ID:           listingID,
-		ProvenanceID: provenanceID,
+		ProvenanceID: &provenanceID,
 	})
 	if err != nil {
 		return fmt.Errorf("setting listing provenance: %w", err)
@@ -110,17 +110,13 @@ func (r *Repo) GetProvenanceByListing(ctx context.Context, listingID uuid.UUID) 
 
 // provenanceFromRow converts a sqlc row to domain.ProvenanceRecord.
 func provenanceFromRow(row db.ProvenanceRecord) domain.ProvenanceRecord {
-	var prevHash *string
-	if row.PreviousHash.Valid {
-		prevHash = &row.PreviousHash.String
-	}
 	return domain.ProvenanceRecord{
 		ID:               row.ID,
 		ListingID:        row.ListingID,
 		ArtisanID:        row.ArtisanID,
 		CraftID:          row.CraftID,
 		ContentHash:      row.ContentHash,
-		PreviousHash:     prevHash,
+		PreviousHash:     row.PreviousHash,
 		Signature:        row.Signature,
 		SignatureAlgo:    row.SignatureAlgo,
 		PublicKeyID:      row.PublicKeyID,

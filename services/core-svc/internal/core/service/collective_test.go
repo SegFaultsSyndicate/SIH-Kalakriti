@@ -137,7 +137,7 @@ func TestCreateSelfHelpGroupStoresGroupAndRoster(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	group, roster, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), validSHGInput())
+	group, roster, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), validSHGInput())
 	if err != nil {
 		t.Fatalf("CreateSelfHelpGroup: %v", err)
 	}
@@ -167,7 +167,7 @@ func TestCreateSelfHelpGroupRejectsABadShareSplit(t *testing.T) {
 	in := validSHGInput()
 	in.Members[0].SharePct = 41 // now sums to 101
 
-	_, _, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), in)
+	_, _, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), in)
 	if err == nil {
 		t.Fatal("expected a roster summing to 101 to be rejected")
 	}
@@ -185,7 +185,7 @@ func TestCreateSelfHelpGroupRejectsANonMemberSignatory(t *testing.T) {
 	outsider := uuid.New()
 	in.SignatoryArtisanID = &outsider
 
-	_, _, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), in)
+	_, _, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), in)
 	if err == nil || !strings.Contains(err.Error(), "not one of the group's members") {
 		t.Fatalf("expected the signatory check to fire, got %v", err)
 	}
@@ -195,12 +195,12 @@ func TestSetSelfHelpGroupMembersReplacesRosterWholesale(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	group, _, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), validSHGInput())
+	group, _, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), validSHGInput())
 	if err != nil {
 		t.Fatalf("CreateSelfHelpGroup: %v", err)
 	}
 
-	roster, err := svc.SetSelfHelpGroupMembers(officerCtx("officer-1"), group.ID, []domain.SHGMemberShare{
+	roster, err := svc.SetSelfHelpGroupMembers(officerSubjectCtx("officer-1"), group.ID, []domain.SHGMemberShare{
 		{ArtisanID: artisanA, SharePct: 60},
 		{ArtisanID: artisanB, SharePct: 40},
 	})
@@ -222,12 +222,12 @@ func TestSetSelfHelpGroupMembersRejectsABadSplitWithoutTouchingTheStoredRoster(t
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	group, _, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), validSHGInput())
+	group, _, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), validSHGInput())
 	if err != nil {
 		t.Fatalf("CreateSelfHelpGroup: %v", err)
 	}
 
-	_, err = svc.SetSelfHelpGroupMembers(officerCtx("officer-1"), group.ID, []domain.SHGMemberShare{
+	_, err = svc.SetSelfHelpGroupMembers(officerSubjectCtx("officer-1"), group.ID, []domain.SHGMemberShare{
 		{ArtisanID: artisanA, SharePct: 60},
 		{ArtisanID: artisanB, SharePct: 50},
 	})
@@ -236,7 +236,7 @@ func TestSetSelfHelpGroupMembersRejectsABadSplitWithoutTouchingTheStoredRoster(t
 	}
 
 	// The original roster must be untouched.
-	stored, err := svc.ListSelfHelpGroupMembers(officerCtx("officer-1"), group.ID)
+	stored, err := svc.ListSelfHelpGroupMembers(officerSubjectCtx("officer-1"), group.ID)
 	if err != nil {
 		t.Fatalf("ListSelfHelpGroupMembers: %v", err)
 	}
@@ -249,7 +249,7 @@ func TestSetSelfHelpGroupMembersAuthorisation(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 
-	group, _, err := svc.CreateSelfHelpGroup(officerCtx("officer-1"), validSHGInput())
+	group, _, err := svc.CreateSelfHelpGroup(officerSubjectCtx("officer-1"), validSHGInput())
 	if err != nil {
 		t.Fatalf("CreateSelfHelpGroup: %v", err)
 	}
@@ -259,13 +259,13 @@ func TestSetSelfHelpGroupMembersAuthorisation(t *testing.T) {
 	}
 
 	// The signatory (artisanA) may change the split.
-	signatory := artisanCtx(artisanA.String(), testPhone)
+	signatory := artisanPhoneCtx(artisanA.String(), testPhone)
 	if _, err := svc.SetSelfHelpGroupMembers(signatory, group.ID, newRoster); err != nil {
 		t.Fatalf("the signatory should be allowed: %v", err)
 	}
 
 	// An ordinary member may not: these numbers divide real money.
-	member := artisanCtx(artisanB.String(), "+919000000002")
+	member := artisanPhoneCtx(artisanB.String(), "+919000000002")
 	if _, err := svc.SetSelfHelpGroupMembers(member, group.ID, newRoster); !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden for a non-signatory member, got %v", err)
 	}
@@ -278,7 +278,7 @@ func TestSetSelfHelpGroupMembersAuthorisation(t *testing.T) {
 
 func TestSetSelfHelpGroupMembersRejectsAnUnknownGroup(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
-	_, err := svc.SetSelfHelpGroupMembers(officerCtx("o1"), uuid.New(), []domain.SHGMemberShare{
+	_, err := svc.SetSelfHelpGroupMembers(officerSubjectCtx("o1"), uuid.New(), []domain.SHGMemberShare{
 		{ArtisanID: artisanA, SharePct: 100},
 	})
 	if !errors.Is(err, pkgdomain.ErrNotFound) {
@@ -292,11 +292,11 @@ func TestCreateClusterRequiresAnOfficer(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
 	in := domain.CreateClusterInput{Name: "Kutch", Region: domain.Region{StateCode: "IN-GJ"}}
 
-	if _, err := svc.CreateCluster(officerCtx("o1"), in); err != nil {
+	if _, err := svc.CreateCluster(officerSubjectCtx("o1"), in); err != nil {
 		t.Fatalf("officer should be allowed: %v", err)
 	}
 
-	artisan := artisanCtx(uuid.New().String(), testPhone)
+	artisan := artisanPhoneCtx(uuid.New().String(), testPhone)
 	if _, err := svc.CreateCluster(artisan, in); !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden for an artisan, got %v", err)
 	}
@@ -309,7 +309,7 @@ func TestCreateClusterRequiresAnOfficer(t *testing.T) {
 
 func TestCreateClusterValidation(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
-	ctx := officerCtx("o1")
+	ctx := officerSubjectCtx("o1")
 
 	tests := []struct {
 		name string
@@ -338,7 +338,7 @@ func TestCreateClusterValidation(t *testing.T) {
 func TestAddAndRemoveClusterMember(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
-	ctx := officerCtx("o1")
+	ctx := officerSubjectCtx("o1")
 
 	cluster, err := svc.CreateCluster(ctx, domain.CreateClusterInput{
 		Name: "Kutch", Region: domain.Region{StateCode: "IN-GJ"},
@@ -387,7 +387,7 @@ func TestAddAndRemoveClusterMember(t *testing.T) {
 
 func TestClusterMemberMutationsRequireAnOfficer(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{})
-	artisan := artisanCtx(artisanA.String(), testPhone)
+	artisan := artisanPhoneCtx(artisanA.String(), testPhone)
 
 	if _, err := svc.AddClusterMember(artisan, uuid.New(), artisanB, domain.ClusterRoleMember); !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)

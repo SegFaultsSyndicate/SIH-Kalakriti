@@ -65,7 +65,7 @@ func (r *Repo) MinimumWage(ctx context.Context, stateCode string, asOf time.Time
 // do not cancel it out). No match at all is 1.0 with no named driver.
 func (r *Repo) SeasonalityMultiplier(ctx context.Context, craftID uuid.UUID, month time.Month) (domain.TimingSignal, error) {
 	rows, err := r.q.ListSeasonalityMultipliers(ctx, db.ListSeasonalityMultipliersParams{
-		CraftID: craftID,
+		CraftID: &craftID,
 		Month:   int16(month),
 	})
 	if err != nil {
@@ -91,10 +91,11 @@ func (r *Repo) SeasonalityMultiplier(ctx context.Context, craftID uuid.UUID, mon
 // pass. filter.Strict applies the size/material-class/GI narrowing on top of
 // craft; a non-strict filter is craft-only, the caller's widened fallback.
 func (r *Repo) Comparables(ctx context.Context, filter domain.ComparablesFilter) (domain.MarketBand, error) {
+	embedding := pgvector.NewVector(filter.Embedding)
 	params := db.PricingComparableStatsParams{
 		CraftID:          filter.CraftID,
 		ExcludeListingID: filter.ExcludeListingID,
-		Embedding:        pgvector.NewVector(filter.Embedding),
+		Embedding:        &embedding,
 		CandidateLimit:   candidatesPerLeg,
 		RequireGi:        filter.Strict,
 		GiCertified:      filter.GICertified,

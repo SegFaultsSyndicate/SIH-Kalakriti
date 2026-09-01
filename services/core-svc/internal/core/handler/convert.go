@@ -259,7 +259,7 @@ func pageFromProto(p *commonv1.PageRequest) (domain.Page, error) {
 		return domain.Page{}, nil
 	}
 	page := domain.Page{Size: p.GetPageSize()}
-	if c := p.GetCursor(); c != "" {
+	if c := p.GetPageToken(); c != "" {
 		id, err := parseUUID("page.cursor", c)
 		if err != nil {
 			return domain.Page{}, err
@@ -273,9 +273,9 @@ func pageFromProto(p *commonv1.PageRequest) (domain.Page, error) {
 // caller has reached the end.
 func nextPage(lastID string, returned int, requested int32) *commonv1.PageResponse {
 	if returned == 0 || int32(returned) < requested {
-		return &commonv1.PageResponse{NextCursor: ""}
+		return &commonv1.PageResponse{NextPageToken: ""}
 	}
-	return &commonv1.PageResponse{NextCursor: lastID}
+	return &commonv1.PageResponse{NextPageToken: lastID}
 }
 
 // uuidsToStrings renders ids for a wire message.

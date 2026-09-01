@@ -71,14 +71,14 @@ type Querier interface {
 	InsertListingMedia(ctx context.Context, arg db.InsertListingMediaParams) error
 	ListListingMedia(ctx context.Context, listingID uuid.UUID) ([]db.ListListingMediaRow, error)
 
-	CreateMediaPending(ctx context.Context, arg db.CreateMediaPendingParams) (db.Media, error)
-	GetMedia(ctx context.Context, id uuid.UUID) (db.Media, error)
-	GetMediaByHash(ctx context.Context, arg db.GetMediaByHashParams) (db.Media, error)
+	CreateMediaPending(ctx context.Context, arg db.CreateMediaPendingParams) (db.Medium, error)
+	GetMedia(ctx context.Context, id uuid.UUID) (db.Medium, error)
+	GetMediaByHash(ctx context.Context, arg db.GetMediaByHashParams) (db.Medium, error)
 	ListMediaByIDs(ctx context.Context, ids []uuid.UUID) ([]db.ListMediaByIDsRow, error)
 	AttachMediaToProduct(ctx context.Context, arg db.AttachMediaToProductParams) (int64, error)
-	TransitionMediaState(ctx context.Context, arg db.TransitionMediaStateParams) (db.Media, error)
-	SetMediaEnhanced(ctx context.Context, arg db.SetMediaEnhancedParams) (db.Media, error)
-	ListStalePendingMedia(ctx context.Context, arg db.ListStalePendingMediaParams) ([]db.Media, error)
+	TransitionMediaState(ctx context.Context, arg db.TransitionMediaStateParams) (db.Medium, error)
+	SetMediaEnhanced(ctx context.Context, arg db.SetMediaEnhancedParams) (db.Medium, error)
+	ListStalePendingMedia(ctx context.Context, arg db.ListStalePendingMediaParams) ([]db.Medium, error)
 	DeleteMedia(ctx context.Context, id uuid.UUID) (int64, error)
 
 	GetListingPricingSource(ctx context.Context, arg db.GetListingPricingSourceParams) (db.GetListingPricingSourceRow, error)
