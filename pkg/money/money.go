@@ -54,6 +54,32 @@ func (m Money) Split(n int) []Money {
 	return parts
 }
 
+// SplitPct divides m into shares proportional to pcts (whole percentages,
+// e.g. 30 for 30%), which must sum to 100. Each share is floor(m*pct/100);
+// the paise lost to rounding are distributed one each to the first shares in
+// order, so the parts always sum back to exactly m.
+func (m Money) SplitPct(pcts []int) ([]Money, error) {
+	total := 0
+	for _, p := range pcts {
+		total += p
+	}
+	if total != 100 {
+		return nil, fmt.Errorf("percentages must sum to 100, got %d", total)
+	}
+
+	shares := make([]Money, len(pcts))
+	var allocated int64
+	for i, p := range pcts {
+		shares[i] = Money(int64(m) * int64(p) / 100)
+		allocated += int64(shares[i])
+	}
+	remainder := int64(m) - allocated
+	for i := 0; i < int(remainder); i++ {
+		shares[i%len(shares)]++
+	}
+	return shares, nil
+}
+
 // Format returns a display string in rupees with 2 decimal places.
 func (m Money) Format() string {
 	rupees := int64(m) / 100

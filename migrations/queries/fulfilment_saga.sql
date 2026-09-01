@@ -12,6 +12,9 @@ WHERE bulk_order_id = @bulk_order_id
   AND (sqlc.narg('since')::timestamptz IS NULL OR occurred_at >= sqlc.narg('since'))
 ORDER BY occurred_at, id;
 
+-- name: GetReservationForLot :one
+SELECT * FROM capacity_reservation WHERE lot_id = @lot_id;
+
 -- name: GetListingForFulfilment :one
 -- The saga's own view of a listing: craft, artisan, price and typical lead
 -- time. Joins product for craft_id since listing itself only carries

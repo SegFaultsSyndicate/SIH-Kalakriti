@@ -95,7 +95,7 @@ func (r *Repo) CandidatesForOrder(ctx context.Context, in domain.CandidateQuery)
 		PeriodStart:         in.PeriodStart,
 		HubClusterID:        hub,
 		RestrictToPreferred: len(in.PreferredArtisanIDs) > 0,
-		PreferredArtisanIDs: in.PreferredArtisanIDs,
+		PreferredArtisanIds: in.PreferredArtisanIDs,
 	})
 	if err != nil {
 		return nil, translate(err, "allocation candidates")
@@ -107,7 +107,7 @@ func (r *Repo) CandidatesForOrder(ctx context.Context, in domain.CandidateQuery)
 			ClusterID:      row.PrimaryClusterID,
 			AvailableUnits: row.AvailableUnits,
 			OnTimeRate:     float64(row.OnTimeRate),
-			SameCluster:    row.SameCluster,
+			SameCluster:    toBool(row.SameCluster),
 		})
 	}
 	return out, nil
@@ -188,14 +188,21 @@ func (t *Tx) CreateBulkOrder(ctx context.Context, id uuid.UUID, in domain.BulkOr
 		RequiredBy:      in.RequiredBy,
 		Customisations:  customisations,
 		Notes:           in.Notes,
-		IdempotencyKey:  idempotencyKey,
+		IdempotencyKey:  &idempotencyKey,
 		CreatedBy:       "buyer:" + in.BuyerID,
 		EscrowEnabled:   in.EscrowEnabled,
 	})
 	if err != nil {
 		return domain.BulkOrder{}, false, translate(err, "bulk order")
 	}
-	return toDomainBulkOrder(row.BulkOrder), row.IsNew, nil
+	return toDomainBulkOrder(db.BulkOrder{
+		ID: row.ID, BuyerID: row.BuyerID, ListingID: row.ListingID, ProductID: row.ProductID,
+		Quantity: row.Quantity, UnitPricePaise: row.UnitPricePaise, TotalValuePaise: row.TotalValuePaise,
+		CurrencyCode: row.CurrencyCode, RequiredBy: row.RequiredBy, State: row.State,
+		AllocatedQuantity: row.AllocatedQuantity, Customisations: row.Customisations, Notes: row.Notes,
+		CreatedBy: row.CreatedBy, CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt,
+		IdempotencyKey: row.IdempotencyKey, EscrowEnabled: row.EscrowEnabled,
+	}), row.IsNew, nil
 }
 
 // TransitionBulkOrder moves a bulk order from one state to another, guarded
@@ -496,6 +503,12 @@ func orEmpty(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// toBool handles a computed SQL boolean expression sqlc couldn't type statically.
+func toBool(v interface{}) bool {
+	b, _ := v.(bool)
+	return b
 }
 
 // BulkOrderEventRow is one row of the saga's audit trail, in the shape

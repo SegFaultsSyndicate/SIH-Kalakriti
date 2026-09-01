@@ -100,10 +100,7 @@ func (f *Fulfilment) RequestPaymentSplit(ctx context.Context, in RequestPaymentS
 		for i, payee := range payees {
 			gross := shares[i]
 			commission := gross.MulPct(in.CommissionPct)
-			net, err := gross.Sub(commission)
-			if err != nil {
-				return domain.PaymentSplit{}, err
-			}
+			net := gross.Sub(commission)
 			pending = append(pending, pendingLine{
 				lotID: lot.ID, payeeID: payee.payeeID, payeeType: payee.payeeType,
 				gross: gross.Paise(), commission: commission.Paise(), net: net.Paise(),

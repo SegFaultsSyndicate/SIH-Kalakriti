@@ -139,7 +139,12 @@ func (t *Tx) CreatePaymentSplit(ctx context.Context, id, orderID uuid.UUID, gros
 	if err != nil {
 		return domain.PaymentSplit{}, false, translate(err, "payment split")
 	}
-	return toDomainPaymentSplit(row.PaymentSplit), row.IsNew, nil
+	return toDomainPaymentSplit(db.PaymentSplit{
+		ID: row.ID, BulkOrderID: row.BulkOrderID, GrossTotalPaise: row.GrossTotalPaise,
+		CommissionTotalPaise: row.CommissionTotalPaise, NetTotalPaise: row.NetTotalPaise,
+		CurrencyCode: row.CurrencyCode, SettledAt: row.SettledAt,
+		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt,
+	}), row.IsNew, nil
 }
 
 // InsertPaymentSplitLine inserts one payee's share of one lot, or returns the
@@ -155,7 +160,13 @@ func (t *Tx) InsertPaymentSplitLine(ctx context.Context, id, splitID uuid.UUID, 
 	if err != nil {
 		return domain.PaymentSplitLine{}, false, translate(err, "payment split line")
 	}
-	return toDomainPaymentSplitLine(row.PaymentSplitLine), row.IsNew, nil
+	return toDomainPaymentSplitLine(db.PaymentSplitLine{
+		ID: row.ID, PaymentSplitID: row.PaymentSplitID, PayeeID: row.PayeeID,
+		PayeeType: row.PayeeType, LotID: row.LotID, GrossAmountPaise: row.GrossAmountPaise,
+		CommissionPaise: row.CommissionPaise, NetAmountPaise: row.NetAmountPaise,
+		PayoutRef: row.PayoutRef, SettlementRef: row.SettlementRef, SettledAt: row.SettledAt,
+		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt,
+	}), row.IsNew, nil
 }
 
 // MarkSplitLineSettled records one payee's settlement. Already-settled is a
@@ -267,7 +278,7 @@ func (t *Tx) ReleaseEscrowMilestone(ctx context.Context, id uuid.UUID, releaseRe
 // autocommit read) — what RespondToLot/ReportProgress/SubmitQC each check to
 // decide whether their trigger has a tranche waiting.
 func (r *Repo) ListPendingMilestonesForLot(ctx context.Context, lotID uuid.UUID) ([]domain.EscrowMilestone, error) {
-	rows, err := r.q.ListMilestonesForLot(ctx, lotID)
+	rows, err := r.q.ListMilestonesForLot(ctx, &lotID)
 	if err != nil {
 		return nil, translate(err, "escrow milestones")
 	}
