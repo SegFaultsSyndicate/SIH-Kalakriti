@@ -46,13 +46,13 @@ WHERE s.document_tsv @@ q.query
   AND (cardinality(@craft_ids::uuid[]) = 0 OR s.craft_id = ANY(@craft_ids))
   AND (cardinality(@colours::text[]) = 0 OR s.colours && @colours)
   AND (cardinality(@materials::text[]) = 0 OR s.materials && @materials)
-  AND (@min_price_paise::bigint IS NULL OR s.price_paise >= @min_price_paise)
-  AND (@max_price_paise::bigint IS NULL OR s.price_paise <= @max_price_paise)
-  AND (@state_code::text IS NULL OR s.state_code = @state_code)
-  AND (@listing_type::listing_type IS NULL OR s.listing_type = @listing_type)
+  AND (sqlc.narg('min_price_paise')::bigint IS NULL OR s.price_paise >= sqlc.narg('min_price_paise'))
+  AND (sqlc.narg('max_price_paise')::bigint IS NULL OR s.price_paise <= sqlc.narg('max_price_paise'))
+  AND (sqlc.narg('state_code')::text IS NULL OR s.state_code = sqlc.narg('state_code'))
+  AND (sqlc.narg('listing_type')::listing_type IS NULL OR s.listing_type = sqlc.narg('listing_type'))
   AND (NOT @gi_only::boolean OR s.gi_certified)
   AND (NOT @sealed_only::boolean OR s.provenance_sealed)
-  AND (@max_lead_time_days::integer IS NULL OR s.lead_time_days <= @max_lead_time_days)
+  AND (sqlc.narg('max_lead_time_days')::integer IS NULL OR s.lead_time_days <= sqlc.narg('max_lead_time_days'))
 ORDER BY score DESC, s.listing_id
 LIMIT @page_size;
 
@@ -67,13 +67,13 @@ WHERE s.embedding IS NOT NULL
   AND (cardinality(@craft_ids::uuid[]) = 0 OR s.craft_id = ANY(@craft_ids))
   AND (cardinality(@colours::text[]) = 0 OR s.colours && @colours)
   AND (cardinality(@materials::text[]) = 0 OR s.materials && @materials)
-  AND (@min_price_paise::bigint IS NULL OR s.price_paise >= @min_price_paise)
-  AND (@max_price_paise::bigint IS NULL OR s.price_paise <= @max_price_paise)
-  AND (@state_code::text IS NULL OR s.state_code = @state_code)
-  AND (@listing_type::listing_type IS NULL OR s.listing_type = @listing_type)
+  AND (sqlc.narg('min_price_paise')::bigint IS NULL OR s.price_paise >= sqlc.narg('min_price_paise'))
+  AND (sqlc.narg('max_price_paise')::bigint IS NULL OR s.price_paise <= sqlc.narg('max_price_paise'))
+  AND (sqlc.narg('state_code')::text IS NULL OR s.state_code = sqlc.narg('state_code'))
+  AND (sqlc.narg('listing_type')::listing_type IS NULL OR s.listing_type = sqlc.narg('listing_type'))
   AND (NOT @gi_only::boolean OR s.gi_certified)
   AND (NOT @sealed_only::boolean OR s.provenance_sealed)
-  AND (@max_lead_time_days::integer IS NULL OR s.lead_time_days <= @max_lead_time_days)
+  AND (sqlc.narg('max_lead_time_days')::integer IS NULL OR s.lead_time_days <= sqlc.narg('max_lead_time_days'))
 ORDER BY s.embedding <=> @embedding::vector
 LIMIT @page_size;
 

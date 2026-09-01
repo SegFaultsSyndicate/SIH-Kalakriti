@@ -95,8 +95,9 @@ func (r *Repo) SearchVector(
 	filters domain.Filters,
 	limit int32,
 ) ([]domain.Candidate, error) {
+	vector := pgvector.NewVector(embedding)
 	rows, err := r.q.SearchVectorCandidates(ctx, db.SearchVectorCandidatesParams{
-		Embedding:       pgvector.NewVector(embedding),
+		Embedding:       &vector,
 		Language:        db.LanguageCode(language),
 		CraftIds:        filters.CraftIDs,
 		Colours:         orEmpty(filters.Colours),
@@ -199,7 +200,7 @@ func (r *Repo) SuggestAliases(ctx context.Context, prefix, _ string, limit int32
 		craftID := row.CraftID
 		out = append(out, domain.Suggestion{
 			Text: row.DisplayName, Kind: domain.SuggestCraft,
-			EntityID: &craftID, Score: float64(row.Score),
+			EntityID: &craftID, Score: toFloat64(row.Score),
 		})
 	}
 	return out, nil
@@ -259,11 +260,11 @@ func (r *Repo) LoadIndexSource(ctx context.Context, listingID uuid.UUID) ([]doma
 			ArtisanID: row.ArtisanID, CraftID: row.CraftID, ClusterID: row.ClusterID,
 			ListingType: string(row.ListingType), PricePaise: row.PricePaise,
 			LeadTimeDays: row.LeadTimeDays, GICertified: row.GiCertified,
-			ProvenanceSealed: row.ProvenanceSealed,
+			ProvenanceSealed: toBool(row.ProvenanceSealed),
 			StateCode:        row.StateCode, District: row.District,
 			Colours: row.Colours, Materials: row.Materials,
 			Title: row.Title, Description: row.Description, Highlights: row.Highlights,
-			CraftName: row.CraftName, CraftAliases: row.CraftAliases,
+			CraftName: row.CraftName, CraftAliases: toStringSlice(row.CraftAliases),
 			Techniques: row.Techniques, Motifs: row.Motifs, Region: region,
 		})
 	}
@@ -316,4 +317,28 @@ func derefString(value *string) string {
 		return ""
 	}
 	return *value
+}
+
+// toFloat64 handles a computed SQL expression sqlc couldn't type statically
+// (a CASE mixing a literal with a real-returning function). pgx decodes
+// Postgres real as float32.
+func toFloat64(v interface{}) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case float32:
+		return float64(n)
+	default:
+		return 0
+	}
+}
+
+func toBool(v interface{}) bool {
+	b, _ := v.(bool)
+	return b
+}
+
+func toStringSlice(v interface{}) []string {
+	s, _ := v.([]string)
+	return s
 }
