@@ -23,7 +23,7 @@ CREATE INDEX mv_artisans_by_category_state_district_idx
 CREATE MATERIALIZED VIEW mv_listings_by_craft_month AS
 SELECT
     p.craft_id,
-    c.name_en AS craft_name,
+    c.display_name AS craft_name,
     date_trunc('month', l.published_at) AS month,
     COUNT(*) AS listing_count,
     COUNT(DISTINCT l.artisan_id) AS artisan_count
@@ -31,7 +31,7 @@ FROM listing l
 JOIN product p ON l.product_id = p.id
 JOIN craft c ON p.craft_id = c.id
 WHERE l.published_at IS NOT NULL
-GROUP BY p.craft_id, c.name_en, date_trunc('month', l.published_at);
+GROUP BY p.craft_id, c.display_name, date_trunc('month', l.published_at);
 
 CREATE INDEX mv_listings_by_craft_month_craft_month_idx
     ON mv_listings_by_craft_month (craft_id, month DESC);
@@ -143,7 +143,7 @@ craft_stats AS (
 )
 SELECT
     cs.craft_id,
-    c.name_en AS craft_name,
+    c.display_name AS craft_name,
     cs.decline_rate,
     cs.max_count AS peak_artisans,
     cs.min_count AS current_artisans

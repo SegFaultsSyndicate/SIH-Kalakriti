@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 )
@@ -23,19 +24,31 @@ type VerificationHandler struct {
 	cache     *redis.Client
 	verifyURL string
 	tmpl      *template.Template
+	publicKey []byte // Ed25519 public key that signed sealed provenance records; nil fails closed.
 }
 
-// NewVerificationHandler builds the handler.
-func NewVerificationHandler(catalog CatalogService, cache *redis.Client, verifyURL string) (*VerificationHandler, error) {
+// NewVerificationHandler builds the handler. publicKeyHex is the hex-encoded
+// Ed25519 public key matching the provenance signer's private key (see
+// scripts/keygen.go); pass "" only in environments with no signer configured,
+// which makes every signature check fail closed rather than report valid.
+func NewVerificationHandler(catalog CatalogService, cache *redis.Client, verifyURL, publicKeyHex string) (*VerificationHandler, error) {
 	tmpl, err := template.New("verify").Parse(verificationPageTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("parsing verification template: %w", err)
+	}
+	var pubKey []byte
+	if publicKeyHex != "" {
+		pubKey, err = hex.DecodeString(publicKeyHex)
+		if err != nil {
+			return nil, fmt.Errorf("decoding provenance public key: %w", err)
+		}
 	}
 	return &VerificationHandler{
 		catalog:   catalog,
 		cache:     cache,
 		verifyURL: verifyURL,
 		tmpl:      tmpl,
+		publicKey: pubKey,
 	}, nil
 }
 
@@ -169,15 +182,18 @@ func (h *VerificationHandler) fetchVerificationData(ctx context.Context, code st
 	}, nil
 }
 
-// verifySignature checks the provenance signature.
+// verifySignature recomputes the signed message from the record's content
+// hash and checks it against the stored signature. A missing or malformed
+// content hash, or no configured public key, fails closed.
 func (h *VerificationHandler) verifySignature(prov ProvenanceRecord) bool {
-	_, err := hex.DecodeString(prov.ContentHash)
+	if len(h.publicKey) == 0 {
+		return false
+	}
+	message, err := hex.DecodeString(prov.ContentHash)
 	if err != nil {
 		return false
 	}
-	// TODO: fetch public key by prov.PublicKeyID from a key store.
-	// For now, assume valid if signature is present.
-	return len(prov.Signature) > 0
+	return crypto.Verify(h.publicKey, message, prov.Signature)
 }
 
 // getFromCache retrieves cached verification data.

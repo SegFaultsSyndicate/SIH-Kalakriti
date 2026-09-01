@@ -3,6 +3,8 @@ package handler
 
 import (
 	"context"
+	"crypto/ed25519"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -114,7 +116,7 @@ func TestVerificationPageRendersForValidCode(t *testing.T) {
 	}
 
 	cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-	handler, err := NewVerificationHandler(catalog, cache, "https://example.com")
+	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -143,7 +145,7 @@ func TestVerificationPageReturns404ForUnknownCode(t *testing.T) {
 	}
 
 	cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-	handler, err := NewVerificationHandler(catalog, cache, "https://example.com")
+	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -186,7 +188,7 @@ func TestVerificationJSONEndpoint(t *testing.T) {
 	}
 
 	cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-	handler, err := NewVerificationHandler(catalog, cache, "https://example.com")
+	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -220,7 +222,7 @@ func TestVerificationJSONReturns404ForUnknownCode(t *testing.T) {
 	}
 
 	cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-	handler, err := NewVerificationHandler(catalog, cache, "https://example.com")
+	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
 	r := chi.NewRouter()
@@ -236,4 +238,70 @@ func TestVerificationJSONReturns404ForUnknownCode(t *testing.T) {
 
 func strPtr(s string) *string {
 	return &s
+}
+
+// TestVerificationSignatureCheckedAgainstRealKey proves the verify page
+// actually recomputes and checks the signature: a genuine signature over the
+// content hash reports valid, and a record whose content hash was mutated
+// after signing (the tamper the old `len(signature) > 0` stub would have
+// missed) reports invalid.
+func TestVerificationSignatureCheckedAgainstRealKey(t *testing.T) {
+	pub, priv, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+
+	contentHash := "abcd1234abcd1234abcd1234abcd1234"
+	hashBytes, err := hex.DecodeString(contentHash)
+	require.NoError(t, err)
+	signature := ed25519.Sign(priv, hashBytes)
+
+	baseCatalog := func(prov ProvenanceRecord) *fakeCatalogClient {
+		return &fakeCatalogClient{
+			provenance: map[string]ProvenanceRecord{prov.ShortCode: prov},
+			listings: map[string]Listing{
+				"listing-456": {ID: "listing-456", ProductID: "product-123", ArtisanID: "artisan-789", Title: "Handwoven Saree"},
+			},
+			artisans: map[string]Artisan{
+				"artisan-789": {ID: "artisan-789", DisplayName: "Lakshmi Devi"},
+			},
+			crafts: map[string]Craft{
+				"craft-001": {ID: "craft-001", DisplayName: "Kanchipuram Silk Weaving"},
+			},
+		}
+	}
+
+	valid := ProvenanceRecord{
+		ID: "prov-123", ListingID: "listing-456", ArtisanID: "artisan-789", CraftID: "craft-001",
+		ContentHash: contentHash, Signature: signature, SignatureAlgo: "ed25519",
+		ShortCode: "SIGTEST01", SealedAt: time.Date(2026, 8, 27, 0, 0, 0, 0, time.UTC),
+	}
+	tampered := valid
+	tampered.ShortCode = "SIGTEST02"
+	tampered.ContentHash = "ffffffffffffffffffffffffffffffff" // signed hash, then mutated
+
+	// Distinct short codes: ServeHTTP checks a Redis cache keyed by code before
+	// re-fetching, so two subtests sharing a code could read back the first
+	// subtest's cached (and now stale) SignatureValid instead of recomputing it.
+	for _, tc := range []struct {
+		name string
+		prov ProvenanceRecord
+		text string
+	}{
+		{"valid signature", valid, "cryptographically verified"},
+		{"tampered record", tampered, "Signature verification failed"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+			handler, err := NewVerificationHandler(baseCatalog(tc.prov), cache, "https://example.com", hex.EncodeToString(pub))
+			require.NoError(t, err)
+
+			r := chi.NewRouter()
+			r.Get("/v/{code}", handler.ServeHTTP)
+
+			req := httptest.NewRequest(http.MethodGet, "/v/"+tc.prov.ShortCode, nil)
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
+
+			assert.Contains(t, w.Body.String(), tc.text)
+		})
+	}
 }

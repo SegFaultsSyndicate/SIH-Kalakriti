@@ -1,4 +1,4 @@
--- migrations/023_notification_delivery.sql
+-- migrations/029_notification_delivery.sql
 -- +goose Up
 
 -- Delivery attempts per channel (WhatsApp, email, push). Distinct from the

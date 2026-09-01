@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/<org>/kalakriti/pkg/domain"
-	pkgdomain "github.com/<org>/kalakriti/pkg/domain"
-	"github.com/<org>/kalakriti/services/insight-svc/internal/insight/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/domain"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

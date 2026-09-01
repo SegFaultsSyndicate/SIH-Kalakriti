@@ -9,8 +9,8 @@ export
 COMPOSE ?= docker compose
 BIN_DIR  := bin
 
-GO_MODULES  := pkg services/core-svc services/search-svc services/collab-svc services/bff services/insight-svc
-GO_SERVICES := core-svc search-svc collab-svc bff insight-svc
+GO_MODULES  := pkg services/core-svc services/search-svc services/collab-svc services/bff services/insight-svc services/channel-svc
+GO_SERVICES := core-svc search-svc collab-svc bff insight-svc channel-svc
 
 POSTGRES_USER     ?= kalakriti
 POSTGRES_PASSWORD ?= kalakriti
@@ -157,4 +157,5 @@ docker-build: ## Build all Docker images
 	docker build -f Dockerfile.bff -t kalakriti/bff:latest .
 	docker build -f Dockerfile.ml-svc -t kalakriti/ml-svc:latest .
 	docker build -f Dockerfile.insight-svc -t kalakriti/insight-svc:latest .
+	docker build -f Dockerfile.channel-svc -t kalakriti/channel-svc:latest .
 	@echo "✓ All images built"

@@ -1,0 +1,31 @@
+# Dockerfile.channel-svc
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /build
+
+COPY go.work go.work.sum ./
+COPY pkg/go.mod pkg/go.sum ./pkg/
+COPY services/channel-svc/go.mod services/channel-svc/go.sum ./services/channel-svc/
+
+RUN go work sync
+RUN cd services/channel-svc && go mod download
+
+COPY pkg/ ./pkg/
+COPY services/channel-svc/ ./services/channel-svc/
+
+RUN cd services/channel-svc && CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /build/channel-svc ./cmd/channel-svc
+
+FROM alpine:3.18
+
+RUN apk --no-cache add ca-certificates && \
+    adduser -D -u 10001 appuser
+
+WORKDIR /app
+
+COPY --from=builder /build/channel-svc .
+
+USER appuser
+
+EXPOSE 8083 50053
+
+CMD ["./channel-svc"]

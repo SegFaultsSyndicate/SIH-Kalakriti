@@ -1,4 +1,4 @@
-# scripts/generate-qr-sheet/main.go
+// scripts/generate-qr-sheet/main.go
 package main
 
 import (

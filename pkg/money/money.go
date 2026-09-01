@@ -4,7 +4,7 @@ package money
 import (
 	"fmt"
 
-	pb "github.com/<org>/kalakriti/pkg/pb/common/v1"
+	pb "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
 )
 
 // Money represents an amount in paise (1/100 of rupee).

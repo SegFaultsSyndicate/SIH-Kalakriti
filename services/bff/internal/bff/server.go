@@ -11,6 +11,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
+	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
 )
@@ -21,23 +22,31 @@ type Config struct {
 	BaseURL string
 	WebDist string
 
-	Logger    *slog.Logger
-	Issuer    *auth.Issuer
-	Redis     *redis.Client
+	// AllowedOrigins is the CORS allowlist for the public API. Empty disables
+	// CORS entirely; set explicitly per environment rather than wildcarding.
+	AllowedOrigins []string
+	// ProvenancePublicKeyHex is the hex-encoded Ed25519 public key matching
+	// the provenance signer's private key. Empty makes the /v/{code}
+	// signature check fail closed.
+	ProvenancePublicKeyHex string
+
+	Logger     *slog.Logger
+	Issuer     *auth.Issuer
+	Redis      *redis.Client
 	IdempStore middleware.IdempotencyStore
 
 	// Service clients (gRPC).
-	AuthSvc     handler.AuthService
-	ArtisanSvc  handler.ArtisanService
-	MediaSvc    handler.MediaService
-	ListingSvc  handler.ListingService
-	SearchSvc   handler.SearchService
-	PricingSvc  handler.PricingService
-	OrderSvc    handler.OrderService
-	FollowSvc   handler.FollowService
-	StmtSvc     handler.StatementService
-	InsightSvc  handler.InsightService
-	CatalogSvc  handler.CatalogService
+	AuthSvc    handler.AuthService
+	ArtisanSvc handler.ArtisanService
+	MediaSvc   handler.MediaService
+	ListingSvc handler.ListingService
+	SearchSvc  handler.SearchService
+	PricingSvc handler.PricingService
+	OrderSvc   handler.OrderService
+	FollowSvc  handler.FollowService
+	StmtSvc    handler.StatementService
+	InsightSvc handler.InsightService
+	CatalogSvc handler.CatalogService
 
 	// Rate limiting.
 	RateLimitPerIP        int
@@ -60,7 +69,7 @@ func NewServer(cfg Config) (*Server, error) {
 	// Build the chi router with pkg/httpx base middleware.
 	r := httpx.Mux(httpx.Config{
 		Logger:         cfg.Logger,
-		AllowedOrigins: []string{"*"}, // ponytail: tighten per environment
+		AllowedOrigins: cfg.AllowedOrigins,
 		RequestTimeout: 30 * time.Second,
 	})
 
@@ -87,7 +96,7 @@ func (s *Server) mountRoutes() {
 		cfg.StmtSvc, cfg.InsightSvc,
 	)
 
-	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
+	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
 	spaH := handler.NewSPAHandler(cfg.WebDist)
 
@@ -165,9 +174,11 @@ func (s *Server) mountRoutes() {
 			authed.Get("/insights/dying-crafts", apiH.GetDyingCrafts)
 		})
 
-		// OpenAPI spec.
+		// OpenAPI spec, embedded at build time so it serves regardless of the
+		// process's working directory.
 		api.Get("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "openapi.json") // ponytail: serve from disk
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(assets.OpenAPIJSON)
 		})
 	})
 

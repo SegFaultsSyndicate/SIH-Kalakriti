@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -55,16 +56,18 @@ func run() error {
 
 	// Build the server (service clients are nil stubs for now).
 	srv, err := bff.NewServer(bff.Config{
-		Addr:                  getEnv("ADDR", ":8080"),
-		BaseURL:               mustEnv("BASE_URL"),
-		WebDist:               getEnv("WEB_DIST", "./web/dist"),
-		Logger:                logger,
-		Issuer:                issuer,
-		Redis:                 rdb,
-		IdempStore:            nil, // TODO: wire Postgres idempotency store
-		RateLimitPerIP:        100,
-		RateLimitPerPrincipal: 1000,
-		RateLimitWindow:       time.Minute,
+		Addr:                   getEnv("ADDR", ":8080"),
+		BaseURL:                mustEnv("BASE_URL"),
+		WebDist:                getEnv("WEB_DIST", "./web/dist"),
+		AllowedOrigins:         splitEnv("CORS_ALLOWED_ORIGINS"),
+		ProvenancePublicKeyHex: os.Getenv("PROVENANCE_PUBLIC_KEY"),
+		Logger:                 logger,
+		Issuer:                 issuer,
+		Redis:                  rdb,
+		IdempStore:             nil, // TODO: wire Postgres idempotency store
+		RateLimitPerIP:         100,
+		RateLimitPerPrincipal:  1000,
+		RateLimitWindow:        time.Minute,
 		// Service clients: TODO wire gRPC clients to backend services.
 		AuthSvc:    nil,
 		ArtisanSvc: nil,
@@ -125,4 +128,17 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// splitEnv reads a comma-separated env var into a slice, or nil if unset.
+func splitEnv(key string) []string {
+	v := os.Getenv(key)
+	if v == "" {
+		return nil
+	}
+	parts := strings.Split(v, ",")
+	for i, p := range parts {
+		parts[i] = strings.TrimSpace(p)
+	}
+	return parts
 }

@@ -149,6 +149,32 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  channel-svc:
+    build:
+      context: ./kalakriti
+      dockerfile: ../Dockerfile.channel-svc
+    environment:
+      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+      CORE_SVC_ADDR: core-svc:8080
+      OTLP_ENDPOINT: jaeger:4317
+      CHANNEL_SVC_HTTP_ADDR: ":8084"
+      CHANNEL_SVC_GRPC_ADDR: ":9096"
+    ports:
+      - "8084:8084"
+      - "9096:9096"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      core-svc:
+        condition: service_started
+    restart: unless-stopped
+
   insight-svc:
     build:
       context: ./kalakriti

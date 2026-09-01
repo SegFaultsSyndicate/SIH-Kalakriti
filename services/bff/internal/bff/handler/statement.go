@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/<org>/kalakriti/pkg/httpx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
