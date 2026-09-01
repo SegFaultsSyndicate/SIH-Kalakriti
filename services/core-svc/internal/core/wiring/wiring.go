@@ -9,6 +9,12 @@ package wiring
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -158,4 +164,109 @@ func (o ObjectStore) Stat(ctx context.Context, objectKey string) (service.Object
 // Delete removes an object; deleting a missing object is not an error.
 func (o ObjectStore) Delete(ctx context.Context, objectKey string) error {
 	return o.client.Delete(ctx, objectKey)
+}
+
+// ProvenanceStore binds the same repository to service.ProvenanceStore.
+type ProvenanceStore struct {
+	*repo.Repo
+}
+
+// NewProvenanceStore wraps a repository as the provenance service's persistence port.
+func NewProvenanceStore(r *repo.Repo) ProvenanceStore { return ProvenanceStore{Repo: r} }
+
+// ProvenanceStore satisfies the provenance service's persistence contract.
+var _ service.ProvenanceStore = ProvenanceStore{}
+
+// InTx adapts the repository's concrete transaction type to ProvenanceTx.
+func (s ProvenanceStore) InTx(ctx context.Context, fn func(ctx context.Context, tx service.ProvenanceTx) error) error {
+	return s.Repo.InTx(ctx, func(ctx context.Context, tx *repo.Tx) error {
+		return fn(ctx, tx)
+	})
+}
+
+// MediaHasher computes a media object's SHA-256 by downloading it fresh from
+// object storage rather than trusting the client-supplied hash recorded at
+// upload time: the sealed record is a cryptographic attestation, so it must
+// hash what the artisan actually uploaded, not what a client claimed.
+type MediaHasher struct {
+	repo    *repo.Repo
+	objects *storage.Client
+}
+
+// NewMediaHasher builds the provenance service's media-hashing port.
+func NewMediaHasher(r *repo.Repo, objects *storage.Client) MediaHasher {
+	return MediaHasher{repo: r, objects: objects}
+}
+
+// MediaHasher satisfies the provenance service's hashing contract.
+var _ service.MediaHasher = MediaHasher{}
+
+// HashMedia downloads the stored object and returns its lowercase hex SHA-256.
+func (m MediaHasher) HashMedia(ctx context.Context, mediaID uuid.UUID) (string, error) {
+	media, err := m.repo.GetMedia(ctx, mediaID)
+	if err != nil {
+		return "", fmt.Errorf("fetching media %s: %w", mediaID, err)
+	}
+	url, err := m.objects.PresignedGetURL(ctx, media.ServableObjectKey(), 5*time.Minute)
+	if err != nil {
+		return "", fmt.Errorf("presigning media %s: %w", mediaID, err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", fmt.Errorf("building request for media %s: %w", mediaID, err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("downloading media %s: %w", mediaID, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return "", fmt.Errorf("downloading media %s: object storage returned %d", mediaID, resp.StatusCode)
+	}
+	h := sha256.New()
+	if _, err := io.Copy(h, resp.Body); err != nil {
+		return "", fmt.Errorf("hashing media %s: %w", mediaID, err)
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// TechniqueVerifier checks a listing's claimed craft technique against the
+// model's observation, stored as the listing's "technique" attribute by the
+// cataloguing pipeline (batch 9).
+type TechniqueVerifier struct {
+	repo *repo.Repo
+}
+
+// NewTechniqueVerifier builds the provenance service's technique-check port.
+func NewTechniqueVerifier(r *repo.Repo) TechniqueVerifier { return TechniqueVerifier{repo: r} }
+
+// TechniqueVerifier satisfies the provenance service's verification contract.
+var _ service.TechniqueVerifier = TechniqueVerifier{}
+
+// Observe returns the model's observed technique and its confidence, or ("",
+// 0, nil) if the pipeline never wrote one for this listing.
+func (t TechniqueVerifier) Observe(ctx context.Context, listingID uuid.UUID) (observed string, confidence float32, err error) {
+	attrs, err := t.repo.GetListingAttributes(ctx, listingID)
+	if err != nil {
+		return "", 0, fmt.Errorf("fetching listing attributes for %s: %w", listingID, err)
+	}
+	for _, a := range attrs {
+		if a.Name == "technique" {
+			return a.Value, a.Confidence, nil
+		}
+	}
+	return "", 0, nil
+}
+
+// Verify reports whether the claimed technique matches the model's
+// observation. A listing the pipeline never scored cannot be confirmed.
+func (t TechniqueVerifier) Verify(ctx context.Context, listingID uuid.UUID, claimedTechnique string) (bool, error) {
+	observed, _, err := t.Observe(ctx, listingID)
+	if err != nil {
+		return false, err
+	}
+	if observed == "" {
+		return false, nil
+	}
+	return strings.EqualFold(observed, claimedTechnique), nil
 }

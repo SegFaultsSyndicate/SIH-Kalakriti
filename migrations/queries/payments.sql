@@ -36,7 +36,7 @@ RETURNING *;
 
 -- name: MarkPaymentSplitSettled :one
 UPDATE payment_split SET settled_at = now(), updated_at = now()
-WHERE id = @id AND settled_at IS NULL
+WHERE payment_split.id = @id AND settled_at IS NULL
   AND NOT EXISTS (
       SELECT 1 FROM payment_split_line l
       WHERE l.payment_split_id = payment_split.id AND l.settled_at IS NULL
@@ -62,7 +62,7 @@ RETURNING *;
 
 -- Batch 13: get-or-insert so a retried RequestPaymentSplit call never creates
 -- a second header row and never re-derives amounts from a possibly-changed
--- world — same idiom as CreateBulkOrder (orders.sql).
+-- world  -  same idiom as CreateBulkOrder (orders.sql).
 -- name: CreatePaymentSplitIdempotent :one
 WITH inserted AS (
     INSERT INTO payment_split (id, bulk_order_id, gross_total_paise, commission_total_paise, net_total_paise)

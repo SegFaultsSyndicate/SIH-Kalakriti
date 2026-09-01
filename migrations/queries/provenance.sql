@@ -31,7 +31,7 @@ LIMIT 1;
 SELECT * FROM provenance_record
 WHERE artisan_id = @artisan_id
 ORDER BY sealed_at DESC
-LIMIT @limit;
+LIMIT @page_limit;
 
 -- name: ShortCodeExists :one
 SELECT EXISTS(SELECT 1 FROM provenance_record WHERE short_code = @short_code) AS exists;

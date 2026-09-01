@@ -24,7 +24,7 @@ CREATE INDEX idx_fraud_flags_resource ON fraud_flags(resource_type, resource_id)
 CREATE INDEX idx_fraud_flags_created_at ON fraud_flags(created_at DESC);
 CREATE INDEX idx_fraud_flags_severity ON fraud_flags(severity) WHERE severity IN ('high', 'critical');
 
--- Function to check for new buyer large order (>₹50k order from buyer with <7 days account age)
+-- Function to check for new buyer large order (>Rs. 50k order from buyer with <7 days account age)
 CREATE OR REPLACE FUNCTION fraud_check_new_buyer_large_order()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -39,12 +39,12 @@ BEGIN
 
     account_age_days := EXTRACT(EPOCH FROM (NOW() - buyer_created_at)) / 86400;
 
-    -- Calculate order value (sum of lot quantities × prices)
+    -- Calculate order value (sum of lot quantities x prices)
     SELECT COALESCE(SUM(ol.quantity * ol.unit_price_paise), 0) INTO order_value_paise
     FROM order_lots ol
     WHERE ol.bulk_order_id = NEW.id;
 
-    -- Flag if: buyer account <7 days old AND order >₹50,000
+    -- Flag if: buyer account <7 days old AND order >Rs. 50,000
     IF account_age_days < 7 AND order_value_paise > 5000000 THEN
         INSERT INTO fraud_flags (
             resource_type,
@@ -58,7 +58,7 @@ BEGIN
             NEW.id,
             'new_buyer_large_order',
             'high',
-            format('New buyer (account age: %s days) placed large order (₹%s)',
+            format('New buyer (account age: %s days) placed large order (Rs. %s)',
                    account_age_days,
                    order_value_paise / 100.0),
             jsonb_build_object(

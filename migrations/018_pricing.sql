@@ -2,7 +2,7 @@
 -- +goose Up
 
 -- State minimum wage for skilled work, the cost floor's wage input. Keyed by
--- state and effective date so a rate revision is a new row, never an update —
+-- state and effective date so a rate revision is a new row, never an update  - 
 -- a floor computed last month must still cite the rate that was live then.
 -- effective_date is timestamptz, not date, so this table follows the same
 -- "all timestamps TIMESTAMPTZ UTC" rule as everything else and the repo layer

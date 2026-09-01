@@ -12,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
 )
@@ -38,14 +39,14 @@ func TestAuthMiddleware_Unauthenticated(t *testing.T) {
 
 	srv.ServeHTTP(w, req)
 
-	if w.Code != http.StatusForbidden {
-		t.Errorf("expected 403, got %d", w.Code)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
 	}
 
 	var body map[string]any
 	json.NewDecoder(w.Body).Decode(&body)
-	if body["error"] != "forbidden" {
-		t.Errorf("expected error=forbidden, got %v", body["error"])
+	if body["error"] != "unauthenticated" {
+		t.Errorf("expected error=unauthenticated, got %v", body["error"])
 	}
 }
 
@@ -198,4 +199,31 @@ func (m *mockArtisanSvc) GetProfile(artisanID string) (map[string]any, error) {
 
 func (m *mockArtisanSvc) UpdateProfile(artisanID string, updates map[string]any) error {
 	return nil
+}
+
+// mockListingSvc returns not-found for every listing, for testing error mapping.
+type mockListingSvc struct{}
+
+func (m *mockListingSvc) CreateListing(artisanID string, listing map[string]any) (string, error) {
+	return "", nil
+}
+
+func (m *mockListingSvc) UpdateListing(listingID string, updates map[string]any) error {
+	return nil
+}
+
+func (m *mockListingSvc) SubmitForReview(listingID string) error {
+	return nil
+}
+
+func (m *mockListingSvc) ApproveListing(listingID, reviewerID string) error {
+	return nil
+}
+
+func (m *mockListingSvc) GetListing(listingID string) (map[string]any, error) {
+	return nil, pkgdomain.NotFound("listing not found")
+}
+
+func (m *mockListingSvc) ListListings(filters map[string]any) ([]map[string]any, error) {
+	return nil, nil
 }

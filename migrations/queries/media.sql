@@ -28,7 +28,7 @@ RETURNING *;
 SELECT * FROM media WHERE id = @id;
 
 -- Dedupe on re-upload: same artisan, same bytes, no second object in MinIO. A
--- PENDING row is not a hit — its bytes may never arrive.
+-- PENDING row is not a hit  -  its bytes may never arrive.
 -- name: GetMediaByHash :one
 SELECT * FROM media
 WHERE artisan_id = @artisan_id AND sha256_hex = @sha256_hex AND state <> 'PENDING'
@@ -85,42 +85,3 @@ LIMIT @batch_size;
 
 -- name: DeleteMedia :execrows
 DELETE FROM media WHERE id = @id;
-
--- name: CreateProvenanceRecord :one
-INSERT INTO provenance_record (
-    id, listing_id, product_id, artisan_id, technique_claimed, technique_observed,
-    technique_matches, technique_confidence, loom_is_handloom, loom_confidence,
-    loom_fft_peak_ratio, content_hash, previous_hash, signature, signature_algorithm,
-    qr_code, certificate_media_id, model_version
-) VALUES (
-    @id, @listing_id, @product_id, @artisan_id, @technique_claimed, @technique_observed,
-    @technique_matches, @technique_confidence, sqlc.narg('loom_is_handloom'),
-    sqlc.narg('loom_confidence'), sqlc.narg('loom_fft_peak_ratio'), @content_hash,
-    sqlc.narg('previous_hash'), @signature, @signature_algorithm, @qr_code,
-    sqlc.narg('certificate_media_id'), @model_version
-)
-RETURNING *;
-
--- name: GetProvenanceRecord :one
-SELECT * FROM provenance_record WHERE id = @id;
-
--- name: GetProvenanceByListing :one
-SELECT * FROM provenance_record WHERE listing_id = @listing_id;
-
--- The tail of an artisan's hash chain, which the next seal links to.
--- name: GetLatestProvenanceHash :one
-SELECT content_hash FROM provenance_record
-WHERE artisan_id = @artisan_id
-ORDER BY sealed_at DESC, id DESC
-LIMIT 1;
-
--- name: LinkProvenanceMedia :exec
-INSERT INTO provenance_media (provenance_id, media_id, ordinal)
-VALUES (@provenance_id, @media_id, @ordinal)
-ON CONFLICT ON CONSTRAINT provenance_media_pkey DO UPDATE SET ordinal = EXCLUDED.ordinal;
-
--- name: ListProvenanceMedia :many
-SELECT m.* FROM media m
-JOIN provenance_media pm ON pm.media_id = m.id
-WHERE pm.provenance_id = @provenance_id
-ORDER BY pm.ordinal, m.id;

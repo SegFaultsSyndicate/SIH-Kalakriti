@@ -2,7 +2,7 @@
 -- +goose Up
 
 -- Delivery attempts per channel (WhatsApp, email, push). Distinct from the
--- notification itself — one notification can have delivery attempts to multiple
+-- notification itself  -  one notification can have delivery attempts to multiple
 -- channels, and a failed delivery can be retried.
 CREATE TABLE notification_delivery (
     id              uuid        NOT NULL,

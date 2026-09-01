@@ -214,7 +214,7 @@ func run() error {
 	})
 
 	httpServer := &http.Server{
-		Addr:    cfg.server.HTTPAddr,
+		Addr:    cfg.httpAddr,
 		Handler: httpMux,
 	}
 

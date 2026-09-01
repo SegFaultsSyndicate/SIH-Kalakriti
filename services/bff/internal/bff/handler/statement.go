@@ -2,14 +2,16 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 )
 
 // StatementClient talks to insight-svc.
@@ -37,24 +39,24 @@ func (h *StatementHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpx.Error(w, http.StatusBadRequest, "invalid request body")
+		httpx.Error(w, domain.InvalidInput("invalid request body"))
 		return
 	}
 
 	artisanID, err := uuid.Parse(req.ArtisanID)
 	if err != nil {
-		httpx.Error(w, http.StatusBadRequest, "invalid artisan_id")
+		httpx.Error(w, domain.InvalidInput("invalid artisan_id"))
 		return
 	}
 
 	if req.Year < 2020 || req.Year > 2100 || req.Month < 1 || req.Month > 12 {
-		httpx.Error(w, http.StatusBadRequest, "invalid year or month")
+		httpx.Error(w, domain.InvalidInput("invalid year or month"))
 		return
 	}
 
 	pdfURL, code, err := h.client.GenerateStatement(r.Context(), artisanID, req.Year, req.Month)
 	if err != nil {
-		httpx.Error(w, http.StatusInternalServerError, "failed to generate statement")
+		httpx.Error(w, err)
 		return
 	}
 
@@ -68,13 +70,13 @@ func (h *StatementHandler) Generate(w http.ResponseWriter, r *http.Request) {
 func (h *StatementHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {
-		httpx.Error(w, http.StatusBadRequest, "missing code")
+		httpx.Error(w, domain.InvalidInput("missing code"))
 		return
 	}
 
 	verified, details, err := h.client.VerifyStatement(r.Context(), code)
 	if err != nil {
-		httpx.Error(w, http.StatusInternalServerError, "verification failed")
+		httpx.Error(w, err)
 		return
 	}
 

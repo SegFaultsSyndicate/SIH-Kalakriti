@@ -34,7 +34,7 @@ SET artisan_id        = EXCLUDED.artisan_id,
 -- name: DeleteListingSearch :execrows
 DELETE FROM listing_search WHERE listing_id = @listing_id;
 
--- Lexical half of hybrid retrieval. ts_rank_cd, not true BM25 — Postgres has no BM25,
+-- Lexical half of hybrid retrieval. ts_rank_cd, not true BM25  -  Postgres has no BM25,
 -- and the ranks are only used for the fusion ordering, which is rank-based anyway.
 -- name: SearchLexicalCandidates :many
 SELECT s.listing_id, s.language, s.artisan_id, s.craft_id, s.price_paise,

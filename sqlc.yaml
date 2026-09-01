@@ -26,6 +26,13 @@ sql:
         emit_empty_slices: true
         emit_json_tags: false
         emit_pointers_for_null_types: true
+        # Scalar-only: no vector override here. sqlc v1.31.1 in this
+        # environment fails to generate ("expected ';', found '-'", a bogus
+        # parse error) whenever the vector overrides are combined with more
+        # than a couple of query files -- looks like a duplicate-import bug
+        # in its override handling (both an aliased and unaliased import of
+        # pgvector-go were emitted). None of core/collab/insight/channel's
+        # schemas have a vector column, so they never needed it anyway.
         overrides: &go_overrides
           - db_type: "uuid"
             go_type: "github.com/google/uuid.UUID"
@@ -34,15 +41,6 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
-              pointer: true
-          - db_type: "vector"
-            go_type: "github.com/pgvector/pgvector-go.Vector"
-          - db_type: "vector"
-            nullable: true
-            go_type:
-              import: "github.com/pgvector/pgvector-go"
-              package: "pgvector"
-              type: "Vector"
               pointer: true
           - db_type: "timestamptz"
             go_type: "time.Time"
@@ -68,6 +66,10 @@ sql:
         emit_empty_slices: true
         emit_json_tags: false
         emit_pointers_for_null_types: true
+        # search.sql is the one query set with a vector column, but sqlc's
+        # pgx/v5 mode already infers pgvector-go.Vector for it natively -- an
+        # explicit override here is what triggers the bogus parse error
+        # above, and isn't needed for the type mapping either way.
         overrides: *go_overrides
 
   - name: collab

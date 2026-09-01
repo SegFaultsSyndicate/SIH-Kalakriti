@@ -4,7 +4,7 @@
 -- Rework and dropout tracking on order_lot. dropout_reason is free text
 -- recorded when a lot is reallocated because the artisan withdrew (as
 -- opposed to a QC-driven reallocation, which already has its reason on the
--- qc_defect rows) — kept separate from decline_reason because
+-- qc_defect rows)  -  kept separate from decline_reason because
 -- order_lot_decline_reason_check ties that column to state = 'DECLINED'
 -- specifically. rework_deadline is set when a lot first fails QC with a
 -- non-critical defect; a second failure or a rework past this deadline both

@@ -4,6 +4,10 @@
 -- Ministry dashboard materialized views for aggregates. Refreshed on a ticker
 -- (default 15 min) and via manual endpoint, never computed live per request.
 
+-- Self-declared social category (e.g. SC/ST/OBC), for the ministry's
+-- inclusion reporting. Optional: not every artisan has declared one.
+ALTER TABLE artisan ADD COLUMN social_category text;
+
 -- Artisans onboarded by social category and district.
 CREATE MATERIALIZED VIEW mv_artisans_by_category AS
 SELECT
@@ -198,3 +202,4 @@ DROP MATERIALIZED VIEW IF EXISTS mv_income_comparison;
 DROP MATERIALIZED VIEW IF EXISTS mv_earnings_by_district;
 DROP MATERIALIZED VIEW IF EXISTS mv_listings_by_craft_month;
 DROP MATERIALIZED VIEW IF EXISTS mv_artisans_by_category;
+ALTER TABLE artisan DROP COLUMN IF EXISTS social_category;

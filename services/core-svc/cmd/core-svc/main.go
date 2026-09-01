@@ -28,6 +28,7 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
@@ -201,8 +202,20 @@ func run() error {
 
 	pricingSvc := service.NewPricing(wiring.NewPricingStore(repository), log)
 
+	signer, err := loadProvenanceSigner(cfg.provenanceSigningKey, cfg.provenanceKeyID, log)
+	if err != nil {
+		return fmt.Errorf("configuring provenance signer: %w", err)
+	}
+	provenanceSvc := service.NewProvenance(
+		wiring.NewProvenanceStore(repository),
+		wiring.NewCatalogStore(repository),
+		wiring.NewMediaHasher(repository, objects),
+		wiring.NewTechniqueVerifier(repository),
+		signer,
+	)
+
 	identityHandler := handler.NewIdentity(identitySvc)
-	catalogHandler := handler.NewCatalog(catalogSvc)
+	catalogHandler := handler.NewCatalog(catalogSvc, provenanceSvc, cfg.baseURL)
 	curationHandler := handler.NewCuration(catalogSvc)
 	ontologyHandler := handler.NewOntology(ontologySvc)
 	mediaHandler := handler.NewMedia(mediaSvc)
@@ -428,6 +441,13 @@ type appConfig struct {
 	grpcAddr string
 	httpAddr string
 	devOTP   bool
+
+	// provenanceSigningKey is the hex-encoded Ed25519 private key SealProvenance
+	// signs with; provenanceKeyID names it in the signature (see scripts/keygen.go).
+	provenanceSigningKey string
+	provenanceKeyID      string
+	// baseURL is the public origin embedded in a sealed record's QR/verify URL.
+	baseURL string
 }
 
 // Defaults for the addresses this service listens on.
@@ -468,6 +488,9 @@ func loadConfig() (appConfig, error) {
 	cfg.grpcAddr = envOr("CORE_SVC_GRPC_ADDR", defaultGRPCAddr)
 	cfg.httpAddr = envOr("CORE_SVC_HTTP_ADDR", defaultHTTPAddr)
 	cfg.devOTP = envOr("AUTH_DEV_OTP_ENABLED", "false") == "true"
+	cfg.provenanceSigningKey = os.Getenv("PROVENANCE_PRIVATE_KEY")
+	cfg.provenanceKeyID = envOr("PROVENANCE_KEY_ID", "dev-key-1")
+	cfg.baseURL = envOr("BASE_URL", "http://localhost:8000")
 
 	// A development OTP bypass in production would make every account
 	// trivially takeable, so it is refused rather than warned about.
@@ -475,6 +498,23 @@ func loadConfig() (appConfig, error) {
 		return cfg, errors.New("AUTH_DEV_OTP_ENABLED must not be set in production")
 	}
 	return cfg, nil
+}
+
+// loadProvenanceSigner builds the Ed25519 signer SealProvenance uses. In
+// production PROVENANCE_PRIVATE_KEY must be set; locally, an unset key
+// generates an ephemeral one for the process lifetime (mirrors insight-svc's
+// same dev fallback) so the service still starts without one configured.
+func loadProvenanceSigner(privateKeyHex, keyID string, log *slog.Logger) (*crypto.Signer, error) {
+	if privateKeyHex == "" {
+		generatedHex, _, err := crypto.GenerateKeypair()
+		if err != nil {
+			return nil, fmt.Errorf("generating ephemeral provenance keypair: %w", err)
+		}
+		log.Warn("PROVENANCE_PRIVATE_KEY not set: using an ephemeral keypair for this process only",
+			"key_id", keyID)
+		privateKeyHex = generatedHex
+	}
+	return crypto.NewSigner(privateKeyHex, keyID)
 }
 
 func envOr(key, fallback string) string {

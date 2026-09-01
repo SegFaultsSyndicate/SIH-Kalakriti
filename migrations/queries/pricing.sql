@@ -2,7 +2,7 @@
 
 -- name: GetListingPricingSource :one
 -- The listing's own craft, GI status, materials, embedding, reference size and
--- the owning artisan's state (for the wage floor — the artisan cannot pick a
+-- the owning artisan's state (for the wage floor  -  the artisan cannot pick a
 -- more favourable state, it comes from their own registration). language picks
 -- which per-language search row to read; the pricing signal does not depend on
 -- which one, so callers pass a stable default.

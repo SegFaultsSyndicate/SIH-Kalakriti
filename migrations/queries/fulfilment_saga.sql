@@ -6,7 +6,7 @@ VALUES (@id, @bulk_order_id, sqlc.narg('lot_id'), @event_type, @payload);
 
 -- name: ListBulkOrderEventsSince :many
 -- WatchOrder's replay: every event on one order at or after `since`, oldest
--- first. since is nullable — a null replays the whole history.
+-- first. since is nullable  -  a null replays the whole history.
 SELECT * FROM bulk_order_event
 WHERE bulk_order_id = @bulk_order_id
   AND (sqlc.narg('since')::timestamptz IS NULL OR occurred_at >= sqlc.narg('since'))
@@ -57,7 +57,7 @@ RETURNING *;
 -- plus a rolling on-time completion rate over their last 20 completed lots.
 --
 -- ponytail: "verified technique where the buyer requires it" is implemented
--- as artisan.verified only — the schema has no per-technique verification
+-- as artisan.verified only  -  the schema has no per-technique verification
 -- flag (checked: listing_attribute has no such row shape, and the proto's
 -- CreateBulkOrderRequest has no technique field to check against). Upgrade
 -- to a real per-(artisan, technique) verification table if/when the product
@@ -154,7 +154,7 @@ RETURNING *;
 
 -- name: ReallocateLot :one
 -- Shared terminal move for both a second QC failure and a rework-window
--- timeout — either way the lot will not deliver and its units go back to the
+-- timeout  -  either way the lot will not deliver and its units go back to the
 -- allocation pool via a fresh lot.
 UPDATE order_lot
 SET state = 'REALLOCATED', updated_at = now()
@@ -187,7 +187,7 @@ RETURNING *;
 
 -- name: ReduceBulkOrderQuantity :one
 -- Guarded to AMENDMENT_PENDING, same optimistic-concurrency shape as
--- TransitionBulkOrderState (orders.sql) — an amendment is only ever applied
+-- TransitionBulkOrderState (orders.sql)  -  an amendment is only ever applied
 -- to an order still waiting on it.
 UPDATE bulk_order
 SET quantity = @quantity, total_value_paise = @total_value_paise, state = @state, updated_at = now()

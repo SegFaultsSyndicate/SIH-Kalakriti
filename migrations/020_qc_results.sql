@@ -3,8 +3,8 @@
 
 -- qc_result is one inspection outcome for one lot. Kept separate from
 -- bulk_order_event (which still gets a QC_RECORDED audit row for every
--- inspection) because this table is queried on its own shape — "every
--- CRITICAL defect this month", "an artisan's QC pass rate" — not just
+-- inspection) because this table is queried on its own shape  -  "every
+-- CRITICAL defect this month", "an artisan's QC pass rate"  -  not just
 -- replayed chronologically.
 CREATE TABLE qc_result (
     id            uuid        NOT NULL,

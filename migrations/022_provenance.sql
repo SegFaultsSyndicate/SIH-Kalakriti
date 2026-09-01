@@ -39,6 +39,13 @@ CREATE INDEX provenance_record_artisan_id_sealed_at_idx ON provenance_record (ar
 -- Listing provenance lookups.
 CREATE INDEX provenance_record_listing_id_idx ON provenance_record (listing_id);
 
+-- Deferred FK: listing.provenance_id exists from migration 004 but couldn't
+-- reference provenance_record before this table existed.
+ALTER TABLE listing
+    ADD CONSTRAINT listing_provenance_id_fkey FOREIGN KEY (provenance_id)
+        REFERENCES provenance_record (id) ON DELETE SET NULL;
+
 -- +goose Down
 
+ALTER TABLE listing DROP CONSTRAINT IF EXISTS listing_provenance_id_fkey;
 DROP TABLE IF EXISTS provenance_record;

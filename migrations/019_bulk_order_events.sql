@@ -4,7 +4,7 @@
 -- bulk_order gained no idempotency guard in migration 007: CreateBulkOrder is a
 -- multi-step saga entry point (feasibility check, then an insert, then an
 -- outbox row, same transaction), so it needs the same DB-level idempotency the
--- rest of the project uses for anything that must survive a crash mid-flight —
+-- rest of the project uses for anything that must survive a crash mid-flight  - 
 -- pkg/idempotency.Do is deliberately not used here, per the project's standing
 -- rule that it cannot safely wrap an operation like this one. A caller-supplied
 -- key scoped to the buyer is the guard: a retried CreateBulkOrder with the same
@@ -16,7 +16,7 @@ ALTER TABLE bulk_order ADD CONSTRAINT bulk_order_buyer_id_idempotency_key_key
 
 -- bulk_order_event is the append-only audit trail for the fulfilment saga: one
 -- row per state transition on the order or one of its lots. This is separate
--- from the outbox (migrations/011_outbox.sql) — the outbox is a transient
+-- from the outbox (migrations/011_outbox.sql)  -  the outbox is a transient
 -- publish queue that rows are deleted from implicitly by never being
 -- re-selected, this table is a permanent record kept even after the outbox
 -- row that carried the same fact to Kafka has long been published.

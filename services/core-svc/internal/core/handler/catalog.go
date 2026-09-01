@@ -13,15 +13,20 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
 
-// Catalog implements catalog.v1.CatalogService. SealProvenance is left to the
-// embedded Unimplemented server until batch 8 lands the provenance chain.
+// Catalog implements catalog.v1.CatalogService. verifyBaseURL is the public
+// origin the QR/verification URL in a sealed record's response is built from
+// (e.g. "https://kalakriti.in", matching bff's own BASE_URL).
 type Catalog struct {
 	catalogv1.UnimplementedCatalogServiceServer
-	svc *service.Catalog
+	svc           *service.Catalog
+	provenance    *service.Provenance
+	verifyBaseURL string
 }
 
 // NewCatalog builds the catalog handler.
-func NewCatalog(svc *service.Catalog) *Catalog { return &Catalog{svc: svc} }
+func NewCatalog(svc *service.Catalog, provenance *service.Provenance, verifyBaseURL string) *Catalog {
+	return &Catalog{svc: svc, provenance: provenance, verifyBaseURL: verifyBaseURL}
+}
 
 // CreateProduct registers a physical item against an artisan.
 func (h *Catalog) CreateProduct(ctx context.Context, req *catalogv1.CreateProductRequest) (*catalogv1.CreateProductResponse, error) {

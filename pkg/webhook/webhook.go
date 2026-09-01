@@ -11,7 +11,6 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"

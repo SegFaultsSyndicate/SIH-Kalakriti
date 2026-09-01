@@ -48,6 +48,9 @@ type MediaHasher interface {
 // TechniqueVerifier checks a claimed technique against inference results.
 type TechniqueVerifier interface {
 	Verify(ctx context.Context, listingID uuid.UUID, claimedTechnique string) (bool, error)
+	// Observe returns the model's raw observation, for callers building a
+	// caller-facing verdict rather than just gating the seal on a bool.
+	Observe(ctx context.Context, listingID uuid.UUID) (observed string, confidence float32, err error)
 }
 
 // Provenance is core-svc's provenance sealing service.
@@ -265,4 +268,11 @@ func (s *Provenance) GetProvenanceByShortCode(ctx context.Context, code string) 
 		return domain.ProvenanceRecord{}, fmt.Errorf("short_code is required: %w", pkgdomain.ErrInvalidInput)
 	}
 	return s.store.GetProvenanceByShortCode(ctx, code)
+}
+
+// ObserveTechnique returns the model's raw technique observation for a
+// listing, for callers building a caller-facing verdict rather than just the
+// pass/fail bool SealProvenance itself gates on.
+func (s *Provenance) ObserveTechnique(ctx context.Context, listingID uuid.UUID) (observed string, confidence float32, err error) {
+	return s.verifier.Observe(ctx, listingID)
 }

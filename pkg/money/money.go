@@ -64,8 +64,8 @@ func (m Money) Format() string {
 // ToProto converts to protobuf Money message.
 func (m Money) ToProto() *pb.Money {
 	return &pb.Money{
-		Paise:    int64(m),
-		Currency: "INR",
+		AmountPaise:  int64(m),
+		CurrencyCode: "INR",
 	}
 }
 
@@ -74,5 +74,5 @@ func FromProto(pm *pb.Money) Money {
 	if pm == nil {
 		return 0
 	}
-	return Money(pm.Paise)
+	return Money(pm.AmountPaise)
 }

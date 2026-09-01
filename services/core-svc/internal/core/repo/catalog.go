@@ -385,6 +385,20 @@ func translationFromRow(row db.ListingTranslation) domain.ListingTranslation {
 
 // --- attributes --------------------------------------------------------------
 
+// GetListingAttributes reads a listing's attributes outside any transaction,
+// for read-only callers (e.g. provenance sealing) that don't need one.
+func (r *Repo) GetListingAttributes(ctx context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error) {
+	rows, err := r.q.GetListingAttributes(ctx, listingID)
+	if err != nil {
+		return nil, translate(err, "listing attributes")
+	}
+	out := make([]domain.ListingAttribute, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, attributeFromRow(row))
+	}
+	return out, nil
+}
+
 // ListListingAttributes reads a listing's attributes inside the caller's
 // transaction, which is how the service reads the current precedence before
 // deciding what a model write may touch.
