@@ -55,7 +55,7 @@ make check       # Verifies each service is responding
 ```
 
 **What just started:**
-- PostgreSQL 16 + pgvector on port 5432
+- PostgreSQL 18 + pgvector on port 5432
 - Redis 7 on port 6379
 - Kafka (KRaft mode) on port 9092
 - MinIO S3 on port 9000 (console: http://localhost:9001)

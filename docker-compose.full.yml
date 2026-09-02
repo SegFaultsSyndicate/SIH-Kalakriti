@@ -4,7 +4,7 @@ version: '3.8'
 services:
   # Infrastructure
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:pg18
     environment:
       POSTGRES_DB: kalakriti
       POSTGRES_USER: kalakriti

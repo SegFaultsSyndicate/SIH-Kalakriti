@@ -21,7 +21,7 @@ Complete deployment guide for all production-readiness features implemented in t
 ## Prerequisites
 
 **Required:**
-- PostgreSQL 16+
+- PostgreSQL 18+
 - Redis 7+
 - Go 1.23+
 - Docker (for chaos tests)

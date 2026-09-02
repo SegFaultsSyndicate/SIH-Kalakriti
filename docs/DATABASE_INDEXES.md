@@ -1,7 +1,7 @@
 # Database Index Audit & Recommendations
 
 **Last Updated:** 2026-08-28  
-**Database:** PostgreSQL 16 + pgvector
+**Database:** PostgreSQL 18 + pgvector
 
 ---
 

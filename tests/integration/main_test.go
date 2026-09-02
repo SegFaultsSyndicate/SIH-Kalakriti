@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 
 	// Postgres with pgvector
 	pgContainer, err = postgres.Run(ctx,
-		"pgvector/pgvector:pg16",
+		"pgvector/pgvector:pg18",
 		postgres.WithDatabase("kalakriti_test"),
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
