@@ -28,11 +28,36 @@ import (
 
 type fakeCatalogService struct {
 	catalogv1.CatalogServiceClient
-	getListing func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error)
+	getListing        func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error)
+	createProduct     func(ctx context.Context, in *catalogv1.CreateProductRequest, opts ...grpc.CallOption) (*catalogv1.CreateProductResponse, error)
+	upsertListing     func(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error)
+	submitForApproval func(ctx context.Context, in *catalogv1.SubmitForApprovalRequest, opts ...grpc.CallOption) (*catalogv1.SubmitForApprovalResponse, error)
+	approveListing    func(ctx context.Context, in *catalogv1.ApproveListingRequest, opts ...grpc.CallOption) (*catalogv1.ApproveListingResponse, error)
+	listListings      func(ctx context.Context, in *catalogv1.ListListingsRequest, opts ...grpc.CallOption) (*catalogv1.ListListingsResponse, error)
 }
 
 func (f *fakeCatalogService) GetListing(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
 	return f.getListing(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) CreateProduct(ctx context.Context, in *catalogv1.CreateProductRequest, opts ...grpc.CallOption) (*catalogv1.CreateProductResponse, error) {
+	return f.createProduct(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) UpsertListing(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error) {
+	return f.upsertListing(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) SubmitForApproval(ctx context.Context, in *catalogv1.SubmitForApprovalRequest, opts ...grpc.CallOption) (*catalogv1.SubmitForApprovalResponse, error) {
+	return f.submitForApproval(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) ApproveListing(ctx context.Context, in *catalogv1.ApproveListingRequest, opts ...grpc.CallOption) (*catalogv1.ApproveListingResponse, error) {
+	return f.approveListing(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) ListListings(ctx context.Context, in *catalogv1.ListListingsRequest, opts ...grpc.CallOption) (*catalogv1.ListListingsResponse, error) {
+	return f.listListings(ctx, in, opts...)
 }
 
 type fakeOntologyService struct {

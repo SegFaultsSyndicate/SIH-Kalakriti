@@ -16,16 +16,16 @@ import (
 
 // APIHandler aggregates all REST /api/v1 endpoints, bridging HTTP/JSON to gRPC.
 type APIHandler struct {
-	authSvc     AuthService
-	artisanSvc  ArtisanService
-	mediaSvc    MediaService
-	listingSvc  ListingService
-	searchSvc   SearchService
-	pricingSvc  PricingService
-	orderSvc    OrderService
-	followSvc   FollowService
-	stmtSvc     StatementService
-	insightSvc  InsightService
+	authSvc    AuthService
+	artisanSvc ArtisanService
+	mediaSvc   MediaService
+	listingSvc ListingService
+	searchSvc  SearchService
+	pricingSvc PricingService
+	orderSvc   OrderService
+	followSvc  FollowService
+	stmtSvc    StatementService
+	insightSvc InsightService
 }
 
 // AuthService is the auth-svc gRPC client interface.
@@ -50,10 +50,10 @@ type MediaService interface {
 
 // ListingService is the listing-svc gRPC client interface.
 type ListingService interface {
-	CreateListing(ctx context.Context, artisanID string, listing map[string]any) (listingID string, err error)
-	UpdateListing(ctx context.Context, listingID string, updates map[string]any) error
-	SubmitForReview(ctx context.Context, listingID string) error
-	ApproveListing(ctx context.Context, listingID, reviewerID string) error
+	CreateListing(ctx context.Context, artisanID, idempotencyKey string, listing map[string]any) (listingID string, err error)
+	UpdateListing(ctx context.Context, listingID, idempotencyKey string, updates map[string]any) error
+	SubmitForReview(ctx context.Context, listingID, idempotencyKey string) error
+	ApproveListing(ctx context.Context, listingID, reviewerID, idempotencyKey string, editedTranslations []map[string]any) error
 	GetListing(ctx context.Context, listingID string) (map[string]any, error)
 	ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 }
@@ -188,6 +188,17 @@ func (h *APIHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, map[string]string{"access_token": accessToken})
 }
 
+// idempotencyKeyFrom reuses the client's X-Idempotency-Key when present, so a
+// retried HTTP call also replays at the gRPC layer instead of repeating a
+// write core-svc requires a non-empty idempotency_key for; mints one
+// otherwise.
+func idempotencyKeyFrom(r *http.Request) string {
+	if key := r.Header.Get("X-Idempotency-Key"); key != "" {
+		return key
+	}
+	return uuid.NewString()
+}
+
 // Artisan endpoints
 
 func (h *APIHandler) RegisterArtisan(w http.ResponseWriter, r *http.Request) {
@@ -203,15 +214,7 @@ func (h *APIHandler) RegisterArtisan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// core-svc requires a non-empty idempotency_key; reuse the client's
-	// X-Idempotency-Key when present so a retried HTTP call also replays at
-	// the gRPC layer instead of registering twice, otherwise mint one.
-	idempotencyKey := r.Header.Get("X-Idempotency-Key")
-	if idempotencyKey == "" {
-		idempotencyKey = uuid.NewString()
-	}
-
-	artisanID, err := h.artisanSvc.Register(r.Context(), p.PhoneE164, idempotencyKey, fields)
+	artisanID, err := h.artisanSvc.Register(r.Context(), p.PhoneE164, idempotencyKeyFrom(r), fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -318,7 +321,7 @@ func (h *APIHandler) CreateListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listingID, err := h.listingSvc.CreateListing(r.Context(), p.Subject, listing)
+	listingID, err := h.listingSvc.CreateListing(r.Context(), p.Subject, idempotencyKeyFrom(r), listing)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -341,7 +344,7 @@ func (h *APIHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.listingSvc.UpdateListing(r.Context(), listingID, updates); err != nil {
+	if err := h.listingSvc.UpdateListing(r.Context(), listingID, idempotencyKeyFrom(r), updates); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -357,7 +360,7 @@ func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	listingID := httpx.URLParam(r, "id")
-	if err := h.listingSvc.SubmitForReview(r.Context(), listingID); err != nil {
+	if err := h.listingSvc.SubmitForReview(r.Context(), listingID, idempotencyKeyFrom(r)); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -372,8 +375,20 @@ func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The body is optional: approving with no edits needs no request body at
+	// all, only edited copy needs one.
+	var req struct {
+		EditedTranslations []map[string]any `json:"edited_translations"`
+	}
+	if r.ContentLength != 0 {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			httpx.Error(w, domain.InvalidInput("invalid JSON"))
+			return
+		}
+	}
+
 	listingID := httpx.URLParam(r, "id")
-	if err := h.listingSvc.ApproveListing(r.Context(), listingID, p.Subject); err != nil {
+	if err := h.listingSvc.ApproveListing(r.Context(), listingID, p.Subject, idempotencyKeyFrom(r), req.EditedTranslations); err != nil {
 		httpx.Error(w, err)
 		return
 	}

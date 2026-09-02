@@ -204,19 +204,19 @@ func (m *mockArtisanSvc) UpdateProfile(ctx context.Context, artisanID string, up
 // mockListingSvc returns not-found for every listing, for testing error mapping.
 type mockListingSvc struct{}
 
-func (m *mockListingSvc) CreateListing(ctx context.Context, artisanID string, listing map[string]any) (string, error) {
+func (m *mockListingSvc) CreateListing(ctx context.Context, artisanID, idempotencyKey string, listing map[string]any) (string, error) {
 	return "", nil
 }
 
-func (m *mockListingSvc) UpdateListing(ctx context.Context, listingID string, updates map[string]any) error {
+func (m *mockListingSvc) UpdateListing(ctx context.Context, listingID, idempotencyKey string, updates map[string]any) error {
 	return nil
 }
 
-func (m *mockListingSvc) SubmitForReview(ctx context.Context, listingID string) error {
+func (m *mockListingSvc) SubmitForReview(ctx context.Context, listingID, idempotencyKey string) error {
 	return nil
 }
 
-func (m *mockListingSvc) ApproveListing(ctx context.Context, listingID, reviewerID string) error {
+func (m *mockListingSvc) ApproveListing(ctx context.Context, listingID, reviewerID, idempotencyKey string, editedTranslations []map[string]any) error {
 	return nil
 }
 
