@@ -3,10 +3,15 @@ package indiapost
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/breaker"
 )
 
 func TestCheckServiceabilityStub(t *testing.T) {
@@ -40,4 +45,21 @@ func TestEstimateRateStub(t *testing.T) {
 func TestStubModeWhenNoKey(t *testing.T) {
 	client := NewClient(Config{APIKey: "", Stub: false}, nil)
 	assert.True(t, client.stub)
+}
+
+// TestCheckServiceabilityOpensCircuitAfterRepeatedFailures proves the
+// breaker added to guard the not-yet-implemented real API path actually
+// trips, even though nothing reachable through NewClient can flip stub off
+// today without an API key — white-box construction is the only way to
+// exercise it before that integration lands.
+func TestCheckServiceabilityOpensCircuitAfterRepeatedFailures(t *testing.T) {
+	client := &Client{log: slog.Default(), stub: false, breaker: breaker.New(2, time.Minute)}
+
+	_, err1 := client.CheckServiceability(context.Background(), "560001")
+	require.Error(t, err1)
+	_, err2 := client.CheckServiceability(context.Background(), "560001")
+	require.Error(t, err2)
+
+	_, err := client.CheckServiceability(context.Background(), "560001")
+	require.True(t, errors.Is(err, breaker.ErrCircuitOpen), "expected circuit to be open, got %v", err)
 }

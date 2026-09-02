@@ -8,12 +8,16 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/breaker"
 )
 
 // Client sends WhatsApp messages.
 type Client struct {
-	log    *slog.Logger
-	dryRun bool
+	log     *slog.Logger
+	dryRun  bool
+	breaker *breaker.Breaker
 }
 
 // Config holds WhatsApp connection settings.
@@ -21,31 +25,39 @@ type Config struct {
 	DryRun bool // If true, log messages but don't send
 }
 
-// NewClient creates a WhatsApp client stub.
+// NewClient creates a WhatsApp client stub. The breaker guards the send path
+// today's dry-run never actually exercises, so it's in place — same
+// threshold as ondc.Client's — the moment whatsmeow sending lands, instead
+// of needing a second change to add it then.
 func NewClient(cfg Config, log *slog.Logger) *Client {
 	if log == nil {
 		log = slog.Default()
 	}
 	return &Client{
-		log:    log,
-		dryRun: true, // ponytail: always dry-run until whatsmeow session store exists
+		log:     log,
+		dryRun:  true, // ponytail: always dry-run until whatsmeow session store exists
+		breaker: breaker.New(5, 60*time.Second),
 	}
 }
 
 // SendMessage sends a text message.
 func (c *Client) SendMessage(ctx context.Context, to, text string) error {
-	c.log.Info("whatsapp_send_stub", "to", to, "text_len", len(text), "dry_run", c.dryRun)
-	if !c.dryRun {
-		return fmt.Errorf("whatsapp: real sending not implemented")
-	}
-	return nil
+	return c.breaker.Call(func() error {
+		c.log.Info("whatsapp_send_stub", "to", to, "text_len", len(text), "dry_run", c.dryRun)
+		if !c.dryRun {
+			return fmt.Errorf("whatsapp: real sending not implemented")
+		}
+		return nil
+	})
 }
 
 // SendTemplate sends a template message with variables.
 func (c *Client) SendTemplate(ctx context.Context, to, templateName string, vars map[string]string, language string) error {
-	c.log.Info("whatsapp_template_stub", "to", to, "template", templateName, "language", language, "dry_run", c.dryRun)
-	if !c.dryRun {
-		return fmt.Errorf("whatsapp: real sending not implemented")
-	}
-	return nil
+	return c.breaker.Call(func() error {
+		c.log.Info("whatsapp_template_stub", "to", to, "template", templateName, "language", language, "dry_run", c.dryRun)
+		if !c.dryRun {
+			return fmt.Errorf("whatsapp: real sending not implemented")
+		}
+		return nil
+	})
 }
