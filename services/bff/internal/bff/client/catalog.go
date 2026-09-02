@@ -17,15 +17,6 @@ import (
 
 // Catalog is bff's view of core-svc's catalog, ontology and identity
 // services, satisfying handler.CatalogService.
-//
-// GetProvenanceByShortCode is not wired: core-svc's service layer already
-// has GetProvenanceByShortCode (services/core-svc/internal/core/service/
-// provenance.go) and a shortcode generator, but no proto RPC exposes it, and
-// SealProvenance — the RPC that would create a record to look up in the
-// first place — has no gRPC handler at all yet (catalog.proto declares it,
-// but handler/catalog.go never implements it, so it 501s via
-// UnimplementedCatalogServiceServer). That's backend work in core-svc, not
-// an adapter gap; this stays an error until SealProvenance is wired.
 type Catalog struct {
 	catalog  catalogv1.CatalogServiceClient
 	ontology catalogv1.OntologyServiceClient
@@ -42,7 +33,29 @@ func NewCatalog(conn grpc.ClientConnInterface) *Catalog {
 }
 
 func (c *Catalog) GetProvenanceByShortCode(ctx context.Context, code string) (handler.ProvenanceRecord, error) {
-	return handler.ProvenanceRecord{}, domain.Unavailable("provenance lookup by short code is not supported: SealProvenance has no gRPC handler yet")
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := c.catalog.GetProvenanceByShortCode(ctx, &catalogv1.GetProvenanceByShortCodeRequest{ShortCode: code})
+	if err != nil {
+		return handler.ProvenanceRecord{}, grpcErr(err)
+	}
+	rec := resp.GetRecord()
+	return handler.ProvenanceRecord{
+		ID:               rec.GetId(),
+		ListingID:        rec.GetListingId(),
+		ArtisanID:        rec.GetArtisanId(),
+		CraftID:          rec.GetCraftId(),
+		ContentHash:      rec.GetContentHash(),
+		PreviousHash:     rec.PreviousHash,
+		Signature:        rec.GetSignature(),
+		SignatureAlgo:    rec.GetSignatureAlgorithm(),
+		PublicKeyID:      rec.GetPublicKeyId(),
+		ShortCode:        rec.GetShortCode(),
+		TechniqueMatched: rec.GetTechniqueMatched(),
+		MediaHashes:      rec.GetMediaHashes(),
+		SealedAt:         rec.GetSealedAt().AsTime(),
+	}, nil
 }
 
 // GetListingBySlug resolves a slug built by buildSlug back to its id

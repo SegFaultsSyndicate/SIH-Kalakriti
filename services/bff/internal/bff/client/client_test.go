@@ -28,12 +28,13 @@ import (
 
 type fakeCatalogService struct {
 	catalogv1.CatalogServiceClient
-	getListing        func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error)
-	createProduct     func(ctx context.Context, in *catalogv1.CreateProductRequest, opts ...grpc.CallOption) (*catalogv1.CreateProductResponse, error)
-	upsertListing     func(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error)
-	submitForApproval func(ctx context.Context, in *catalogv1.SubmitForApprovalRequest, opts ...grpc.CallOption) (*catalogv1.SubmitForApprovalResponse, error)
-	approveListing    func(ctx context.Context, in *catalogv1.ApproveListingRequest, opts ...grpc.CallOption) (*catalogv1.ApproveListingResponse, error)
-	listListings      func(ctx context.Context, in *catalogv1.ListListingsRequest, opts ...grpc.CallOption) (*catalogv1.ListListingsResponse, error)
+	getListing               func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error)
+	createProduct            func(ctx context.Context, in *catalogv1.CreateProductRequest, opts ...grpc.CallOption) (*catalogv1.CreateProductResponse, error)
+	upsertListing            func(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error)
+	submitForApproval        func(ctx context.Context, in *catalogv1.SubmitForApprovalRequest, opts ...grpc.CallOption) (*catalogv1.SubmitForApprovalResponse, error)
+	approveListing           func(ctx context.Context, in *catalogv1.ApproveListingRequest, opts ...grpc.CallOption) (*catalogv1.ApproveListingResponse, error)
+	listListings             func(ctx context.Context, in *catalogv1.ListListingsRequest, opts ...grpc.CallOption) (*catalogv1.ListListingsResponse, error)
+	getProvenanceByShortCode func(ctx context.Context, in *catalogv1.GetProvenanceByShortCodeRequest, opts ...grpc.CallOption) (*catalogv1.GetProvenanceByShortCodeResponse, error)
 }
 
 func (f *fakeCatalogService) GetListing(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
@@ -58,6 +59,10 @@ func (f *fakeCatalogService) ApproveListing(ctx context.Context, in *catalogv1.A
 
 func (f *fakeCatalogService) ListListings(ctx context.Context, in *catalogv1.ListListingsRequest, opts ...grpc.CallOption) (*catalogv1.ListListingsResponse, error) {
 	return f.listListings(ctx, in, opts...)
+}
+
+func (f *fakeCatalogService) GetProvenanceByShortCode(ctx context.Context, in *catalogv1.GetProvenanceByShortCodeRequest, opts ...grpc.CallOption) (*catalogv1.GetProvenanceByShortCodeResponse, error) {
+	return f.getProvenanceByShortCode(ctx, in, opts...)
 }
 
 type fakeOntologyService struct {
@@ -219,18 +224,49 @@ func TestCatalogGetCraft(t *testing.T) {
 	assert.Equal(t, "GI-9", *got.GIRegistrationNo)
 }
 
-// GetListingBySlug, GetArtisanBySlug, GetProvenanceByShortCode and
-// ListPublishedListings are all unwired gaps (no slug field, no
-// short-code RPC — and the sitemap it would feed can't be honoured without
-// slug support either). Each must return a clear error, never panic, since
-// this interface's previous state (a nil client) panicked on every call.
-// TestCatalogGetProvenanceByShortCodeReturnsAnErrorNotAPanic covers the one
-// remaining unwired gap: SealProvenance has no gRPC handler on core-svc yet,
-// so there's nothing to look a short code up against. GetListingBySlug,
-// GetArtisanBySlug and ListPublishedListings are wired now (slug_test.go).
-func TestCatalogGetProvenanceByShortCodeReturnsAnErrorNotAPanic(t *testing.T) {
-	c := &Catalog{}
-	_, err := c.GetProvenanceByShortCode(context.Background(), "some-code")
+func TestCatalogGetProvenanceByShortCodeReturnsTheStoredRecord(t *testing.T) {
+	var sawReq *catalogv1.GetProvenanceByShortCodeRequest
+	previousHash := "prev-hash"
+	c := &Catalog{catalog: &fakeCatalogService{
+		getProvenanceByShortCode: func(ctx context.Context, in *catalogv1.GetProvenanceByShortCodeRequest, opts ...grpc.CallOption) (*catalogv1.GetProvenanceByShortCodeResponse, error) {
+			sawReq = in
+			return &catalogv1.GetProvenanceByShortCodeResponse{Record: &catalogv1.SealedProvenance{
+				Id:                 "prov-1",
+				ListingId:          "listing-1",
+				ArtisanId:          "artisan-1",
+				CraftId:            "craft-1",
+				ContentHash:        "hash-1",
+				PreviousHash:       &previousHash,
+				SignatureAlgorithm: "ed25519",
+				PublicKeyId:        "key-1",
+				ShortCode:          "SOMECODE1",
+				TechniqueMatched:   true,
+				MediaHashes:        []string{"h1", "h2"},
+			}}, nil
+		},
+	}}
+
+	rec, err := c.GetProvenanceByShortCode(context.Background(), "SOMECODE1")
+	require.NoError(t, err)
+	require.NotNil(t, sawReq)
+	assert.Equal(t, "SOMECODE1", sawReq.GetShortCode())
+
+	assert.Equal(t, "prov-1", rec.ID)
+	assert.Equal(t, "listing-1", rec.ListingID)
+	assert.Equal(t, "SOMECODE1", rec.ShortCode)
+	assert.True(t, rec.TechniqueMatched)
+	require.NotNil(t, rec.PreviousHash)
+	assert.Equal(t, "prev-hash", *rec.PreviousHash)
+	assert.Equal(t, []string{"h1", "h2"}, rec.MediaHashes)
+}
+
+func TestCatalogGetProvenanceByShortCodePropagatesGRPCError(t *testing.T) {
+	c := &Catalog{catalog: &fakeCatalogService{
+		getProvenanceByShortCode: func(ctx context.Context, in *catalogv1.GetProvenanceByShortCodeRequest, opts ...grpc.CallOption) (*catalogv1.GetProvenanceByShortCodeResponse, error) {
+			return nil, status.Error(codes.NotFound, "not found")
+		},
+	}}
+	_, err := c.GetProvenanceByShortCode(context.Background(), "missing-code")
 	assert.Error(t, err)
 }
 

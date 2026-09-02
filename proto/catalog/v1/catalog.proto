@@ -25,6 +25,8 @@ service CatalogService {
   rpc ListListings(ListListingsRequest) returns (ListListingsResponse);
   // Freeze the provenance evidence for a listing and mint its certificate.
   rpc SealProvenance(SealProvenanceRequest) returns (SealProvenanceResponse);
+  // Look up a sealed provenance record by its public short code.
+  rpc GetProvenanceByShortCode(GetProvenanceByShortCodeRequest) returns (GetProvenanceByShortCodeResponse);
 }
 
 // Craft is one node of the craft ontology, e.g. "assam-muga-weaving".
@@ -435,6 +437,54 @@ message SealProvenanceRequest {
 message SealProvenanceResponse {
   // The sealed record.
   ProvenanceRecord provenance = 1;
+}
+
+// GetProvenanceByShortCodeRequest looks up a sealed record by its public
+// short code, e.g. the code printed on a physical verification tag.
+message GetProvenanceByShortCodeRequest {
+  // Short code to resolve.
+  string short_code = 1;
+}
+
+// GetProvenanceByShortCodeResponse returns the sealed record as stored — the
+// content actually signed, not a recomputed inference verdict. Distinct from
+// ProvenanceRecord (SealProvenance's response), which carries the richer,
+// request-time verdict shape a fresh seal has on hand; a lookup only has
+// what was frozen at seal time.
+message GetProvenanceByShortCodeResponse {
+  // The sealed record.
+  SealedProvenance record = 1;
+}
+
+// SealedProvenance is a stored provenance record's own frozen fields,
+// mirroring what GetProvenanceByShortCode's store lookup returns.
+message SealedProvenance {
+  // UUIDv7.
+  string id = 1;
+  // Listing this record vouches for.
+  string listing_id = 2;
+  // Maker who sealed it.
+  string artisan_id = 3;
+  // Craft ontology node, pinned at seal time.
+  string craft_id = 4;
+  // Lowercase hex SHA-256 over the canonical serialisation of the sealed fields.
+  string content_hash = 5;
+  // content_hash of the artisan's previous sealed record; empty for their first.
+  optional string previous_hash = 6;
+  // Detached signature over content_hash.
+  bytes signature = 7;
+  // Signature scheme, e.g. "ed25519".
+  string signature_algorithm = 8;
+  // Key id the signature was produced under.
+  string public_key_id = 9;
+  // Public short code printed on the verification tag.
+  string short_code = 10;
+  // Whether the claimed technique matched what the model observed at seal time.
+  bool technique_matched = 11;
+  // SHA-256 hashes of the process evidence media, in sorted order.
+  repeated string media_hashes = 12;
+  // When the record was frozen, UTC.
+  google.protobuf.Timestamp sealed_at = 13;
 }
 
 // ListingType is the commercial posture of a listing.

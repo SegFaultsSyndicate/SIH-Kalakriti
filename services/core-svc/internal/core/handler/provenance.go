@@ -68,6 +68,35 @@ func (h *Catalog) SealProvenance(ctx context.Context, req *catalogv1.SealProvena
 	}, nil
 }
 
+// GetProvenanceByShortCode looks up a sealed record by its public short
+// code, e.g. the code printed on a verification tag. Returns what was
+// actually frozen at seal time, not a recomputed inference verdict.
+func (h *Catalog) GetProvenanceByShortCode(ctx context.Context, req *catalogv1.GetProvenanceByShortCodeRequest) (*catalogv1.GetProvenanceByShortCodeResponse, error) {
+	rec, err := h.provenance.GetProvenanceByShortCode(ctx, req.GetShortCode())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &catalogv1.GetProvenanceByShortCodeResponse{Record: sealedProvenanceToProto(rec)}, nil
+}
+
+func sealedProvenanceToProto(rec domain.ProvenanceRecord) *catalogv1.SealedProvenance {
+	return &catalogv1.SealedProvenance{
+		Id:                 rec.ID.String(),
+		ListingId:          rec.ListingID.String(),
+		ArtisanId:          rec.ArtisanID.String(),
+		CraftId:            rec.CraftID.String(),
+		ContentHash:        rec.ContentHash,
+		PreviousHash:       rec.PreviousHash,
+		Signature:          rec.Signature,
+		SignatureAlgorithm: rec.SignatureAlgo,
+		PublicKeyId:        rec.PublicKeyID,
+		ShortCode:          rec.ShortCode,
+		TechniqueMatched:   rec.TechniqueMatched,
+		MediaHashes:        rec.MediaHashes,
+		SealedAt:           timestamppb.New(rec.SealedAt),
+	}
+}
+
 // provenanceRecordToProto converts a sealed record to the wire type. media is
 // the client's own declared evidence list, passed through as-is: the
 // cryptographic authority is content_hash + signature, not this echo.

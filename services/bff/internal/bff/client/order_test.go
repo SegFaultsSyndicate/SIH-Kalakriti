@@ -164,12 +164,12 @@ func TestOrderGetOrderReturnsOrderWithLots(t *testing.T) {
 		getOrder: func(ctx context.Context, in *fulfilmentv1.GetOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.GetOrderResponse, error) {
 			sawReq = in
 			return &fulfilmentv1.GetOrderResponse{Order: &fulfilmentv1.BulkOrder{
-				Id:       "order-1",
-				BuyerId:  "buyer-1",
-				Quantity: 50,
-				State:    fulfilmentv1.BulkOrderState_BULK_ORDER_STATE_CONFIRMED,
+				Id:        "order-1",
+				BuyerId:   "buyer-1",
+				Quantity:  50,
+				State:     fulfilmentv1.BulkOrderState_BULK_ORDER_STATE_CONFIRMED,
 				UnitPrice: unitPrice,
-				Lots:     []*fulfilmentv1.OrderLot{{Id: "lot-1", ArtisanId: "art-1"}},
+				Lots:      []*fulfilmentv1.OrderLot{{Id: "lot-1", ArtisanId: "art-1"}},
 			}}, nil
 		},
 	}}
