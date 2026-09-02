@@ -74,11 +74,17 @@ type PricingService interface {
 	AdvisePricing(ctx context.Context, listingID string, inputs map[string]any) (map[string]any, error)
 }
 
-// OrderService is the order-svc gRPC client interface.
+// OrderService is fulfilment-svc's gRPC client interface. CreateBulkOrder
+// registers a quantity+listing requirement — fields carries listing_id,
+// quantity, required_by (RFC3339), customisations (map of string to
+// string) and optional notes — allocation into per-artisan lots happens
+// separately and asynchronously; there's no "lots" input at order creation.
+// RespondToLot's fields carries promised_ship_date (RFC3339, required when
+// accept is true) or decline_reason (required when accept is false).
 type OrderService interface {
-	CreateBulkOrder(ctx context.Context, buyerID string, lots []map[string]any) (orderID string, err error)
+	CreateBulkOrder(ctx context.Context, buyerID, idempotencyKey string, fields map[string]any) (orderID string, err error)
 	GetOrder(ctx context.Context, orderID string) (map[string]any, error)
-	RespondToLot(ctx context.Context, lotID, artisanID, response string) error
+	RespondToLot(ctx context.Context, lotID, artisanID, idempotencyKey string, accept bool, fields map[string]any) error
 	WatchOrder(ctx context.Context, orderID string) (<-chan map[string]any, error)
 }
 
@@ -513,15 +519,13 @@ func (h *APIHandler) CreateBulkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		Lots []map[string]any `json:"lots"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
 
-	orderID, err := h.orderSvc.CreateBulkOrder(r.Context(), p.Subject, req.Lots)
+	orderID, err := h.orderSvc.CreateBulkOrder(r.Context(), p.Subject, idempotencyKeyFrom(r), fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -556,14 +560,24 @@ func (h *APIHandler) RespondToLot(w http.ResponseWriter, r *http.Request) {
 
 	lotID := httpx.URLParam(r, "id")
 	var req struct {
-		Response string `json:"response"`
+		Accept bool `json:"accept"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var fields map[string]any
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("cannot read request body"))
+		return
+	}
+	if err := json.Unmarshal(body, &req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	if err := json.Unmarshal(body, &fields); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
 
-	if err := h.orderSvc.RespondToLot(r.Context(), lotID, p.Subject, req.Response); err != nil {
+	if err := h.orderSvc.RespondToLot(r.Context(), lotID, p.Subject, idempotencyKeyFrom(r), req.Accept, fields); err != nil {
 		httpx.Error(w, err)
 		return
 	}

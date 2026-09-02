@@ -27,10 +27,17 @@ const callTimeout = 10 * time.Second
 // RPC except OTP request/verify and refresh. A public route's ctx carries no
 // token, so its calls go out unauthenticated, same as before.
 func withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(withAuth(ctx), callTimeout)
+}
+
+// withAuth attaches the outgoing bearer token without imposing callTimeout,
+// for a server-streaming call that's meant to outlive it — the stream's own
+// lifetime is the caller disconnecting (ctx.Done()), not a fixed deadline.
+func withAuth(ctx context.Context) context.Context {
 	if token, ok := auth.TokenFrom(ctx); ok && token != "" {
-		ctx = metadata.NewOutgoingContext(ctx, auth.BearerMetadata(token))
+		return metadata.NewOutgoingContext(ctx, auth.BearerMetadata(token))
 	}
-	return context.WithTimeout(ctx, callTimeout)
+	return ctx
 }
 
 // grpcErr maps a gRPC status error from a backend call to the domain error

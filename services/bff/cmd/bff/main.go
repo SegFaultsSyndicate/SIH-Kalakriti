@@ -91,6 +91,17 @@ func run() error {
 	defer insightConn.Close()
 	insightClient := client.NewInsight(insightConn) // satisfies both InsightSvc and StmtSvc
 
+	// collab-svc's own gRPC port (see its main.go default: defaultGRPCAddr
+	// :50053); COLLAB_SVC_ADDR already existed in docker-compose.full.yml's
+	// bff block pointing at collab-svc's HTTP port (8083) instead — same
+	// stale-port shape as CORE_SVC_ADDR/SEARCH_SVC_ADDR were, never actually
+	// read by any Go code until now.
+	collabConn, err := grpc.NewClient(getEnv("COLLAB_SVC_ADDR", "localhost:50053"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling collab-svc: %w", err)
+	}
+	defer collabConn.Close()
+
 	srv, err := bff.NewServer(bff.Config{
 		Addr:                   getEnv("ADDR", ":8080"),
 		BaseURL:                mustEnv("BASE_URL"),
@@ -106,17 +117,15 @@ func run() error {
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
 		// Service clients wired to real backends where the RPC shapes line up
-		// 1:1 with these interfaces. OrderSvc and FollowSvc stay nil: each
-		// needs either a bff API contract change or a backend RPC that
-		// doesn't exist yet (see git history for the per-service gaps found
-		// while scoping this).
+		// 1:1 with these interfaces. FollowSvc stays nil: no gRPC service
+		// exists for it at all yet (see git history for the scoping).
 		AuthSvc:    client.NewAuth(coreConn, rdb),
 		ArtisanSvc: client.NewArtisan(coreConn),
 		MediaSvc:   client.NewMedia(coreConn),
 		ListingSvc: client.NewListing(coreConn),
 		SearchSvc:  client.NewSearch(searchConn),
 		PricingSvc: client.NewPricing(coreConn),
-		OrderSvc:   nil,
+		OrderSvc:   client.NewOrder(collabConn),
 		FollowSvc:  nil,
 		StmtSvc:    insightClient,
 		InsightSvc: insightClient,

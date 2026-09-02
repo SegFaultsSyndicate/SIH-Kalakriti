@@ -201,12 +201,13 @@ services:
       context: ./kalakriti
       dockerfile: ../Dockerfile.bff
     environment:
-      # core-svc and search-svc's own gRPC ports (see their main.go defaults:
-      # CORE_SVC_GRPC_ADDR :50051, search-svc's grpcAddr :50052) — these were
-      # pointing at the two services' HTTP ports instead.
+      # core-svc, search-svc and collab-svc's own gRPC ports (see their
+      # main.go defaults: CORE_SVC_GRPC_ADDR :50051, search-svc's grpcAddr
+      # :50052, collab-svc's defaultGRPCAddr :50053) — these were pointing at
+      # the services' HTTP ports instead.
       CORE_SVC_ADDR: core-svc:50051
       SEARCH_SVC_ADDR: search-svc:50052
-      COLLAB_SVC_ADDR: collab-svc:8083
+      COLLAB_SVC_ADDR: collab-svc:50053
       INSIGHT_SVC_ADDR: insight-svc:8085
       POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
