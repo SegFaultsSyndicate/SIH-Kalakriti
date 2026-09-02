@@ -58,6 +58,7 @@ func run() error {
 		Addr:                   getEnv("ADDR", ":8080"),
 		BaseURL:                mustEnv("BASE_URL"),
 		WebDist:                getEnv("WEB_DIST", "./web/dist"),
+		ChannelSvcAddr:         getEnv("CHANNEL_SVC_ADDR", "http://localhost:8083"),
 		AllowedOrigins:         splitEnv("CORS_ALLOWED_ORIGINS"),
 		ProvenancePublicKeyHex: os.Getenv("PROVENANCE_PUBLIC_KEY"),
 		Logger:                 logger,

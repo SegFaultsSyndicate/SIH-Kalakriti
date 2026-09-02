@@ -14,6 +14,9 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
@@ -21,9 +24,11 @@ import (
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/client"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/consumer"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/export"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/ondc"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/repo"
 )
 
@@ -47,6 +52,9 @@ type cfg struct {
 	indiaPost IndiaPostConfig
 	grpcAddr  string
 	httpAddr  string
+	// coreSvcAddr is core-svc's gRPC address, dialled for the catalog/media
+	// clients that hydrate a listing before it goes out to ONDC.
+	coreSvcAddr string
 }
 
 type ONDCConfig struct {
@@ -91,6 +99,10 @@ func loadConfig() (cfg, error) {
 	c.httpAddr = os.Getenv("CHANNEL_SVC_HTTP_ADDR")
 	if c.httpAddr == "" {
 		c.httpAddr = ":8083"
+	}
+	c.coreSvcAddr = os.Getenv("CORE_SVC_ADDR")
+	if c.coreSvcAddr == "" {
+		c.coreSvcAddr = "localhost:50051"
 	}
 
 	c.ondc = ONDCConfig{
@@ -150,30 +162,48 @@ func run() error {
 	// Notification service
 	notifSvc := notification.NewService(r, log)
 
-	// ONDC adapter, WhatsApp client, India Post client: none is wired to a
-	// caller yet. ondc.Client.PublishOnSearch needs a hydrated []ondc.Listing
-	// (title, price, media, GI status...) that the bare
-	// catalog.listing.published event this service already consumes doesn't
-	// carry, so publishing on that trigger means first giving channel-svc a
-	// core-svc catalog client to fetch listing detail -- a real cross-service
-	// wiring decision, not a one-line fix. WhatsApp/India Post are still
-	// log-only stubs (see their package docs) with nothing to dispatch to
-	// yet. Left uninstantiated rather than wired to a guessed-at consumer.
-	//
-	// ondcAdapter, err := ondc.NewAdapter(ondc.Config{
-	//     PrivateKeyHex: cfg.ondc.PrivateKeyHex,
-	//     KeyID:         cfg.ondc.KeyID,
-	//     SubscriberID:  cfg.ondc.SubscriberID,
-	//     SubscriberURL: cfg.ondc.SubscriberURL,
-	//     DryRun:        cfg.ondc.DryRun,
-	// })
-	// ondcClient := ondc.NewClient(ondcAdapter, cfg.ondc.SubscriberURL, log)
+	// WhatsApp and India Post clients: still log-only stubs (see their own
+	// package docs) with nothing to dispatch to yet, so they stay
+	// uninstantiated rather than wired to a guessed-at consumer.
 	// waClient := whatsapp.NewClient(whatsapp.Config{DryRun: cfg.whatsapp.DryRun}, log)
 	// ipClient := indiapost.NewClient(indiapost.Config{
 	//     APIURL: cfg.indiaPost.APIURL,
 	//     APIKey: cfg.indiaPost.APIKey,
 	//     Stub:   cfg.indiaPost.Stub,
 	// }, log)
+
+	// core-svc catalog/media/ontology/identity client, shared by the ONDC
+	// publisher below and the IndiaHandmade export handler further down —
+	// both need a listing hydrated beyond what the bare
+	// catalog.listing.published event or the listing row alone carries.
+	coreConn, err := grpc.NewClient(cfg.coreSvcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling core-svc: %w", err)
+	}
+	defer func() { _ = coreConn.Close() }()
+	catalogClient := client.NewCatalog(coreConn)
+
+	// ONDC: PublishOnSearch needs a hydrated []ondc.Listing (title, price,
+	// media...), so publishing is gated on ONDC_PRIVATE_KEY being set --
+	// without it there's no adapter to sign with, and this service must
+	// still start cleanly for every env that hasn't configured ONDC yet.
+	var ondcPublisher *consumer.ONDCPublisher
+	if cfg.ondc.PrivateKeyHex != "" {
+		ondcAdapter, err := ondc.NewAdapter(ondc.Config{
+			PrivateKeyHex: cfg.ondc.PrivateKeyHex,
+			KeyID:         cfg.ondc.KeyID,
+			SubscriberID:  cfg.ondc.SubscriberID,
+			SubscriberURL: cfg.ondc.SubscriberURL,
+			DryRun:        cfg.ondc.DryRun,
+		})
+		if err != nil {
+			return fmt.Errorf("building ondc adapter: %w", err)
+		}
+		ondcClient := ondc.NewClient(ondcAdapter, cfg.ondc.SubscriberURL, log)
+		ondcPublisher = consumer.NewONDCPublisher(catalogClient, ondcClient, log)
+	} else {
+		log.Info("ondc publishing disabled: ONDC_PRIVATE_KEY not set")
+	}
 
 	// Follow fanout consumer
 	fanout := consumer.NewFollowFanout(notifSvc, r, log)
@@ -203,14 +233,29 @@ func run() error {
 		w.Write([]byte("ok"))
 	})
 
-	// Export endpoint - placeholder
+	// IndiaHandmade catalog export: the published catalog, hydrated via
+	// core-svc, in the feed format IndiaHandmade ingests. ?format=csv for
+	// the CSV variant (export.WriteCSV existed but nothing called it before
+	// this handler); JSON otherwise.
+	const indiaHandmadeExportLimit = 500
 	httpMux.HandleFunc("/export/indiahandmade", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		records, err := catalogClient.ListPublishedForIndiaHandmade(r.Context(), indiaHandmadeExportLimit)
+		if err != nil {
+			log.Error("indiahandmade export failed", "error", err)
+			http.Error(w, "fetching catalog", http.StatusBadGateway)
+			return
+		}
+		if r.URL.Query().Get("format") == "csv" {
+			w.Header().Set("Content-Type", "text/csv")
+			_ = export.WriteCSV(w, records)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = export.WriteJSON(w, []export.IndiaHandmadeRecord{})
+		_ = export.WriteJSON(w, records)
 	})
 
 	httpServer := &http.Server{
@@ -221,12 +266,32 @@ func run() error {
 	// Start background workers
 	var wg sync.WaitGroup
 	wg.Add(2)
+	if ondcPublisher != nil {
+		wg.Add(1)
+	}
 
 	// 1. Fanout consumer
 	go func() {
 		defer wg.Done()
 		fanout.Run(ctx, kafkaReader)
 	}()
+
+	// 1b. ONDC publisher, its own consumer group on the same topic so it
+	// gets every event independently of the fanout consumer's position.
+	if ondcPublisher != nil {
+		ondcReader := pkgkafka.NewReader(pkgkafka.ReaderConfig{
+			Brokers:  cfg.kafka.Brokers,
+			Topic:    topics.CatalogListingPublished,
+			GroupID:  serviceName + "-ondc",
+			MinBytes: 1,
+			MaxBytes: 10e6,
+		})
+		go func() {
+			defer wg.Done()
+			defer ondcReader.Close()
+			ondcPublisher.Run(ctx, ondcReader)
+		}()
+	}
 
 	// 2. HTTP server
 	go func() {
