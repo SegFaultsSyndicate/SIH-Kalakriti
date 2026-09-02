@@ -167,6 +167,9 @@ func (h *Catalog) GetListing(ctx context.Context, req *catalogv1.GetListingReque
 		}
 		resp.Product = productToProto(product)
 	}
+	if req.GetIncludeProvenance() && listing.ProvenanceID != nil {
+		resp.Provenance = h.hydrateProvenance(ctx, listing.ID, listing.ProductID)
+	}
 	return resp, nil
 }
 

@@ -270,6 +270,12 @@ func (s *Provenance) GetProvenanceByShortCode(ctx context.Context, code string) 
 	return s.store.GetProvenanceByShortCode(ctx, code)
 }
 
+// GetByListing fetches the latest sealed record for a listing, for
+// GetListing's include_provenance hydration.
+func (s *Provenance) GetByListing(ctx context.Context, listingID uuid.UUID) (domain.ProvenanceRecord, error) {
+	return s.store.GetProvenanceByListing(ctx, listingID)
+}
+
 // ObserveTechnique returns the model's raw technique observation for a
 // listing, for callers building a caller-facing verdict rather than just the
 // pass/fail bool SealProvenance itself gates on.

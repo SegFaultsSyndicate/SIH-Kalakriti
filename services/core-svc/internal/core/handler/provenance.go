@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
@@ -95,6 +96,29 @@ func sealedProvenanceToProto(rec domain.ProvenanceRecord) *catalogv1.SealedProve
 		MediaHashes:        rec.MediaHashes,
 		SealedAt:           timestamppb.New(rec.SealedAt),
 	}
+}
+
+// hydrateProvenance fetches the sealed record for a listing and converts it
+// to the wire type, for GetListing's include_provenance=true. Unlike
+// SealProvenance's own response, there's no fresh media list or inference
+// call here — this is a read of what was already frozen, not a new seal —
+// so Media stays empty and the verdict carries only what the stored record
+// itself has (technique_matched); claimed/observed/confidence require the
+// original SealProvenance request or a fresh inference call, neither of
+// which a listing read should be re-deriving.
+//
+// ponytail: degraded verdict (matches only, no claimed/observed/confidence
+// text) rather than persisting the full verdict at seal time or
+// recomputing it on every read. Upgrade by storing TechniqueVerdict's
+// fields on provenance_record if the UI ever needs to show them outside
+// the seal response itself.
+func (h *Catalog) hydrateProvenance(ctx context.Context, listingID, productID uuid.UUID) *catalogv1.ProvenanceRecord {
+	rec, err := h.provenance.GetByListing(ctx, listingID)
+	if err != nil {
+		return nil
+	}
+	verdict := &inferencev1.TechniqueVerdict{Matches: rec.TechniqueMatched}
+	return provenanceRecordToProto(rec, productID.String(), nil, verdict, h.verifyBaseURL)
 }
 
 // provenanceRecordToProto converts a sealed record to the wire type. media is
