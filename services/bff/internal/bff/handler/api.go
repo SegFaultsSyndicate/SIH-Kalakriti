@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,72 +30,72 @@ type APIHandler struct {
 
 // AuthService is the auth-svc gRPC client interface.
 type AuthService interface {
-	RequestOTP(phone string) error
-	VerifyOTP(phone, otp string) (accessToken, refreshToken string, err error)
-	RefreshToken(refreshToken string) (accessToken string, err error)
+	RequestOTP(ctx context.Context, phone string) error
+	VerifyOTP(ctx context.Context, phone, otp string) (accessToken, refreshToken string, err error)
+	RefreshToken(ctx context.Context, refreshToken string) (accessToken string, err error)
 }
 
 // ArtisanService is the artisan-svc gRPC client interface.
 type ArtisanService interface {
-	Register(phone, idempotencyKey string, fields map[string]any) (artisanID string, err error)
-	GetProfile(artisanID string) (map[string]any, error)
-	UpdateProfile(artisanID string, updates map[string]any) error
+	Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (artisanID string, err error)
+	GetProfile(ctx context.Context, artisanID string) (map[string]any, error)
+	UpdateProfile(ctx context.Context, artisanID string, updates map[string]any) error
 }
 
 // MediaService is the media-svc gRPC client interface.
 type MediaService interface {
-	GenerateUploadURL(artisanID, contentType string, sizeBytes int64) (mediaID, uploadURL string, err error)
-	ConfirmUpload(mediaID string) error
+	GenerateUploadURL(ctx context.Context, artisanID, contentType string, sizeBytes int64) (mediaID, uploadURL string, err error)
+	ConfirmUpload(ctx context.Context, mediaID string) error
 }
 
 // ListingService is the listing-svc gRPC client interface.
 type ListingService interface {
-	CreateListing(artisanID string, listing map[string]any) (listingID string, err error)
-	UpdateListing(listingID string, updates map[string]any) error
-	SubmitForReview(listingID string) error
-	ApproveListing(listingID, reviewerID string) error
-	GetListing(listingID string) (map[string]any, error)
-	ListListings(filters map[string]any) ([]map[string]any, error)
+	CreateListing(ctx context.Context, artisanID string, listing map[string]any) (listingID string, err error)
+	UpdateListing(ctx context.Context, listingID string, updates map[string]any) error
+	SubmitForReview(ctx context.Context, listingID string) error
+	ApproveListing(ctx context.Context, listingID, reviewerID string) error
+	GetListing(ctx context.Context, listingID string) (map[string]any, error)
+	ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 }
 
 // SearchService is the search-svc gRPC client interface.
 type SearchService interface {
-	Search(query string, filters map[string]any) ([]map[string]any, error)
-	Suggest(prefix string) ([]string, error)
-	SearchVoice(audioData []byte, language string) (query string, results []map[string]any, err error)
+	Search(ctx context.Context, query string, filters map[string]any) ([]map[string]any, error)
+	Suggest(ctx context.Context, prefix string) ([]string, error)
+	SearchVoice(ctx context.Context, audioData []byte, language string) (query string, results []map[string]any, err error)
 }
 
 // PricingService is the pricing-svc gRPC client interface.
 type PricingService interface {
-	AdvisePricing(craftID, region string, inputs map[string]any) (map[string]any, error)
+	AdvisePricing(ctx context.Context, craftID, region string, inputs map[string]any) (map[string]any, error)
 }
 
 // OrderService is the order-svc gRPC client interface.
 type OrderService interface {
-	CreateBulkOrder(buyerID string, lots []map[string]any) (orderID string, err error)
-	GetOrder(orderID string) (map[string]any, error)
-	RespondToLot(lotID, artisanID, response string) error
-	WatchOrder(orderID string) (<-chan map[string]any, error)
+	CreateBulkOrder(ctx context.Context, buyerID string, lots []map[string]any) (orderID string, err error)
+	GetOrder(ctx context.Context, orderID string) (map[string]any, error)
+	RespondToLot(ctx context.Context, lotID, artisanID, response string) error
+	WatchOrder(ctx context.Context, orderID string) (<-chan map[string]any, error)
 }
 
 // FollowService is the follow-svc gRPC client interface.
 type FollowService interface {
-	FollowArtisan(followerID, artisanID string) error
-	UnfollowArtisan(followerID, artisanID string) error
-	GetFeed(userID string, limit, offset int32) ([]map[string]any, error)
+	FollowArtisan(ctx context.Context, followerID, artisanID string) error
+	UnfollowArtisan(ctx context.Context, followerID, artisanID string) error
+	GetFeed(ctx context.Context, userID string, limit, offset int32) ([]map[string]any, error)
 }
 
 // StatementService is the statement-svc gRPC client interface.
 type StatementService interface {
-	GenerateStatement(artisanID string, start, end string) (statementID string, err error)
-	GetStatement(statementID string) (map[string]any, error)
+	GenerateStatement(ctx context.Context, artisanID string, start, end string) (statementID string, err error)
+	GetStatement(ctx context.Context, statementID string) (map[string]any, error)
 }
 
 // InsightService is the insight-svc gRPC client interface.
 type InsightService interface {
-	GetEarningsByDistrict(filters map[string]any) ([]map[string]any, error)
-	GetIncomeComparison(filters map[string]any) ([]map[string]any, error)
-	GetDyingCrafts(limit int32) ([]map[string]any, error)
+	GetEarningsByDistrict(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	GetIncomeComparison(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	GetDyingCrafts(ctx context.Context, limit int32) ([]map[string]any, error)
 }
 
 // NewAPIHandler constructs the handler with all service clients.
@@ -139,7 +140,7 @@ func (h *APIHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authSvc.RequestOTP(req.Phone); err != nil {
+	if err := h.authSvc.RequestOTP(r.Context(), req.Phone); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -157,7 +158,7 @@ func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authSvc.VerifyOTP(req.Phone, req.OTP)
+	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.Phone, req.OTP)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -178,7 +179,7 @@ func (h *APIHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := h.authSvc.RefreshToken(req.RefreshToken)
+	accessToken, err := h.authSvc.RefreshToken(r.Context(), req.RefreshToken)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -210,7 +211,7 @@ func (h *APIHandler) RegisterArtisan(w http.ResponseWriter, r *http.Request) {
 		idempotencyKey = uuid.NewString()
 	}
 
-	artisanID, err := h.artisanSvc.Register(p.PhoneE164, idempotencyKey, fields)
+	artisanID, err := h.artisanSvc.Register(r.Context(), p.PhoneE164, idempotencyKey, fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -226,7 +227,7 @@ func (h *APIHandler) GetArtisanProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	profile, err := h.artisanSvc.GetProfile(p.Subject)
+	profile, err := h.artisanSvc.GetProfile(r.Context(), p.Subject)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -248,7 +249,7 @@ func (h *APIHandler) UpdateArtisanProfile(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := h.artisanSvc.UpdateProfile(p.Subject, updates); err != nil {
+	if err := h.artisanSvc.UpdateProfile(r.Context(), p.Subject, updates); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -274,7 +275,7 @@ func (h *APIHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mediaID, uploadURL, err := h.mediaSvc.GenerateUploadURL(p.Subject, req.ContentType, req.SizeBytes)
+	mediaID, uploadURL, err := h.mediaSvc.GenerateUploadURL(r.Context(), p.Subject, req.ContentType, req.SizeBytes)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -294,7 +295,7 @@ func (h *APIHandler) ConfirmUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mediaID := httpx.URLParam(r, "id")
-	if err := h.mediaSvc.ConfirmUpload(mediaID); err != nil {
+	if err := h.mediaSvc.ConfirmUpload(r.Context(), mediaID); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -317,7 +318,7 @@ func (h *APIHandler) CreateListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listingID, err := h.listingSvc.CreateListing(p.Subject, listing)
+	listingID, err := h.listingSvc.CreateListing(r.Context(), p.Subject, listing)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -340,7 +341,7 @@ func (h *APIHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.listingSvc.UpdateListing(listingID, updates); err != nil {
+	if err := h.listingSvc.UpdateListing(r.Context(), listingID, updates); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -356,7 +357,7 @@ func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	listingID := httpx.URLParam(r, "id")
-	if err := h.listingSvc.SubmitForReview(listingID); err != nil {
+	if err := h.listingSvc.SubmitForReview(r.Context(), listingID); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -372,7 +373,7 @@ func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	listingID := httpx.URLParam(r, "id")
-	if err := h.listingSvc.ApproveListing(listingID, p.Subject); err != nil {
+	if err := h.listingSvc.ApproveListing(r.Context(), listingID, p.Subject); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -382,7 +383,7 @@ func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) GetListing(w http.ResponseWriter, r *http.Request) {
 	listingID := httpx.URLParam(r, "id")
-	listing, err := h.listingSvc.GetListing(listingID)
+	listing, err := h.listingSvc.GetListing(r.Context(), listingID)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -397,7 +398,7 @@ func (h *APIHandler) ListListings(w http.ResponseWriter, r *http.Request) {
 		"state":    r.URL.Query().Get("state"),
 	}
 
-	listings, err := h.listingSvc.ListListings(filters)
+	listings, err := h.listingSvc.ListListings(r.Context(), filters)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -415,7 +416,7 @@ func (h *APIHandler) Search(w http.ResponseWriter, r *http.Request) {
 		"region":   r.URL.Query().Get("region"),
 	}
 
-	results, err := h.searchSvc.Search(query, filters)
+	results, err := h.searchSvc.Search(r.Context(), query, filters)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -426,7 +427,7 @@ func (h *APIHandler) Search(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) Suggest(w http.ResponseWriter, r *http.Request) {
 	prefix := r.URL.Query().Get("q")
-	suggestions, err := h.searchSvc.Suggest(prefix)
+	suggestions, err := h.searchSvc.Suggest(r.Context(), prefix)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -443,7 +444,7 @@ func (h *APIHandler) SearchVoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	language := r.Header.Get("Accept-Language")
-	query, results, err := h.searchSvc.SearchVoice(audioData, language)
+	query, results, err := h.searchSvc.SearchVoice(r.Context(), audioData, language)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -474,7 +475,7 @@ func (h *APIHandler) AdvisePricing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	advice, err := h.pricingSvc.AdvisePricing(req.CraftID, req.Region, req.Inputs)
+	advice, err := h.pricingSvc.AdvisePricing(r.Context(), req.CraftID, req.Region, req.Inputs)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -500,7 +501,7 @@ func (h *APIHandler) CreateBulkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID, err := h.orderSvc.CreateBulkOrder(p.Subject, req.Lots)
+	orderID, err := h.orderSvc.CreateBulkOrder(r.Context(), p.Subject, req.Lots)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -517,7 +518,7 @@ func (h *APIHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderID := httpx.URLParam(r, "id")
-	order, err := h.orderSvc.GetOrder(orderID)
+	order, err := h.orderSvc.GetOrder(r.Context(), orderID)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -542,7 +543,7 @@ func (h *APIHandler) RespondToLot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.orderSvc.RespondToLot(lotID, p.Subject, req.Response); err != nil {
+	if err := h.orderSvc.RespondToLot(r.Context(), lotID, p.Subject, req.Response); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -559,7 +560,7 @@ func (h *APIHandler) WatchOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderID := httpx.URLParam(r, "id")
-	events, err := h.orderSvc.WatchOrder(orderID)
+	events, err := h.orderSvc.WatchOrder(r.Context(), orderID)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -594,7 +595,7 @@ func (h *APIHandler) FollowArtisan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	artisanID := httpx.URLParam(r, "id")
-	if err := h.followSvc.FollowArtisan(p.Subject, artisanID); err != nil {
+	if err := h.followSvc.FollowArtisan(r.Context(), p.Subject, artisanID); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -610,7 +611,7 @@ func (h *APIHandler) UnfollowArtisan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	artisanID := httpx.URLParam(r, "id")
-	if err := h.followSvc.UnfollowArtisan(p.Subject, artisanID); err != nil {
+	if err := h.followSvc.UnfollowArtisan(r.Context(), p.Subject, artisanID); err != nil {
 		httpx.Error(w, err)
 		return
 	}
@@ -625,7 +626,7 @@ func (h *APIHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed, err := h.followSvc.GetFeed(p.Subject, 50, 0)
+	feed, err := h.followSvc.GetFeed(r.Context(), p.Subject, 50, 0)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -652,7 +653,7 @@ func (h *APIHandler) GenerateStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statementID, err := h.stmtSvc.GenerateStatement(p.Subject, req.Start, req.End)
+	statementID, err := h.stmtSvc.GenerateStatement(r.Context(), p.Subject, req.Start, req.End)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -669,7 +670,7 @@ func (h *APIHandler) GetStatement(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statementID := httpx.URLParam(r, "id")
-	statement, err := h.stmtSvc.GetStatement(statementID)
+	statement, err := h.stmtSvc.GetStatement(r.Context(), statementID)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -692,7 +693,7 @@ func (h *APIHandler) GetEarningsByDistrict(w http.ResponseWriter, r *http.Reques
 		"district":   r.URL.Query().Get("district"),
 	}
 
-	data, err := h.insightSvc.GetEarningsByDistrict(filters)
+	data, err := h.insightSvc.GetEarningsByDistrict(r.Context(), filters)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -709,7 +710,7 @@ func (h *APIHandler) GetIncomeComparison(w http.ResponseWriter, r *http.Request)
 	}
 
 	filters := map[string]any{}
-	data, err := h.insightSvc.GetIncomeComparison(filters)
+	data, err := h.insightSvc.GetIncomeComparison(r.Context(), filters)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -725,7 +726,7 @@ func (h *APIHandler) GetDyingCrafts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.insightSvc.GetDyingCrafts(100)
+	data, err := h.insightSvc.GetDyingCrafts(r.Context(), 100)
 	if err != nil {
 		httpx.Error(w, err)
 		return

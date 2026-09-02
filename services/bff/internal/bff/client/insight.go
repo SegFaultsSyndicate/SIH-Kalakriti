@@ -2,6 +2,7 @@
 package client
 
 import (
+	"context"
 	"time"
 
 	"google.golang.org/grpc"
@@ -42,8 +43,8 @@ func moneyMap(m *commonv1.Money) map[string]any {
 }
 
 // GetEarningsByDistrict returns total and average earnings per district.
-func (in *Insight) GetEarningsByDistrict(filters map[string]any) ([]map[string]any, error) {
-	ctx, cancel := withTimeout()
+func (in *Insight) GetEarningsByDistrict(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	req := &insightv1.GetEarningsByDistrictRequest{
@@ -70,8 +71,8 @@ func (in *Insight) GetEarningsByDistrict(filters map[string]any) ([]map[string]a
 }
 
 // GetIncomeComparison returns before/after median income per district.
-func (in *Insight) GetIncomeComparison(filters map[string]any) ([]map[string]any, error) {
-	ctx, cancel := withTimeout()
+func (in *Insight) GetIncomeComparison(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	req := &insightv1.GetIncomeComparisonRequest{
@@ -97,8 +98,8 @@ func (in *Insight) GetIncomeComparison(filters map[string]any) ([]map[string]any
 }
 
 // GetDyingCrafts returns the crafts with the steepest artisan decline.
-func (in *Insight) GetDyingCrafts(limit int32) ([]map[string]any, error) {
-	ctx, cancel := withTimeout()
+func (in *Insight) GetDyingCrafts(ctx context.Context, limit int32) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := in.insight.GetDyingCrafts(ctx, &insightv1.GetDyingCraftsRequest{Limit: limit})
@@ -144,7 +145,7 @@ func parseStatementBound(s string, exclusiveEnd bool) (time.Time, error) {
 }
 
 // GenerateStatement kicks off income statement generation for one artisan's period.
-func (in *Insight) GenerateStatement(artisanID string, start, end string) (statementID string, err error) {
+func (in *Insight) GenerateStatement(ctx context.Context, artisanID string, start, end string) (statementID string, err error) {
 	periodStart, err := parseStatementBound(start, false)
 	if err != nil {
 		return "", err
@@ -154,7 +155,7 @@ func (in *Insight) GenerateStatement(artisanID string, start, end string) (state
 		return "", err
 	}
 
-	ctx, cancel := withTimeout()
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := in.insight.GenerateIncomeStatement(ctx, &insightv1.GenerateIncomeStatementRequest{
@@ -174,6 +175,6 @@ func (in *Insight) GenerateStatement(artisanID string, start, end string) (state
 // (VerifyIncomeStatement). handler.StatementService.GetStatement's signature
 // has neither an artisan id nor a short code to hand it, so there is no RPC
 // this can call.
-func (in *Insight) GetStatement(statementID string) (map[string]any, error) {
+func (in *Insight) GetStatement(ctx context.Context, statementID string) (map[string]any, error) {
 	return nil, domain.Unavailable("fetching a statement by id is not supported: insight-svc only lists by artisan or verifies by short code")
 }

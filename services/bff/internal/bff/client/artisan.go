@@ -2,6 +2,8 @@
 package client
 
 import (
+	"context"
+
 	"google.golang.org/grpc"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
@@ -29,7 +31,7 @@ func NewArtisan(conn grpc.ClientConnInterface) *Artisan {
 // as languageToProto expects), region ({state_code, district?, block?,
 // village?, pincode?}), and the optional cluster_id/pehchan_id/
 // pm_vishwakarma_id/years_of_experience/bio.
-func (a *Artisan) Register(phone, idempotencyKey string, fields map[string]any) (string, error) {
+func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
 	craftIDs, err := stringSlice(fields, "craft_ids")
 	if err != nil {
 		return "", err
@@ -82,7 +84,7 @@ func (a *Artisan) Register(phone, idempotencyKey string, fields map[string]any) 
 		req.Bio = &v
 	}
 
-	ctx, cancel := withTimeout()
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := a.identity.RegisterArtisan(ctx, req)
@@ -141,8 +143,8 @@ func geoRegion(raw any) (*commonv1.GeoRegion, error) {
 }
 
 // GetProfile fetches one artisan's profile.
-func (a *Artisan) GetProfile(artisanID string) (map[string]any, error) {
-	ctx, cancel := withTimeout()
+func (a *Artisan) GetProfile(ctx context.Context, artisanID string) (map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := a.identity.GetArtisan(ctx, &identityv1.GetArtisanRequest{ArtisanId: artisanID})
@@ -179,8 +181,8 @@ func (a *Artisan) GetProfile(artisanID string) (map[string]any, error) {
 // UpdateProfile patches the mutable fields of an artisan profile. Only the
 // scalar fields present in updates are sent; anything not in this map is
 // left alone, matching UpdateArtisanProfileRequest's own patch semantics.
-func (a *Artisan) UpdateProfile(artisanID string, updates map[string]any) error {
-	ctx, cancel := withTimeout()
+func (a *Artisan) UpdateProfile(ctx context.Context, artisanID string, updates map[string]any) error {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	req := &identityv1.UpdateArtisanProfileRequest{ArtisanId: artisanID}

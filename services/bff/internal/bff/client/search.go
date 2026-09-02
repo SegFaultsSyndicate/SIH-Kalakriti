@@ -2,6 +2,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 
 	"google.golang.org/grpc"
@@ -56,8 +57,8 @@ func hitsToMaps(hits []*searchv1.SearchHit) []map[string]any {
 }
 
 // Search runs a hybrid lexical/semantic query.
-func (s *Search) Search(query string, filters map[string]any) ([]map[string]any, error) {
-	ctx, cancel := withTimeout()
+func (s *Search) Search(ctx context.Context, query string, filters map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := s.search.Search(ctx, &searchv1.SearchRequest{
@@ -72,8 +73,8 @@ func (s *Search) Search(query string, filters map[string]any) ([]map[string]any,
 }
 
 // Suggest returns type-ahead completions for a partial query.
-func (s *Search) Suggest(prefix string) ([]string, error) {
-	ctx, cancel := withTimeout()
+func (s *Search) Suggest(ctx context.Context, prefix string) ([]string, error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := s.search.Suggest(ctx, &searchv1.SuggestRequest{Prefix: prefix})
@@ -93,8 +94,8 @@ func (s *Search) Suggest(prefix string) ([]string, error) {
 // whole audio blob at once (the HTTP handler already drained the request
 // body), so this opens the RPC's client stream, sends it as a single config
 // frame plus a single audio frame, and waits for the one response.
-func (s *Search) SearchVoice(audioData []byte, language string) (query string, results []map[string]any, err error) {
-	ctx, cancel := withTimeout()
+func (s *Search) SearchVoice(ctx context.Context, audioData []byte, language string) (query string, results []map[string]any, err error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	stream, err := s.search.VoiceSearch(ctx)

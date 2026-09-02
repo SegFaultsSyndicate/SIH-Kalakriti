@@ -40,6 +40,7 @@ func Auth(issuer *auth.Issuer) func(http.Handler) http.Handler {
 			}
 
 			ctx := auth.ContextWithPrincipal(r.Context(), principal)
+			ctx = auth.ContextWithToken(ctx, token)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -11,8 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
 	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
@@ -135,6 +137,46 @@ func TestCatalogGetArtisanPassesClusterIDPointerThrough(t *testing.T) {
 	assert.Equal(t, "cluster-1", *got.ClusterID)
 }
 
+// TestWithTimeoutForwardsBearerTokenAsOutgoingMetadata is the check for the
+// bug that hid across three sessions: every client call went out on
+// context.Background(), so core-svc's auth interceptor rejected all of them
+// as Unauthenticated. A fake grpc client can't see that — it never goes
+// through the interceptor — so this asserts directly on the metadata
+// withTimeout attaches, which is the one thing a fake response can't fake.
+func TestWithTimeoutForwardsBearerTokenAsOutgoingMetadata(t *testing.T) {
+	var sawToken []string
+	c := &Catalog{identity: &fakeIdentityService{
+		getArtisan: func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error) {
+			if md, ok := metadata.FromOutgoingContext(ctx); ok {
+				sawToken = md.Get("authorization")
+			}
+			return &identityv1.GetArtisanResponse{Artisan: &catalogv1.Artisan{Id: "art-1"}}, nil
+		},
+	}}
+
+	ctx := auth.ContextWithToken(context.Background(), "tok-abc")
+	_, err := c.GetArtisan(ctx, "art-1")
+	require.NoError(t, err)
+	require.Equal(t, []string{"Bearer tok-abc"}, sawToken)
+}
+
+func TestWithTimeoutSendsNoAuthorizationMetadataWhenCtxCarriesNoToken(t *testing.T) {
+	var mdSeen metadata.MD
+	var hadMD bool
+	c := &Catalog{identity: &fakeIdentityService{
+		getArtisan: func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error) {
+			mdSeen, hadMD = metadata.FromOutgoingContext(ctx)
+			return &identityv1.GetArtisanResponse{Artisan: &catalogv1.Artisan{Id: "art-1"}}, nil
+		},
+	}}
+
+	_, err := c.GetArtisan(context.Background(), "art-1")
+	require.NoError(t, err)
+	if hadMD {
+		assert.Empty(t, mdSeen.Get("authorization"))
+	}
+}
+
 func TestCatalogGetCraft(t *testing.T) {
 	c := &Catalog{ontology: &fakeOntologyService{
 		getCraft: func(ctx context.Context, in *catalogv1.GetCraftRequest, opts ...grpc.CallOption) (*catalogv1.GetCraftResponse, error) {
@@ -187,7 +229,7 @@ func TestMediaGenerateUploadURL(t *testing.T) {
 		},
 	}}
 
-	mediaID, uploadURL, err := m.GenerateUploadURL("art-1", "image/jpeg", 1024)
+	mediaID, uploadURL, err := m.GenerateUploadURL(context.Background(), "art-1", "image/jpeg", 1024)
 	require.NoError(t, err)
 	assert.Equal(t, "media-1", mediaID)
 	assert.Equal(t, "https://upload", uploadURL)
@@ -217,7 +259,7 @@ func TestInsightGetDyingCrafts(t *testing.T) {
 		},
 	}}
 
-	rows, err := in.GetDyingCrafts(5)
+	rows, err := in.GetDyingCrafts(context.Background(), 5)
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
 	assert.Equal(t, "Kota Doria", rows[0]["craft_name"])
@@ -237,7 +279,7 @@ func TestInsightGenerateStatementRollsABareEndDateToIncludeTheWholeDay(t *testin
 		},
 	}}
 
-	id, err := in.GenerateStatement("art-1", "2024-01-01", "2024-01-31")
+	id, err := in.GenerateStatement(context.Background(), "art-1", "2024-01-01", "2024-01-31")
 	require.NoError(t, err)
 	assert.Equal(t, "stmt-1", id)
 }
@@ -250,19 +292,19 @@ func TestInsightGenerateStatementTakesAnRFC3339EndExactlyAsGiven(t *testing.T) {
 		},
 	}}
 
-	_, err := in.GenerateStatement("art-1", "2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z")
+	_, err := in.GenerateStatement(context.Background(), "art-1", "2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z")
 	require.NoError(t, err)
 }
 
 func TestInsightGenerateStatementRejectsAnUnparseableDate(t *testing.T) {
 	in := &Insight{insight: &fakeInsightService{}}
-	_, err := in.GenerateStatement("art-1", "not-a-date", "2024-01-31")
+	_, err := in.GenerateStatement(context.Background(), "art-1", "not-a-date", "2024-01-31")
 	assert.True(t, domain.HTTPStatus(err) == 400)
 }
 
 func TestInsightGetStatementReturnsAnErrorNotAPanic(t *testing.T) {
 	in := &Insight{}
-	_, err := in.GetStatement("stmt-1")
+	_, err := in.GetStatement(context.Background(), "stmt-1")
 	assert.Error(t, err)
 }
 
@@ -288,7 +330,7 @@ func TestArtisanRegisterSendsCraftLanguageAndRegionThrough(t *testing.T) {
 		},
 	}}
 
-	id, err := a.Register("+919900011234", "idem-1", validRegisterFields())
+	id, err := a.Register(context.Background(), "+919900011234", "idem-1", validRegisterFields())
 	require.NoError(t, err)
 	assert.Equal(t, "art-1", id)
 }
@@ -297,7 +339,7 @@ func TestArtisanRegisterRejectsMissingCraftIDs(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	delete(fields, "craft_ids")
-	_, err := a.Register("+919900011234", "idem-1", fields)
+	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
@@ -305,7 +347,7 @@ func TestArtisanRegisterRejectsMissingRegion(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	delete(fields, "region")
-	_, err := a.Register("+919900011234", "idem-1", fields)
+	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
@@ -313,7 +355,7 @@ func TestArtisanRegisterRejectsNonStringCraftID(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	fields["craft_ids"] = []any{42}
-	_, err := a.Register("+919900011234", "idem-1", fields)
+	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
@@ -341,7 +383,7 @@ func TestSearchSearchAppliesCraftFilterAndMapsHits(t *testing.T) {
 		},
 	}}
 
-	results, err := s.Search("ajrakh", map[string]any{"craft_id": "craft-1"})
+	results, err := s.Search(context.Background(), "ajrakh", map[string]any{"craft_id": "craft-1"})
 	require.NoError(t, err)
 	require.Len(t, results, 1)
 	assert.Equal(t, "lst-1", results[0]["listing_id"])
@@ -355,7 +397,7 @@ func TestSearchSuggestReturnsTextOnly(t *testing.T) {
 		},
 	}}
 
-	got, err := s.Suggest("ajr")
+	got, err := s.Suggest(context.Background(), "ajr")
 	require.NoError(t, err)
 	assert.Equal(t, []string{"ajrakh", "ajrak block print"}, got)
 }

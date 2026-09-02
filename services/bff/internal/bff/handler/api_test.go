@@ -187,43 +187,43 @@ type mockArtisanSvc struct {
 	nextID string
 }
 
-func (m *mockArtisanSvc) Register(phone, idempotencyKey string, fields map[string]any) (string, error) {
+func (m *mockArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
 	id := m.nextID
 	m.nextID = "art-" + id[4:] + "1" // increment for next call
 	return id, nil
 }
 
-func (m *mockArtisanSvc) GetProfile(artisanID string) (map[string]any, error) {
+func (m *mockArtisanSvc) GetProfile(ctx context.Context, artisanID string) (map[string]any, error) {
 	return map[string]any{"id": artisanID}, nil
 }
 
-func (m *mockArtisanSvc) UpdateProfile(artisanID string, updates map[string]any) error {
+func (m *mockArtisanSvc) UpdateProfile(ctx context.Context, artisanID string, updates map[string]any) error {
 	return nil
 }
 
 // mockListingSvc returns not-found for every listing, for testing error mapping.
 type mockListingSvc struct{}
 
-func (m *mockListingSvc) CreateListing(artisanID string, listing map[string]any) (string, error) {
+func (m *mockListingSvc) CreateListing(ctx context.Context, artisanID string, listing map[string]any) (string, error) {
 	return "", nil
 }
 
-func (m *mockListingSvc) UpdateListing(listingID string, updates map[string]any) error {
+func (m *mockListingSvc) UpdateListing(ctx context.Context, listingID string, updates map[string]any) error {
 	return nil
 }
 
-func (m *mockListingSvc) SubmitForReview(listingID string) error {
+func (m *mockListingSvc) SubmitForReview(ctx context.Context, listingID string) error {
 	return nil
 }
 
-func (m *mockListingSvc) ApproveListing(listingID, reviewerID string) error {
+func (m *mockListingSvc) ApproveListing(ctx context.Context, listingID, reviewerID string) error {
 	return nil
 }
 
-func (m *mockListingSvc) GetListing(listingID string) (map[string]any, error) {
+func (m *mockListingSvc) GetListing(ctx context.Context, listingID string) (map[string]any, error) {
 	return nil, pkgdomain.NotFound("listing not found")
 }
 
-func (m *mockListingSvc) ListListings(filters map[string]any) ([]map[string]any, error) {
+func (m *mockListingSvc) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	return nil, nil
 }

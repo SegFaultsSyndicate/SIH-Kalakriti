@@ -2,6 +2,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -40,8 +41,10 @@ func NewAuth(conn grpc.ClientConnInterface, rdb redis.Cmdable) *Auth {
 }
 
 // RequestOTP sends a login code and remembers the challenge it opened.
-func (a *Auth) RequestOTP(phone string) error {
-	ctx, cancel := withTimeout()
+// RequestOtp is one of core-svc's three public RPCs, so ctx carries no
+// bearer token here — there's no session to forward yet.
+func (a *Auth) RequestOTP(ctx context.Context, phone string) error {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := a.identity.RequestOtp(ctx, &identityv1.RequestOtpRequest{
@@ -65,8 +68,8 @@ func (a *Auth) RequestOTP(phone string) error {
 }
 
 // VerifyOTP redeems the challenge RequestOTP opened for this phone number.
-func (a *Auth) VerifyOTP(phone, otp string) (accessToken, refreshToken string, err error) {
-	ctx, cancel := withTimeout()
+func (a *Auth) VerifyOTP(ctx context.Context, phone, otp string) (accessToken, refreshToken string, err error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	challengeID, err := a.challenge.Get(ctx, phone)
@@ -92,8 +95,8 @@ func (a *Auth) VerifyOTP(phone, otp string) (accessToken, refreshToken string, e
 }
 
 // RefreshToken exchanges a valid refresh token for a fresh pair.
-func (a *Auth) RefreshToken(refreshToken string) (accessToken string, err error) {
-	ctx, cancel := withTimeout()
+func (a *Auth) RefreshToken(ctx context.Context, refreshToken string) (accessToken string, err error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := a.identity.RefreshToken(ctx, &identityv1.RefreshTokenRequest{RefreshToken: refreshToken})

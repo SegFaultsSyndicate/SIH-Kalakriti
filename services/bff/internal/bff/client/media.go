@@ -2,6 +2,8 @@
 package client
 
 import (
+	"context"
+
 	"google.golang.org/grpc"
 
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
@@ -18,8 +20,8 @@ func NewMedia(conn grpc.ClientConnInterface) *Media {
 }
 
 // GenerateUploadURL asks for a presigned PUT URL for a new asset.
-func (m *Media) GenerateUploadURL(artisanID, contentType string, sizeBytes int64) (mediaID, uploadURL string, err error) {
-	ctx, cancel := withTimeout()
+func (m *Media) GenerateUploadURL(ctx context.Context, artisanID, contentType string, sizeBytes int64) (mediaID, uploadURL string, err error) {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := m.media.RequestUpload(ctx, &catalogv1.RequestUploadRequest{
@@ -35,8 +37,8 @@ func (m *Media) GenerateUploadURL(artisanID, contentType string, sizeBytes int64
 }
 
 // ConfirmUpload tells core-svc the bytes have landed.
-func (m *Media) ConfirmUpload(mediaID string) error {
-	ctx, cancel := withTimeout()
+func (m *Media) ConfirmUpload(ctx context.Context, mediaID string) error {
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	if _, err := m.media.ConfirmUpload(ctx, &catalogv1.ConfirmUploadRequest{MediaId: mediaID}); err != nil {

@@ -10,7 +10,10 @@ import (
 
 type ctxKey int
 
-const principalKey ctxKey = iota
+const (
+	principalKey ctxKey = iota
+	tokenKey
+)
 
 // ContextWithPrincipal attaches an authenticated principal to ctx. Only the
 // interceptor (and tests) should call this — a service layer receives a ctx that
@@ -24,6 +27,20 @@ func ContextWithPrincipal(ctx context.Context, p Principal) context.Context {
 func PrincipalFrom(ctx context.Context) (Principal, bool) {
 	p, ok := ctx.Value(principalKey).(Principal)
 	return p, ok
+}
+
+// ContextWithToken attaches the raw bearer token to ctx, alongside the decoded
+// Principal, so a service that received it over HTTP can forward the same
+// token when it calls another service over gRPC instead of only the claims.
+func ContextWithToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, tokenKey, token)
+}
+
+// TokenFrom returns the raw bearer token carried by ctx. ok is false when the
+// call carries no token, which is normal for the public RPCs.
+func TokenFrom(ctx context.Context) (string, bool) {
+	t, ok := ctx.Value(tokenKey).(string)
+	return t, ok
 }
 
 // RequirePrincipal returns the principal carried by ctx, or ErrForbidden when the

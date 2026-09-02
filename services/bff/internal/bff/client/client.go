@@ -10,19 +10,27 @@ import (
 	"time"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
-// callTimeout bounds every outbound RPC. The handler interfaces these
-// adapters satisfy take no context, so a bare context.Background() would let
-// a wedged backend hang the bff handler indefinitely; this keeps the failure
-// bounded even though it can't inherit the inbound request's deadline.
+// callTimeout bounds every outbound RPC on top of whatever deadline ctx
+// already carries, so a wedged backend can't hang the bff handler indefinitely.
 const callTimeout = 10 * time.Second
 
-func withTimeout() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), callTimeout)
+// withTimeout bounds ctx and, when it carries a bearer token (stashed by
+// middleware.Auth on every authenticated HTTP request), forwards it as
+// outgoing gRPC metadata — core-svc's own interceptor requires one on every
+// RPC except OTP request/verify and refresh. A public route's ctx carries no
+// token, so its calls go out unauthenticated, same as before.
+func withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	if token, ok := auth.TokenFrom(ctx); ok && token != "" {
+		ctx = metadata.NewOutgoingContext(ctx, auth.BearerMetadata(token))
+	}
+	return context.WithTimeout(ctx, callTimeout)
 }
 
 // grpcErr maps a gRPC status error from a backend call to the domain error

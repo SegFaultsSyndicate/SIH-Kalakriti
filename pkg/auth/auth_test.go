@@ -431,3 +431,15 @@ func TestBearerMetadata(t *testing.T) {
 		t.Fatalf("BearerMetadata = %v", got)
 	}
 }
+
+func TestTokenFromRoundTripsThroughContext(t *testing.T) {
+	if _, ok := TokenFrom(context.Background()); ok {
+		t.Fatal("TokenFrom should report false on a context that never carried a token")
+	}
+
+	ctx := ContextWithToken(context.Background(), "tok-123")
+	got, ok := TokenFrom(ctx)
+	if !ok || got != "tok-123" {
+		t.Fatalf("TokenFrom = %q, %v; want \"tok-123\", true", got, ok)
+	}
+}

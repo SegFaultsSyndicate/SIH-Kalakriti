@@ -62,7 +62,7 @@ func (c *Catalog) ListPublishedListings(ctx context.Context, limit, offset int32
 }
 
 func (c *Catalog) GetListing(ctx context.Context, listingID string) (handler.Listing, error) {
-	ctx, cancel := context.WithTimeout(ctx, callTimeout)
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := c.catalog.GetListing(ctx, &catalogv1.GetListingRequest{ListingId: listingID})
@@ -83,7 +83,7 @@ func (c *Catalog) GetListing(ctx context.Context, listingID string) (handler.Lis
 }
 
 func (c *Catalog) GetArtisan(ctx context.Context, artisanID string) (handler.Artisan, error) {
-	ctx, cancel := context.WithTimeout(ctx, callTimeout)
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := c.identity.GetArtisan(ctx, &identityv1.GetArtisanRequest{ArtisanId: artisanID})
@@ -100,7 +100,7 @@ func (c *Catalog) GetArtisan(ctx context.Context, artisanID string) (handler.Art
 }
 
 func (c *Catalog) GetCraft(ctx context.Context, craftID string) (handler.Craft, error) {
-	ctx, cancel := context.WithTimeout(ctx, callTimeout)
+	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := c.ontology.GetCraft(ctx, &catalogv1.GetCraftRequest{CraftId: craftID})
