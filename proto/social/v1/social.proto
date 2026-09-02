@@ -1,0 +1,71 @@
+// proto/social/v1/social.proto
+syntax = "proto3";
+
+package social.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/social/v1;socialv1";
+
+// FollowService lets a buyer follow an artisan and read the feed that
+// generates.
+service FollowService {
+  // Follow an artisan; idempotent, following twice is a no-op.
+  rpc FollowArtisan(FollowArtisanRequest) returns (FollowArtisanResponse);
+  // Stop following an artisan; idempotent, unfollowing a non-follow is a no-op.
+  rpc UnfollowArtisan(UnfollowArtisanRequest) returns (UnfollowArtisanResponse);
+  // Page through a follower's feed of notifications about artisans they follow.
+  rpc GetFeed(GetFeedRequest) returns (GetFeedResponse);
+}
+
+// FollowArtisanRequest names the follower and the artisan being followed.
+message FollowArtisanRequest {
+  // Subject id of the buyer doing the following.
+  string follower_id = 1;
+  // Artisan being followed.
+  string artisan_id = 2;
+}
+
+// FollowArtisanResponse is empty; success is the absence of an error.
+message FollowArtisanResponse {}
+
+// UnfollowArtisanRequest names the follower and the artisan to unfollow.
+message UnfollowArtisanRequest {
+  // Subject id of the buyer doing the unfollowing.
+  string follower_id = 1;
+  // Artisan being unfollowed.
+  string artisan_id = 2;
+}
+
+// UnfollowArtisanResponse is empty; success is the absence of an error.
+message UnfollowArtisanResponse {}
+
+// GetFeedRequest pages one follower's feed.
+message GetFeedRequest {
+  // Subject id of the follower whose feed this is.
+  string user_id = 1;
+  // Page size.
+  int32 limit = 2;
+  // Offset into the feed, newest first.
+  int32 offset = 3;
+}
+
+// GetFeedResponse returns one page of feed items.
+message GetFeedResponse {
+  repeated FeedItem items = 1;
+}
+
+// FeedItem is one notification in a follower's feed.
+message FeedItem {
+  // UUIDv7.
+  string id = 1;
+  // Notification kind, e.g. "ARTISAN_FOLLOWED".
+  string kind = 2;
+  string title = 3;
+  string body = 4;
+  // Extra context (e.g. listing_id, artisan_id) carried by this notification kind.
+  map<string, string> payload = 5;
+  // Unset while unread.
+  optional google.protobuf.Timestamp read_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+}

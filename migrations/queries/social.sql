@@ -38,3 +38,6 @@ ORDER BY created_at DESC;
 INSERT INTO follow (artisan_id, follower_id, source, created_at)
 VALUES ($1, $2, $3, $4)
 ON CONFLICT (artisan_id, follower_id) DO NOTHING;
+
+-- name: DeleteFollow :exec
+DELETE FROM follow WHERE artisan_id = $1 AND follower_id = $2;

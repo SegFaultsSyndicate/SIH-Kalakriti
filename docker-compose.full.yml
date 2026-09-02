@@ -208,6 +208,10 @@ services:
       CORE_SVC_ADDR: core-svc:50051
       SEARCH_SVC_ADDR: search-svc:50052
       COLLAB_SVC_ADDR: collab-svc:50053
+      # channel-svc's own gRPC port (see its CHANNEL_SVC_GRPC_ADDR above,
+      # :9096) — distinct from CHANNEL_SVC_ADDR, which nothing here sets and
+      # which is channel-svc's HTTP port, used elsewhere.
+      CHANNEL_SVC_GRPC_ADDR: channel-svc:9096
       INSIGHT_SVC_ADDR: insight-svc:8085
       POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
@@ -223,6 +227,7 @@ services:
       - core-svc
       - search-svc
       - collab-svc
+      - channel-svc
       - insight-svc
     restart: unless-stopped
 

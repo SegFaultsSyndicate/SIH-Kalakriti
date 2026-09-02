@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,10 +17,14 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
-	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
+	socialv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/social/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
@@ -27,9 +32,11 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/client"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/consumer"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/export"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/ondc"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/service"
 )
 
 const serviceName = "channel-svc"
@@ -58,11 +65,11 @@ type cfg struct {
 }
 
 type ONDCConfig struct {
-	PrivateKeyHex  string
-	KeyID          string
-	SubscriberID   string
-	SubscriberURL  string
-	DryRun         bool
+	PrivateKeyHex string
+	KeyID         string
+	SubscriberID  string
+	SubscriberURL string
+	DryRun        bool
 }
 
 type WhatsAppConfig struct {
@@ -94,7 +101,9 @@ func loadConfig() (cfg, error) {
 
 	c.grpcAddr = os.Getenv("CHANNEL_SVC_GRPC_ADDR")
 	if c.grpcAddr == "" {
-		c.grpcAddr = ":50053"
+		// :50053 collides with collab-svc's own default gRPC port; docker-compose.full.yml
+		// already reserves :9096 for channel-svc's gRPC port, so that's the default here too.
+		c.grpcAddr = ":9096"
 	}
 	c.httpAddr = os.Getenv("CHANNEL_SVC_HTTP_ADDR")
 	if c.httpAddr == "" {
@@ -208,11 +217,29 @@ func run() error {
 	// Follow fanout consumer
 	fanout := consumer.NewFollowFanout(notifSvc, r, log)
 
+	// Follow gRPC service: FollowArtisan/UnfollowArtisan/GetFeed for bff.
+	followSvc := service.NewFollow(r)
+	followHandler := handler.NewFollow(followSvc, notifSvc)
+
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recoveryInterceptor(log)))
+	socialv1.RegisterFollowServiceServer(grpcServer, followHandler)
+	healthSrv := health.NewServer()
+	healthpb.RegisterHealthServer(grpcServer, healthSrv)
+	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	healthSrv.SetServingStatus(serviceName, healthpb.HealthCheckResponse_SERVING)
+	if cfg.server.Env != "production" {
+		reflection.Register(grpcServer)
+	}
+	grpcListener, err := net.Listen("tcp", cfg.grpcAddr)
+	if err != nil {
+		return fmt.Errorf("listening on %s: %w", cfg.grpcAddr, err)
+	}
+
 	// Kafka consumer for catalog.listing.published
 	kafkaReader := pkgkafka.NewReader(pkgkafka.ReaderConfig{
-		Brokers: cfg.kafka.Brokers,
-		Topic:   topics.CatalogListingPublished,
-		GroupID: serviceName + "-fanout",
+		Brokers:  cfg.kafka.Brokers,
+		Topic:    topics.CatalogListingPublished,
+		GroupID:  serviceName + "-fanout",
 		MinBytes: 1,
 		MaxBytes: 10e6,
 	})
@@ -265,7 +292,7 @@ func run() error {
 
 	// Start background workers
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 	if ondcPublisher != nil {
 		wg.Add(1)
 	}
@@ -302,17 +329,55 @@ func run() error {
 		}
 	}()
 
+	// 3. gRPC server
+	go func() {
+		defer wg.Done()
+		log.Info("grpc server listening", "addr", cfg.grpcAddr)
+		if err := grpcServer.Serve(grpcListener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			log.Error("grpc server error", "error", err)
+		}
+	}()
+
 	// Wait for shutdown
 	<-ctx.Done()
 	log.Info("shutting down")
+
+	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+	healthSrv.SetServingStatus(serviceName, healthpb.HealthCheckResponse_NOT_SERVING)
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), drainTimeout)
 	defer cancel()
 
 	_ = httpServer.Shutdown(shutdownCtx)
+
+	stopped := make(chan struct{})
+	go func() {
+		grpcServer.GracefulStop()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+	case <-shutdownCtx.Done():
+		grpcServer.Stop()
+	}
+
 	wg.Wait()
 
 	log.Info("stopped")
 	return nil
 }
 
+// recoveryInterceptor converts a panic inside a gRPC handler into an
+// Internal error rather than crashing the process.
+func recoveryInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, next grpc.UnaryHandler) (resp any, err error) {
+		defer func() {
+			if p := recover(); p != nil {
+				log.ErrorContext(ctx, "panic in grpc handler",
+					"method", info.FullMethod, "panic", fmt.Sprintf("%v", p))
+				err = fmt.Errorf("internal error")
+			}
+		}()
+		return next(ctx, req)
+	}
+}

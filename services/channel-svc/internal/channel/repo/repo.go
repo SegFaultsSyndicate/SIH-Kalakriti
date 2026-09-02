@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/sqlc"
+	"github.com/google/uuid"
 )
 
 // Repo implements the notification service repository.
@@ -162,11 +162,38 @@ func (r *Repo) GetFollowers(ctx context.Context, artisanID uuid.UUID) ([]string,
 	return rows, nil
 }
 
+// InsertFollow records a follow; a repeat follow of the same artisan by the
+// same follower is a no-op (ON CONFLICT DO NOTHING on the query).
+func (r *Repo) InsertFollow(ctx context.Context, artisanID uuid.UUID, followerID, source string) error {
+	if err := r.queries.InsertFollow(ctx, sqlc.InsertFollowParams{
+		ArtisanID:  artisanID,
+		FollowerID: followerID,
+		Source:     source,
+		CreatedAt:  time.Now().UTC(),
+	}); err != nil {
+		return fmt.Errorf("insert follow: %w", err)
+	}
+	return nil
+}
+
+// DeleteFollow removes a follow; unfollowing a non-follow is a no-op.
+func (r *Repo) DeleteFollow(ctx context.Context, artisanID uuid.UUID, followerID string) error {
+	if err := r.queries.DeleteFollow(ctx, sqlc.DeleteFollowParams{
+		ArtisanID:  artisanID,
+		FollowerID: followerID,
+	}); err != nil {
+		return fmt.Errorf("delete follow: %w", err)
+	}
+	return nil
+}
+
 func toNotification(row sqlc.Notification) notification.Notification {
 	var readAt *time.Time
 	if row.ReadAt != nil {
 		readAt = row.ReadAt
 	}
+	var payload map[string]any
+	_ = json.Unmarshal(row.Payload, &payload)
 	return notification.Notification{
 		ID:          row.ID,
 		RecipientID: row.RecipientID,
@@ -174,6 +201,7 @@ func toNotification(row sqlc.Notification) notification.Notification {
 		Language:    notification.Language(row.Language),
 		Title:       row.Title,
 		Body:        row.Body,
+		Payload:     payload,
 		ReadAt:      readAt,
 		CreatedAt:   row.CreatedAt,
 	}

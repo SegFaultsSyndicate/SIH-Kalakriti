@@ -102,6 +102,15 @@ func run() error {
 	}
 	defer collabConn.Close()
 
+	// channel-svc's gRPC port (see its main.go default: :9096, distinct from
+	// collab-svc's :50053 to avoid a port collision) — CHANNEL_SVC_ADDR is
+	// already used for channel-svc's HTTP port, so this is a separate var.
+	channelConn, err := grpc.NewClient(getEnv("CHANNEL_SVC_GRPC_ADDR", "localhost:9096"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling channel-svc: %w", err)
+	}
+	defer channelConn.Close()
+
 	srv, err := bff.NewServer(bff.Config{
 		Addr:                   getEnv("ADDR", ":8080"),
 		BaseURL:                mustEnv("BASE_URL"),
@@ -117,8 +126,7 @@ func run() error {
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
 		// Service clients wired to real backends where the RPC shapes line up
-		// 1:1 with these interfaces. FollowSvc stays nil: no gRPC service
-		// exists for it at all yet (see git history for the scoping).
+		// 1:1 with these interfaces.
 		AuthSvc:    client.NewAuth(coreConn, rdb),
 		ArtisanSvc: client.NewArtisan(coreConn),
 		MediaSvc:   client.NewMedia(coreConn),
@@ -126,7 +134,7 @@ func run() error {
 		SearchSvc:  client.NewSearch(searchConn),
 		PricingSvc: client.NewPricing(coreConn),
 		OrderSvc:   client.NewOrder(collabConn),
-		FollowSvc:  nil,
+		FollowSvc:  client.NewFollow(channelConn),
 		StmtSvc:    insightClient,
 		InsightSvc: insightClient,
 		CatalogSvc: client.NewCatalog(coreConn),

@@ -46,6 +46,28 @@ func TestRepo_InsertNotification(t *testing.T) {
 	assert.Equal(t, "user-1", created.RecipientID)
 }
 
+// TestToNotificationDecodesPayload guards against the payload column being
+// scanned but never unmarshalled back into the domain type — it used to be
+// dropped silently, which meant every notification consumer (GetFeed
+// included) lost listing_id/artisan_id on every read.
+func TestToNotificationDecodesPayload(t *testing.T) {
+	row := sqlc.Notification{
+		ID:          uuid.Must(uuid.NewV7()),
+		RecipientID: "user-1",
+		Kind:        sqlc.NotificationKindARTISANFOLLOWED,
+		Language:    sqlc.LanguageCodeENGLISH,
+		Title:       "Title",
+		Body:        "Body",
+		Payload:     []byte(`{"listing_id":"lst-1","artisan_id":"art-1"}`),
+		CreatedAt:   time.Now().UTC(),
+	}
+
+	n := toNotification(row)
+	require.NotNil(t, n.Payload)
+	assert.Equal(t, "lst-1", n.Payload["listing_id"])
+	assert.Equal(t, "art-1", n.Payload["artisan_id"])
+}
+
 func TestRepo_GetFollowers(t *testing.T) {
 	db := setupTestDB(t)
 	if db == nil {
