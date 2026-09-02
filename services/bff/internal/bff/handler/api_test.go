@@ -187,7 +187,7 @@ type mockArtisanSvc struct {
 	nextID string
 }
 
-func (m *mockArtisanSvc) Register(principalID, displayName, phone, language string) (string, error) {
+func (m *mockArtisanSvc) Register(phone, idempotencyKey string, fields map[string]any) (string, error) {
 	id := m.nextID
 	m.nextID = "art-" + id[4:] + "1" // increment for next call
 	return id, nil

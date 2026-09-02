@@ -44,11 +44,16 @@ func (f *fakeOntologyService) GetCraft(ctx context.Context, in *catalogv1.GetCra
 
 type fakeIdentityService struct {
 	identityv1.IdentityServiceClient
-	getArtisan func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error)
+	getArtisan      func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error)
+	registerArtisan func(ctx context.Context, in *identityv1.RegisterArtisanRequest, opts ...grpc.CallOption) (*identityv1.RegisterArtisanResponse, error)
 }
 
 func (f *fakeIdentityService) GetArtisan(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error) {
 	return f.getArtisan(ctx, in, opts...)
+}
+
+func (f *fakeIdentityService) RegisterArtisan(ctx context.Context, in *identityv1.RegisterArtisanRequest, opts ...grpc.CallOption) (*identityv1.RegisterArtisanResponse, error) {
+	return f.registerArtisan(ctx, in, opts...)
 }
 
 func strPtr(s string) *string { return &s }
@@ -259,6 +264,57 @@ func TestInsightGetStatementReturnsAnErrorNotAPanic(t *testing.T) {
 	in := &Insight{}
 	_, err := in.GetStatement("stmt-1")
 	assert.Error(t, err)
+}
+
+func validRegisterFields() map[string]any {
+	return map[string]any{
+		"display_name": "Lakshmi",
+		"craft_ids":    []any{"craft-1"},
+		"languages":    []any{"HINDI"},
+		"region":       map[string]any{"state_code": "IN-AS"},
+	}
+}
+
+func TestArtisanRegisterSendsCraftLanguageAndRegionThrough(t *testing.T) {
+	a := &Artisan{identity: &fakeIdentityService{
+		registerArtisan: func(ctx context.Context, in *identityv1.RegisterArtisanRequest, opts ...grpc.CallOption) (*identityv1.RegisterArtisanResponse, error) {
+			require.Equal(t, "Lakshmi", in.GetDisplayName())
+			require.Equal(t, "+919900011234", in.GetPhoneE164())
+			require.Equal(t, []string{"craft-1"}, in.GetCraftIds())
+			require.Equal(t, []commonv1.Language{commonv1.Language_LANGUAGE_HINDI}, in.GetLanguages())
+			require.Equal(t, "IN-AS", in.GetRegion().GetStateCode())
+			require.Equal(t, "idem-1", in.GetIdempotencyKey())
+			return &identityv1.RegisterArtisanResponse{Artisan: &catalogv1.Artisan{Id: "art-1"}}, nil
+		},
+	}}
+
+	id, err := a.Register("+919900011234", "idem-1", validRegisterFields())
+	require.NoError(t, err)
+	assert.Equal(t, "art-1", id)
+}
+
+func TestArtisanRegisterRejectsMissingCraftIDs(t *testing.T) {
+	a := &Artisan{}
+	fields := validRegisterFields()
+	delete(fields, "craft_ids")
+	_, err := a.Register("+919900011234", "idem-1", fields)
+	assert.Equal(t, 400, domain.HTTPStatus(err))
+}
+
+func TestArtisanRegisterRejectsMissingRegion(t *testing.T) {
+	a := &Artisan{}
+	fields := validRegisterFields()
+	delete(fields, "region")
+	_, err := a.Register("+919900011234", "idem-1", fields)
+	assert.Equal(t, 400, domain.HTTPStatus(err))
+}
+
+func TestArtisanRegisterRejectsNonStringCraftID(t *testing.T) {
+	a := &Artisan{}
+	fields := validRegisterFields()
+	fields["craft_ids"] = []any{42}
+	_, err := a.Register("+919900011234", "idem-1", fields)
+	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
 type fakeSearchService struct {

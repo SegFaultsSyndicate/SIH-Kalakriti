@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
@@ -34,7 +36,7 @@ type AuthService interface {
 
 // ArtisanService is the artisan-svc gRPC client interface.
 type ArtisanService interface {
-	Register(principalID, displayName, phone, language string) (artisanID string, err error)
+	Register(phone, idempotencyKey string, fields map[string]any) (artisanID string, err error)
 	GetProfile(artisanID string) (map[string]any, error)
 	UpdateProfile(artisanID string, updates map[string]any) error
 }
@@ -194,16 +196,21 @@ func (h *APIHandler) RegisterArtisan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		DisplayName string `json:"display_name"`
-		Language    string `json:"language"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
 
-	artisanID, err := h.artisanSvc.Register(p.Subject, req.DisplayName, p.PhoneE164, req.Language)
+	// core-svc requires a non-empty idempotency_key; reuse the client's
+	// X-Idempotency-Key when present so a retried HTTP call also replays at
+	// the gRPC layer instead of registering twice, otherwise mint one.
+	idempotencyKey := r.Header.Get("X-Idempotency-Key")
+	if idempotencyKey == "" {
+		idempotencyKey = uuid.NewString()
+	}
+
+	artisanID, err := h.artisanSvc.Register(p.PhoneE164, idempotencyKey, fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
