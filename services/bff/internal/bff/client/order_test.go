@@ -12,14 +12,20 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
 	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
 )
 
 type fakeFulfilmentService struct {
 	fulfilmentv1.FulfilmentServiceClient
 	createBulkOrder func(ctx context.Context, in *fulfilmentv1.CreateBulkOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.CreateBulkOrderResponse, error)
+	getOrder        func(ctx context.Context, in *fulfilmentv1.GetOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.GetOrderResponse, error)
 	respondToLot    func(ctx context.Context, in *fulfilmentv1.RespondToLotRequest, opts ...grpc.CallOption) (*fulfilmentv1.RespondToLotResponse, error)
 	watchOrder      func(ctx context.Context, in *fulfilmentv1.WatchOrderRequest, opts ...grpc.CallOption) (fulfilmentv1.FulfilmentService_WatchOrderClient, error)
+}
+
+func (f *fakeFulfilmentService) GetOrder(ctx context.Context, in *fulfilmentv1.GetOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.GetOrderResponse, error) {
+	return f.getOrder(ctx, in, opts...)
 }
 
 func (f *fakeFulfilmentService) CreateBulkOrder(ctx context.Context, in *fulfilmentv1.CreateBulkOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.CreateBulkOrderResponse, error) {
@@ -151,8 +157,43 @@ func TestOrderRespondToLotRejectsDeclineWithNoReason(t *testing.T) {
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
-func TestOrderGetOrderReturnsAnErrorNotAPanic(t *testing.T) {
-	o := &Order{}
+func TestOrderGetOrderReturnsOrderWithLots(t *testing.T) {
+	var sawReq *fulfilmentv1.GetOrderRequest
+	unitPrice := &commonv1.Money{AmountPaise: 5000, CurrencyCode: "INR"}
+	o := &Order{fulfilment: &fakeFulfilmentService{
+		getOrder: func(ctx context.Context, in *fulfilmentv1.GetOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.GetOrderResponse, error) {
+			sawReq = in
+			return &fulfilmentv1.GetOrderResponse{Order: &fulfilmentv1.BulkOrder{
+				Id:       "order-1",
+				BuyerId:  "buyer-1",
+				Quantity: 50,
+				State:    fulfilmentv1.BulkOrderState_BULK_ORDER_STATE_CONFIRMED,
+				UnitPrice: unitPrice,
+				Lots:     []*fulfilmentv1.OrderLot{{Id: "lot-1", ArtisanId: "art-1"}},
+			}}, nil
+		},
+	}}
+
+	order, err := o.GetOrder(context.Background(), "order-1")
+	require.NoError(t, err)
+	require.NotNil(t, sawReq)
+	assert.Equal(t, "order-1", sawReq.GetBulkOrderId())
+
+	assert.Equal(t, "order-1", order["id"])
+	assert.Equal(t, "buyer-1", order["buyer_id"])
+	assert.Equal(t, "CONFIRMED", order["state"])
+	lots, ok := order["lots"].([]map[string]any)
+	require.True(t, ok)
+	require.Len(t, lots, 1)
+	assert.Equal(t, "lot-1", lots[0]["id"])
+}
+
+func TestOrderGetOrderPropagatesGRPCError(t *testing.T) {
+	o := &Order{fulfilment: &fakeFulfilmentService{
+		getOrder: func(ctx context.Context, in *fulfilmentv1.GetOrderRequest, opts ...grpc.CallOption) (*fulfilmentv1.GetOrderResponse, error) {
+			return nil, errors.New("not found")
+		},
+	}}
 	_, err := o.GetOrder(context.Background(), "order-1")
 	assert.Error(t, err)
 }

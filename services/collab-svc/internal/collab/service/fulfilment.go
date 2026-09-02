@@ -246,6 +246,21 @@ func (f *Fulfilment) CreateBulkOrder(ctx context.Context, in CreateBulkOrderInpu
 	return created, nil
 }
 
+// --- GetOrder -----------------------------------------------------------------
+
+// GetOrder loads one bulk order with its lots.
+func (f *Fulfilment) GetOrder(ctx context.Context, orderID uuid.UUID) (domain.BulkOrder, []domain.OrderLot, error) {
+	order, err := f.store.GetBulkOrder(ctx, orderID)
+	if err != nil {
+		return domain.BulkOrder{}, nil, fmt.Errorf("loading bulk order %s: %w", orderID, err)
+	}
+	lots, err := f.store.ListLotsForOrder(ctx, orderID)
+	if err != nil {
+		return domain.BulkOrder{}, nil, fmt.Errorf("listing lots for order %s: %w", orderID, err)
+	}
+	return order, lots, nil
+}
+
 // --- ProposeAllocation -------------------------------------------------------
 
 // ProposeAllocationInput controls one allocation pass.

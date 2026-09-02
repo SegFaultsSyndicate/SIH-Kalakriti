@@ -68,12 +68,16 @@ func (o *Order) CreateBulkOrder(ctx context.Context, buyerID, idempotencyKey str
 	return resp.GetOrder().GetId(), nil
 }
 
-// GetOrder is not wired: fulfilment-svc has no RPC that fetches one bulk
-// order by id — only WatchOrder's event stream and CreateBulkOrder's own
-// response return a BulkOrder. Needs a new RPC (and a service-layer method;
-// only the store layer has GetBulkOrder today), not a guessed adapter.
+// GetOrder fetches one bulk order by id, with its lots.
 func (o *Order) GetOrder(ctx context.Context, orderID string) (map[string]any, error) {
-	return nil, domain.Unavailable("fetching a bulk order by id is not supported: fulfilment-svc has no such RPC yet")
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := o.fulfilment.GetOrder(ctx, &fulfilmentv1.GetOrderRequest{BulkOrderId: orderID})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return bulkOrderToMap(resp.GetOrder()), nil
 }
 
 // RespondToLot carries an artisan's accept or decline. fields carries
@@ -164,6 +168,31 @@ func orderEventToMap(e *fulfilmentv1.OrderEvent) map[string]any {
 		out["type"] = "payment_settled"
 	}
 	return out
+}
+
+func bulkOrderToMap(o *fulfilmentv1.BulkOrder) map[string]any {
+	m := map[string]any{
+		"id":                 o.GetId(),
+		"buyer_id":           o.GetBuyerId(),
+		"listing_id":         o.GetListingId(),
+		"product_id":         o.GetProductId(),
+		"quantity":           o.GetQuantity(),
+		"unit_price":         moneyMap(o.GetUnitPrice()),
+		"total_value":        moneyMap(o.GetTotalValue()),
+		"required_by":        o.GetRequiredBy().AsTime().Format(time.RFC3339),
+		"state":              trimEnumPrefix(o.GetState().String(), "BULK_ORDER_STATE_"),
+		"allocated_quantity": o.GetAllocatedQuantity(),
+		"customisations":     o.GetCustomisations(),
+	}
+	if o.Notes != nil {
+		m["notes"] = *o.Notes
+	}
+	lots := make([]map[string]any, 0, len(o.GetLots()))
+	for _, l := range o.GetLots() {
+		lots = append(lots, orderLotToMap(l))
+	}
+	m["lots"] = lots
+	return m
 }
 
 func orderLotToMap(l *fulfilmentv1.OrderLot) map[string]any {

@@ -85,6 +85,46 @@ func TestCreateBulkOrderAcceptsFeasibleDeadline(t *testing.T) {
 	}
 }
 
+func TestGetOrderReturnsOrderWithLots(t *testing.T) {
+	t.Parallel()
+	store := newFakeStore()
+	f := newTestFulfilment(store)
+
+	listingID, craftID := uuid.New(), uuid.New()
+	seedListing(t, store, listingID, craftID, 14, 10000)
+
+	created, err := f.CreateBulkOrder(context.Background(), CreateBulkOrderInput{
+		BuyerID: "buyer-1", ListingID: listingID, Quantity: 10,
+		RequiredBy:     f.now().AddDate(0, 0, 30),
+		IdempotencyKey: "key-1",
+	})
+	if err != nil {
+		t.Fatalf("CreateBulkOrder returned error: %v", err)
+	}
+
+	order, lots, err := f.GetOrder(context.Background(), created.ID)
+	if err != nil {
+		t.Fatalf("GetOrder returned error: %v", err)
+	}
+	if order.ID != created.ID {
+		t.Errorf("order.ID = %s, want %s", order.ID, created.ID)
+	}
+	if len(lots) != 0 {
+		t.Errorf("expected no lots before allocation, got %d", len(lots))
+	}
+}
+
+func TestGetOrderNotFound(t *testing.T) {
+	t.Parallel()
+	store := newFakeStore()
+	f := newTestFulfilment(store)
+
+	_, _, err := f.GetOrder(context.Background(), uuid.New())
+	if !errors.Is(err, pkgdomain.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
 // TestCreateBulkOrderIsIdempotent replays the same request twice with the
 // same idempotency key and expects one order, not two.
 func TestCreateBulkOrderIsIdempotent(t *testing.T) {

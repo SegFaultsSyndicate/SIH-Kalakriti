@@ -69,6 +69,20 @@ func (h *Fulfilment) CreateBulkOrder(ctx context.Context, req *fulfilmentv1.Crea
 	return &fulfilmentv1.CreateBulkOrderResponse{Order: bulkOrderToProto(order, nil)}, nil
 }
 
+// GetOrder fetches one bulk order with its lots.
+func (h *Fulfilment) GetOrder(ctx context.Context, req *fulfilmentv1.GetOrderRequest) (*fulfilmentv1.GetOrderResponse, error) {
+	orderID, err := parseUUID("bulk_order_id", req.GetBulkOrderId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+
+	order, lots, err := h.svc.GetOrder(ctx, orderID)
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &fulfilmentv1.GetOrderResponse{Order: bulkOrderToProto(order, lots)}, nil
+}
+
 // ProposeAllocation ranks candidates, decomposes the order and (unless
 // DryRun) offers the resulting lots.
 func (h *Fulfilment) ProposeAllocation(ctx context.Context, req *fulfilmentv1.ProposeAllocationRequest) (*fulfilmentv1.ProposeAllocationResponse, error) {

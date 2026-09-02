@@ -12,6 +12,8 @@ option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1;fulf
 service FulfilmentService {
   // Register a buyer's bulk requirement; allocation happens asynchronously.
   rpc CreateBulkOrder(CreateBulkOrderRequest) returns (CreateBulkOrderResponse);
+  // Fetch one bulk order by id, with its lots.
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
   // Propose a split of the order into lots, honouring declared capacity.
   rpc ProposeAllocation(ProposeAllocationRequest) returns (ProposeAllocationResponse);
   // Artisan accepts or declines an offered lot.
@@ -263,6 +265,18 @@ message CreateBulkOrderRequest {
 // CreateBulkOrderResponse returns the registered order.
 message CreateBulkOrderResponse {
   // The created order, in ALLOCATING.
+  BulkOrder order = 1;
+}
+
+// GetOrderRequest fetches one bulk order.
+message GetOrderRequest {
+  // Order to fetch.
+  string bulk_order_id = 1;
+}
+
+// GetOrderResponse returns the order with its lots populated.
+message GetOrderResponse {
+  // The order, lots included.
   BulkOrder order = 1;
 }
 
