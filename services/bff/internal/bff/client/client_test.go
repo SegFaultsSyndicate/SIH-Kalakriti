@@ -224,15 +224,13 @@ func TestCatalogGetCraft(t *testing.T) {
 // short-code RPC — and the sitemap it would feed can't be honoured without
 // slug support either). Each must return a clear error, never panic, since
 // this interface's previous state (a nil client) panicked on every call.
-func TestCatalogUnwiredGapsReturnAnErrorNotAPanic(t *testing.T) {
+// TestCatalogGetProvenanceByShortCodeReturnsAnErrorNotAPanic covers the one
+// remaining unwired gap: SealProvenance has no gRPC handler on core-svc yet,
+// so there's nothing to look a short code up against. GetListingBySlug,
+// GetArtisanBySlug and ListPublishedListings are wired now (slug_test.go).
+func TestCatalogGetProvenanceByShortCodeReturnsAnErrorNotAPanic(t *testing.T) {
 	c := &Catalog{}
-	_, err := c.GetListingBySlug(context.Background(), "some-slug")
-	assert.Error(t, err)
-	_, err = c.GetArtisanBySlug(context.Background(), "some-slug")
-	assert.Error(t, err)
-	_, err = c.GetProvenanceByShortCode(context.Background(), "some-code")
-	assert.Error(t, err)
-	_, err = c.ListPublishedListings(context.Background(), 100, 0)
+	_, err := c.GetProvenanceByShortCode(context.Background(), "some-code")
 	assert.Error(t, err)
 }
 

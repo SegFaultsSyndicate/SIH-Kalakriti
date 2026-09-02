@@ -3,6 +3,7 @@ package client
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc"
 
@@ -17,12 +18,14 @@ import (
 // Catalog is bff's view of core-svc's catalog, ontology and identity
 // services, satisfying handler.CatalogService.
 //
-// GetListingBySlug, GetArtisanBySlug and GetProvenanceByShortCode are not
-// wired: no slug field exists anywhere on Listing or Artisan, and no RPC
-// looks up a provenance record by its short code (only by listing id). Both
-// need new backend work, not an adapter — they return a clear error instead
-// of the nil-pointer panic this interface's caller got before it was wired
-// at all.
+// GetProvenanceByShortCode is not wired: core-svc's service layer already
+// has GetProvenanceByShortCode (services/core-svc/internal/core/service/
+// provenance.go) and a shortcode generator, but no proto RPC exposes it, and
+// SealProvenance — the RPC that would create a record to look up in the
+// first place — has no gRPC handler at all yet (catalog.proto declares it,
+// but handler/catalog.go never implements it, so it 501s via
+// UnimplementedCatalogServiceServer). That's backend work in core-svc, not
+// an adapter gap; this stays an error until SealProvenance is wired.
 type Catalog struct {
 	catalog  catalogv1.CatalogServiceClient
 	ontology catalogv1.OntologyServiceClient
@@ -38,27 +41,141 @@ func NewCatalog(conn grpc.ClientConnInterface) *Catalog {
 	}
 }
 
-var errNoSlugSupport = domain.Unavailable("slug-based lookup is not supported: the catalog has no slug field yet")
-
-func (c *Catalog) GetListingBySlug(ctx context.Context, slug string) (*handler.ListingDetail, error) {
-	return nil, errNoSlugSupport
-}
-
-func (c *Catalog) GetArtisanBySlug(ctx context.Context, slug string) (*handler.ArtisanProfile, error) {
-	return nil, errNoSlugSupport
-}
-
 func (c *Catalog) GetProvenanceByShortCode(ctx context.Context, code string) (handler.ProvenanceRecord, error) {
-	return handler.ProvenanceRecord{}, domain.Unavailable("provenance lookup by short code is not supported: no such RPC exists yet")
+	return handler.ProvenanceRecord{}, domain.Unavailable("provenance lookup by short code is not supported: SealProvenance has no gRPC handler yet")
 }
 
-// ListPublishedListings is not wired either: it only exists to feed the
-// sitemap with /listing/{slug} URLs, and GetListingBySlug can't serve any
-// slug it would emit (see errNoSlugSupport above). Publishing an index of
-// links that all 503 is worse than publishing none, so this stays an error
-// until slug lookup exists — same gap, kept honest instead of half-wired.
+// GetListingBySlug resolves a slug built by buildSlug back to its id
+// (parseSlugID) and fetches the listing. The slug is derived, not stored —
+// no proto change, no migration — so it stays valid even if the title later
+// changes; the id is the only part that must round-trip.
+func (c *Catalog) GetListingBySlug(ctx context.Context, slug string) (*handler.ListingDetail, error) {
+	id, ok := parseSlugID(slug)
+	if !ok {
+		return nil, domain.NotFound("listing not found")
+	}
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := c.catalog.GetListing(ctx, &catalogv1.GetListingRequest{ListingId: id, IncludeProduct: true})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	listing := resp.GetListing()
+	title, description := listingCopy(listing)
+
+	var artisanName string
+	if art, err := c.identity.GetArtisan(ctx, &identityv1.GetArtisanRequest{ArtisanId: listing.GetArtisanId()}); err == nil {
+		artisanName = art.GetArtisan().GetDisplayName()
+	}
+	var craftName string
+	if product := resp.GetProduct(); product != nil {
+		if craft, err := c.ontology.GetCraft(ctx, &catalogv1.GetCraftRequest{CraftId: product.GetCraftId()}); err == nil {
+			craftName = craft.GetCraft().GetDisplayName()
+		}
+	}
+
+	return &handler.ListingDetail{
+		ID:          listing.GetId(),
+		Slug:        buildSlug(title, listing.GetId()),
+		Title:       title,
+		Description: description,
+		PricePaise:  listing.GetPrice().GetAmountPaise(),
+		Currency:    listing.GetPrice().GetCurrencyCode(),
+		ArtisanName: artisanName,
+		CraftName:   craftName,
+		Available:   listing.GetState() == catalogv1.ListingState_LISTING_STATE_PUBLISHED,
+	}, nil
+}
+
+// GetArtisanBySlug mirrors GetListingBySlug for artisan profile pages.
+func (c *Catalog) GetArtisanBySlug(ctx context.Context, slug string) (*handler.ArtisanProfile, error) {
+	id, ok := parseSlugID(slug)
+	if !ok {
+		return nil, domain.NotFound("artisan not found")
+	}
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := c.identity.GetArtisan(ctx, &identityv1.GetArtisanRequest{ArtisanId: id})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	art := resp.GetArtisan()
+
+	var craftName string
+	if craftIDs := art.GetCraftIds(); len(craftIDs) > 0 {
+		if craft, err := c.ontology.GetCraft(ctx, &catalogv1.GetCraftRequest{CraftId: craftIDs[0]}); err == nil {
+			craftName = craft.GetCraft().GetDisplayName()
+		}
+	}
+
+	var bio string
+	if art.Bio != nil {
+		bio = *art.Bio
+	}
+
+	return &handler.ArtisanProfile{
+		ID:          art.GetId(),
+		Slug:        buildSlug(art.GetDisplayName(), art.GetId()),
+		DisplayName: art.GetDisplayName(),
+		Bio:         bio,
+		Location:    regionLocation(art.GetRegion()),
+		CraftName:   craftName,
+	}, nil
+}
+
+// regionLocation renders a GeoRegion as a short human-readable location.
+func regionLocation(r *commonv1.GeoRegion) string {
+	if r == nil {
+		return ""
+	}
+	var parts []string
+	if r.District != nil && *r.District != "" {
+		parts = append(parts, *r.District)
+	}
+	if r.GetStateCode() != "" {
+		parts = append(parts, r.GetStateCode())
+	}
+	return strings.Join(parts, ", ")
+}
+
+// ListPublishedListings feeds the sitemap. ListListingsRequest pages by
+// opaque cursor, not numeric offset, so only the first page (offset 0) is
+// servable without persisting a cursor between calls; anything else comes
+// back empty rather than silently returning the first page again under a
+// different offset's URL.
 func (c *Catalog) ListPublishedListings(ctx context.Context, limit, offset int32) ([]handler.ListingDetail, error) {
-	return nil, errNoSlugSupport
+	if offset != 0 {
+		return nil, nil
+	}
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := c.catalog.ListListings(ctx, &catalogv1.ListListingsRequest{
+		State: catalogv1.ListingState_LISTING_STATE_PUBLISHED,
+		Page:  &commonv1.PageRequest{PageSize: limit},
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	out := make([]handler.ListingDetail, 0, len(resp.GetListings()))
+	for _, l := range resp.GetListings() {
+		title, _ := listingCopy(l)
+		out = append(out, handler.ListingDetail{
+			ID:         l.GetId(),
+			Slug:       buildSlug(title, l.GetId()),
+			Title:      title,
+			PricePaise: l.GetPrice().GetAmountPaise(),
+			Currency:   l.GetPrice().GetCurrencyCode(),
+			Available:  true,
+		})
+	}
+	return out, nil
 }
 
 func (c *Catalog) GetListing(ctx context.Context, listingID string) (handler.Listing, error) {
