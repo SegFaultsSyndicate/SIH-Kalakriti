@@ -30,8 +30,12 @@ func TestLotExpiryReoffersToNextCandidateWhenOneIsAvailable(t *testing.T) {
 	listingID, craftID := uuid.New(), uuid.New()
 	seedListing(t, store, listingID, craftID, 14, 10000)
 	a1, a2 := uuid.New(), uuid.New()
+	// a1 gets an exact-fit capacity (30, matching the order below) and a2 a
+	// 100-unit overshoot, so a1 deterministically outranks a2 on capacity fit
+	// — tying both at 100 left the outcome decided by RankCandidates' random-
+	// UUID tiebreak, making the "must be a1" assertion below flaky.
 	seedCandidates(store, craftID,
-		domain.Candidate{ArtisanID: a1, AvailableUnits: 100, OnTimeRate: 1.0},
+		domain.Candidate{ArtisanID: a1, AvailableUnits: 30, OnTimeRate: 1.0},
 		domain.Candidate{ArtisanID: a2, AvailableUnits: 100, OnTimeRate: 1.0},
 	)
 

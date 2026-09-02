@@ -46,7 +46,7 @@ const DefaultOnTimeRate = 1.0
 // ranking heuristic, not a tunable model.
 func score(c Candidate, remaining int32) float64 {
 	fit := capacityFit(c.AvailableUnits, remaining)
-	s := 0.5*fit + 0.4*c.OnTimeRate
+	s := 0.4*fit + 0.5*c.OnTimeRate
 	if c.SameCluster {
 		s += 0.1
 	}

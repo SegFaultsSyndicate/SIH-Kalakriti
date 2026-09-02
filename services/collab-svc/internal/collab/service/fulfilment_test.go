@@ -219,7 +219,6 @@ func TestRespondToLotDeclineReleasesReservation(t *testing.T) {
 		t.Fatalf("ProposeAllocation: %v, lots=%+v", err, allocResult.Lots)
 	}
 	lot := allocResult.Lots[0]
-	reservationID := store.reservationsByLot[lot.ID].ID
 
 	declineReason := "cannot meet the timeline"
 	declined, err := f.RespondToLot(context.Background(), RespondToLotInput{
@@ -232,14 +231,16 @@ func TestRespondToLotDeclineReleasesReservation(t *testing.T) {
 	if declined.State != domain.LotDeclined {
 		t.Errorf("lot state = %s, want DECLINED", declined.State)
 	}
-	if got := store.reservationsByLot[reservationID].State; got != domain.ReservationReleased {
+	if got := store.reservationsByLot[lot.ID].State; got != domain.ReservationReleased {
 		t.Errorf("reservation state = %s, want RELEASED", got)
 	}
 }
 
 // TestRespondToLotDeclineReoffersToNextCandidate confirms a decline's
-// automatic re-offer pass picks up a previously-unused candidate for the
-// freed capacity.
+// re-offer pass — driven by HandleLotDeclined off the order.lot.declined
+// event RespondToLot enqueues, per the durability fix documented on
+// RespondToLot and exercised directly by TestHandleLotDeclinedReoffersCapacity
+// — picks up a previously-unused candidate for the freed capacity.
 func TestRespondToLotDeclineReoffersToNextCandidate(t *testing.T) {
 	t.Parallel()
 	store := newFakeStore()
@@ -280,6 +281,16 @@ func TestRespondToLotDeclineReoffersToNextCandidate(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("RespondToLot decline: %v", err)
+	}
+
+	// The reoffer is driven by the order.lot.declined event, not inline —
+	// simulate it reaching the consumer.
+	payload, err := json.Marshal(map[string]string{"bulk_order_id": order.ID.String()})
+	if err != nil {
+		t.Fatalf("marshalling test payload: %v", err)
+	}
+	if err := f.HandleLotDeclined(context.Background(), payload); err != nil {
+		t.Fatalf("HandleLotDeclined: %v", err)
 	}
 
 	var offeredToB bool

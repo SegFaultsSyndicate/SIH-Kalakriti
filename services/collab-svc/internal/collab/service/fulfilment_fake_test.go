@@ -44,11 +44,16 @@ type escrowKey struct {
 	trigger domain.MilestoneTrigger
 }
 
-// fakeStore is an in-memory Store + Tx. Writes made inside InTx's callback are
-// buffered and applied only if the callback returns nil, mirroring a real
-// transaction's all-or-nothing commit; a returned error leaves the store
-// exactly as it was before the call, which is what lets the idempotency and
-// resumability tests below assert "nothing changed" after a failure.
+// fakeStore is an in-memory Store + Tx. Every Tx write applies to the store
+// immediately, so a later call within the SAME transaction sees earlier ones
+// (matching a real DB transaction's read-your-own-writes semantics) — this
+// used to buffer writes until commit instead, which let a later step in the
+// same saga (e.g. TransitionBulkOrder re-reading the order) observe a stale
+// value from before an earlier step's write (e.g. IncrementAllocatedQuantity)
+// and clobber it back on its own write. To keep the "a returned error leaves
+// the store exactly as it was before the call" guarantee the idempotency and
+// resumability tests rely on, each write instead records an undo closure;
+// InTx runs them in reverse on a non-nil error.
 type fakeStore struct {
 	mu sync.Mutex
 
@@ -96,19 +101,19 @@ func newFakeStore() *fakeStore {
 }
 
 type fakeTx struct {
-	store  *fakeStore
-	writes []func()
+	store *fakeStore
+	undo  []func()
 }
 
 func (s *fakeStore) InTx(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error {
 	tx := &fakeTx{store: s}
 	if err := fn(ctx, tx); err != nil {
+		s.mu.Lock()
+		for i := len(tx.undo) - 1; i >= 0; i-- {
+			tx.undo[i]()
+		}
+		s.mu.Unlock()
 		return err
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for _, w := range tx.writes {
-		w()
 	}
 	return nil
 }
@@ -274,14 +279,15 @@ func (tx *fakeTx) CreateBulkOrder(_ context.Context, id uuid.UUID, in domain.Bul
 		tx.store.mu.Unlock()
 		return existing, false, nil
 	}
-	tx.store.mu.Unlock()
-
 	in.ID = id
 	in.IdempotencyKey = idempotencyKey
 	in.CreatedAt, in.UpdatedAt = time.Now().UTC(), time.Now().UTC()
-	tx.writes = append(tx.writes, func() {
-		tx.store.orders[id] = in
-		tx.store.ordersByBuyerKey[key] = id
+	tx.store.orders[id] = in
+	tx.store.ordersByBuyerKey[key] = id
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		delete(tx.store.orders, id)
+		delete(tx.store.ordersByBuyerKey, key)
 	})
 	return in, true, nil
 }
@@ -289,34 +295,44 @@ func (tx *fakeTx) CreateBulkOrder(_ context.Context, id uuid.UUID, in domain.Bul
 func (tx *fakeTx) TransitionBulkOrder(_ context.Context, orderID uuid.UUID, from, to domain.BulkOrderState) (domain.BulkOrder, error) {
 	tx.store.mu.Lock()
 	o, ok := tx.store.orders[orderID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.BulkOrder{}, fmt.Errorf("bulk order not found: %w", pkgdomain.ErrNotFound)
 	}
 	if o.State != from {
+		tx.store.mu.Unlock()
 		return domain.BulkOrder{}, fmt.Errorf("bulk order state is %s, not %s: %w", o.State, from, pkgdomain.ErrConflict)
 	}
+	prev := o
 	o.State = to
-	tx.writes = append(tx.writes, func() { tx.store.orders[orderID] = o })
+	tx.store.orders[orderID] = o
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.orders[orderID] = prev })
 	return o, nil
 }
 
 func (tx *fakeTx) IncrementAllocatedQuantity(_ context.Context, orderID uuid.UUID, delta int32) (domain.BulkOrder, error) {
 	tx.store.mu.Lock()
 	o, ok := tx.store.orders[orderID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.BulkOrder{}, fmt.Errorf("bulk order not found: %w", pkgdomain.ErrNotFound)
 	}
+	prev := o
 	o.AllocatedQuantity += delta
-	tx.writes = append(tx.writes, func() { tx.store.orders[orderID] = o })
+	tx.store.orders[orderID] = o
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.orders[orderID] = prev })
 	return o, nil
 }
 
 func (tx *fakeTx) CreateLot(_ context.Context, id uuid.UUID, in domain.OrderLot) (domain.OrderLot, error) {
 	in.ID = id
 	in.CreatedAt, in.UpdatedAt = time.Now().UTC(), time.Now().UTC()
-	tx.writes = append(tx.writes, func() { tx.store.lots[id] = in })
+	tx.store.mu.Lock()
+	tx.store.lots[id] = in
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { delete(tx.store.lots, id) })
 	return in, nil
 }
 
@@ -327,13 +343,15 @@ func (tx *fakeTx) CreateLot(_ context.Context, id uuid.UUID, in domain.OrderLot)
 func (tx *fakeTx) TransitionLot(_ context.Context, lotID uuid.UUID, from, to domain.LotState, fields domain.LotTransitionFields) (domain.OrderLot, error) {
 	tx.store.mu.Lock()
 	l, ok := tx.store.lots[lotID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.OrderLot{}, fmt.Errorf("lot not found: %w", pkgdomain.ErrNotFound)
 	}
 	if l.State != from {
+		tx.store.mu.Unlock()
 		return domain.OrderLot{}, fmt.Errorf("lot state is %s, not %s: %w", l.State, from, pkgdomain.ErrConflict)
 	}
+	prev := l
 	l.State = to
 	if fields.AcceptedAt != nil {
 		l.AcceptedAt = fields.AcceptedAt
@@ -353,60 +371,77 @@ func (tx *fakeTx) TransitionLot(_ context.Context, lotID uuid.UUID, from, to dom
 	if fields.ReworkDeadline != nil {
 		l.ReworkDeadline = fields.ReworkDeadline
 	}
-	tx.writes = append(tx.writes, func() { tx.store.lots[lotID] = l })
+	tx.store.lots[lotID] = l
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.lots[lotID] = prev })
 	return l, nil
 }
 
 func (tx *fakeTx) CreateReservation(_ context.Context, id uuid.UUID, in domain.CapacityReservation) (domain.CapacityReservation, error) {
 	in.ID = id
-	tx.writes = append(tx.writes, func() { tx.store.reservationsByLot[in.LotID] = in })
+	tx.store.mu.Lock()
+	tx.store.reservationsByLot[in.LotID] = in
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { delete(tx.store.reservationsByLot, in.LotID) })
 	return in, nil
 }
 
 func (tx *fakeTx) ReleaseReservation(_ context.Context, reservationID uuid.UUID) error {
-	tx.writes = append(tx.writes, func() {
-		for lotID, r := range tx.store.reservationsByLot {
-			if r.ID == reservationID {
-				r.State = domain.ReservationReleased
-				tx.store.reservationsByLot[lotID] = r
-			}
+	tx.store.mu.Lock()
+	defer tx.store.mu.Unlock()
+	for lotID, r := range tx.store.reservationsByLot {
+		if r.ID == reservationID {
+			prev := r
+			r.State = domain.ReservationReleased
+			tx.store.reservationsByLot[lotID] = r
+			tx.undo = append(tx.undo, func() { tx.store.reservationsByLot[lotID] = prev })
+			return nil
 		}
-	})
+	}
 	return nil
 }
 
 func (tx *fakeTx) ConsumeReservation(_ context.Context, reservationID uuid.UUID) error {
-	tx.writes = append(tx.writes, func() {
-		for lotID, r := range tx.store.reservationsByLot {
-			if r.ID == reservationID {
-				r.State = domain.ReservationConsumed
-				tx.store.reservationsByLot[lotID] = r
-			}
+	tx.store.mu.Lock()
+	defer tx.store.mu.Unlock()
+	for lotID, r := range tx.store.reservationsByLot {
+		if r.ID == reservationID {
+			prev := r
+			r.State = domain.ReservationConsumed
+			tx.store.reservationsByLot[lotID] = r
+			tx.undo = append(tx.undo, func() { tx.store.reservationsByLot[lotID] = prev })
+			return nil
 		}
-	})
+	}
 	return nil
 }
 
 func (tx *fakeTx) RecordEvent(_ context.Context, id, orderID uuid.UUID, lotID *uuid.UUID, eventType string, _ any) error {
-	tx.writes = append(tx.writes, func() {
-		tx.store.events = append(tx.store.events, eventRow{id: id, orderID: orderID, lotID: lotID, eventType: eventType})
-	})
+	tx.store.mu.Lock()
+	n := len(tx.store.events)
+	tx.store.events = append(tx.store.events, eventRow{id: id, orderID: orderID, lotID: lotID, eventType: eventType})
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.events = tx.store.events[:n] })
 	return nil
 }
 
 func (tx *fakeTx) CreateQCResult(_ context.Context, result domain.QCResult) error {
-	tx.writes = append(tx.writes, func() {
-		tx.store.qcResults = append(tx.store.qcResults, result)
-	})
+	tx.store.mu.Lock()
+	n := len(tx.store.qcResults)
+	tx.store.qcResults = append(tx.store.qcResults, result)
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.qcResults = tx.store.qcResults[:n] })
 	return nil
 }
 
 func (tx *fakeTx) InsertOutbox(_ context.Context, id, aggregateID, topic, idempotencyKey string, payload []byte) error {
-	tx.writes = append(tx.writes, func() {
-		tx.store.outbox = append(tx.store.outbox, outboxRow{
-			id: id, aggregateID: aggregateID, topic: topic, idempotencyKey: idempotencyKey, payload: payload,
-		})
+	tx.store.mu.Lock()
+	n := len(tx.store.outbox)
+	tx.store.outbox = append(tx.store.outbox, outboxRow{
+		id: id, aggregateID: aggregateID, topic: topic, idempotencyKey: idempotencyKey, payload: payload,
 	})
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.outbox = tx.store.outbox[:n] })
 	return nil
 }
 
@@ -414,17 +449,19 @@ func (tx *fakeTx) InsertOutbox(_ context.Context, id, aggregateID, topic, idempo
 
 func (tx *fakeTx) CreateAmendment(_ context.Context, id uuid.UUID, in domain.BulkOrderAmendment) (domain.BulkOrderAmendment, error) {
 	tx.store.mu.Lock()
-	_, pending := tx.store.pendingAmendmentOf[in.BulkOrderID]
-	tx.store.mu.Unlock()
-	if pending {
+	if _, pending := tx.store.pendingAmendmentOf[in.BulkOrderID]; pending {
+		tx.store.mu.Unlock()
 		return domain.BulkOrderAmendment{}, fmt.Errorf("amendment already pending: %w", pkgdomain.ErrConflict)
 	}
 	in.ID = id
 	in.Status = domain.AmendmentPendingStatus
 	in.CreatedAt, in.UpdatedAt = time.Now().UTC(), time.Now().UTC()
-	tx.writes = append(tx.writes, func() {
-		tx.store.amendments[id] = in
-		tx.store.pendingAmendmentOf[in.BulkOrderID] = id
+	tx.store.amendments[id] = in
+	tx.store.pendingAmendmentOf[in.BulkOrderID] = id
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		delete(tx.store.amendments, id)
+		delete(tx.store.pendingAmendmentOf, in.BulkOrderID)
 	})
 	return in, nil
 }
@@ -432,19 +469,24 @@ func (tx *fakeTx) CreateAmendment(_ context.Context, id uuid.UUID, in domain.Bul
 func (tx *fakeTx) DecideAmendment(_ context.Context, amendmentID uuid.UUID, status domain.AmendmentStatus) (domain.BulkOrderAmendment, error) {
 	tx.store.mu.Lock()
 	a, ok := tx.store.amendments[amendmentID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.BulkOrderAmendment{}, fmt.Errorf("amendment not found: %w", pkgdomain.ErrNotFound)
 	}
 	if a.Status != domain.AmendmentPendingStatus {
+		tx.store.mu.Unlock()
 		return domain.BulkOrderAmendment{}, fmt.Errorf("amendment already decided: %w", pkgdomain.ErrConflict)
 	}
-	a.Status = status
+	prev := a
 	now := time.Now().UTC()
+	a.Status = status
 	a.DecidedAt = &now
-	tx.writes = append(tx.writes, func() {
-		tx.store.amendments[amendmentID] = a
-		delete(tx.store.pendingAmendmentOf, a.BulkOrderID)
+	tx.store.amendments[amendmentID] = a
+	delete(tx.store.pendingAmendmentOf, a.BulkOrderID)
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		tx.store.amendments[amendmentID] = prev
+		tx.store.pendingAmendmentOf[prev.BulkOrderID] = amendmentID
 	})
 	return a, nil
 }
@@ -452,24 +494,30 @@ func (tx *fakeTx) DecideAmendment(_ context.Context, amendmentID uuid.UUID, stat
 func (tx *fakeTx) ReduceBulkOrderQuantity(_ context.Context, orderID uuid.UUID, quantity int32, totalValuePaise int64, state domain.BulkOrderState) (domain.BulkOrder, error) {
 	tx.store.mu.Lock()
 	o, ok := tx.store.orders[orderID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.BulkOrder{}, fmt.Errorf("bulk order not found: %w", pkgdomain.ErrNotFound)
 	}
+	prev := o
 	o.Quantity, o.TotalValuePaise, o.State = quantity, totalValuePaise, state
-	tx.writes = append(tx.writes, func() { tx.store.orders[orderID] = o })
+	tx.store.orders[orderID] = o
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.orders[orderID] = prev })
 	return o, nil
 }
 
 func (tx *fakeTx) ExtendBulkOrderDeadline(_ context.Context, orderID uuid.UUID, requiredBy time.Time, state domain.BulkOrderState) (domain.BulkOrder, error) {
 	tx.store.mu.Lock()
 	o, ok := tx.store.orders[orderID]
-	tx.store.mu.Unlock()
 	if !ok {
+		tx.store.mu.Unlock()
 		return domain.BulkOrder{}, fmt.Errorf("bulk order not found: %w", pkgdomain.ErrNotFound)
 	}
+	prev := o
 	o.RequiredBy, o.State = requiredBy, state
-	tx.writes = append(tx.writes, func() { tx.store.orders[orderID] = o })
+	tx.store.orders[orderID] = o
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.orders[orderID] = prev })
 	return o, nil
 }
 
@@ -482,16 +530,17 @@ func (tx *fakeTx) CreatePaymentSplit(_ context.Context, id, orderID uuid.UUID, g
 		tx.store.mu.Unlock()
 		return existing, false, nil
 	}
-	tx.store.mu.Unlock()
-
 	split := domain.PaymentSplit{
 		ID: id, BulkOrderID: orderID,
 		GrossTotalPaise: grossTotal, CommissionTotalPaise: commissionTotal, NetTotalPaise: netTotal,
 		CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC(),
 	}
-	tx.writes = append(tx.writes, func() {
-		tx.store.splits[id] = split
-		tx.store.splitByOrder[orderID] = id
+	tx.store.splits[id] = split
+	tx.store.splitByOrder[orderID] = id
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		delete(tx.store.splits, id)
+		delete(tx.store.splitByOrder, orderID)
 	})
 	return split, true, nil
 }
@@ -504,15 +553,16 @@ func (tx *fakeTx) InsertPaymentSplitLine(_ context.Context, id, splitID uuid.UUI
 		tx.store.mu.Unlock()
 		return existing, false, nil
 	}
-	tx.store.mu.Unlock()
-
 	line := domain.PaymentSplitLine{
 		ID: id, PaymentSplitID: splitID, PayeeID: payeeID, PayeeType: payeeType, LotID: lotID,
 		GrossAmountPaise: gross, CommissionPaise: commission, NetAmountPaise: net, PayoutRef: payoutRef,
 	}
-	tx.writes = append(tx.writes, func() {
-		tx.store.lines[id] = line
-		tx.store.lineByKey[key] = id
+	tx.store.lines[id] = line
+	tx.store.lineByKey[key] = id
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		delete(tx.store.lines, id)
+		delete(tx.store.lineByKey, key)
 	})
 	return line, true, nil
 }
@@ -520,14 +570,17 @@ func (tx *fakeTx) InsertPaymentSplitLine(_ context.Context, id, splitID uuid.UUI
 func (tx *fakeTx) MarkSplitLineSettled(_ context.Context, lineID uuid.UUID, settlementRef string) (domain.PaymentSplitLine, error) {
 	tx.store.mu.Lock()
 	l, ok := tx.store.lines[lineID]
-	tx.store.mu.Unlock()
 	if !ok || l.SettledAt != nil {
+		tx.store.mu.Unlock()
 		return domain.PaymentSplitLine{}, fmt.Errorf("payment split line not found or already settled: %w", pkgdomain.ErrNotFound)
 	}
+	prev := l
 	now := time.Now().UTC()
 	l.SettledAt = &now
 	l.SettlementRef = &settlementRef
-	tx.writes = append(tx.writes, func() { tx.store.lines[lineID] = l })
+	tx.store.lines[lineID] = l
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.lines[lineID] = prev })
 	return l, nil
 }
 
@@ -548,11 +601,12 @@ func (tx *fakeTx) MarkPaymentSplitSettled(_ context.Context, splitID uuid.UUID) 
 			return domain.PaymentSplit{}, false, nil
 		}
 	}
-	tx.store.mu.Unlock()
-
+	prev := split
 	now := time.Now().UTC()
 	split.SettledAt = &now
-	tx.writes = append(tx.writes, func() { tx.store.splits[splitID] = split })
+	tx.store.splits[splitID] = split
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.splits[splitID] = prev })
 	return split, true, nil
 }
 
@@ -570,12 +624,13 @@ func (tx *fakeTx) CreateEscrowMilestone(_ context.Context, id, orderID uuid.UUID
 		tx.store.mu.Unlock()
 		return existing, false, nil
 	}
-	tx.store.mu.Unlock()
-
 	m := domain.EscrowMilestone{ID: id, BulkOrderID: orderID, LotID: lotID, Trigger: trigger, AmountPaise: amountPaise}
-	tx.writes = append(tx.writes, func() {
-		tx.store.milestones[id] = m
-		tx.store.milestoneByKey[key] = id
+	tx.store.milestones[id] = m
+	tx.store.milestoneByKey[key] = id
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() {
+		delete(tx.store.milestones, id)
+		delete(tx.store.milestoneByKey, key)
 	})
 	return m, true, nil
 }
@@ -583,12 +638,15 @@ func (tx *fakeTx) CreateEscrowMilestone(_ context.Context, id, orderID uuid.UUID
 func (tx *fakeTx) ReleaseEscrowMilestone(_ context.Context, id uuid.UUID, releaseRef string) (domain.EscrowMilestone, error) {
 	tx.store.mu.Lock()
 	m, ok := tx.store.milestones[id]
-	tx.store.mu.Unlock()
 	if !ok || m.Released {
+		tx.store.mu.Unlock()
 		return domain.EscrowMilestone{}, fmt.Errorf("escrow milestone not found or already released: %w", pkgdomain.ErrNotFound)
 	}
+	prev := m
 	now := time.Now().UTC()
 	m.Released, m.ReleasedAt, m.ReleaseRef = true, &now, &releaseRef
-	tx.writes = append(tx.writes, func() { tx.store.milestones[id] = m })
+	tx.store.milestones[id] = m
+	tx.store.mu.Unlock()
+	tx.undo = append(tx.undo, func() { tx.store.milestones[id] = prev })
 	return m, nil
 }

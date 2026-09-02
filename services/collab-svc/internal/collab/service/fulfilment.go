@@ -281,7 +281,23 @@ func (f *Fulfilment) ProposeAllocation(ctx context.Context, in ProposeAllocation
 			"bulk order is not accepting allocation in state " + string(order.State))
 	}
 
-	remaining := order.Quantity - order.AllocatedQuantity
+	existingLots, err := f.store.ListLotsForOrder(ctx, order.ID)
+	if err != nil {
+		return ProposeAllocationResult{}, fmt.Errorf("listing lots for order %s: %w", order.ID, err)
+	}
+	var pendingOffered int32
+	for _, l := range existingLots {
+		if l.State == domain.LotOffered {
+			pendingOffered += l.Quantity
+		}
+	}
+
+	// remaining excludes both accepted quantity and quantity already offered
+	// but not yet answered — an OFFERED lot already reserves that capacity
+	// against this order, so a redundant re-run (e.g. Kafka's at-least-once
+	// redelivery of order.lot.declined calling HandleLotDeclined twice) must
+	// not offer the same freed capacity a second time.
+	remaining := order.Quantity - order.AllocatedQuantity - pendingOffered
 	if remaining <= 0 {
 		return ProposeAllocationResult{}, pkgdomain.Conflict("bulk order already fully allocated")
 	}
