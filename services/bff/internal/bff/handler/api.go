@@ -358,7 +358,7 @@ func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
-	p, err := auth.RequireRole(r.Context(), auth.RoleMinistry)
+	p, err := auth.RequireRole(r.Context(), auth.RoleArtisan)
 	if err != nil {
 		httpx.Error(w, err)
 		return
