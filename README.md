@@ -130,19 +130,19 @@ Batch scope past #2 is provisional and will be adjusted as the build lands.
 - [x] 5 — core-svc: identity, auth, JWT, artisan profiles, clusters and SHGs.
       Adds `proto/identity/v1`, migration 013, and `pkg/auth`; core-svc now runs
       the outbox relay, so item 7's wiring is done for this service too
-- [ ] 6 — core-svc: catalog listings, media upload to MinIO
-- [ ] 7 — Wire the remaining services to the outbox and Kafka consumers
-- [ ] 8 — ml-svc: embeddings, auto-tagging, description generation
-- [ ] 9 — core-svc: AI cataloging pipeline consuming ml-svc
-- [ ] 10 — Provenance: craft lineage, verification events, hash chain
-- [ ] 11 — search-svc: pgvector HNSW, hybrid lexical + semantic search
-- [ ] 12 — collab-svc: artisan collectives, capacity, membership
-- [ ] 13 — collab-svc: pooled orders, allocation and settlement in paise
-- [ ] 14 — channel-svc: outbound marketplace sync, notifications
-- [ ] 15 — bff: REST edge, auth middleware, aggregation endpoints
-- [ ] 16 — PDF provenance certificates (gofpdf) and QR verification
-- [ ] 17 — Service Dockerfiles, compose app tier, seed data
-- [ ] 18 — Kubernetes manifests, observability, demo script
+- [x] 6 — core-svc: catalog listings, media upload to MinIO
+- [x] 7 — Wire the remaining services to the outbox and Kafka consumers
+- [x] 8 — ml-svc: embeddings, auto-tagging, description generation
+- [x] 9 — core-svc: AI cataloging pipeline consuming ml-svc
+- [x] 10 — Provenance: craft lineage, verification events, hash chain
+- [x] 11 — search-svc: pgvector HNSW, hybrid lexical + semantic search
+- [x] 12 — collab-svc: artisan collectives, capacity, membership
+- [x] 13 — collab-svc: pooled orders, allocation and settlement in paise
+- [x] 14 — channel-svc: outbound marketplace sync, notifications
+- [x] 15 — bff: REST edge, auth middleware, aggregation endpoints
+- [x] 16 — PDF provenance certificates (gofpdf) and QR verification
+- [x] 17 — Service Dockerfiles, compose app tier, seed data
+- [x] 18 — Kubernetes manifests, observability, demo script
 
 ## Media uploads
 
