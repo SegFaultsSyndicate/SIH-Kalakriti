@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -19,6 +20,14 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
 	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/domain"
 )
+
+// notoSansDevanagariTTF is embedded rather than loaded from a configured
+// path: a statement PDF must render Devanagari script (see generatePDF
+// below) regardless of what the deploying environment did or didn't set, so
+// the font ships with the binary. SIL Open Font License, see fonts/OFL.txt.
+//
+//go:embed fonts/NotoSansDevanagari-Regular.ttf
+var notoSansDevanagariTTF []byte
 
 type Store interface {
 	InTx(ctx context.Context, fn func(Tx) error) error
@@ -45,7 +54,6 @@ type Service struct {
 	codeGen        *shortcode.Generator
 	s3             *storage.Client
 	verifyBaseURL  string
-	fontPath       string
 	minBucketSize  int32
 	presignExpiry  time.Duration
 }
@@ -57,7 +65,6 @@ type Config struct {
 	CodeGenerator  *shortcode.Generator
 	S3Client       *storage.Client
 	VerifyBaseURL  string
-	FontPath       string
 	MinBucketSize  int32
 	PresignExpiry  time.Duration
 }
@@ -70,7 +77,6 @@ func New(cfg Config) *Service {
 		codeGen:        cfg.CodeGenerator,
 		s3:             cfg.S3Client,
 		verifyBaseURL:  cfg.VerifyBaseURL,
-		fontPath:       cfg.FontPath,
 		minBucketSize:  cfg.MinBucketSize,
 		presignExpiry:  cfg.PresignExpiry,
 	}
@@ -203,8 +209,7 @@ func (s *Service) generatePDF(stmt *domain.IncomeStatement, qrPNG []byte) ([]byt
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	// Add Unicode font for Devanagari rendering. Must use embedded TTF, NOT core fonts.
-	// ponytail: assumes fontPath points to NotoSansDevanagari-Regular.ttf
-	pdf.AddUTF8Font("NotoSans", "", s.fontPath)
+	pdf.AddUTF8FontFromBytes("NotoSans", "", notoSansDevanagariTTF)
 	pdf.SetFont("NotoSans", "", 12)
 
 	pdf.AddPage()

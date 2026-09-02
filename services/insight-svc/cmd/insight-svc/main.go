@@ -80,7 +80,6 @@ func run() error {
 		CodeGenerator: shortcode.NewGenerator(repository.ShortCodeExists),
 		S3Client:      objects,
 		VerifyBaseURL: cfg.baseURL,
-		FontPath:      cfg.fontPath,
 		MinBucketSize: cfg.minBucketSize,
 		PresignExpiry: 24 * time.Hour,
 	})
@@ -140,7 +139,6 @@ type appConfig struct {
 	signingKey    string
 	keyID         string
 	baseURL       string
-	fontPath      string
 	minBucketSize int32
 	grpcAddr      string
 }
@@ -160,7 +158,6 @@ func loadConfig() (appConfig, error) {
 	cfg.signingKey = os.Getenv("SIGNING_PRIVATE_KEY")
 	cfg.keyID = envOr("SIGNING_KEY_ID", "dev-key-1")
 	cfg.baseURL = envOr("BASE_URL", "http://localhost:8000")
-	cfg.fontPath = envOr("FONT_PATH", "")
 	cfg.minBucketSize = 5
 	cfg.grpcAddr = envOr("GRPC_ADDR", ":8085")
 	return cfg, nil

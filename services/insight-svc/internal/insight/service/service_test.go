@@ -1,7 +1,11 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/color"
+	"image/png"
 	"testing"
 	"time"
 
@@ -33,11 +37,55 @@ func TestGetEarningsByDistrict_MinBucketSuppression(t *testing.T) {
 	}
 }
 
-// Test that PDF generation produces non-empty output with Devanagari text.
-// Full rendering validation requires opening the PDF with a reader.
+// Test that PDF generation produces a well-formed, non-trivial PDF with
+// Devanagari text in it (the artisan name below is Devanagari, not just the
+// static "आय विवरण" header gofpdf.AddUTF8FontFromBytes has to render it at
+// all) — this is the embedded-font acceptance criterion that used to be
+// skipped pending a real .ttf being wired in.
 func TestGeneratePDF_NonEmpty(t *testing.T) {
-	t.Skip("PDF generation requires gofpdf with embedded TTF font")
-	// Acceptance: manual test confirms PDF opens and Hindi text renders correctly.
+	svc := &Service{}
+	stmt := &domain.IncomeStatement{
+		ArtisanID:   uuid.New(),
+		ArtisanName: "लक्ष्मी देवी",
+		PeriodStart: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+		PeriodEnd:   time.Date(2026, 1, 31, 0, 0, 0, 0, time.UTC),
+		OrderCount:  5,
+		GrossPaise:  500000,
+		NetPaise:    450000,
+		FeePaise:    50000,
+		Signature:   bytes.Repeat([]byte{0xAB}, 32),
+		ShortCode:   "TESTCODE1",
+		MonthlyRows: []domain.MonthlyEarnings{
+			{Month: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), OrderCount: 5, GrossPaise: 500000, NetPaise: 450000, FeePaise: 50000},
+		},
+	}
+
+	data, err := svc.generatePDF(stmt, onePixelPNG(t))
+	if err != nil {
+		t.Fatalf("generatePDF: %v", err)
+	}
+	if !bytes.HasPrefix(data, []byte("%PDF-")) {
+		t.Fatalf("output does not start with the PDF magic header, got %q", data[:min(len(data), 16)])
+	}
+	// A PDF that actually embedded a ~150KB TTF subset is well into the tens
+	// of KB; a near-empty or failed-render output would be far smaller.
+	if len(data) < 5000 {
+		t.Errorf("pdf output suspiciously small (%d bytes), embedded font may not have loaded", len(data))
+	}
+}
+
+// onePixelPNG builds a minimal valid PNG so generatePDF's RegisterImageReader
+// has real image bytes to decode, the same shape as the QR code it renders
+// in production.
+func onePixelPNG(t *testing.T) []byte {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	img.Set(0, 0, color.Black)
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatalf("encoding test PNG: %v", err)
+	}
+	return buf.Bytes()
 }
 
 // Test cross-artisan access denial (handler layer test, placeholder here).
