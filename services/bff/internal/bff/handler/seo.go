@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
@@ -42,7 +41,7 @@ func NewSEOHandler(catalog CatalogService, cache *redis.Client, baseURL string) 
 
 // ListingPage handles GET /listing/{slug} — server-rendered listing page with JSON-LD.
 func (h *SEOHandler) ListingPage(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
+	slug := httpx.URLParam(r, "slug")
 	if slug == "" {
 		http.Error(w, "slug required", http.StatusBadRequest)
 		return
@@ -113,7 +112,7 @@ func (h *SEOHandler) ListingPage(w http.ResponseWriter, r *http.Request) {
 
 // ArtisanPage handles GET /artisan/{slug} — server-rendered artisan page.
 func (h *SEOHandler) ArtisanPage(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
+	slug := httpx.URLParam(r, "slug")
 	if slug == "" {
 		http.Error(w, "slug required", http.StatusBadRequest)
 		return

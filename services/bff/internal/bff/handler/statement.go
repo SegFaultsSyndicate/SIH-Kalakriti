@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
@@ -68,7 +67,7 @@ func (h *StatementHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 // GET /statements/{code}/verify - Verify statement signature
 func (h *StatementHandler) Verify(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	code := httpx.URLParam(r, "code")
 	if code == "" {
 		httpx.Error(w, domain.InvalidInput("missing code"))
 		return

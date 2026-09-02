@@ -11,10 +11,10 @@
 
 Request IDs are **already generated and logged** at the BFF edge:
 
-1. **Generation:** `pkg/httpx/middleware.go` line 51 — `chi/v5/middleware.RequestID` generates UUIDs
-2. **Context injection:** `pkg/logger/logger.go` line 97-100 — extracts chi's request ID and attaches to context
+1. **Generation:** `pkg/httpx/middleware.go` — `httpx.RequestID` reads an inbound `X-Request-Id` or generates a UUID
+2. **Context injection:** `pkg/httpx/middleware.go`'s `RequestID` middleware attaches it via `logger.ContextWithRequestID`; `pkg/logger/logger.go`'s `Middleware` reads it back (falling back to a fresh UUID if that middleware isn't mounted)
 3. **Logging:** Every log line includes `request_id` field via `logger.With(ctx, base)`
-4. **Response header:** Chi's RequestID middleware sets `X-Request-ID` response header automatically
+4. **Response header:** `httpx.RequestID` echoes it back as the `X-Request-Id` response header
 
 **What's covered:**
 - Every HTTP request to BFF gets a unique request ID

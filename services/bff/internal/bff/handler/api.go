@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
@@ -287,7 +286,7 @@ func (h *APIHandler) ConfirmUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mediaID := chi.URLParam(r, "id")
+	mediaID := httpx.URLParam(r, "id")
 	if err := h.mediaSvc.ConfirmUpload(mediaID); err != nil {
 		httpx.Error(w, err)
 		return
@@ -327,7 +326,7 @@ func (h *APIHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listingID := chi.URLParam(r, "id")
+	listingID := httpx.URLParam(r, "id")
 	var updates map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
@@ -349,7 +348,7 @@ func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listingID := chi.URLParam(r, "id")
+	listingID := httpx.URLParam(r, "id")
 	if err := h.listingSvc.SubmitForReview(listingID); err != nil {
 		httpx.Error(w, err)
 		return
@@ -365,7 +364,7 @@ func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listingID := chi.URLParam(r, "id")
+	listingID := httpx.URLParam(r, "id")
 	if err := h.listingSvc.ApproveListing(listingID, p.Subject); err != nil {
 		httpx.Error(w, err)
 		return
@@ -375,7 +374,7 @@ func (h *APIHandler) ApproveListing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) GetListing(w http.ResponseWriter, r *http.Request) {
-	listingID := chi.URLParam(r, "id")
+	listingID := httpx.URLParam(r, "id")
 	listing, err := h.listingSvc.GetListing(listingID)
 	if err != nil {
 		httpx.Error(w, err)
@@ -510,7 +509,7 @@ func (h *APIHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID := chi.URLParam(r, "id")
+	orderID := httpx.URLParam(r, "id")
 	order, err := h.orderSvc.GetOrder(orderID)
 	if err != nil {
 		httpx.Error(w, err)
@@ -527,7 +526,7 @@ func (h *APIHandler) RespondToLot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lotID := chi.URLParam(r, "id")
+	lotID := httpx.URLParam(r, "id")
 	var req struct {
 		Response string `json:"response"`
 	}
@@ -552,7 +551,7 @@ func (h *APIHandler) WatchOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID := chi.URLParam(r, "id")
+	orderID := httpx.URLParam(r, "id")
 	events, err := h.orderSvc.WatchOrder(orderID)
 	if err != nil {
 		httpx.Error(w, err)
@@ -587,7 +586,7 @@ func (h *APIHandler) FollowArtisan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	artisanID := chi.URLParam(r, "id")
+	artisanID := httpx.URLParam(r, "id")
 	if err := h.followSvc.FollowArtisan(p.Subject, artisanID); err != nil {
 		httpx.Error(w, err)
 		return
@@ -603,7 +602,7 @@ func (h *APIHandler) UnfollowArtisan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	artisanID := chi.URLParam(r, "id")
+	artisanID := httpx.URLParam(r, "id")
 	if err := h.followSvc.UnfollowArtisan(p.Subject, artisanID); err != nil {
 		httpx.Error(w, err)
 		return
@@ -662,7 +661,7 @@ func (h *APIHandler) GetStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statementID := chi.URLParam(r, "id")
+	statementID := httpx.URLParam(r, "id")
 	statement, err := h.stmtSvc.GetStatement(statementID)
 	if err != nil {
 		httpx.Error(w, err)

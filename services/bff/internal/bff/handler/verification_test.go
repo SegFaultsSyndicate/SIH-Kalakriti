@@ -10,13 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 )
+
+func init() {
+	gin.SetMode(gin.TestMode)
+}
 
 // fakeCatalogClient is a test double for CatalogService.
 type fakeCatalogClient struct {
@@ -119,8 +124,8 @@ func TestVerificationPageRendersForValidCode(t *testing.T) {
 	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
-	r := chi.NewRouter()
-	r.Get("/v/{code}", handler.ServeHTTP)
+	r := gin.New()
+	r.GET("/v/:code", httpx.WrapHandler(handler.ServeHTTP))
 
 	req := httptest.NewRequest(http.MethodGet, "/v/TESTCODE01", nil)
 	w := httptest.NewRecorder()
@@ -148,8 +153,8 @@ func TestVerificationPageReturns404ForUnknownCode(t *testing.T) {
 	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
-	r := chi.NewRouter()
-	r.Get("/v/{code}", handler.ServeHTTP)
+	r := gin.New()
+	r.GET("/v/:code", httpx.WrapHandler(handler.ServeHTTP))
 
 	req := httptest.NewRequest(http.MethodGet, "/v/INVALIDCODE", nil)
 	w := httptest.NewRecorder()
@@ -191,8 +196,8 @@ func TestVerificationJSONEndpoint(t *testing.T) {
 	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
-	r := chi.NewRouter()
-	r.Get("/v/{code}/verify.json", handler.ServeJSON)
+	r := gin.New()
+	r.GET("/v/:code/verify.json", httpx.WrapHandler(handler.ServeJSON))
 
 	req := httptest.NewRequest(http.MethodGet, "/v/JSONTEST01/verify.json", nil)
 	w := httptest.NewRecorder()
@@ -225,8 +230,8 @@ func TestVerificationJSONReturns404ForUnknownCode(t *testing.T) {
 	handler, err := NewVerificationHandler(catalog, cache, "https://example.com", "")
 	require.NoError(t, err)
 
-	r := chi.NewRouter()
-	r.Get("/v/{code}/verify.json", handler.ServeJSON)
+	r := gin.New()
+	r.GET("/v/:code/verify.json", httpx.WrapHandler(handler.ServeJSON))
 
 	req := httptest.NewRequest(http.MethodGet, "/v/UNKNOWN99/verify.json", nil)
 	w := httptest.NewRecorder()
@@ -294,8 +299,8 @@ func TestVerificationSignatureCheckedAgainstRealKey(t *testing.T) {
 			handler, err := NewVerificationHandler(baseCatalog(tc.prov), cache, "https://example.com", hex.EncodeToString(pub))
 			require.NoError(t, err)
 
-			r := chi.NewRouter()
-			r.Get("/v/{code}", handler.ServeHTTP)
+			r := gin.New()
+			r.GET("/v/:code", httpx.WrapHandler(handler.ServeHTTP))
 
 			req := httptest.NewRequest(http.MethodGet, "/v/"+tc.prov.ShortCode, nil)
 			w := httptest.NewRecorder()

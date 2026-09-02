@@ -1,6 +1,6 @@
 // pkg/httpx/middleware.go
 
-// Package httpx provides the chi middleware stack shared by every service's
+// Package httpx provides the gin middleware stack shared by every service's
 // REST edge (today, just the bff): request id propagation, structured access
 // logging, panic recovery, CORS, and request timeouts.
 package httpx
@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 )
@@ -38,27 +38,100 @@ type Config struct {
 	RequestTimeout time.Duration
 }
 
-// Mux builds a *chi.Mux with the standard middleware stack pre-mounted:
+// Mux builds a *gin.Engine with the standard middleware stack pre-mounted:
 // request id -> panic recovery -> request-scoped logger -> access log ->
-// CORS -> timeout. Routes are added by the caller.
-func Mux(cfg Config) *chi.Mux {
+// CORS -> timeout. Routes are added by the caller. gin.New() (not
+// gin.Default()) so this stack is the only one running — gin's own built-in
+// logger/recovery middleware would just duplicate Recoverer/AccessLog below.
+func Mux(cfg Config) *gin.Engine {
 	base := cfg.Logger
 	if base == nil {
 		base = slog.Default()
 	}
 
-	r := chi.NewRouter()
-	r.Use(chimw.RequestID)
-	r.Use(Recoverer(base))
-	r.Use(logger.Middleware(base))
-	r.Use(AccessLog(base))
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
+	r.Use(Wrap(RequestID(base)))
+	r.Use(Wrap(Recoverer(base)))
+	r.Use(Wrap(logger.Middleware(base)))
+	r.Use(Wrap(AccessLog(base)))
 	if len(cfg.AllowedOrigins) > 0 {
-		r.Use(CORS(cfg))
+		r.Use(Wrap(CORS(cfg)))
 	}
 	if cfg.RequestTimeout > 0 {
-		r.Use(chimw.Timeout(cfg.RequestTimeout))
+		r.Use(Wrap(Timeout(cfg.RequestTimeout)))
 	}
 	return r
+}
+
+// Wrap adapts a plain net/http middleware (func(http.Handler) http.Handler)
+// into gin's middleware shape, so the stack above — written once, before this
+// package took a router dependency — needs no rewrite for gin: the inner
+// handler c.Next()s to continue gin's own chain, letting mw's post-next logic
+// (status logging, recover()) still run after the rest of the chain returns.
+func Wrap(mw func(http.Handler) http.Handler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			c.Request = r
+			c.Next()
+		})).ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+// urlParamKey namespaces the path-param values WrapHandler stashes on the
+// request context, distinct from any other context key in play.
+type urlParamKey string
+
+// WrapHandler adapts a plain http.HandlerFunc into a gin.HandlerFunc,
+// copying gin's path params onto the request context first so the handler
+// can read them via URLParam without taking a *gin.Context directly — every
+// existing REST handler keeps its net/http signature across the chi->gin
+// swap, only the URLParam call sites change.
+func WrapHandler(h http.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		for _, p := range c.Params {
+			ctx = context.WithValue(ctx, urlParamKey(p.Key), p.Value)
+		}
+		h(c.Writer, c.Request.WithContext(ctx))
+	}
+}
+
+// URLParam returns the value of a named path parameter previously stashed by
+// WrapHandler, mirroring chi.URLParam's signature so handlers written
+// against chi needed only an import and callsite swap, not a rewrite.
+func URLParam(r *http.Request, name string) string {
+	v, _ := r.Context().Value(urlParamKey(name)).(string)
+	return v
+}
+
+// RequestID reads an inbound X-Request-Id header (letting a caller preserve
+// its own id across a retry) or generates a fresh uuid, stashes it in the
+// request context via logger.ContextWithRequestID, and echoes it back in
+// X-Request-Id so a client can correlate its request across services. This
+// replaces chi/v5/middleware.RequestID, which did the same job keyed off
+// chi's own request context.
+func RequestID(base *slog.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			id := r.Header.Get("X-Request-Id")
+			if id == "" {
+				id = uuid.NewString()
+			}
+			w.Header().Set("X-Request-Id", id)
+			next.ServeHTTP(w, r.WithContext(logger.ContextWithRequestID(r.Context(), id)))
+		})
+	}
+}
+
+// Timeout bounds how long a handler may run before the request context is
+// cancelled and a 503 is returned, mirroring chi/v5/middleware.Timeout.
+// http.TimeoutHandler already does exactly this — no chi-specific behaviour
+// was actually in play here.
+func Timeout(d time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.TimeoutHandler(next, d, "request timed out")
+	}
 }
 
 // Recoverer converts a panic anywhere downstream into a 500 response instead
@@ -128,8 +201,8 @@ func AccessLog(base *slog.Logger) func(http.Handler) http.Handler {
 }
 
 // CORS applies the configured allowlist to preflight and actual requests.
-// It is hand-rolled rather than pulled from go-chi/cors, since only
-// go-chi/chi/v5 itself is in this project's approved dependency list.
+// It is hand-rolled rather than pulled from gin-contrib/cors, since only
+// gin-gonic/gin itself is in this project's approved dependency list.
 func CORS(cfg Config) func(http.Handler) http.Handler {
 	methods := cfg.AllowedMethods
 	if len(methods) == 0 {

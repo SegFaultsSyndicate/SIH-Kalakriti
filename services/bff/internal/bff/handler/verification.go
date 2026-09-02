@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
@@ -54,7 +53,7 @@ func NewVerificationHandler(catalog CatalogService, cache *redis.Client, verifyU
 
 // ServeHTTP handles GET /v/{code} — the public verification page.
 func (h *VerificationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	code := httpx.URLParam(r, "code")
 	if code == "" {
 		h.renderNotFound(w, r)
 		return
@@ -91,7 +90,7 @@ func (h *VerificationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 // ServeJSON handles GET /v/{code}/verify.json — the machine-readable verification endpoint.
 func (h *VerificationHandler) ServeJSON(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	code := httpx.URLParam(r, "code")
 	if code == "" {
 		httpx.Error(w, fmt.Errorf("code is required: %w", pkgdomain.ErrInvalidInput))
 		return
@@ -242,7 +241,7 @@ func (h *VerificationHandler) renderNotFound(w http.ResponseWriter, r *http.Requ
 	notFoundData := struct {
 		Code string
 	}{
-		Code: chi.URLParam(r, "code"),
+		Code: httpx.URLParam(r, "code"),
 	}
 
 	notFoundTmpl := template.Must(template.New("404").Parse(notFoundPageTemplate))

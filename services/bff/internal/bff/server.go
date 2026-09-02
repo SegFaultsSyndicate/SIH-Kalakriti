@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
@@ -21,6 +21,10 @@ type Config struct {
 	Addr    string
 	BaseURL string
 	WebDist string
+	// ChannelSvcAddr is channel-svc's internal HTTP base URL, proxied for
+	// outbound catalog feeds (IndiaHandmade today) so bff stays the only
+	// service the outside world talks to.
+	ChannelSvcAddr string
 
 	// AllowedOrigins is the CORS allowlist for the public API. Empty disables
 	// CORS entirely; set explicitly per environment rather than wildcarding.
@@ -57,7 +61,7 @@ type Config struct {
 // Server is the BFF HTTP server.
 type Server struct {
 	cfg    Config
-	router *chi.Mux
+	router *gin.Engine
 }
 
 // NewServer builds the server with all routes mounted.
@@ -66,7 +70,7 @@ func NewServer(cfg Config) (*Server, error) {
 		cfg.Logger = slog.Default()
 	}
 
-	// Build the chi router with pkg/httpx base middleware.
+	// Build the gin router with pkg/httpx base middleware.
 	r := httpx.Mux(httpx.Config{
 		Logger:         cfg.Logger,
 		AllowedOrigins: cfg.AllowedOrigins,
@@ -74,8 +78,8 @@ func NewServer(cfg Config) (*Server, error) {
 	})
 
 	// Global middleware: i18n locale detection, body size limit.
-	r.Use(i18n.Middleware)
-	r.Use(middleware.MaxBodySize(10 << 20)) // 10 MiB
+	r.Use(httpx.Wrap(i18n.Middleware))
+	r.Use(httpx.Wrap(middleware.MaxBodySize(10 << 20))) // 10 MiB
 
 	// Mount routes.
 	s := &Server{cfg: cfg, router: r}
@@ -99,91 +103,92 @@ func (s *Server) mountRoutes() {
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
 	spaH := handler.NewSPAHandler(cfg.WebDist)
+	exportH := handler.NewExportHandler(cfg.ChannelSvcAddr)
 
 	// Public SEO pages (server-rendered HTML).
-	r.Get("/listing/{slug}", seoH.ListingPage)
-	r.Get("/artisan/{slug}", seoH.ArtisanPage)
-	r.Get("/v/{code}", verifyH.ServeHTTP)
-	r.Get("/v/{code}/verify.json", verifyH.ServeJSON)
-	r.Get("/sitemap.xml", seoH.Sitemap)
-	r.Get("/robots.txt", seoH.RobotsTxt)
+	r.GET("/listing/:slug", httpx.WrapHandler(seoH.ListingPage))
+	r.GET("/artisan/:slug", httpx.WrapHandler(seoH.ArtisanPage))
+	r.GET("/v/:code", httpx.WrapHandler(verifyH.ServeHTTP))
+	r.GET("/export/indiahandmade", httpx.WrapHandler(exportH.IndiaHandmade))
+	r.GET("/v/:code/verify.json", httpx.WrapHandler(verifyH.ServeJSON))
+	r.GET("/sitemap.xml", httpx.WrapHandler(seoH.Sitemap))
+	r.GET("/robots.txt", httpx.WrapHandler(seoH.RobotsTxt))
 
 	// API routes under /api/v1.
-	r.Route("/api/v1", func(api chi.Router) {
-		// Rate limiting on all API routes.
-		api.Use(middleware.RateLimit(cfg.Redis, middleware.RateLimitConfig{
-			PerIPLimit:        cfg.RateLimitPerIP,
-			PerPrincipalLimit: cfg.RateLimitPerPrincipal,
-			Window:            cfg.RateLimitWindow,
-		}))
+	api := r.Group("/api/v1")
 
-		// Public auth routes (no JWT required).
-		api.Post("/auth/otp/request", apiH.RequestOTP)
-		api.Post("/auth/otp/verify", apiH.VerifyOTP)
-		api.Post("/auth/refresh", apiH.RefreshToken)
+	// Rate limiting on all API routes.
+	api.Use(httpx.Wrap(middleware.RateLimit(cfg.Redis, middleware.RateLimitConfig{
+		PerIPLimit:        cfg.RateLimitPerIP,
+		PerPrincipalLimit: cfg.RateLimitPerPrincipal,
+		Window:            cfg.RateLimitWindow,
+	})))
 
-		// Public search and listing reads.
-		api.Get("/search", apiH.Search)
-		api.Get("/search/suggest", apiH.Suggest)
-		api.Get("/listings", apiH.ListListings)
-		api.Get("/listings/{id}", apiH.GetListing)
+	// Public auth routes (no JWT required).
+	api.POST("/auth/otp/request", httpx.WrapHandler(apiH.RequestOTP))
+	api.POST("/auth/otp/verify", httpx.WrapHandler(apiH.VerifyOTP))
+	api.POST("/auth/refresh", httpx.WrapHandler(apiH.RefreshToken))
 
-		// Protected routes group (JWT required).
-		api.Group(func(authed chi.Router) {
-			authed.Use(middleware.Auth(cfg.Issuer))
+	// Public search and listing reads.
+	api.GET("/search", httpx.WrapHandler(apiH.Search))
+	api.GET("/search/suggest", httpx.WrapHandler(apiH.Suggest))
+	api.GET("/listings", httpx.WrapHandler(apiH.ListListings))
+	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
 
-			// Artisan endpoints.
-			authed.Post("/artisans", withIdempotency(apiH.RegisterArtisan, cfg.IdempStore))
-			authed.Get("/artisans/me", apiH.GetArtisanProfile)
-			authed.Patch("/artisans/me", apiH.UpdateArtisanProfile)
+	// Protected routes group (JWT required).
+	authed := api.Group("")
+	authed.Use(httpx.Wrap(middleware.Auth(cfg.Issuer)))
 
-			// Media endpoints.
-			authed.Post("/media/upload-url", apiH.GenerateUploadURL)
-			authed.Post("/media/{id}/confirm", apiH.ConfirmUpload)
+	// Artisan endpoints.
+	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))
+	authed.GET("/artisans/me", httpx.WrapHandler(apiH.GetArtisanProfile))
+	authed.PATCH("/artisans/me", httpx.WrapHandler(apiH.UpdateArtisanProfile))
 
-			// Listing mutations.
-			authed.Post("/listings", withIdempotency(apiH.CreateListing, cfg.IdempStore))
-			authed.Patch("/listings/{id}", apiH.UpdateListing)
-			authed.Post("/listings/{id}/submit", apiH.SubmitListing)
-			authed.Post("/listings/{id}/approve", apiH.ApproveListing)
+	// Media endpoints.
+	authed.POST("/media/upload-url", httpx.WrapHandler(apiH.GenerateUploadURL))
+	authed.POST("/media/:id/confirm", httpx.WrapHandler(apiH.ConfirmUpload))
 
-			// Search voice.
-			authed.Post("/search/voice", apiH.SearchVoice)
+	// Listing mutations.
+	authed.POST("/listings", httpx.WrapHandler(withIdempotency(apiH.CreateListing, cfg.IdempStore)))
+	authed.PATCH("/listings/:id", httpx.WrapHandler(apiH.UpdateListing))
+	authed.POST("/listings/:id/submit", httpx.WrapHandler(apiH.SubmitListing))
+	authed.POST("/listings/:id/approve", httpx.WrapHandler(apiH.ApproveListing))
 
-			// Pricing.
-			authed.Post("/pricing/advise", apiH.AdvisePricing)
+	// Search voice.
+	authed.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
 
-			// Orders.
-			authed.Post("/orders/bulk", withIdempotency(apiH.CreateBulkOrder, cfg.IdempStore))
-			authed.Get("/orders/{id}", apiH.GetOrder)
-			authed.Get("/orders/{id}/events", apiH.WatchOrder)
-			authed.Post("/orders/lots/{id}/respond", apiH.RespondToLot)
+	// Pricing.
+	authed.POST("/pricing/advise", httpx.WrapHandler(apiH.AdvisePricing))
 
-			// Follows and feed.
-			authed.Post("/artisans/{id}/follow", apiH.FollowArtisan)
-			authed.Delete("/artisans/{id}/follow", apiH.UnfollowArtisan)
-			authed.Get("/feed", apiH.GetFeed)
+	// Orders.
+	authed.POST("/orders/bulk", httpx.WrapHandler(withIdempotency(apiH.CreateBulkOrder, cfg.IdempStore)))
+	authed.GET("/orders/:id", httpx.WrapHandler(apiH.GetOrder))
+	authed.GET("/orders/:id/events", httpx.WrapHandler(apiH.WatchOrder))
+	authed.POST("/orders/lots/:id/respond", httpx.WrapHandler(apiH.RespondToLot))
 
-			// Statements.
-			authed.Post("/statements", withIdempotency(apiH.GenerateStatement, cfg.IdempStore))
-			authed.Get("/statements/{id}", apiH.GetStatement)
+	// Follows and feed.
+	authed.POST("/artisans/:id/follow", httpx.WrapHandler(apiH.FollowArtisan))
+	authed.DELETE("/artisans/:id/follow", httpx.WrapHandler(apiH.UnfollowArtisan))
+	authed.GET("/feed", httpx.WrapHandler(apiH.GetFeed))
 
-			// Insights (MINISTRY role only, enforced in handlers).
-			authed.Get("/insights/earnings-by-district", apiH.GetEarningsByDistrict)
-			authed.Get("/insights/income-comparison", apiH.GetIncomeComparison)
-			authed.Get("/insights/dying-crafts", apiH.GetDyingCrafts)
-		})
+	// Statements.
+	authed.POST("/statements", httpx.WrapHandler(withIdempotency(apiH.GenerateStatement, cfg.IdempStore)))
+	authed.GET("/statements/:id", httpx.WrapHandler(apiH.GetStatement))
 
-		// OpenAPI spec, embedded at build time so it serves regardless of the
-		// process's working directory.
-		api.Get("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(assets.OpenAPIJSON)
-		})
-	})
+	// Insights (MINISTRY role only, enforced in handlers).
+	authed.GET("/insights/earnings-by-district", httpx.WrapHandler(apiH.GetEarningsByDistrict))
+	authed.GET("/insights/income-comparison", httpx.WrapHandler(apiH.GetIncomeComparison))
+	authed.GET("/insights/dying-crafts", httpx.WrapHandler(apiH.GetDyingCrafts))
+
+	// OpenAPI spec, embedded at build time so it serves regardless of the
+	// process's working directory.
+	api.GET("/openapi.json", httpx.WrapHandler(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(assets.OpenAPIJSON)
+	}))
 
 	// SPA fallback for everything else.
-	r.NotFound(spaH.ServeHTTP)
+	r.NoRoute(httpx.WrapHandler(spaH.ServeHTTP))
 }
 
 // withIdempotency wraps a handler with idempotency middleware.

@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 )
 
@@ -89,12 +88,12 @@ func FromContext(ctx context.Context, base *slog.Logger) *slog.Logger {
 }
 
 // Middleware injects a request-scoped logger into the request context, annotated
-// with a request id (chi's, generated if chi's own middleware is not mounted)
-// and a trace id (the X-Trace-Id header, when a caller sets one).
+// with a request id (httpx.RequestID's, generated if that middleware is not
+// mounted) and a trace id (the X-Trace-Id header, when a caller sets one).
 func Middleware(base *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			reqID := middleware.GetReqID(r.Context())
+			reqID := RequestID(r.Context())
 			if reqID == "" {
 				reqID = uuid.NewString()
 			}
