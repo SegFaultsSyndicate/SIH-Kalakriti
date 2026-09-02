@@ -26,6 +26,6 @@ COPY --from=builder /build/channel-svc .
 
 USER appuser
 
-EXPOSE 8083 50053
+EXPOSE 8083 9096
 
 CMD ["./channel-svc"]

@@ -104,7 +104,7 @@ make demo-up
 - `bff` → REST API (:8000) — **this is what frontend calls**
 - `ml-svc` → ML inference in MOCK_MODE (:50055)
 - `insight-svc` → Income statements (gRPC :50056)
-- `channel-svc` → Notifications, exports (gRPC :50057)
+- `channel-svc` → Notifications, follows, exports (gRPC :9096)
 
 **Check if running:**
 ```bash
