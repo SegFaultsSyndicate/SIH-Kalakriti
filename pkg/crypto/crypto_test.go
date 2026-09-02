@@ -85,7 +85,7 @@ func TestVerifyRejectsWrongKey(t *testing.T) {
 	pubBytes2, err = hex.DecodeString(privHex2) // Wrong - let's decode properly
 	require.NoError(t, err)
 	// Actually, need public key from keypair 2
-	_, pubHex2, err = GenerateKeypair()
+	_, pubHex2, err := GenerateKeypair()
 	require.NoError(t, err)
 	pubBytes2, err = hex.DecodeString(pubHex2)
 	require.NoError(t, err)
@@ -95,13 +95,13 @@ func TestVerifyRejectsWrongKey(t *testing.T) {
 
 // TestNewSignerRejectsInvalidKey verifies error on bad key length.
 func TestNewSignerRejectsInvalidKey(t *testing.T) {
-	// Too short key.
-	_, err := NewSigner("abc", "test-key")
+	// Too short key (valid hex, wrong length).
+	_, err := NewSigner("aabb", "test-key")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "must be 64 bytes")
 
-	// Too long key.
-	_, err = NewSigner(strings.Repeat("a", 128), "test-key")
+	// Too long key (130 hex chars = 65 bytes, one over ed25519.PrivateKeySize).
+	_, err = NewSigner(strings.Repeat("a", 130), "test-key")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "must be 64 bytes")
 }
