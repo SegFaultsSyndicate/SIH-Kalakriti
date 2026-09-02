@@ -106,16 +106,16 @@ func run() error {
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
 		// Service clients wired to real backends where the RPC shapes line up
-		// 1:1 with these interfaces. PricingSvc, OrderSvc and FollowSvc stay
-		// nil: each needs either a bff API contract change or a backend RPC
-		// that doesn't exist yet (see git history for the per-service gaps
-		// found while scoping this).
+		// 1:1 with these interfaces. OrderSvc and FollowSvc stay nil: each
+		// needs either a bff API contract change or a backend RPC that
+		// doesn't exist yet (see git history for the per-service gaps found
+		// while scoping this).
 		AuthSvc:    client.NewAuth(coreConn, rdb),
 		ArtisanSvc: client.NewArtisan(coreConn),
 		MediaSvc:   client.NewMedia(coreConn),
 		ListingSvc: client.NewListing(coreConn),
 		SearchSvc:  client.NewSearch(searchConn),
-		PricingSvc: nil,
+		PricingSvc: client.NewPricing(coreConn),
 		OrderSvc:   nil,
 		FollowSvc:  nil,
 		StmtSvc:    insightClient,

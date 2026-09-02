@@ -65,9 +65,13 @@ type SearchService interface {
 	SearchVoice(ctx context.Context, audioData []byte, language string) (query string, results []map[string]any, err error)
 }
 
-// PricingService is the pricing-svc gRPC client interface.
+// PricingService is the pricing-svc gRPC client interface. inputs carries
+// material_cost ({amount_paise, currency_code?}), hours (number) and the
+// optional chosen_price ({amount_paise, currency_code?}) — GetAdvisory's own
+// request shape, not a craft/region lookup: the advisory is computed from an
+// existing listing, not from a craft in the abstract.
 type PricingService interface {
-	AdvisePricing(ctx context.Context, craftID, region string, inputs map[string]any) (map[string]any, error)
+	AdvisePricing(ctx context.Context, listingID string, inputs map[string]any) (map[string]any, error)
 }
 
 // OrderService is the order-svc gRPC client interface.
@@ -480,17 +484,18 @@ func (h *APIHandler) AdvisePricing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		CraftID string         `json:"craft_id"`
-		Region  string         `json:"region"`
-		Inputs  map[string]any `json:"inputs"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var inputs map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&inputs); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
+	listingID, _ := inputs["listing_id"].(string)
+	if listingID == "" {
+		httpx.Error(w, domain.InvalidInput("listing_id is required"))
+		return
+	}
 
-	advice, err := h.pricingSvc.AdvisePricing(r.Context(), req.CraftID, req.Region, req.Inputs)
+	advice, err := h.pricingSvc.AdvisePricing(r.Context(), listingID, inputs)
 	if err != nil {
 		httpx.Error(w, err)
 		return
