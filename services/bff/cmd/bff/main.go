@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,9 +13,14 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/client"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/repo"
 )
 
 const drainTimeout = 15 * time.Second
@@ -53,7 +59,38 @@ func run() error {
 		}
 	}()
 
-	// Build the server (service clients are nil stubs for now).
+	// Connect to Postgres, for the idempotency_key table this shares with
+	// every other service — it is not bff's own schema, just the one table
+	// bff also needs.
+	pgPool, err := postgres.New(ctx, postgres.Config{DSN: mustEnv("POSTGRES_DSN")})
+	if err != nil {
+		return fmt.Errorf("connecting to postgres: %w", err)
+	}
+	defer pgPool.Close()
+	idempStore := repo.NewIdempotencyStore(repo.New(pgPool))
+
+	// Dial backend services. Each is a single shared connection per backend;
+	// grpc.NewClient doesn't connect until first use, so a backend that's down
+	// at startup doesn't block bff from starting.
+	coreConn, err := grpc.NewClient(getEnv("CORE_SVC_ADDR", "localhost:50051"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling core-svc: %w", err)
+	}
+	defer coreConn.Close()
+
+	searchConn, err := grpc.NewClient(getEnv("SEARCH_SVC_ADDR", "localhost:50052"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling search-svc: %w", err)
+	}
+	defer searchConn.Close()
+
+	insightConn, err := grpc.NewClient(getEnv("INSIGHT_SVC_ADDR", "localhost:8085"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return fmt.Errorf("dialling insight-svc: %w", err)
+	}
+	defer insightConn.Close()
+	insightClient := client.NewInsight(insightConn) // satisfies both InsightSvc and StmtSvc
+
 	srv, err := bff.NewServer(bff.Config{
 		Addr:                   getEnv("ADDR", ":8080"),
 		BaseURL:                mustEnv("BASE_URL"),
@@ -64,22 +101,26 @@ func run() error {
 		Logger:                 logger,
 		Issuer:                 issuer,
 		Redis:                  rdb,
-		IdempStore:             nil, // TODO: wire Postgres idempotency store
+		IdempStore:             idempStore,
 		RateLimitPerIP:         100,
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
-		// Service clients: TODO wire gRPC clients to backend services.
-		AuthSvc:    nil,
-		ArtisanSvc: nil,
-		MediaSvc:   nil,
+		// Service clients wired to real backends where the RPC shapes line up
+		// 1:1 with these interfaces. ListingSvc, PricingSvc, OrderSvc and
+		// FollowSvc stay nil: each needs either a bff API contract change or a
+		// backend RPC that doesn't exist yet (see git history for the
+		// per-service gaps found while scoping this).
+		AuthSvc:    client.NewAuth(coreConn, rdb),
+		ArtisanSvc: client.NewArtisan(coreConn),
+		MediaSvc:   client.NewMedia(coreConn),
 		ListingSvc: nil,
-		SearchSvc:  nil,
+		SearchSvc:  client.NewSearch(searchConn),
 		PricingSvc: nil,
 		OrderSvc:   nil,
 		FollowSvc:  nil,
-		StmtSvc:    nil,
-		InsightSvc: nil,
-		CatalogSvc: nil,
+		StmtSvc:    insightClient,
+		InsightSvc: insightClient,
+		CatalogSvc: client.NewCatalog(coreConn),
 	})
 	if err != nil {
 		return err

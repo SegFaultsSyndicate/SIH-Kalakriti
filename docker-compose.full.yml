@@ -201,16 +201,24 @@ services:
       context: ./kalakriti
       dockerfile: ../Dockerfile.bff
     environment:
-      CORE_SVC_ADDR: core-svc:8080
-      SEARCH_SVC_ADDR: search-svc:8082
+      # core-svc and search-svc's own gRPC ports (see their main.go defaults:
+      # CORE_SVC_GRPC_ADDR :50051, search-svc's grpcAddr :50052) — these were
+      # pointing at the two services' HTTP ports instead.
+      CORE_SVC_ADDR: core-svc:50051
+      SEARCH_SVC_ADDR: search-svc:50052
       COLLAB_SVC_ADDR: collab-svc:8083
       INSIGHT_SVC_ADDR: insight-svc:8085
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      REDIS_ADDR: redis:6379
+      BASE_URL: http://localhost:8000
       JWT_SECRET: dev-secret-change-in-prod
       OTLP_ENDPOINT: jaeger:4317
     ports:
       - "8000:8000"
       - "9095:9095"
     depends_on:
+      - postgres
+      - redis
       - core-svc
       - search-svc
       - collab-svc

@@ -42,6 +42,7 @@ coverage.out
 /services/collab-svc/internal/collab/repo/db/
 /services/insight-svc/internal/insight/repo/db/
 /services/channel-svc/internal/channel/sqlc/
+/services/bff/internal/bff/repo/db/
 
 # Python caches, environments, and packaging output
 __pycache__/

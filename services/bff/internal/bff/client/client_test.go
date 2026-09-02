@@ -1,0 +1,305 @@
+// services/bff/internal/bff/client/client_test.go
+package client
+
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
+	insightv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1"
+	searchv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1"
+)
+
+// Fakes embed the real client interface (left nil) and override only the
+// methods a test needs — same pattern as channel-svc's client tests.
+
+type fakeCatalogService struct {
+	catalogv1.CatalogServiceClient
+	getListing func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error)
+}
+
+func (f *fakeCatalogService) GetListing(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
+	return f.getListing(ctx, in, opts...)
+}
+
+type fakeOntologyService struct {
+	catalogv1.OntologyServiceClient
+	getCraft func(ctx context.Context, in *catalogv1.GetCraftRequest, opts ...grpc.CallOption) (*catalogv1.GetCraftResponse, error)
+}
+
+func (f *fakeOntologyService) GetCraft(ctx context.Context, in *catalogv1.GetCraftRequest, opts ...grpc.CallOption) (*catalogv1.GetCraftResponse, error) {
+	return f.getCraft(ctx, in, opts...)
+}
+
+type fakeIdentityService struct {
+	identityv1.IdentityServiceClient
+	getArtisan func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error)
+}
+
+func (f *fakeIdentityService) GetArtisan(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error) {
+	return f.getArtisan(ctx, in, opts...)
+}
+
+func strPtr(s string) *string { return &s }
+
+func TestGrpcErrMapsStatusCodesToDomainErrors(t *testing.T) {
+	cases := []struct {
+		code codes.Code
+		is   func(error) bool
+	}{
+		{codes.NotFound, domain.IsNotFound},
+		{codes.AlreadyExists, domain.IsConflict},
+		{codes.PermissionDenied, domain.IsForbidden},
+	}
+	for _, c := range cases {
+		err := grpcErr(status.Error(c.code, "boom"))
+		assert.True(t, c.is(err), "code %s should map to a domain error IsX() recognises", c.code)
+	}
+
+	// InvalidArgument, Unauthenticated, Unavailable are checked directly via
+	// domain.HTTPStatus since domain has no IsX helper for them.
+	assert.Equal(t, 400, domain.HTTPStatus(grpcErr(status.Error(codes.InvalidArgument, "bad"))))
+	assert.Equal(t, 401, domain.HTTPStatus(grpcErr(status.Error(codes.Unauthenticated, "who"))))
+	assert.Equal(t, 503, domain.HTTPStatus(grpcErr(status.Error(codes.Unavailable, "down"))))
+
+	// An unmapped code, and a non-status error, both fall through to 500 —
+	// the same as an error grpcErr never saw.
+	assert.Equal(t, 500, domain.HTTPStatus(grpcErr(status.Error(codes.Internal, "oops"))))
+	assert.Equal(t, 500, domain.HTTPStatus(grpcErr(errors.New("not a grpc status"))))
+
+	assert.NoError(t, grpcErr(nil))
+}
+
+func TestCatalogGetListingPicksEnglishTranslation(t *testing.T) {
+	c := &Catalog{catalog: &fakeCatalogService{
+		getListing: func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
+			require.Equal(t, "lst-1", in.GetListingId())
+			return &catalogv1.GetListingResponse{Listing: &catalogv1.Listing{
+				Id: "lst-1", ProductId: "prod-1", ArtisanId: "art-1",
+				Price: &commonv1.Money{AmountPaise: 250000, CurrencyCode: "INR"},
+				Translations: []*catalogv1.ListingTranslation{
+					{Language: commonv1.Language_LANGUAGE_HINDI, Title: "hi-title"},
+					{Language: commonv1.Language_LANGUAGE_ENGLISH, Title: "en-title"},
+				},
+			}}, nil
+		},
+	}}
+
+	got, err := c.GetListing(context.Background(), "lst-1")
+	require.NoError(t, err)
+	assert.Equal(t, "en-title", got.Title)
+	assert.Equal(t, int64(250000), got.Price)
+	assert.Equal(t, "INR", got.Currency)
+}
+
+func TestCatalogGetListingMapsNotFound(t *testing.T) {
+	c := &Catalog{catalog: &fakeCatalogService{
+		getListing: func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
+			return nil, status.Error(codes.NotFound, "no such listing")
+		},
+	}}
+
+	_, err := c.GetListing(context.Background(), "missing")
+	assert.True(t, domain.IsNotFound(err))
+}
+
+func TestCatalogGetArtisanPassesClusterIDPointerThrough(t *testing.T) {
+	c := &Catalog{identity: &fakeIdentityService{
+		getArtisan: func(ctx context.Context, in *identityv1.GetArtisanRequest, opts ...grpc.CallOption) (*identityv1.GetArtisanResponse, error) {
+			return &identityv1.GetArtisanResponse{Artisan: &catalogv1.Artisan{
+				Id: "art-1", DisplayName: "Lakshmi", ClusterId: strPtr("cluster-1"),
+			}}, nil
+		},
+	}}
+
+	got, err := c.GetArtisan(context.Background(), "art-1")
+	require.NoError(t, err)
+	assert.Equal(t, "Lakshmi", got.DisplayName)
+	require.NotNil(t, got.ClusterID)
+	assert.Equal(t, "cluster-1", *got.ClusterID)
+}
+
+func TestCatalogGetCraft(t *testing.T) {
+	c := &Catalog{ontology: &fakeOntologyService{
+		getCraft: func(ctx context.Context, in *catalogv1.GetCraftRequest, opts ...grpc.CallOption) (*catalogv1.GetCraftResponse, error) {
+			require.Equal(t, "craft-1", in.GetCraftId())
+			return &catalogv1.GetCraftResponse{Craft: &catalogv1.Craft{
+				Id: "craft-1", DisplayName: "Ajrakh", GiRegistrationNo: strPtr("GI-9"),
+			}}, nil
+		},
+	}}
+
+	got, err := c.GetCraft(context.Background(), "craft-1")
+	require.NoError(t, err)
+	assert.Equal(t, "Ajrakh", got.DisplayName)
+	require.NotNil(t, got.GIRegistrationNo)
+	assert.Equal(t, "GI-9", *got.GIRegistrationNo)
+}
+
+// GetListingBySlug, GetArtisanBySlug, GetProvenanceByShortCode and
+// ListPublishedListings are all unwired gaps (no slug field, no
+// short-code RPC — and the sitemap it would feed can't be honoured without
+// slug support either). Each must return a clear error, never panic, since
+// this interface's previous state (a nil client) panicked on every call.
+func TestCatalogUnwiredGapsReturnAnErrorNotAPanic(t *testing.T) {
+	c := &Catalog{}
+	_, err := c.GetListingBySlug(context.Background(), "some-slug")
+	assert.Error(t, err)
+	_, err = c.GetArtisanBySlug(context.Background(), "some-slug")
+	assert.Error(t, err)
+	_, err = c.GetProvenanceByShortCode(context.Background(), "some-code")
+	assert.Error(t, err)
+	_, err = c.ListPublishedListings(context.Background(), 100, 0)
+	assert.Error(t, err)
+}
+
+type fakeMediaService struct {
+	catalogv1.MediaServiceClient
+	requestUpload func(ctx context.Context, in *catalogv1.RequestUploadRequest, opts ...grpc.CallOption) (*catalogv1.RequestUploadResponse, error)
+}
+
+func (f *fakeMediaService) RequestUpload(ctx context.Context, in *catalogv1.RequestUploadRequest, opts ...grpc.CallOption) (*catalogv1.RequestUploadResponse, error) {
+	return f.requestUpload(ctx, in, opts...)
+}
+
+func TestMediaGenerateUploadURL(t *testing.T) {
+	m := &Media{media: &fakeMediaService{
+		requestUpload: func(ctx context.Context, in *catalogv1.RequestUploadRequest, opts ...grpc.CallOption) (*catalogv1.RequestUploadResponse, error) {
+			assert.Equal(t, "art-1", in.GetArtisanId())
+			assert.Equal(t, "image/jpeg", in.GetContentType())
+			return &catalogv1.RequestUploadResponse{MediaId: "media-1", UploadUrl: "https://upload"}, nil
+		},
+	}}
+
+	mediaID, uploadURL, err := m.GenerateUploadURL("art-1", "image/jpeg", 1024)
+	require.NoError(t, err)
+	assert.Equal(t, "media-1", mediaID)
+	assert.Equal(t, "https://upload", uploadURL)
+}
+
+type fakeInsightService struct {
+	insightv1.InsightServiceClient
+	getDyingCrafts          func(ctx context.Context, in *insightv1.GetDyingCraftsRequest, opts ...grpc.CallOption) (*insightv1.GetDyingCraftsResponse, error)
+	generateIncomeStatement func(ctx context.Context, in *insightv1.GenerateIncomeStatementRequest, opts ...grpc.CallOption) (*insightv1.GenerateIncomeStatementResponse, error)
+}
+
+func (f *fakeInsightService) GetDyingCrafts(ctx context.Context, in *insightv1.GetDyingCraftsRequest, opts ...grpc.CallOption) (*insightv1.GetDyingCraftsResponse, error) {
+	return f.getDyingCrafts(ctx, in, opts...)
+}
+
+func (f *fakeInsightService) GenerateIncomeStatement(ctx context.Context, in *insightv1.GenerateIncomeStatementRequest, opts ...grpc.CallOption) (*insightv1.GenerateIncomeStatementResponse, error) {
+	return f.generateIncomeStatement(ctx, in, opts...)
+}
+
+func TestInsightGetDyingCrafts(t *testing.T) {
+	in := &Insight{insight: &fakeInsightService{
+		getDyingCrafts: func(ctx context.Context, req *insightv1.GetDyingCraftsRequest, opts ...grpc.CallOption) (*insightv1.GetDyingCraftsResponse, error) {
+			assert.Equal(t, int32(5), req.GetLimit())
+			return &insightv1.GetDyingCraftsResponse{Rows: []*insightv1.DyingCraftRow{
+				{CraftId: "craft-1", CraftName: "Kota Doria", DeclineRate: 0.4, PeakArtisans: 500, CurrentArtisans: 200},
+			}}, nil
+		},
+	}}
+
+	rows, err := in.GetDyingCrafts(5)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	assert.Equal(t, "Kota Doria", rows[0]["craft_name"])
+	assert.Equal(t, int32(200), rows[0]["current_artisans"])
+}
+
+func TestInsightGenerateStatementRollsABareEndDateToIncludeTheWholeDay(t *testing.T) {
+	// insight-svc bounds settled_at with `< period_end` (exclusive). A bare
+	// "2024-01-31" end date must arrive as 2024-02-01T00:00:00Z, not midnight
+	// on the 31st itself, or every order settled that day silently drops off
+	// the statement.
+	in := &Insight{insight: &fakeInsightService{
+		generateIncomeStatement: func(ctx context.Context, req *insightv1.GenerateIncomeStatementRequest, opts ...grpc.CallOption) (*insightv1.GenerateIncomeStatementResponse, error) {
+			assert.Equal(t, "2024-01-01T00:00:00Z", req.GetPeriodStart().AsTime().Format(time.RFC3339))
+			assert.Equal(t, "2024-02-01T00:00:00Z", req.GetPeriodEnd().AsTime().Format(time.RFC3339))
+			return &insightv1.GenerateIncomeStatementResponse{StatementId: "stmt-1"}, nil
+		},
+	}}
+
+	id, err := in.GenerateStatement("art-1", "2024-01-01", "2024-01-31")
+	require.NoError(t, err)
+	assert.Equal(t, "stmt-1", id)
+}
+
+func TestInsightGenerateStatementTakesAnRFC3339EndExactlyAsGiven(t *testing.T) {
+	in := &Insight{insight: &fakeInsightService{
+		generateIncomeStatement: func(ctx context.Context, req *insightv1.GenerateIncomeStatementRequest, opts ...grpc.CallOption) (*insightv1.GenerateIncomeStatementResponse, error) {
+			assert.Equal(t, "2024-01-31T23:59:59Z", req.GetPeriodEnd().AsTime().Format(time.RFC3339))
+			return &insightv1.GenerateIncomeStatementResponse{StatementId: "stmt-1"}, nil
+		},
+	}}
+
+	_, err := in.GenerateStatement("art-1", "2024-01-01T00:00:00Z", "2024-01-31T23:59:59Z")
+	require.NoError(t, err)
+}
+
+func TestInsightGenerateStatementRejectsAnUnparseableDate(t *testing.T) {
+	in := &Insight{insight: &fakeInsightService{}}
+	_, err := in.GenerateStatement("art-1", "not-a-date", "2024-01-31")
+	assert.True(t, domain.HTTPStatus(err) == 400)
+}
+
+func TestInsightGetStatementReturnsAnErrorNotAPanic(t *testing.T) {
+	in := &Insight{}
+	_, err := in.GetStatement("stmt-1")
+	assert.Error(t, err)
+}
+
+type fakeSearchService struct {
+	searchv1.SearchServiceClient
+	search  func(ctx context.Context, in *searchv1.SearchRequest, opts ...grpc.CallOption) (*searchv1.SearchResponse, error)
+	suggest func(ctx context.Context, in *searchv1.SuggestRequest, opts ...grpc.CallOption) (*searchv1.SuggestResponse, error)
+}
+
+func (f *fakeSearchService) Search(ctx context.Context, in *searchv1.SearchRequest, opts ...grpc.CallOption) (*searchv1.SearchResponse, error) {
+	return f.search(ctx, in, opts...)
+}
+func (f *fakeSearchService) Suggest(ctx context.Context, in *searchv1.SuggestRequest, opts ...grpc.CallOption) (*searchv1.SuggestResponse, error) {
+	return f.suggest(ctx, in, opts...)
+}
+
+func TestSearchSearchAppliesCraftFilterAndMapsHits(t *testing.T) {
+	s := &Search{search: &fakeSearchService{
+		search: func(ctx context.Context, in *searchv1.SearchRequest, opts ...grpc.CallOption) (*searchv1.SearchResponse, error) {
+			assert.Equal(t, "ajrakh", in.GetQuery())
+			require.Equal(t, []string{"craft-1"}, in.GetFilters().GetCraftIds())
+			return &searchv1.SearchResponse{Hits: []*searchv1.SearchHit{
+				{ListingId: "lst-1", ArtisanId: "art-1", Score: 0.9},
+			}}, nil
+		},
+	}}
+
+	results, err := s.Search("ajrakh", map[string]any{"craft_id": "craft-1"})
+	require.NoError(t, err)
+	require.Len(t, results, 1)
+	assert.Equal(t, "lst-1", results[0]["listing_id"])
+}
+
+func TestSearchSuggestReturnsTextOnly(t *testing.T) {
+	s := &Search{search: &fakeSearchService{
+		suggest: func(ctx context.Context, in *searchv1.SuggestRequest, opts ...grpc.CallOption) (*searchv1.SuggestResponse, error) {
+			assert.Equal(t, "ajr", in.GetPrefix())
+			return &searchv1.SuggestResponse{Suggestions: []*searchv1.Suggestion{{Text: "ajrakh"}, {Text: "ajrak block print"}}}, nil
+		},
+	}}
+
+	got, err := s.Suggest("ajr")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"ajrakh", "ajrak block print"}, got)
+}
