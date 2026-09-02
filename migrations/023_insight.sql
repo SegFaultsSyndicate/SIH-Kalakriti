@@ -28,7 +28,7 @@ CREATE MATERIALIZED VIEW mv_listings_by_craft_month AS
 SELECT
     p.craft_id,
     c.display_name AS craft_name,
-    date_trunc('month', l.published_at) AS month,
+    date_trunc('month', l.published_at)::timestamptz AS month,
     COUNT(*) AS listing_count,
     COUNT(DISTINCT l.artisan_id) AS artisan_count
 FROM listing l
@@ -148,9 +148,9 @@ craft_stats AS (
 SELECT
     cs.craft_id,
     c.display_name AS craft_name,
-    cs.decline_rate,
-    cs.max_count AS peak_artisans,
-    cs.min_count AS current_artisans
+    cs.decline_rate::real AS decline_rate,
+    cs.max_count::integer AS peak_artisans,
+    cs.min_count::integer AS current_artisans
 FROM craft_stats cs
 JOIN craft c ON c.id = cs.craft_id
 WHERE cs.decline_rate < 0

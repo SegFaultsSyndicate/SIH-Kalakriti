@@ -3,9 +3,8 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/hex"
-	"log"
+	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
@@ -13,79 +12,163 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ZoroNewbie00/kalakriti/pkg/config"
-	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
-	"github.com/ZoroNewbie00/kalakriti/pkg/postgres"
-	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
-	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/repo"
-	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
-	"google.golang.org/grpc/health/grpc_health_v1"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
+	insightv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1"
+	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	"github.com/ZoroNewbie00/kalakriti/pkg/qrcode"
+	"github.com/ZoroNewbie00/kalakriti/pkg/shortcode"
+	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
+
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/handler"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/repo"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/service"
+	"github.com/ZoroNewbie00/kalakriti/services/insight-svc/internal/insight/wiring"
 )
 
-type Config struct {
-	GRPCAddr      string `env:"GRPC_ADDR" envDefault:":8085"`
-	SigningKey    string `env:"SIGNING_PRIVATE_KEY"`
-	config.Postgres
-	config.S3
-}
+const serviceName = "insight-svc"
 
 func main() {
-	ctx := context.Background()
+	if err := run(); err != nil {
+		slog.New(slog.NewJSONHandler(os.Stderr, nil)).Error("insight-svc exited", "error", err)
+		os.Exit(1)
+	}
+}
 
-	cfg := config.Load[Config]()
-	logger.Init(os.Getenv("LOG_LEVEL"))
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	pool := postgres.MustConnect(ctx, cfg.Postgres)
+	cfg, err := loadConfig()
+	if err != nil {
+		return err
+	}
+	log := logger.New(cfg.server.LogLevel).With("service", serviceName, "env", cfg.server.Env)
+
+	pool, err := pkgpostgres.New(ctx, pkgpostgres.Config{
+		DSN: cfg.postgres.DSN, MaxConns: cfg.postgres.MaxConns, MinConns: cfg.postgres.MinConns,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to postgres: %w", err)
+	}
 	defer pool.Close()
 
-	s3Client := storage.NewClient(cfg.S3)
-
-	privateKey := loadPrivateKey(cfg.SigningKey)
-
-	repo := repo.New(pool)
-	stmtSvc := service.NewStatementService(repo, s3Client, privateKey)
-
-	grpcServer := grpc.NewServer()
-	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
-
-	// ponytail: No proto for insight-svc yet, manual handler registration would go here
-	// For now, bff will call via HTTP REST endpoint
-
-	lis, err := net.Listen("tcp", cfg.GRPCAddr)
+	objects, err := storage.New(ctx, storage.Config{
+		Endpoint: cfg.s3.Endpoint, AccessKey: cfg.s3.AccessKey, SecretKey: cfg.s3.SecretKey,
+		Bucket: cfg.s3.Bucket, Region: cfg.s3.Region, UseSSL: cfg.s3.UseSSL, PublicURL: cfg.s3.PublicURL,
+	})
 	if err != nil {
-		log.Fatalf("listen: %v", err)
+		return fmt.Errorf("connecting to object storage: %w", err)
 	}
 
-	slog.Info("insight-svc starting", "addr", cfg.GRPCAddr)
+	signer, err := loadSigner(cfg.signingKey, cfg.keyID, log)
+	if err != nil {
+		return fmt.Errorf("configuring signer: %w", err)
+	}
 
+	repository := repo.New(pool)
+	store := wiring.NewStore(repository)
+	svc := service.New(service.Config{
+		Store:         store,
+		Signer:        signer,
+		QRGenerator:   qrcode.NewGenerator(cfg.baseURL),
+		CodeGenerator: shortcode.NewGenerator(repository.ShortCodeExists),
+		S3Client:      objects,
+		VerifyBaseURL: cfg.baseURL,
+		FontPath:      cfg.fontPath,
+		MinBucketSize: cfg.minBucketSize,
+		PresignExpiry: 24 * time.Hour,
+	})
+	h := handler.New(svc, cfg.baseURL)
+
+	grpcServer := grpc.NewServer()
+	insightv1.RegisterInsightServiceServer(grpcServer, h)
+	healthSrv := health.NewServer()
+	healthpb.RegisterHealthServer(grpcServer, healthSrv)
+	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	healthSrv.SetServingStatus(serviceName, healthpb.HealthCheckResponse_SERVING)
+
+	lis, err := net.Listen("tcp", cfg.grpcAddr)
+	if err != nil {
+		return fmt.Errorf("listening on %s: %w", cfg.grpcAddr, err)
+	}
+
+	errCh := make(chan error, 1)
 	go func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("serve: %v", err)
+		log.Info("grpc server listening", "addr", cfg.grpcAddr)
+		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			errCh <- fmt.Errorf("grpc server: %w", err)
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	<-stop
+	select {
+	case <-ctx.Done():
+		log.Info("shutdown signal received")
+	case err := <-errCh:
+		log.Error("server failed", "error", err)
+	}
 
-	slog.Info("shutting down")
 	grpcServer.GracefulStop()
-
-	_ = stmtSvc // Used via HTTP handler in bff for demo
+	log.Info("shutdown complete")
+	return nil
 }
 
-func loadPrivateKey(keyHex string) ed25519.PrivateKey {
-	if keyHex == "" {
-		// Dev fallback: generate ephemeral key
-		_, priv, _ := ed25519.GenerateKey(nil)
-		return priv
+// loadSigner builds the Ed25519 signer income statements are signed with. An
+// unset key generates an ephemeral one for the process lifetime, so the
+// service still starts in dev without one configured.
+func loadSigner(privateKeyHex, keyID string, log *slog.Logger) (*crypto.Signer, error) {
+	if privateKeyHex == "" {
+		generatedHex, _, err := crypto.GenerateKeypair()
+		if err != nil {
+			return nil, fmt.Errorf("generating ephemeral keypair: %w", err)
+		}
+		log.Warn("SIGNING_PRIVATE_KEY not set: using an ephemeral keypair for this process only", "key_id", keyID)
+		privateKeyHex = generatedHex
 	}
+	return crypto.NewSigner(privateKeyHex, keyID)
+}
 
-	key, err := hex.DecodeString(keyHex)
-	if err != nil {
-		log.Fatalf("decode signing key: %v", err)
+type appConfig struct {
+	server        config.Server
+	postgres      config.Postgres
+	s3            config.S3
+	signingKey    string
+	keyID         string
+	baseURL       string
+	fontPath      string
+	minBucketSize int32
+	grpcAddr      string
+}
+
+func loadConfig() (appConfig, error) {
+	var cfg appConfig
+	var err error
+	if cfg.server, err = config.Load[config.Server](); err != nil {
+		return cfg, err
 	}
-	return ed25519.PrivateKey(key)
+	if cfg.postgres, err = config.Load[config.Postgres](); err != nil {
+		return cfg, err
+	}
+	if cfg.s3, err = config.Load[config.S3](); err != nil {
+		return cfg, err
+	}
+	cfg.signingKey = os.Getenv("SIGNING_PRIVATE_KEY")
+	cfg.keyID = envOr("SIGNING_KEY_ID", "dev-key-1")
+	cfg.baseURL = envOr("BASE_URL", "http://localhost:8000")
+	cfg.fontPath = envOr("FONT_PATH", "")
+	cfg.minBucketSize = 5
+	cfg.grpcAddr = envOr("GRPC_ADDR", ":8085")
+	return cfg, nil
+}
+
+func envOr(key, fallback string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
+	}
+	return fallback
 }

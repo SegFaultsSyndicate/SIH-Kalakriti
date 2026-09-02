@@ -50,9 +50,9 @@ SELECT
     a.id,
     a.display_name,
     COUNT(DISTINCT ol.id) AS order_count,
-    COALESCE(SUM(psl.gross_amount_paise), 0) AS gross_paise,
-    COALESCE(SUM(psl.net_amount_paise), 0) AS net_paise,
-    COALESCE(SUM(psl.commission_paise), 0) AS fee_paise
+    COALESCE(SUM(psl.gross_amount_paise), 0)::bigint AS gross_paise,
+    COALESCE(SUM(psl.net_amount_paise), 0)::bigint AS net_paise,
+    COALESCE(SUM(psl.commission_paise), 0)::bigint AS fee_paise
 FROM artisan a
 LEFT JOIN order_lot ol ON ol.artisan_id = a.id
 LEFT JOIN payment_split_line psl ON psl.lot_id = ol.id
@@ -65,7 +65,7 @@ GROUP BY a.id, a.display_name;
 
 -- name: GetArtisanEarningsMonthly :many
 SELECT
-    date_trunc('month', psl.settled_at) AS month,
+    date_trunc('month', psl.settled_at)::timestamptz AS month,
     COUNT(DISTINCT ol.id) AS order_count,
     SUM(psl.gross_amount_paise) AS gross_paise,
     SUM(psl.net_amount_paise) AS net_paise,
@@ -99,6 +99,9 @@ SELECT
 FROM income_statement s
 JOIN artisan a ON a.id = s.artisan_id
 WHERE s.short_code = $1;
+
+-- name: IncomeStatementShortCodeExists :one
+SELECT EXISTS(SELECT 1 FROM income_statement WHERE short_code = @short_code) AS exists;
 
 -- name: GetArtisanIncomeStatements :many
 SELECT id, period_start, period_end, order_count, gross_paise, net_paise,
