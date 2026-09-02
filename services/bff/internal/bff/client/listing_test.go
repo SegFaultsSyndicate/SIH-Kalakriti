@@ -112,6 +112,35 @@ func TestListingUpdateListingBackfillsFieldsNotInUpdatesFromTheExistingListing(t
 	assert.Equal(t, int32(9), *sawReq.StockQuantity)
 }
 
+func TestListingUpdateListingClearsStockQuantityOnExplicitNull(t *testing.T) {
+	stock := int32(5)
+	existing := &catalogv1.Listing{
+		Id:            "lst-1",
+		ProductId:     "prod-1",
+		StockQuantity: &stock,
+	}
+
+	var sawReq *catalogv1.UpsertListingRequest
+	l := &Listing{catalog: &fakeCatalogService{
+		getListing: func(ctx context.Context, in *catalogv1.GetListingRequest, opts ...grpc.CallOption) (*catalogv1.GetListingResponse, error) {
+			return &catalogv1.GetListingResponse{Listing: existing}, nil
+		},
+		upsertListing: func(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error) {
+			sawReq = in
+			return &catalogv1.UpsertListingResponse{Listing: existing}, nil
+		},
+	}}
+
+	// An explicit null (key present, value nil — what "stock_quantity": null
+	// decodes to) must clear the field, not silently keep the old value.
+	err := l.UpdateListing(context.Background(), "lst-1", "idem-2", map[string]any{
+		"stock_quantity": nil,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, sawReq)
+	assert.Nil(t, sawReq.StockQuantity)
+}
+
 func TestListingApproveListingSendsEditedTranslations(t *testing.T) {
 	var sawReq *catalogv1.ApproveListingRequest
 	l := &Listing{catalog: &fakeCatalogService{

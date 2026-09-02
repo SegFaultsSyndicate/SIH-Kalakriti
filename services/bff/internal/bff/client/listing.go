@@ -133,9 +133,20 @@ func upsertListingRequest(fields map[string]any, productID string, existing *cat
 		req.Price = existing.GetPrice()
 	}
 
-	if v, ok := fields["stock_quantity"].(float64); ok {
-		sq := int32(v)
-		req.StockQuantity = &sq
+	// stock_quantity is present-but-null when a caller means to clear it (e.g.
+	// switching a listing off READY_STOCK), which a map-value type assertion
+	// alone can't tell apart from the key being absent — both decode to a nil
+	// interface. Checked as key presence first so "null" reaches core-svc as
+	// an explicit clear instead of silently reverting to the old value.
+	if raw, present := fields["stock_quantity"]; present {
+		if raw != nil {
+			v, ok := raw.(float64)
+			if !ok {
+				return nil, domain.InvalidInput("stock_quantity: must be a number")
+			}
+			sq := int32(v)
+			req.StockQuantity = &sq
+		}
 	} else if existing != nil {
 		req.StockQuantity = existing.StockQuantity
 	}
