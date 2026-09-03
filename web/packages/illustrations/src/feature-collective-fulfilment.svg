@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure. Many looms, one cloth emerging from their combined threads — "collective fulfilment". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M40 20 L 40 75 L 100 75 L 100 20"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55 20 L55 69"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 20 L70 69"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M85 20 L85 69"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M40 90 L 40 145 L 100 145 L 100 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55 90 L55 139"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 90 L70 139"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M85 90 L85 139"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M40 155 L 40 210 L 100 210 L 100 155"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55 155 L55 204"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 155 L70 204"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M85 155 L85 204"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M100 40 Q170 20 170 90"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M100 110 L170 90"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M100 180 Q170 200 170 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M173 70 L257 70 A3 3 0 0 1 260 73 L260 127 A3 3 0 0 1 257 130 L173 130 A3 3 0 0 1 170 127 L170 73 A3 3 0 0 1 173 70 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M185 70 L185 130"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 70 L200 130"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M215 70 L215 130"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M230 70 L230 130"/>
+</svg>

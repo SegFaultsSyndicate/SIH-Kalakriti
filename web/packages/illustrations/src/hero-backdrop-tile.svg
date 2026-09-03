@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Jaali diamond lattice (octagonal-star cell logic) with a weft hairline, one 60x60 tile. Tile with background-repeat: repeat across the hero width at 4-6% opacity via CSS — see illustrations.css — so it sits behind a photograph without competing. -->
+  <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" d="M0 0 L 30 30 L 0 60 L -30 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" d="M60 0 L 90 30 L 60 60 L 30 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" d="M0 45 L60 45"/>
+</svg>

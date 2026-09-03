@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalakriti — Batch 3 contact sheet: structural ornament</title>
+
+<!-- The real tokens and the real utilities. Nothing on this page restates a
+     colour or a mask by hand: if a divider is wrong here it is wrong in the
+     product, which is the only reason a contact sheet is worth opening. -->
+<link rel="stylesheet" href="../tokens/src/palette.css">
+<link rel="stylesheet" href="./ornament.css">
+
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
+
+  /* Each theme block uses the shipped [data-theme] selectors, so this page is
+     testing the themes that were actually delivered in Batch 1. */
+  .theme {
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
+    padding: 2.5rem clamp(1rem, 4vw, 3rem) 3.5rem;
+  }
+  .theme > header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0 0 2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--k-border-hairline);
+  }
+  .theme > header h1 { font-size: 1.1rem; margin: 0; letter-spacing: 0.02em; }
+  .theme > header span { color: var(--k-text-secondary); font-size: 0.8rem; }
+
+  h2 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--k-text-secondary);
+    margin: 2.5rem 0 0.9rem;
+    font-weight: 600;
+  }
+  h2:first-of-type { margin-top: 0; }
+  .label {
+    font-size: 0.7rem;
+    color: var(--k-text-secondary);
+    margin: 1.1rem 0 0.35rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .note {
+    font-size: 0.75rem;
+    color: var(--k-text-secondary);
+    max-width: 62ch;
+    margin: 0.5rem 0 0;
+  }
+
+  /* Seam test. The strip is exactly four tiles wide, hard-cropped, so any
+     mismatch at a tile boundary shows as a break in the middle of the strip
+     rather than being lost in a full-width repeat. */
+  .seam {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .seam .k-divider {
+    width: var(--w);
+    outline: 1px dashed var(--k-border-hairline);
+    outline-offset: 3px;
+    opacity: 0.55;   /* raised above the shipped 0.18 so seams are visible */
+  }
+  .seam small { color: var(--k-text-secondary); font-size: 0.68rem; }
+
+  .grid3 { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+
+  .swatch {
+    border: 1px solid var(--k-border-hairline);
+    padding: 1rem;
+    background: var(--k-surface-raised);
+  }
+  .swatch h3 { margin: 0 0 0.5rem; font-size: 0.75rem; font-weight: 600; }
+
+  /* Weft opacity study. Body text sits on top so the "felt but not seen"
+     judgement is made against real text, not against an empty box. */
+  .weft-study { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .weft-cell {
+    border: 1px solid var(--k-border-hairline);
+    background: var(--k-surface-base);
+    min-height: 132px;
+    padding: 0.9rem;
+  }
+  .weft-cell p { margin: 0.4rem 0 0; font-size: 0.78rem; }
+
+  .frame-demo { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .kolam-frame {
+    position: relative;
+    padding: 2.25rem;
+    min-height: 120px;
+    background: var(--k-surface-raised);
+  }
+  .kolam-frame > svg { position: absolute; width: 42px; height: 42px; }
+  .kolam-frame > svg:nth-of-type(1) { top: 6px; left: 6px; }
+  .kolam-frame > svg:nth-of-type(2) { top: 6px; right: 6px; }
+  .kolam-frame > svg:nth-of-type(3) { bottom: 6px; left: 6px; }
+  .kolam-frame > svg:nth-of-type(4) { bottom: 6px; right: 6px; }
+
+  .knot-scale { display: flex; align-items: center; gap: 0.75rem; color: var(--k-text-primary); }
+
+  .tradition {
+    font-size: 0.66rem;
+    color: var(--k-text-secondary);
+    margin-top: 0.35rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================================================================== -->
+<template id="sheet">
+  <header>
+    <h1>Batch 3 — structural ornament</h1>
+    <span data-theme-name></span>
+  </header>
+
+  <h2>1 · Jaali section dividers — full width, three geometries, three densities</h2>
+  <p class="note">
+    Shown at the shipped 0.18 opacity, tiled across the full page width. Density
+    is not a scale factor: each tile is redrawn, so bold carries a centre
+    aperture and an inner echo that a 16px tile cannot hold.
+  </p>
+
+  <p class="label">hexagonal — fine 14×16 / medium 21×24 / bold 28×32</p>
+  <div class="k-divider k-divider--jaali-hex-16"></div>
+  <div class="k-divider k-divider--jaali-hex-24"></div>
+  <div class="k-divider k-divider--jaali-hex-32"></div>
+
+  <p class="label">octagonal-star — fine 16×16 / medium 24×24 / bold 32×32</p>
+  <div class="k-divider k-divider--jaali-octstar-16"></div>
+  <div class="k-divider k-divider--jaali-octstar-24"></div>
+  <div class="k-divider k-divider--jaali-octstar-32"></div>
+
+  <p class="label">interlaced-square — fine 16×16 / medium 24×24 / bold 32×32</p>
+  <div class="k-divider k-divider--jaali-interlace-16"></div>
+  <div class="k-divider k-divider--jaali-interlace-24"></div>
+  <div class="k-divider k-divider--jaali-interlace-32"></div>
+
+  <h2>2 · Seam test — exactly four tiles, cropped</h2>
+  <p class="note">
+    Each strip below is four tile-widths wide and nothing more, at raised
+    opacity. Look at the three interior boundaries: a doubled stroke, a gap or
+    a kink at 1/4, 1/2 or 3/4 across is a seam failure.
+  </p>
+  <div data-seams></div>
+
+  <h2>3 · Block-print border strips</h2>
+  <p class="label">running border — 20×20, for card edges and section rules</p>
+  <div class="k-divider k-divider--blockprint-running-20"></div>
+  <p class="label">bordered band — 32×32, for page headers and the provenance page</p>
+  <div class="k-divider k-divider--blockprint-band-32"></div>
+  <p class="tradition">Block print (Ajrakh / Bagru). Fill-led; the undyed centres are resist negative space.</p>
+
+  <h2>4 · Hairline rules</h2>
+  <div class="grid3">
+    <div class="swatch">
+      <h3>plain</h3>
+      <hr class="k-rule">
+      <p class="tradition">CSS only — no image, so it cannot fail to load.</p>
+    </div>
+    <div class="swatch">
+      <h3>centred motif interruption</h3>
+      <div class="k-rule-motif">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-knot></svg>
+      </div>
+      <p class="label" style="margin-top:1rem">the knot alone, at 16 / 20 / 24 / 48px</p>
+      <div class="knot-scale">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px" aria-hidden="true" focusable="false" data-knot></svg>
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px" aria-hidden="true" focusable="false" data-knot></svg>
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px" aria-hidden="true" focusable="false" data-knot></svg>
+        <svg viewBox="0 0 24 24" style="width:48px;height:48px" aria-hidden="true" focusable="false" data-knot></svg>
+      </div>
+      <p class="tradition">
+        Handloom structure — the logomark's warp/weft crossing at rule scale.
+        At 16px the warp's break closes up and it reads as a plus, which is why
+        the utility sets 20px.
+      </p>
+    </div>
+    <div class="swatch">
+      <h3>double rule, woven infill</h3>
+      <hr class="k-rule k-rule--woven">
+      <p class="tradition">Handloom structure. 8×8 tile; falls back to a plain 1px line.</p>
+    </div>
+  </div>
+
+  <h2>5 · Weft texture — 3%, 6%, 12%</h2>
+  <p class="note">
+    The tile is 545 bytes raw. Pick by eye: at 3–6% it should be felt and not
+    seen. 12% is included as the point where it stops being a surface and
+    starts being a pattern — that is the failure case, not an option.
+  </p>
+  <div class="weft-study">
+    <div class="weft-cell k-weft-surface" style="--k-weft-opacity:0.03">
+      <strong>3%</strong>
+      <p>Khadi cotton, handspun. Warp and weft, plain weave, twelve-pixel repeat.</p>
+    </div>
+    <div class="weft-cell k-weft-surface" style="--k-weft-opacity:0.06">
+      <strong>6%</strong>
+      <p>Khadi cotton, handspun. Warp and weft, plain weave, twelve-pixel repeat.</p>
+    </div>
+    <div class="weft-cell k-weft-surface" style="--k-weft-opacity:0.12">
+      <strong>12% — too much</strong>
+      <p>Khadi cotton, handspun. Warp and weft, plain weave, twelve-pixel repeat.</p>
+    </div>
+  </div>
+
+  <h2>6 · Kolam corner and printed card edge</h2>
+  <div class="frame-demo">
+    <div class="kolam-frame">
+      <svg class="k-kolam-corner" viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-kolam></svg>
+      <svg class="k-kolam-corner k-kolam-corner--tr" viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-kolam></svg>
+      <svg class="k-kolam-corner k-kolam-corner--bl" viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-kolam></svg>
+      <svg class="k-kolam-corner k-kolam-corner--br" viewBox="0 0 96 96" aria-hidden="true" focusable="false" data-kolam></svg>
+      <strong>Featured content</strong>
+      <p class="tradition">Kolam (sikku) — one continuous line, five dots, none touched.</p>
+    </div>
+    <div class="k-card--printed">
+      <strong>Printed card edge</strong>
+      <p class="tradition">Block print (Bagru). 9-slice border-image, 25% slice, no drop shadow.</p>
+    </div>
+  </div>
+
+  <h2>7 · Dividers as SVG &lt;pattern&gt;</h2>
+  <p class="note">
+    The same tiles referenced through patterns.svg rather than through a CSS
+    mask. This path is what a page uses when it needs the ornament inside an
+    SVG composition; it inherits currentColor from the referencing element.
+  </p>
+  <svg viewBox="0 0 480 24" style="width:100%;height:24px;opacity:0.18" aria-hidden="true" focusable="false">
+    <rect width="480" height="24" fill="url(#k-jaali-octstar-24)"/>
+  </svg>
+</template>
+
+<!--INJECT:PATTERNS-->
+
+<script>
+/* Generated by scripts/gen-batch3.mjs from
+   scripts/contact-sheet-batch3.template.html — edit the template, not this.
+
+   The sheet is one <template> rendered once per theme, so a section can never
+   be present in light and quietly missing in dark. Everything is inlined
+   rather than fetched, so the file opens straight off disk. */
+
+const KOLAM = `<!--INJECT:KOLAM-->`;
+const KNOT = `<!--INJECT:KNOT-->`;
+
+const SEAMS = [
+  ['jaali-hex-16', 14, 16], ['jaali-hex-24', 21, 24], ['jaali-hex-32', 28, 32],
+  ['jaali-octstar-16', 16, 16], ['jaali-octstar-24', 24, 24], ['jaali-octstar-32', 32, 32],
+  ['jaali-interlace-16', 16, 16], ['jaali-interlace-24', 24, 24], ['jaali-interlace-32', 32, 32],
+  ['blockprint-running-20', 20, 20], ['blockprint-band-32', 32, 32],
+];
+
+const tpl = document.getElementById('sheet');
+
+for (const [theme, name] of [
+  ['light', 'light theme'],
+  ['dark', 'dark theme'],
+  ['high-contrast', 'high-contrast theme'],
+]) {
+  const section = document.createElement('section');
+  section.className = 'theme';
+  section.setAttribute('data-theme', theme);
+  section.append(tpl.content.cloneNode(true));
+  section.querySelector('[data-theme-name]').textContent = name;
+
+  const seams = section.querySelector('[data-seams]');
+  for (const [key, w, h] of SEAMS) {
+    const row = document.createElement('div');
+    row.className = 'seam';
+    row.innerHTML =
+      `<div class="k-divider k-divider--${key}" style="--w:${w * 4}px"></div>` +
+      `<small>${key} &mdash; 4 &times; ${w}px = ${w * 4}px</small>`;
+    seams.append(row);
+  }
+
+  for (const svg of section.querySelectorAll('[data-kolam]')) svg.innerHTML = KOLAM;
+  for (const svg of section.querySelectorAll('[data-knot]')) svg.innerHTML = KNOT;
+
+  document.body.append(section);
+}
+</script>
+</body>
+</html>

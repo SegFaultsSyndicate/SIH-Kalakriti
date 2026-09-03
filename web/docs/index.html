@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kalakriti asset catalogue</title>
+<link rel="stylesheet" href="../packages/tokens/src/palette.css">
+<style>
+  body { margin: 0; background: var(--k-surface-base); color: var(--k-text-primary); font-family: ui-sans-serif, system-ui, sans-serif; }
+  header { position: sticky; top: 0; background: var(--k-surface-base); border-bottom: 1px solid var(--k-border-hairline); padding: 1rem 1.5rem; z-index: 1; }
+  h1 { margin: 0 0 0.75rem; font-size: 1.3rem; font-family: ui-serif, Georgia, serif; }
+  #q { width: 100%; max-width: 28rem; padding: 0.5rem 0.75rem; border: 1px solid var(--k-border-hairline); border-radius: 4px; font-size: 0.95rem; background: var(--k-surface-raised); color: inherit; }
+  #count { font-size: 0.8rem; color: var(--k-text-secondary); margin-left: 0.75rem; }
+  .pkg-filters { margin-top: 0.6rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .pkg-filters button { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid var(--k-border-hairline); background: var(--k-surface-raised); color: var(--k-text-secondary); cursor: pointer; }
+  .pkg-filters button[aria-pressed="true"] { background: var(--k-accent-primary-bg); color: var(--k-text-on-accent); border-color: transparent; }
+  main { padding: 1.25rem 1.5rem 3rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.9rem; }
+  .card { border: 1px solid var(--k-border-hairline); border-radius: 6px; padding: 0.8rem; background: var(--k-surface-raised); display: flex; flex-direction: column; gap: 0.4rem; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+  .card-name { font-weight: 600; font-size: 0.9rem; }
+  .card-pkg { font-size: 0.7rem; color: var(--k-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .card-size { font-size: 0.75rem; color: var(--k-text-secondary); font-variant-numeric: tabular-nums; }
+  .card-blurb { font-size: 0.78rem; color: var(--k-text-secondary); line-height: 1.4; flex: 1; }
+  .card-import { display: flex; align-items: center; gap: 0.4rem; }
+  .card-import code { flex: 1; font-size: 0.72rem; background: var(--k-surface-base); border: 1px solid var(--k-border-hairline); border-radius: 4px; padding: 0.3rem 0.4rem; overflow-x: auto; white-space: nowrap; }
+  .copy-btn { font-size: 0.72rem; padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid var(--k-border-hairline); background: var(--k-surface-base); color: inherit; cursor: pointer; flex: none; }
+  .copy-btn[data-copied="true"] { background: var(--k-accent-success); color: var(--k-text-on-accent); border-color: transparent; }
+  #empty { display: none; color: var(--k-text-secondary); padding: 2rem 0; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Kalakriti asset catalogue<span id="count"></span></h1>
+    <input id="q" type="search" placeholder="Search by name, package, or tradition/use text&hellip;" autocomplete="off">
+    <div class="pkg-filters" id="filters"></div>
+  </header>
+  <main>
+    <div class="grid" id="grid"></div>
+    <p id="empty">No assets match.</p>
+  </main>
+
+<script>
+(async function () {
+  const res = await fetch('./manifest.json');
+  const rows = await res.json();
+  const grid = document.getElementById('grid');
+  const q = document.getElementById('q');
+  const count = document.getElementById('count');
+  const empty = document.getElementById('empty');
+  const filtersEl = document.getElementById('filters');
+
+  const packages = [...new Set(rows.map((r) => r.package))].sort();
+  let activePkg = null;
+
+  function pkgButton(pkg) {
+    const b = document.createElement('button');
+    b.textContent = pkg + ' (' + rows.filter((r) => r.package === pkg).length + ')';
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      activePkg = activePkg === pkg ? null : pkg;
+      for (const btn of filtersEl.children) btn.setAttribute('aria-pressed', 'false');
+      if (activePkg) b.setAttribute('aria-pressed', 'true');
+      render();
+    });
+    return b;
+  }
+  for (const pkg of packages) filtersEl.appendChild(pkgButton(pkg));
+
+  function card(row) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `
+      <div class="card-head">
+        <span class="card-name">${row.name}</span>
+        <span class="card-size">${row.bytes}B</span>
+      </div>
+      <span class="card-pkg">${row.package}</span>
+      <p class="card-blurb">${row.blurb ? escapeHtml(row.blurb) : '<em>no header comment</em>'}</p>
+      <div class="card-import">
+        <code>${escapeHtml(row.importLine)}</code>
+        <button class="copy-btn" type="button">Copy</button>
+      </div>`;
+    el.querySelector('.copy-btn').addEventListener('click', async (e) => {
+      await navigator.clipboard.writeText(row.importLine);
+      e.target.textContent = 'Copied';
+      e.target.dataset.copied = 'true';
+      setTimeout(() => { e.target.textContent = 'Copy'; e.target.dataset.copied = 'false'; }, 1200);
+    });
+    return el;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function render() {
+    const term = q.value.trim().toLowerCase();
+    const matches = rows.filter((r) => {
+      if (activePkg && r.package !== activePkg) return false;
+      if (!term) return true;
+      return r.name.toLowerCase().includes(term) || r.package.includes(term) || r.blurb.toLowerCase().includes(term);
+    });
+    grid.replaceChildren(...matches.map(card));
+    empty.style.display = matches.length ? 'none' : 'block';
+    count.textContent = ' — ' + matches.length + ' of ' + rows.length;
+  }
+
+  q.addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>

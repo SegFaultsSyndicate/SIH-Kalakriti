@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Process step 2 of 4 (block printing): dye. Step number shown as a dot count, not a numeral. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M32 70 L88 70 A2 2 0 0 1 90 72 L90 98 A2 2 0 0 1 88 100 L32 100 A2 2 0 0 1 30 98 L30 72 A2 2 0 0 1 32 70 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M60 30 C50 45 50 55 60 65 C70 55 70 45 60 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 98 L16.5 98 A4 4 0 0 1 20.5 102 L20.5 114 A4 4 0 0 1 16.5 118 L6 118 A4 4 0 0 1 2 114 L2 102 A4 4 0 0 1 6 98 Z"/>
+  <path fill="currentColor" d="M9 108 A2 2 0 1 0 13 108 A2 2 0 1 0 9 108 Z"/>
+  <path fill="currentColor" d="M15.5 108 A2 2 0 1 0 19.5 108 A2 2 0 1 0 15.5 108 Z"/>
+</svg>

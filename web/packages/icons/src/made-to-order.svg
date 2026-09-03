@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- made-to-order (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.5 14.5 A6 6 0 1 0 15.5 14.5 A6 6 0 1 0 3.5 14.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.5 14.5 L9.5 11 L12 13"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 4 L9 4 M4.5 4 L4.5 8 A5 5 0 0 0 9 10.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 4 L15 4 M19.5 4 L19.5 8 A5 5 0 0 1 15 10.5"/>
+</svg>

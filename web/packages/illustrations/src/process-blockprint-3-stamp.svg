@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Process step 3 of 4 (block printing): stamp. Step number shown as a dot count, not a numeral. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M42 30 L78 30 A2 2 0 0 1 80 32 L80 58 A2 2 0 0 1 78 60 L42 60 A2 2 0 0 1 40 58 L40 32 A2 2 0 0 1 42 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M60 60 L60 75"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M31 78 L89 78 A1 1 0 0 1 90 79 L90 99 A1 1 0 0 1 89 100 L31 100 A1 1 0 0 1 30 99 L30 79 A1 1 0 0 1 31 78 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M57 89 A3 3 0 1 0 63 89 A3 3 0 1 0 57 89 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 98 L23 98 A4 4 0 0 1 27 102 L27 114 A4 4 0 0 1 23 118 L6 118 A4 4 0 0 1 2 114 L2 102 A4 4 0 0 1 6 98 Z"/>
+  <path fill="currentColor" d="M9 108 A2 2 0 1 0 13 108 A2 2 0 1 0 9 108 Z"/>
+  <path fill="currentColor" d="M15.5 108 A2 2 0 1 0 19.5 108 A2 2 0 1 0 15.5 108 Z"/>
+  <path fill="currentColor" d="M22 108 A2 2 0 1 0 26 108 A2 2 0 1 0 22 108 Z"/>
+</svg>

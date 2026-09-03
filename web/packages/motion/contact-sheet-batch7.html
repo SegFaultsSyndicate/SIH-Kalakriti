@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalakriti — Batch 7 contact sheet: motion and state assets</title>
+<link rel="stylesheet" href="../tokens/src/palette.css">
+<link rel="stylesheet" href="../icons/icons.css">
+<link rel="stylesheet" href="../patterns/patterns.css">
+<link rel="stylesheet" href="./motion.css">
+<style>
+  body { margin: 0; font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; background: var(--k-surface-base); color: var(--k-text-primary); padding: 2.5rem clamp(1rem,4vw,3rem) 4rem; }
+  h1 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+  h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--k-text-secondary); margin: 2.5rem 0 0.9rem; font-weight: 600; }
+  h2:first-of-type { margin-top: 0; }
+  .note { font-size: 0.75rem; color: var(--k-text-secondary); max-width: 62ch; margin: 0.3rem 0 1rem; }
+  .row { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+  .cell { border: 1px solid var(--k-border-hairline); background: var(--k-surface-raised); padding: 1rem; text-align: center; min-width: 100px; }
+  .cell small { display: block; margin-top: 0.5rem; font-size: 0.68rem; color: var(--k-text-secondary); }
+  button { font: inherit; padding: 0.4rem 0.8rem; border: 1px solid var(--k-border-hairline); background: var(--k-surface-raised); color: var(--k-text-primary); cursor: pointer; border-radius: var(--k-radius-md); }
+  .reduced-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 10; }
+  .k-icon { width: 1.5rem; height: 1.5rem; }
+  .waveform-demo { width: 260px; }
+</style>
+</head>
+<body>
+
+<button class="reduced-toggle" id="rmToggle">Simulate prefers-reduced-motion: OFF</button>
+
+<h1>Batch 7 — motion and state assets</h1>
+<p class="note">Everything on this page is live CSS animation, not a screenshot — open it in a browser to see it move. The button top-right forces the reduced-motion CSS path for every animation on the page at once.</p>
+
+<h2>1 · Charkha spinner (Batch 4, referenced not rebuilt)</h2>
+<div class="row">
+  <div class="cell"><svg class="k-icon k-spinner k-spinner--indeterminate" viewBox="0 0 24 24" id="spinner-indet"></svg><small>indeterminate</small></div>
+  <div class="cell"><svg class="k-icon k-spinner k-spinner--determinate" viewBox="0 0 24 24" style="--k-spin-progress:0.4" id="spinner-det"></svg><small>determinate, 40%</small></div>
+</div>
+
+<h2>2 · Skeleton shimmer (Batch 6, referenced not rebuilt)</h2>
+<div class="row">
+  <div class="k-skeleton" style="width:220px;height:80px"></div>
+</div>
+
+<h2>3 · ML pipeline progress</h2>
+<p class="note">Click "advance" to move the demo state forward one stage at a time — that click handler lives in this demo page, not inside PipelineProgress.svelte, which never advances itself.</p>
+<div id="pipeline-mount"></div>
+<button id="pipeline-advance" style="margin-top:1rem">Advance one stage →</button>
+
+<h2>4 · Sync state icons</h2>
+<div class="row" id="sync-row"></div>
+
+<h2>5 · Success / failure moments</h2>
+<p class="note">Click to replay the draw-on (they mount fresh each click, same as a real success/error toast appearing).</p>
+<div class="row">
+  <button id="replay-success">Replay success</button>
+  <button id="replay-failure">Replay failure</button>
+</div>
+<div class="row" id="moment-row" style="margin-top:1rem"></div>
+
+<h2>6 · Seal draw-on</h2>
+<div class="row">
+  <div class="cell" style="width:220px;height:220px;display:flex;align-items:center;justify-content:center">
+    <div id="seal-mount" style="width:200px;height:200px"></div>
+  </div>
+  <button id="seal-play">Play seal animation</button>
+</div>
+
+<h2>7 · Voice waveform</h2>
+<p class="note">Driven by a real AnalyserNode from a synthetic oscillator (no microphone permission needed for this demo) — genuinely live data, not a canned loop.</p>
+<div class="row">
+  <div class="cell waveform-demo"><div id="waveform-mount"></div><small>live, animated</small></div>
+  <div class="cell waveform-demo"><div id="waveform-reduced-mount"></div><small>reduced-motion path (numeric readout)</small></div>
+  <button id="waveform-start">Start demo tone</button>
+</div>
+
+<script type="module">
+const KOLAM_SPIN_INNER = `M0 0`;
+
+// --- 1: charkha spinner geometry (reuse Batch 4's file) ---
+const spinnerSvg = await fetch('../icons/src/charkha-spinner.svg').then(r => r.text());
+const spinnerInner = spinnerSvg.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+document.getElementById('spinner-indet').innerHTML = spinnerInner;
+document.getElementById('spinner-det').innerHTML = spinnerInner;
+
+// --- 3: pipeline progress (plain DOM, mirroring PipelineProgress.svelte's markup) ---
+const STAGE_ICONS = {};
+for (const name of ['enhance', 'attributes', 'describe', 'translate']) {
+  STAGE_ICONS[name] = await fetch(`./src/pipeline-${name}.svg`).then(r => r.text())
+    .then(t => t.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, ''));
+}
+let stages = [
+  { key: 'enhance', state: 'complete' },
+  { key: 'attributes', state: 'active' },
+  { key: 'describe', state: 'pending' },
+  { key: 'translate', state: 'pending' },
+];
+function renderPipeline() {
+  const mount = document.getElementById('pipeline-mount');
+  mount.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'k-pipeline';
+  stages.forEach((s, i) => {
+    const station = document.createElement('div');
+    station.className = 'k-pipeline-station';
+    station.dataset.state = s.state;
+    station.innerHTML = `<svg viewBox="0 0 24 24">${STAGE_ICONS[s.key]}</svg>`;
+    wrap.appendChild(station);
+    if (i < stages.length - 1) {
+      const thread = document.createElement('div');
+      thread.className = 'k-pipeline-thread';
+      thread.dataset.crossed = s.state === 'complete';
+      wrap.appendChild(thread);
+    }
+  });
+  mount.appendChild(wrap);
+}
+renderPipeline();
+document.getElementById('pipeline-advance').addEventListener('click', () => {
+  const activeIdx = stages.findIndex(s => s.state === 'active');
+  if (activeIdx === -1) return;
+  stages[activeIdx].state = 'complete';
+  if (activeIdx + 1 < stages.length) stages[activeIdx + 1].state = 'active';
+  renderPipeline();
+});
+
+// --- 4: sync states ---
+const SYNC_FILES = { offline: '../icons/src/offline.svg', pending: './src/sync-pending.svg', syncing: './src/sync-syncing.svg', synced: './src/sync-synced.svg' };
+const syncRow = document.getElementById('sync-row');
+for (const [state, path] of Object.entries(SYNC_FILES)) {
+  const svgText = await fetch(path).then(r => r.text());
+  const inner = svgText.replace(/[\s\S]*?<svg[^>]*viewBox="([^"]+)"[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  const vb = svgText.match(/viewBox="([^"]+)"/)[1];
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.innerHTML = `<svg class="k-sync-state k-sync-state--${state}" viewBox="${vb}">${inner}</svg><small>${state}</small>`;
+  syncRow.appendChild(cell);
+}
+
+// --- 5: success/failure moments ---
+const successSvg = await fetch('./src/sync-synced.svg').then(r => r.text());
+const failureSvg = await fetch('./src/failure-thread.svg').then(r => r.text());
+const successInner = successSvg.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+const failureInner = failureSvg.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+function playMoment(kind) {
+  const row = document.getElementById('moment-row');
+  row.innerHTML = '';
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  const inner = kind === 'success' ? successInner : failureInner;
+  cell.innerHTML = `<svg class="k-moment k-moment--${kind}" viewBox="0 0 24 24">${inner}</svg><small>${kind}</small>`;
+  row.appendChild(cell);
+}
+playMoment('success');
+document.getElementById('replay-success').addEventListener('click', () => playMoment('success'));
+document.getElementById('replay-failure').addEventListener('click', () => playMoment('failure'));
+
+// --- 6: seal animation ---
+const sealDrawSvg = await fetch('./src/seal-draw.svg').then(r => r.text());
+const sealDrawInner = sealDrawSvg.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+const realSealSvg = await fetch('../identity/src/seal.svg').then(r => r.text());
+const realSealInner = realSealSvg.replace(/[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+function playSeal() {
+  const mount = document.getElementById('seal-mount');
+  mount.innerHTML = `<svg class="k-seal-draw" viewBox="0 0 200 200" style="width:100%;height:100%">${sealDrawInner}</svg>`;
+  setTimeout(() => {
+    mount.innerHTML = `<svg class="k-seal-crossfade-in" viewBox="0 0 200 200" style="width:100%;height:100%">${realSealInner}</svg>`;
+  }, 620);
+}
+document.getElementById('seal-play').addEventListener('click', playSeal);
+
+// --- 7: voice waveform, real AnalyserNode fed by an oscillator (no mic needed for the demo) ---
+let audioCtx, analyser, osc;
+function buildWaveform(mountId, reduced) {
+  const mount = document.getElementById(mountId);
+  const bars = reduced ? 1 : 24;
+  const wrap = document.createElement('div');
+  wrap.className = reduced ? 'k-waveform k-waveform--reduced' : 'k-waveform';
+  const barEls = [];
+  for (let i = 0; i < bars; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'k-waveform__bar';
+    wrap.appendChild(bar);
+    barEls.push(bar);
+  }
+  let label;
+  if (reduced) {
+    label = document.createElement('span');
+    label.className = 'k-waveform__level-text';
+    label.textContent = '0%';
+    wrap.appendChild(label);
+  }
+  mount.innerHTML = '';
+  mount.appendChild(wrap);
+  return { barEls, label, bars, reduced };
+}
+const live = buildWaveform('waveform-mount', false);
+const reducedDemo = buildWaveform('waveform-reduced-mount', true);
+
+function sampleInto(target) {
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  const step = Math.floor(data.length / target.bars) || 1;
+  target.barEls.forEach((bar, i) => {
+    const v = Math.max(0.06, data[i * step] / 255);
+    bar.style.setProperty('--k-bar-level', v);
+  });
+  if (target.label) {
+    const avg = Math.round((data.reduce((a, b) => a + b, 0) / data.length / 255) * 100);
+    target.label.textContent = avg + '%';
+  }
+}
+function loop() {
+  sampleInto(live);
+  requestAnimationFrame(loop);
+}
+document.getElementById('waveform-start').addEventListener('click', () => {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 128;
+  osc = audioCtx.createOscillator();
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.frequency.value = 2.2;
+  lfoGain.gain.value = 300;
+  lfo.connect(lfoGain).connect(osc.frequency);
+  osc.frequency.value = 320;
+  osc.type = 'sawtooth';
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.15;
+  osc.connect(gain).connect(analyser);
+  osc.start(); lfo.start();
+  requestAnimationFrame(loop);
+  setInterval(() => sampleInto(reducedDemo), 250);
+});
+
+// --- reduced-motion simulation toggle ---
+const rmToggle = document.getElementById('rmToggle');
+let rmOn = false;
+rmToggle.addEventListener('click', () => {
+  rmOn = !rmOn;
+  document.documentElement.classList.toggle('force-reduced-motion', rmOn);
+  rmToggle.textContent = 'Simulate prefers-reduced-motion: ' + (rmOn ? 'ON' : 'OFF');
+});
+const style = document.createElement('style');
+style.textContent = `
+  .force-reduced-motion .k-spinner--indeterminate,
+  .force-reduced-motion .k-skeleton::after,
+  .force-reduced-motion .k-pipeline-station[data-state="active"],
+  .force-reduced-motion .k-pipeline-thread[data-crossed="true"]::after,
+  .force-reduced-motion .k-sync-state--syncing path,
+  .force-reduced-motion .k-moment--success path,
+  .force-reduced-motion .k-moment--failure path,
+  .force-reduced-motion .k-seal-draw path,
+  .force-reduced-motion .k-seal-crossfade-in,
+  .force-reduced-motion .k-waveform__bar { animation: none !important; transition: none !important; }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

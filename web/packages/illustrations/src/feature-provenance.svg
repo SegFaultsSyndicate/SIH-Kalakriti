@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- The provenance seal with a thread trail running back to the originating loom — "provenance". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M196 80 A34 34 0 1 0 264 80 A34 34 0 1 0 196 80"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M208 80 A22 22 0 1 0 252 80 A22 22 0 1 0 208 80"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M218 80 L 226 88 L 242 70"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 100 Q150 130 110 150 Q80 165 60 190"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M35 165 L 35 210 L 90 210 L 90 165"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M48.75 165 L48.75 205"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M62.5 165 L62.5 205"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M76.25 165 L76.25 205"/>
+</svg>

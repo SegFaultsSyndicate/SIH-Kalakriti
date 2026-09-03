@@ -1,0 +1,1338 @@
+[
+  {
+    "package": "icons",
+    "name": "accessibility",
+    "file": "src/accessibility.svg",
+    "bytes": 976,
+    "blurb": "accessibility (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Accessibility from '@kalakriti/icons/src/accessibility.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "arrow-down",
+    "file": "src/arrow-down.svg",
+    "bytes": 520,
+    "blurb": "arrow-down (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ArrowDown from '@kalakriti/icons/src/arrow-down.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "arrow-left",
+    "file": "src/arrow-left.svg",
+    "bytes": 519,
+    "blurb": "arrow-left (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ArrowLeft from '@kalakriti/icons/src/arrow-left.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "arrow-right",
+    "file": "src/arrow-right.svg",
+    "bytes": 521,
+    "blurb": "arrow-right (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ArrowRight from '@kalakriti/icons/src/arrow-right.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "arrow-up",
+    "file": "src/arrow-up.svg",
+    "bytes": 517,
+    "blurb": "arrow-up (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ArrowUp from '@kalakriti/icons/src/arrow-up.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "bamboo",
+    "file": "src/bamboo.svg",
+    "bytes": 1028,
+    "blurb": "bamboo (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Bamboo from '@kalakriti/icons/src/bamboo.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "basketry",
+    "file": "src/basketry.svg",
+    "bytes": 834,
+    "blurb": "basketry (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Basketry from '@kalakriti/icons/src/basketry.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "bell",
+    "file": "src/bell.svg",
+    "bytes": 554,
+    "blurb": "bell (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Bell from '@kalakriti/icons/src/bell.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "block-printing",
+    "file": "src/block-printing.svg",
+    "bytes": 1033,
+    "blurb": "block-printing (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import BlockPrinting from '@kalakriti/icons/src/block-printing.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "calendar",
+    "file": "src/calendar.svg",
+    "bytes": 875,
+    "blurb": "calendar (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Calendar from '@kalakriti/icons/src/calendar.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "camera",
+    "file": "src/camera.svg",
+    "bytes": 593,
+    "blurb": "camera (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Camera from '@kalakriti/icons/src/camera.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "charkha-spinner",
+    "file": "src/charkha-spinner.svg",
+    "bytes": 2036,
+    "blurb": "Charkha (spinning wheel), reduced to wheel + radiating spokes + an offset spindle per motifs.md. Primary ML-processing / loading indicator. Rotation and the reduced-motion pulse are CSS in icons.css, not SMIL.",
+    "importLine": "import CharkhaSpinner from '@kalakriti/icons/src/charkha-spinner.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "check",
+    "file": "src/check.svg",
+    "bytes": 386,
+    "blurb": "check (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Check from '@kalakriti/icons/src/check.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "chevron-down",
+    "file": "src/chevron-down.svg",
+    "bytes": 393,
+    "blurb": "chevron-down (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ChevronDown from '@kalakriti/icons/src/chevron-down.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "chevron-left",
+    "file": "src/chevron-left.svg",
+    "bytes": 394,
+    "blurb": "chevron-left (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ChevronLeft from '@kalakriti/icons/src/chevron-left.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "chevron-right",
+    "file": "src/chevron-right.svg",
+    "bytes": 394,
+    "blurb": "chevron-right (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ChevronRight from '@kalakriti/icons/src/chevron-right.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "chevron-up",
+    "file": "src/chevron-up.svg",
+    "bytes": 392,
+    "blurb": "chevron-up (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ChevronUp from '@kalakriti/icons/src/chevron-up.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "clock",
+    "file": "src/clock.svg",
+    "bytes": 662,
+    "blurb": "clock (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Clock from '@kalakriti/icons/src/clock.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "close",
+    "file": "src/close.svg",
+    "bytes": 504,
+    "blurb": "close (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Close from '@kalakriti/icons/src/close.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "cluster",
+    "file": "src/cluster.svg",
+    "bytes": 1332,
+    "blurb": "cluster (domain icon). Tradition: kolam-derived node arrangement (rotational layout, not a drawn continuous line). Use: product-specific UI states.",
+    "importLine": "import Cluster from '@kalakriti/icons/src/cluster.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "collective-order",
+    "file": "src/collective-order.svg",
+    "bytes": 1051,
+    "blurb": "collective-order (domain icon). Tradition: none — abstract node convergence. Use: product-specific UI states.",
+    "importLine": "import CollectiveOrder from '@kalakriti/icons/src/collective-order.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "contrast",
+    "file": "src/contrast.svg",
+    "bytes": 467,
+    "blurb": "contrast (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Contrast from '@kalakriti/icons/src/contrast.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "download",
+    "file": "src/download.svg",
+    "bytes": 659,
+    "blurb": "download (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Download from '@kalakriti/icons/src/download.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "dying-craft",
+    "file": "src/dying-craft.svg",
+    "bytes": 973,
+    "blurb": "dying-craft (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import DyingCraft from '@kalakriti/icons/src/dying-craft.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "edit",
+    "file": "src/edit.svg",
+    "bytes": 536,
+    "blurb": "edit (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Edit from '@kalakriti/icons/src/edit.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "embroidery",
+    "file": "src/embroidery.svg",
+    "bytes": 793,
+    "blurb": "embroidery (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Embroidery from '@kalakriti/icons/src/embroidery.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "error",
+    "file": "src/error.svg",
+    "bytes": 673,
+    "blurb": "error (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Error from '@kalakriti/icons/src/error.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "external-link",
+    "file": "src/external-link.svg",
+    "bytes": 669,
+    "blurb": "external-link (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import ExternalLink from '@kalakriti/icons/src/external-link.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "eye",
+    "file": "src/eye.svg",
+    "bytes": 607,
+    "blurb": "eye (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Eye from '@kalakriti/icons/src/eye.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "eye-off",
+    "file": "src/eye-off.svg",
+    "bytes": 932,
+    "blurb": "eye-off (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import EyeOff from '@kalakriti/icons/src/eye-off.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "fair-price",
+    "file": "src/fair-price.svg",
+    "bytes": 1072,
+    "blurb": "fair-price (domain icon). Tradition: none — balance scale with a thread. Use: product-specific UI states.",
+    "importLine": "import FairPrice from '@kalakriti/icons/src/fair-price.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "filter",
+    "file": "src/filter.svg",
+    "bytes": 413,
+    "blurb": "filter (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Filter from '@kalakriti/icons/src/filter.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "gi-tagged",
+    "file": "src/gi-tagged.svg",
+    "bytes": 799,
+    "blurb": "gi-tagged (domain icon). Tradition: none — a map-pin/seal fusion, not drawn from a licensed tradition. Use: product-specific UI states.",
+    "importLine": "import GiTagged from '@kalakriti/icons/src/gi-tagged.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "handloom-verified",
+    "file": "src/handloom-verified.svg",
+    "bytes": 750,
+    "blurb": "handloom-verified (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import HandloomVerified from '@kalakriti/icons/src/handloom-verified.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "handmade-certified",
+    "file": "src/handmade-certified.svg",
+    "bytes": 750,
+    "blurb": "handmade-certified (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import HandmadeCertified from '@kalakriti/icons/src/handmade-certified.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "help",
+    "file": "src/help.svg",
+    "bytes": 766,
+    "blurb": "help (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Help from '@kalakriti/icons/src/help.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "home",
+    "file": "src/home.svg",
+    "bytes": 673,
+    "blurb": "home (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Home from '@kalakriti/icons/src/home.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "image",
+    "file": "src/image.svg",
+    "bytes": 808,
+    "blurb": "image (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Image from '@kalakriti/icons/src/image.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "income-statement",
+    "file": "src/income-statement.svg",
+    "bytes": 819,
+    "blurb": "income-statement (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import IncomeStatement from '@kalakriti/icons/src/income-statement.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "info",
+    "file": "src/info.svg",
+    "bytes": 706,
+    "blurb": "info (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Info from '@kalakriti/icons/src/info.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "jewellery",
+    "file": "src/jewellery.svg",
+    "bytes": 748,
+    "blurb": "jewellery (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Jewellery from '@kalakriti/icons/src/jewellery.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "language",
+    "file": "src/language.svg",
+    "bytes": 974,
+    "blurb": "language (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Language from '@kalakriti/icons/src/language.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "leather",
+    "file": "src/leather.svg",
+    "bytes": 1451,
+    "blurb": "leather (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Leather from '@kalakriti/icons/src/leather.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "link",
+    "file": "src/link.svg",
+    "bytes": 601,
+    "blurb": "link (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Link from '@kalakriti/icons/src/link.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "location",
+    "file": "src/location.svg",
+    "bytes": 593,
+    "blurb": "location (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Location from '@kalakriti/icons/src/location.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "lock",
+    "file": "src/lock.svg",
+    "bytes": 818,
+    "blurb": "lock (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Lock from '@kalakriti/icons/src/lock.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "made-to-order",
+    "file": "src/made-to-order.svg",
+    "bytes": 892,
+    "blurb": "made-to-order (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import MadeToOrder from '@kalakriti/icons/src/made-to-order.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "menu",
+    "file": "src/menu.svg",
+    "bytes": 630,
+    "blurb": "menu (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Menu from '@kalakriti/icons/src/menu.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "message",
+    "file": "src/message.svg",
+    "bytes": 419,
+    "blurb": "message (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Message from '@kalakriti/icons/src/message.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "metalwork",
+    "file": "src/metalwork.svg",
+    "bytes": 699,
+    "blurb": "metalwork (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Metalwork from '@kalakriti/icons/src/metalwork.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "microphone",
+    "file": "src/microphone.svg",
+    "bytes": 893,
+    "blurb": "microphone (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Microphone from '@kalakriti/icons/src/microphone.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "more-horizontal",
+    "file": "src/more-horizontal.svg",
+    "bytes": 532,
+    "blurb": "more-horizontal (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import MoreHorizontal from '@kalakriti/icons/src/more-horizontal.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "more-vertical",
+    "file": "src/more-vertical.svg",
+    "bytes": 530,
+    "blurb": "more-vertical (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import MoreVertical from '@kalakriti/icons/src/more-vertical.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "offline",
+    "file": "src/offline.svg",
+    "bytes": 986,
+    "blurb": "offline (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Offline from '@kalakriti/icons/src/offline.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "painting",
+    "file": "src/painting.svg",
+    "bytes": 614,
+    "blurb": "painting (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Painting from '@kalakriti/icons/src/painting.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "pause",
+    "file": "src/pause.svg",
+    "bytes": 727,
+    "blurb": "pause (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Pause from '@kalakriti/icons/src/pause.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "phone",
+    "file": "src/phone.svg",
+    "bytes": 487,
+    "blurb": "phone (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Phone from '@kalakriti/icons/src/phone.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "play",
+    "file": "src/play.svg",
+    "bytes": 391,
+    "blurb": "play (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Play from '@kalakriti/icons/src/play.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "plus",
+    "file": "src/plus.svg",
+    "bytes": 505,
+    "blurb": "plus (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Plus from '@kalakriti/icons/src/plus.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "pottery",
+    "file": "src/pottery.svg",
+    "bytes": 689,
+    "blurb": "pottery (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Pottery from '@kalakriti/icons/src/pottery.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "print",
+    "file": "src/print.svg",
+    "bytes": 757,
+    "blurb": "print (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Print from '@kalakriti/icons/src/print.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "process-video",
+    "file": "src/process-video.svg",
+    "bytes": 779,
+    "blurb": "process-video (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import ProcessVideo from '@kalakriti/icons/src/process-video.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "provenance",
+    "file": "src/provenance.svg",
+    "bytes": 965,
+    "blurb": "provenance (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import Provenance from '@kalakriti/icons/src/provenance.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "ready-stock",
+    "file": "src/ready-stock.svg",
+    "bytes": 805,
+    "blurb": "ready-stock (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import ReadyStock from '@kalakriti/icons/src/ready-stock.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "refresh",
+    "file": "src/refresh.svg",
+    "bytes": 432,
+    "blurb": "refresh (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Refresh from '@kalakriti/icons/src/refresh.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "search",
+    "file": "src/search.svg",
+    "bytes": 552,
+    "blurb": "search (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Search from '@kalakriti/icons/src/search.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "settings",
+    "file": "src/settings.svg",
+    "bytes": 668,
+    "blurb": "settings (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Settings from '@kalakriti/icons/src/settings.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "share",
+    "file": "src/share.svg",
+    "bytes": 1022,
+    "blurb": "share (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Share from '@kalakriti/icons/src/share.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "shg",
+    "file": "src/shg.svg",
+    "bytes": 1183,
+    "blurb": "shg (domain icon). Tradition: Warli-derived — a ring of reduced figures. Use: product-specific UI states.",
+    "importLine": "import Shg from '@kalakriti/icons/src/shg.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "sort",
+    "file": "src/sort.svg",
+    "bytes": 772,
+    "blurb": "sort (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Sort from '@kalakriti/icons/src/sort.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "speaker",
+    "file": "src/speaker.svg",
+    "bytes": 734,
+    "blurb": "speaker (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Speaker from '@kalakriti/icons/src/speaker.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "stone",
+    "file": "src/stone.svg",
+    "bytes": 689,
+    "blurb": "stone (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Stone from '@kalakriti/icons/src/stone.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "success",
+    "file": "src/success.svg",
+    "bytes": 550,
+    "blurb": "success (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Success from '@kalakriti/icons/src/success.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "sync",
+    "file": "src/sync.svg",
+    "bytes": 824,
+    "blurb": "sync (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Sync from '@kalakriti/icons/src/sync.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "text-size",
+    "file": "src/text-size.svg",
+    "bytes": 1053,
+    "blurb": "text-size (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import TextSize from '@kalakriti/icons/src/text-size.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "trash",
+    "file": "src/trash.svg",
+    "bytes": 912,
+    "blurb": "trash (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Trash from '@kalakriti/icons/src/trash.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "upload",
+    "file": "src/upload.svg",
+    "bytes": 654,
+    "blurb": "upload (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Upload from '@kalakriti/icons/src/upload.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "upload-zone",
+    "file": "src/upload-zone.svg",
+    "bytes": 2021,
+    "blurb": "Upload-zone drop area, one asset with four states (idle, drag-over, uploading, success, error) toggled by the k-upload-zone[data-state] CSS in icons.css, which shows exactly one <g> at a time. The dashed border is CSS (b",
+    "importLine": "import UploadZone from '@kalakriti/icons/src/upload-zone.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "user",
+    "file": "src/user.svg",
+    "bytes": 554,
+    "blurb": "user (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import User from '@kalakriti/icons/src/user.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "users",
+    "file": "src/users.svg",
+    "bytes": 871,
+    "blurb": "users (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Users from '@kalakriti/icons/src/users.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "verified-artisan",
+    "file": "src/verified-artisan.svg",
+    "bytes": 624,
+    "blurb": "verified-artisan (domain icon). Tradition: handloom structure, unless noted per-icon. Use: product-specific UI states.",
+    "importLine": "import VerifiedArtisan from '@kalakriti/icons/src/verified-artisan.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "video",
+    "file": "src/video.svg",
+    "bytes": 641,
+    "blurb": "video (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Video from '@kalakriti/icons/src/video.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "voice-search",
+    "file": "src/voice-search.svg",
+    "bytes": 751,
+    "blurb": "voice-search (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import VoiceSearch from '@kalakriti/icons/src/voice-search.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "volume",
+    "file": "src/volume.svg",
+    "bytes": 578,
+    "blurb": "volume (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Volume from '@kalakriti/icons/src/volume.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "warning",
+    "file": "src/warning.svg",
+    "bytes": 705,
+    "blurb": "warning (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Warning from '@kalakriti/icons/src/warning.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "weaving",
+    "file": "src/weaving.svg",
+    "bytes": 815,
+    "blurb": "weaving (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Weaving from '@kalakriti/icons/src/weaving.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "whatsapp",
+    "file": "src/whatsapp.svg",
+    "bytes": 625,
+    "blurb": "whatsapp (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import Whatsapp from '@kalakriti/icons/src/whatsapp.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "wifi-off",
+    "file": "src/wifi-off.svg",
+    "bytes": 1279,
+    "blurb": "wifi-off (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome.",
+    "importLine": "import WifiOff from '@kalakriti/icons/src/wifi-off.svg';"
+  },
+  {
+    "package": "icons",
+    "name": "woodwork",
+    "file": "src/woodwork.svg",
+    "bytes": 699,
+    "blurb": "woodwork (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters.",
+    "importLine": "import Woodwork from '@kalakriti/icons/src/woodwork.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "app-icon-maskable",
+    "file": "src/app-icon-maskable.svg",
+    "bytes": 770,
+    "blurb": "Kalakriti maskable PWA app icon, colour. Tradition: none — the logomark on a terracotta ground, drawn inside the safe zone so it survives an arbitrary (incl. circular) OS mask. Use: manifest.json \"maskable\" icon, 192/512",
+    "importLine": "import AppIconMaskable from '@kalakriti/identity/src/app-icon-maskable.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "app-icon-maskable-mono",
+    "file": "src/app-icon-maskable-mono.svg",
+    "bytes": 785,
+    "blurb": "Kalakriti maskable PWA app icon, monochrome. Tradition: none — the logomark on an ink ground, drawn inside the safe zone so it survives an arbitrary (incl. circular) OS mask. Use: manifest.json monochrome icon variant (A",
+    "importLine": "import AppIconMaskableMono from '@kalakriti/identity/src/app-icon-maskable-mono.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "apple-touch-icon",
+    "file": "src/apple-touch-icon.svg",
+    "bytes": 689,
+    "blurb": "Kalakriti Apple touch icon. Tradition: none — the logomark on a terracotta ground, full-bleed (iOS applies its own corner mask). Use: apple-touch-icon link tag. Platform-chrome asset: rendered by iOS outside any CSS cont",
+    "importLine": "import AppleTouchIcon from '@kalakriti/identity/src/apple-touch-icon.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "emblem-lockup",
+    "file": "src/emblem-lockup.svg",
+    "bytes": 13007,
+    "blurb": "Kalakriti emblem lockup: mark, hairline rule, and a reserved slot for the national emblem with the ministry name set beneath — the standard government-portal convention. This file deliberately does NOT draw the State Emb",
+    "importLine": "import EmblemLockup from '@kalakriti/identity/src/emblem-lockup.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "favicon",
+    "file": "src/favicon.svg",
+    "bytes": 642,
+    "blurb": "Kalakriti favicon. Tradition: none — the logomark, flattened for a browser tab. Use: <link rel=\"icon\">. Platform-chrome asset: rendered by the browser tab outside any CSS context, so it uses explicit brand hex (khadi-50/",
+    "importLine": "import Favicon from '@kalakriti/identity/src/favicon.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "heritage-crest-coarse",
+    "file": "src/heritage-crest-coarse.svg",
+    "bytes": 2903,
+    "blurb": "Kalakriti heritage crest, coarse density. Tradition: jaali — concentric pierced-lattice geometry with an open centre. Use: low-opacity watermark behind small areas, where the fine variant's detail would just turn to nois",
+    "importLine": "import HeritageCrestCoarse from '@kalakriti/identity/src/heritage-crest-coarse.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "heritage-crest-fine",
+    "file": "src/heritage-crest-fine.svg",
+    "bytes": 8991,
+    "blurb": "Kalakriti heritage crest, fine density. Tradition: jaali — concentric pierced-lattice geometry with an open centre. Use: low-opacity watermark behind large areas (page headers, the provenance certificate) where fine deta",
+    "importLine": "import HeritageCrestFine from '@kalakriti/identity/src/heritage-crest-fine.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "logomark-outline",
+    "file": "src/logomark-outline.svg",
+    "bytes": 528,
+    "blurb": "Kalakriti logomark, outline. Tradition: none — abstract warp/weft crossing, reading simultaneously as a woven cell, a loom, and a jaali aperture. Use: primary mark where a stroked treatment suits the surface (e.g. emboss",
+    "importLine": "import LogomarkOutline from '@kalakriti/identity/src/logomark-outline.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "logomark-reversed",
+    "file": "src/logomark-reversed.svg",
+    "bytes": 712,
+    "blurb": "Kalakriti logomark, reversed. Tradition: none — abstract warp/weft crossing, reading simultaneously as a woven cell, a loom, and a jaali aperture. Use: single-colour mark on a terracotta (k-accent-primary-bg token) fill,",
+    "importLine": "import LogomarkReversed from '@kalakriti/identity/src/logomark-reversed.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "logomark-solid",
+    "file": "src/logomark-solid.svg",
+    "bytes": 511,
+    "blurb": "Kalakriti logomark, solid. Tradition: none — abstract warp/weft crossing, reading simultaneously as a woven cell, a loom, and a jaali aperture. Use: primary mark, single colour via currentColor.",
+    "importLine": "import LogomarkSolid from '@kalakriti/identity/src/logomark-solid.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "seal",
+    "file": "src/seal.svg",
+    "bytes": 1331,
+    "blurb": "Kalakriti verified-provenance seal. Tradition: none — an abstract ring-and-mark device, not drawn from a licensed motif. Use: digital provenance UI (SealAnimation's draw-on target, the provenance certificate page). See s",
+    "importLine": "import Seal from '@kalakriti/identity/src/seal.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "seal-print",
+    "file": "src/seal-print.svg",
+    "bytes": 1160,
+    "blurb": "Kalakriti verified-provenance seal, print-optimised. Tradition: none — same abstract ring-and-mark device as seal.svg, redrawn with heavier strokes so it stays legible printed single-colour at ~15mm on uncoated paper. Us",
+    "importLine": "import SealPrint from '@kalakriti/identity/src/seal-print.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "wordmark-horizontal",
+    "file": "src/wordmark-horizontal.svg",
+    "bytes": 8807,
+    "blurb": "Kalakriti wordmark, horizontal lockup. Text converted to paths so it renders without the font loaded; Devanagari lockup (कलाकृति) set beside the Latin wordmark. Use: primary header lockup where width allows.",
+    "importLine": "import WordmarkHorizontal from '@kalakriti/identity/src/wordmark-horizontal.svg';"
+  },
+  {
+    "package": "identity",
+    "name": "wordmark-stacked",
+    "file": "src/wordmark-stacked.svg",
+    "bytes": 8812,
+    "blurb": "Kalakriti wordmark, stacked lockup. Text converted to paths so it renders without the font loaded; Devanagari lockup (कलाकृति) set beneath the Latin wordmark. Use: narrow layouts (mobile header, app icon adjacent text) w",
+    "importLine": "import WordmarkStacked from '@kalakriti/identity/src/wordmark-stacked.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-cart",
+    "file": "src/empty-cart.svg",
+    "bytes": 1606,
+    "blurb": "Basketry (interlaced cane). An empty market basket — \"empty cart\".",
+    "importLine": "import EmptyCart from '@kalakriti/illustrations/src/empty-cart.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-error",
+    "file": "src/empty-error.svg",
+    "bytes": 906,
+    "blurb": "Handloom structure. A dropped shuttle (the trapezoid) with tangled thread (accent) trailing from it — \"error\".",
+    "importLine": "import EmptyError from '@kalakriti/illustrations/src/empty-error.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-no-followers",
+    "file": "src/empty-no-followers.svg",
+    "bytes": 2198,
+    "blurb": "Warli figure-abstraction (economy of line, per motifs.md) at a loom — \"no followers yet\".",
+    "importLine": "import EmptyNoFollowers from '@kalakriti/illustrations/src/empty-no-followers.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-no-listings",
+    "file": "src/empty-no-listings.svg",
+    "bytes": 1337,
+    "blurb": "Handloom structure. Empty loom, warp strung and waiting, no weft yet — \"no listings yet\".",
+    "importLine": "import EmptyNoListings from '@kalakriti/illustrations/src/empty-no-listings.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-no-notifications",
+    "file": "src/empty-no-notifications.svg",
+    "bytes": 1909,
+    "blurb": "Charkha, used sparingly and abstractly per motifs.md — a still spinning wheel, no motion lines — \"no notifications\".",
+    "importLine": "import EmptyNoNotifications from '@kalakriti/illustrations/src/empty-no-notifications.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-no-orders",
+    "file": "src/empty-no-orders.svg",
+    "bytes": 1563,
+    "blurb": "Handloom structure (folded cloth) beside an open ledger — \"no orders yet\".",
+    "importLine": "import EmptyNoOrders from '@kalakriti/illustrations/src/empty-no-orders.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-no-search-results",
+    "file": "src/empty-no-search-results.svg",
+    "bytes": 1397,
+    "blurb": "Jaali. A pierced-lattice window looking onto empty space — \"no search results\".",
+    "importLine": "import EmptyNoSearchResults from '@kalakriti/illustrations/src/empty-no-search-results.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "empty-offline",
+    "file": "src/empty-offline.svg",
+    "bytes": 1089,
+    "blurb": "Handloom structure. A thread crossing a gap, one end unattached and curling loose (accent) — \"offline\".",
+    "importLine": "import EmptyOffline from '@kalakriti/illustrations/src/empty-offline.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "feature-collective-fulfilment",
+    "file": "src/feature-collective-fulfilment.svg",
+    "bytes": 3131,
+    "blurb": "Handloom structure. Many looms, one cloth emerging from their combined threads — \"collective fulfilment\".",
+    "importLine": "import FeatureCollectiveFulfilment from '@kalakriti/illustrations/src/feature-collective-fulfilment.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "feature-fair-pricing",
+    "file": "src/feature-fair-pricing.svg",
+    "bytes": 1991,
+    "blurb": "A balance scale weighing material, hours (accent thread) and skill (a small block) on one side — \"fair pricing\".",
+    "importLine": "import FeatureFairPricing from '@kalakriti/illustrations/src/feature-fair-pricing.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "feature-handloom-verification",
+    "file": "src/feature-handloom-verification.svg",
+    "bytes": 2769,
+    "blurb": "Handloom structure. Irregular hand-woven grid (left) versus a regular machine grid (right) — the handloom-detector explainer, also feature copy — \"handloom verification\".",
+    "importLine": "import FeatureHandloomVerification from '@kalakriti/illustrations/src/feature-handloom-verification.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "feature-provenance",
+    "file": "src/feature-provenance.svg",
+    "bytes": 1459,
+    "blurb": "The provenance seal with a thread trail running back to the originating loom — \"provenance\".",
+    "importLine": "import FeatureProvenance from '@kalakriti/illustrations/src/feature-provenance.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "fft-comparison",
+    "file": "src/fft-comparison.svg",
+    "bytes": 6019,
+    "blurb": "Handloom structure. Two fabric swatches (irregular hand-woven left, regular machine right) each above its frequency-spectrum bars: a broad, uneven spread for handwoven versus one sharp accent peak for machine-made. Bar h",
+    "importLine": "import FftComparison from '@kalakriti/illustrations/src/fft-comparison.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "hero-backdrop-tile",
+    "file": "src/hero-backdrop-tile.svg",
+    "bytes": 817,
+    "blurb": "Jaali diamond lattice (octagonal-star cell logic) with a weft hairline, one 60x60 tile. Tile with background-repeat: repeat across the hero width at 4-6% opacity via CSS — see illustrations.css — so it sits behind a phot",
+    "importLine": "import HeroBackdropTile from '@kalakriti/illustrations/src/hero-backdrop-tile.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "onboard-buyers-find-you",
+    "file": "src/onboard-buyers-find-you.svg",
+    "bytes": 2154,
+    "blurb": "Kolam-derived node network across an abstract outline of India — \"buyers find you across India\".",
+    "importLine": "import OnboardBuyersFindYou from '@kalakriti/illustrations/src/onboard-buyers-find-you.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "onboard-description",
+    "file": "src/onboard-description.svg",
+    "bytes": 2374,
+    "blurb": "Handloom structure. Warp threads (left) becoming text lines (right), joined by a drawn thread — \"we write the description\".",
+    "importLine": "import OnboardDescription from '@kalakriti/illustrations/src/onboard-description.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "onboard-paid-directly",
+    "file": "src/onboard-paid-directly.svg",
+    "bytes": 2658,
+    "blurb": "Warli figure-abstraction. A single direct thread from buyer to artisan, no intermediary node — \"you are paid directly\".",
+    "importLine": "import OnboardPaidDirectly from '@kalakriti/illustrations/src/onboard-paid-directly.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "onboard-photograph",
+    "file": "src/onboard-photograph.svg",
+    "bytes": 1746,
+    "blurb": "Handloom structure (folded cloth) with two hands and arms — reduced Warli line, no torso — holding a phone up to it — \"photograph your work\".",
+    "importLine": "import OnboardPhotograph from '@kalakriti/illustrations/src/onboard-photograph.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-blockprint-1-carve",
+    "file": "src/process-blockprint-1-carve.svg",
+    "bytes": 1038,
+    "blurb": "Process step 1 of 4 (block printing): carve. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessBlockprint-1Carve from '@kalakriti/illustrations/src/process-blockprint-1-carve.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-blockprint-2-dye",
+    "file": "src/process-blockprint-2-dye.svg",
+    "bytes": 1023,
+    "blurb": "Process step 2 of 4 (block printing): dye. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessBlockprint-2Dye from '@kalakriti/illustrations/src/process-blockprint-2-dye.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-blockprint-3-stamp",
+    "file": "src/process-blockprint-3-stamp.svg",
+    "bytes": 1440,
+    "blurb": "Process step 3 of 4 (block printing): stamp. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessBlockprint-3Stamp from '@kalakriti/illustrations/src/process-blockprint-3-stamp.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-blockprint-4-wash",
+    "file": "src/process-blockprint-4-wash.svg",
+    "bytes": 1529,
+    "blurb": "Process step 4 of 4 (block printing): wash. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessBlockprint-4Wash from '@kalakriti/illustrations/src/process-blockprint-4-wash.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-pottery-1-centre",
+    "file": "src/process-pottery-1-centre.svg",
+    "bytes": 859,
+    "blurb": "Process step 1 of 4 (pottery): centre. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessPottery-1Centre from '@kalakriti/illustrations/src/process-pottery-1-centre.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-pottery-2-throw",
+    "file": "src/process-pottery-2-throw.svg",
+    "bytes": 795,
+    "blurb": "Process step 2 of 4 (pottery): throw. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessPottery-2Throw from '@kalakriti/illustrations/src/process-pottery-2-throw.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-pottery-3-dry",
+    "file": "src/process-pottery-3-dry.svg",
+    "bytes": 1324,
+    "blurb": "Process step 3 of 4 (pottery): dry. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessPottery-3Dry from '@kalakriti/illustrations/src/process-pottery-3-dry.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-pottery-4-fire",
+    "file": "src/process-pottery-4-fire.svg",
+    "bytes": 1143,
+    "blurb": "Process step 4 of 4 (pottery): fire. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessPottery-4Fire from '@kalakriti/illustrations/src/process-pottery-4-fire.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-weaving-1-warp",
+    "file": "src/process-weaving-1-warp.svg",
+    "bytes": 1053,
+    "blurb": "Process step 1 of 4 (weaving): warp. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessWeaving-1Warp from '@kalakriti/illustrations/src/process-weaving-1-warp.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-weaving-2-weft",
+    "file": "src/process-weaving-2-weft.svg",
+    "bytes": 958,
+    "blurb": "Process step 2 of 4 (weaving): weft. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessWeaving-2Weft from '@kalakriti/illustrations/src/process-weaving-2-weft.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-weaving-3-beat",
+    "file": "src/process-weaving-3-beat.svg",
+    "bytes": 1158,
+    "blurb": "Process step 3 of 4 (weaving): beat. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessWeaving-3Beat from '@kalakriti/illustrations/src/process-weaving-3-beat.svg';"
+  },
+  {
+    "package": "illustrations",
+    "name": "process-weaving-4-finish",
+    "file": "src/process-weaving-4-finish.svg",
+    "bytes": 1164,
+    "blurb": "Process step 4 of 4 (weaving): finish. Step number shown as a dot count, not a numeral.",
+    "importLine": "import ProcessWeaving-4Finish from '@kalakriti/illustrations/src/process-weaving-4-finish.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "failure-thread",
+    "file": "src/failure-thread.svg",
+    "bytes": 822,
+    "blurb": "Failure moment: a broken thread — one continuous line that snaps and the two ends drop out of alignment, brief. Static by default; motion.css adds a quick separate-and-settle on the two ends, under the 400ms UI-feedback ",
+    "importLine": "import FailureThread from '@kalakriti/motion/src/failure-thread.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "pipeline-attributes",
+    "file": "src/pipeline-attributes.svg",
+    "bytes": 573,
+    "blurb": "ML pipeline, stage 2: attributes. A tag with a punch hole — the material/technique tagging step.",
+    "importLine": "import PipelineAttributes from '@kalakriti/motion/src/pipeline-attributes.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "pipeline-describe",
+    "file": "src/pipeline-describe.svg",
+    "bytes": 616,
+    "blurb": "ML pipeline, stage 3: describe. Text lines forming — the description-generation step.",
+    "importLine": "import PipelineDescribe from '@kalakriti/motion/src/pipeline-describe.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "pipeline-enhance",
+    "file": "src/pipeline-enhance.svg",
+    "bytes": 1022,
+    "blurb": "ML pipeline, stage 1: enhance. A sparkle/wand — the image-enhancement step. State (pending/active/complete/failed) is drawn by motion.css around this glyph, not inside it.",
+    "importLine": "import PipelineEnhance from '@kalakriti/motion/src/pipeline-enhance.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "pipeline-translate",
+    "file": "src/pipeline-translate.svg",
+    "bytes": 602,
+    "blurb": "ML pipeline, stage 4: translate. Two overlapping speech bubbles — the multi-language translation step.",
+    "importLine": "import PipelineTranslate from '@kalakriti/motion/src/pipeline-translate.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "seal-draw",
+    "file": "src/seal-draw.svg",
+    "bytes": 1361,
+    "blurb": "Seal draw-on outline. Stroke-only reconstruction of identity/seal.svg's ring, radial ticks and warp/weft cross, for the one-time \"sealing\" animation (SealAnimation.svelte): each path's stroke-dashoffset animates from its",
+    "importLine": "import SealDraw from '@kalakriti/motion/src/seal-draw.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "sync-pending",
+    "file": "src/sync-pending.svg",
+    "bytes": 471,
+    "blurb": "Sync state: pending. A dotted, unfilled ring — queued but not yet moving. Distinct from the charkha spinner (Batch 4) so \"queued\" never reads as \"in progress\".",
+    "importLine": "import SyncPending from '@kalakriti/motion/src/sync-pending.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "sync-synced",
+    "file": "src/sync-synced.svg",
+    "bytes": 596,
+    "blurb": "Sync state: synced. A completed stitch — two short crossing strokes, static. Also reused as the general \"success\" moment (see motion.css) rather than drawing a second near-identical mark.",
+    "importLine": "import SyncSynced from '@kalakriti/motion/src/sync-synced.svg';"
+  },
+  {
+    "package": "motion",
+    "name": "sync-syncing",
+    "file": "src/sync-syncing.svg",
+    "bytes": 541,
+    "blurb": "Sync state: syncing. A thread being drawn — motion.css animates this path's stroke-dashoffset from full to zero (the \"thread drawing itself in\") rather than rotating a spinner, so syncing reads distinctly from the charkh",
+    "importLine": "import SyncSyncing from '@kalakriti/motion/src/sync-syncing.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "blockprint-band-32",
+    "file": "src/blockprint-band-32.svg",
+    "bytes": 1057,
+    "blurb": "Block print (Ajrakh bordered band). Richer layered band for page headers and the provenance page, tileable along X at 32x32: outer rail, resist tick row, inner rail, rosette course. Fill-led; the rosette centres and the ",
+    "importLine": "import BlockprintBand-32 from '@kalakriti/ornament/src/blockprint-band-32.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "blockprint-running-20",
+    "file": "src/blockprint-running-20.svg",
+    "bytes": 657,
+    "blurb": "Block print (Ajrakh/Bagru running border). Simple repeating band for card edges and section rules, tileable along X at 20x20. Fill-led, with resist-dye negative space cut by fill-rule evenodd. The separator tick is split",
+    "importLine": "import BlockprintRunning-20 from '@kalakriti/ornament/src/blockprint-running-20.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "card-edge",
+    "file": "src/card-edge.svg",
+    "bytes": 1369,
+    "blurb": "Block print (Bagru corner stamp and running border). 9-slice card frame, 48x48 with a 12px (25%) slice: corner stamps, an unbroken inner rail, and a repeating diamond course in the middle slices. Gives a card a printed e",
+    "importLine": "import CardEdge from '@kalakriti/ornament/src/card-edge.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-hex-16",
+    "file": "src/jaali-hex-16.svg",
+    "bytes": 639,
+    "blurb": "Jaali (hexagonal lattice), fine density. Horizontal section divider, seamlessly tileable along X at 14x16. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-24% o",
+    "importLine": "import JaaliHex-16 from '@kalakriti/ornament/src/jaali-hex-16.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-hex-24",
+    "file": "src/jaali-hex-24.svg",
+    "bytes": 694,
+    "blurb": "Jaali (hexagonal lattice), medium density. Horizontal section divider, seamlessly tileable along X at 21x24. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-24%",
+    "importLine": "import JaaliHex-24 from '@kalakriti/ornament/src/jaali-hex-24.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-hex-32",
+    "file": "src/jaali-hex-32.svg",
+    "bytes": 761,
+    "blurb": "Jaali (hexagonal lattice), bold density. Horizontal section divider, seamlessly tileable along X at 28x32. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-24% o",
+    "importLine": "import JaaliHex-32 from '@kalakriti/ornament/src/jaali-hex-32.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-interlace-16",
+    "file": "src/jaali-interlace-16.svg",
+    "bytes": 613,
+    "blurb": "Jaali (interlaced-square lattice), fine density. Horizontal section divider, seamlessly tileable along X at 16x16. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at ",
+    "importLine": "import JaaliInterlace-16 from '@kalakriti/ornament/src/jaali-interlace-16.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-interlace-24",
+    "file": "src/jaali-interlace-24.svg",
+    "bytes": 658,
+    "blurb": "Jaali (interlaced-square lattice), medium density. Horizontal section divider, seamlessly tileable along X at 24x24. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended a",
+    "importLine": "import JaaliInterlace-24 from '@kalakriti/ornament/src/jaali-interlace-24.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-interlace-32",
+    "file": "src/jaali-interlace-32.svg",
+    "bytes": 700,
+    "blurb": "Jaali (interlaced-square lattice), bold density. Horizontal section divider, seamlessly tileable along X at 32x32. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at ",
+    "importLine": "import JaaliInterlace-32 from '@kalakriti/ornament/src/jaali-interlace-32.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-octstar-16",
+    "file": "src/jaali-octstar-16.svg",
+    "bytes": 642,
+    "blurb": "Jaali (octagonal-star lattice), fine density. Horizontal section divider, seamlessly tileable along X at 16x16. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-",
+    "importLine": "import JaaliOctstar-16 from '@kalakriti/ornament/src/jaali-octstar-16.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-octstar-24",
+    "file": "src/jaali-octstar-24.svg",
+    "bytes": 683,
+    "blurb": "Jaali (octagonal-star lattice), medium density. Horizontal section divider, seamlessly tileable along X at 24x24. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 1",
+    "importLine": "import JaaliOctstar-24 from '@kalakriti/ornament/src/jaali-octstar-24.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "jaali-octstar-32",
+    "file": "src/jaali-octstar-32.svg",
+    "bytes": 795,
+    "blurb": "Jaali (octagonal-star lattice), bold density. Horizontal section divider, seamlessly tileable along X at 32x32. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-",
+    "importLine": "import JaaliOctstar-32 from '@kalakriti/ornament/src/jaali-octstar-32.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "kolam-corner",
+    "file": "src/kolam-corner.svg",
+    "bytes": 1171,
+    "blurb": "Kolam (sikku) L-corner ornament for framing featured content. One continuous closed line looping around a five-dot L on the 24px dot grid; the line encircles every dot and touches none, which is the tradition’s defining ",
+    "importLine": "import KolamCorner from '@kalakriti/ornament/src/kolam-corner.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "patterns",
+    "file": "src/patterns.svg",
+    "bytes": 5805,
+    "blurb": "Kalakriti ornament patterns, Batch 3. Inline this whole file once per document (it renders nothing on its own), then reference a pattern with fill=\"url(#k-jaali-hex-24)\". Every pattern inherits currentColor from the elem",
+    "importLine": "import Patterns from '@kalakriti/ornament/src/patterns.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "rule-double-woven-8",
+    "file": "src/rule-double-woven-8.svg",
+    "bytes": 593,
+    "blurb": "Handloom structure. Double rule with woven-thread infill, tileable along X at 8x8: two rules with a warp thread between them and a weft thread broken where the warp passes over. Degrades to a plain 1px line via the borde",
+    "importLine": "import RuleDoubleWoven-8 from '@kalakriti/ornament/src/rule-double-woven-8.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "rule-knot",
+    "file": "src/rule-knot.svg",
+    "bytes": 590,
+    "blurb": "Handloom structure (warp/weft crossing), reduced from the logomark. Centred motif for the interrupted hairline rule: the warp thread breaks with clear air either side of the weft passing over it, so the knot reads as wea",
+    "importLine": "import RuleKnot from '@kalakriti/ornament/src/rule-knot.svg';"
+  },
+  {
+    "package": "ornament",
+    "name": "weft-texture-12",
+    "file": "src/weft-texture-12.svg",
+    "bytes": 545,
+    "blurb": "Handloom structure (plain weave). Page background texture, tileable on both axes at 12x12. Only the over-thread is drawn at each crossing, so the weave reads through the gaps. Intended at 3-6% opacity behind content.",
+    "importLine": "import WeftTexture-12 from '@kalakriti/ornament/src/weft-texture-12.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "paper-grain",
+    "file": "src/paper-grain.svg",
+    "bytes": 884,
+    "blurb": "Paper grain, feTurbulence-based. Tuned low (baseFrequency 0.9, 2 octaves) so it reads as handmade paper texture, not visual noise. Tile at 200x200; recommended opacity 4-7%. Verify on a throttled low-end profile before s",
+    "importLine": "import PaperGrain from '@kalakriti/patterns/src/paper-grain.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-ajrakh",
+    "file": "src/pattern-ajrakh.svg",
+    "bytes": 1515,
+    "blurb": "Block print (Ajrakh). Dense tessellated eight-pointed star, resist-cut centre, fill-led with evenodd negative space. Corner stars combine at the tile edge into one star per corner, in the Ajrakh layered-stamp idiom. Reco",
+    "importLine": "import PatternAjrakh from '@kalakriti/patterns/src/pattern-ajrakh.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-bagru",
+    "file": "src/pattern-bagru.svg",
+    "bytes": 1665,
+    "blurb": "Block print (Bagru). Medium floral-geometric repeat: a four-petal rosette at each grid point, joined by hairline sprigs, softer and more floral than Ajrakh hard star geometry, per motifs.md per-tradition distinction. Rec",
+    "importLine": "import PatternBagru from '@kalakriti/patterns/src/pattern-bagru.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-dabu",
+    "file": "src/pattern-dabu.svg",
+    "bytes": 628,
+    "blurb": "Block print (Dabu, mud-resist). Fine scattered resist dots, deliberately irregular spacing within one repeat unit rather than a perfect grid, per Dabu hand-applied resist paste. Recommended opacity: 8-14%, fine surfaces ",
+    "importLine": "import PatternDabu from '@kalakriti/patterns/src/pattern-dabu.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-jaali-fill",
+    "file": "src/pattern-jaali-fill.svg",
+    "bytes": 807,
+    "blurb": "Jaali. Solid ground with diamond apertures cut by fill-rule evenodd, a filled panel with holes, closer to real pierced stone than Batch 3 stroke-drawn jaali dividers (a different job: horizontal bands, not a 2D panel fil",
+    "importLine": "import PatternJaaliFill from '@kalakriti/patterns/src/pattern-jaali-fill.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-kolam-dotgrid",
+    "file": "src/pattern-kolam-dotgrid.svg",
+    "bytes": 493,
+    "blurb": "Kolam. The dot grid a kolam line is drawn around (motifs.md), with no line — the substrate pattern for large surfaces, at 24px pitch matching stroke-geometry-spec.md kolam grid unit. Recommended opacity: 4-6%, large surf",
+    "importLine": "import PatternKolamDotgrid from '@kalakriti/patterns/src/pattern-kolam-dotgrid.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "pattern-warp-weft",
+    "file": "src/pattern-warp-weft.svg",
+    "bytes": 710,
+    "blurb": "Handloom structure (plain weave), the workhorse pattern. Panel/page-background fill version of the over/under weave, the same construction as Batch 3 weft-texture-12.svg divider tile, delivered here as its own Batch 6 as",
+    "importLine": "import PatternWarpWeft from '@kalakriti/patterns/src/pattern-warp-weft.svg';"
+  },
+  {
+    "package": "patterns",
+    "name": "qr-frame",
+    "file": "src/qr-frame.svg",
+    "bytes": 1668,
+    "blurb": "Jaali. Decorative surround for the provenance QR. The QR itself is NOT drawn here — the consuming page places its own QR image inside the 172.8x172.8 clear inner square (out of a 240x240 frame), which reserves 14% of the",
+    "importLine": "import QrFrame from '@kalakriti/patterns/src/qr-frame.svg';"
+  }
+]

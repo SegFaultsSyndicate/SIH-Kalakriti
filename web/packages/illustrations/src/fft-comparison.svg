@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure. Two fabric swatches (irregular hand-woven left, regular machine right) each above its frequency-spectrum bars: a broad, uneven spread for handwoven versus one sharp accent peak for machine-made. Bar heights are placeholder data — coordinate with the ML track to drop in the real FFT output at the same 10-bar layout. -->
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M33 30 L187 30 A3 3 0 0 1 190 33 L190 117 A3 3 0 0 1 187 120 L33 120 A3 3 0 0 1 30 117 L30 33 A3 3 0 0 1 33 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M50 34 L50 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M72.5 34 L67.5 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M87.5 34 L92.5 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M110 34 L110 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M132.5 34 L127.5 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M147.5 34 L152.5 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M170 34 L170 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M35 260 L35 227"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M52 260 L52 199.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M69 260 L69 216"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M86 260 L86 183"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M103 260 L103 205"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M120 260 L120 188.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M137 260 L137 221.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M154 260 L154 194"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M171 260 L171 210.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M188 260 L188 227"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M30 260 L200 260"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M293 30 L447 30 A3 3 0 0 1 450 33 L450 117 A3 3 0 0 1 447 120 L293 120 A3 3 0 0 1 290 117 L290 33 A3 3 0 0 1 293 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M310 34 L310 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M330 34 L330 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M350 34 L350 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M370 34 L370 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M390 34 L390 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M410 34 L410 116"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M430 34 L430 116"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M295 260 L295 251.2"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M312 260 L312 249"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M329 260 L329 246.8"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M346 260 L346 161"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M363 260 L363 155.5"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M380 260 L380 243.5"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M397 260 L397 249"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M414 260 L414 251.2"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M431 260 L431 253.4"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M448 260 L448 254.5"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M290 260 L460 260"/>
+  <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M245 30 L245 260"/>
+</svg>

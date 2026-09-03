@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure. Warp threads (left) becoming text lines (right), joined by a drawn thread — "we write the description". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M53 60 L137 60 A3 3 0 0 1 140 63 L140 177 A3 3 0 0 1 137 180 L53 180 A3 3 0 0 1 50 177 L50 63 A3 3 0 0 1 53 60 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 80 L130 80"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 95 L130 95"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 110 L130 110"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 125 L130 125"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 140 L130 140"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M60 155 L130 155"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M150 120 Q180 90 210 100 Q235 108 250 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M193 60 L277 60 A3 3 0 0 1 280 63 L280 167 A3 3 0 0 1 277 170 L193 170 A3 3 0 0 1 190 167 L190 63 A3 3 0 0 1 193 60 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 78 L270 78"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 96 L270 96"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 114 L270 114"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 132 L270 132"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 150 L270 150"/>
+</svg>

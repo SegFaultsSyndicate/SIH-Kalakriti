@@ -1,0 +1,13 @@
+{
+  "name": "@kalakriti/offline",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
+  "dependencies": {
+    "dexie": "^4.0.0",
+    "svelte": "^5.0.0"
+  }
+}

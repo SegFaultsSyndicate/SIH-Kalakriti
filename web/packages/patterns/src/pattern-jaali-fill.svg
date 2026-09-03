@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Jaali. Solid ground with diamond apertures cut by fill-rule evenodd, a filled panel with holes, closer to real pierced stone than Batch 3 stroke-drawn jaali dividers (a different job: horizontal bands, not a 2D panel fill). Hard corners per stroke-geometry-spec.md. Recommended opacity: 4-8%, panels and cards (this is the jaali lattice fill the brief asks for). -->
+  <path fill="currentColor" fill-rule="evenodd" stroke="currentColor" stroke-width="0.75" stroke-linejoin="miter" d="M0 0 H28 V28 H0 Z M0 -8 L 8 0 L 0 8 L -8 0 Z M28 -8 L 36 0 L 28 8 L 20 0 Z M0 20 L 8 28 L 0 36 L -8 28 Z M28 20 L 36 28 L 28 36 L 20 28 Z M14 6 L 22 14 L 14 22 L 6 14 Z"/>
+</svg>

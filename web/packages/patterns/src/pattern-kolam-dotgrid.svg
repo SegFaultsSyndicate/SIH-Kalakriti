@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Kolam. The dot grid a kolam line is drawn around (motifs.md), with no line — the substrate pattern for large surfaces, at 24px pitch matching stroke-geometry-spec.md kolam grid unit. Recommended opacity: 4-6%, large surfaces (page backgrounds). -->
+  <path fill="currentColor" d="M11.1 12 A0.9 0.9 0 1 0 12.9 12 A0.9 0.9 0 1 0 11.1 12 Z"/>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Seal draw-on outline. Stroke-only reconstruction of identity/seal.svg's ring, radial ticks and warp/weft cross, for the one-time "sealing" animation (SealAnimation.svelte): each path's stroke-dashoffset animates from its own length to 0 over 400ms (the UI-feedback cap), then the component crossfades to the real filled seal.svg and this outline is removed from the DOM. Not intended for standalone display — it is a transient animation frame, not the seal icon. -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="3" d="M8 100 A92 92 0 1 0 192 100 A92 92 0 1 0 8 100"/>
+    <path stroke-width="2" d="M188 100 L198 100 M181.3 133.68 L190.54 137.5 M162.23 162.23 L169.3 169.3 M133.68 181.3 L137.5 190.54 M100 188 L100 198 M66.32 181.3 L62.5 190.54 M37.77 162.23 L30.7 169.3 M18.7 133.68 L9.46 137.5 M12 100 L2 100 M18.7 66.32 L9.46 62.5 M37.77 37.77 L30.7 30.7 M66.32 18.7 L62.5 9.46 M100 12 L100 2 M133.68 18.7 L137.5 9.46 M162.23 37.77 L169.3 30.7 M181.3 66.32 L190.54 62.5"/>
+    <path stroke-width="6" d="M33.5 100 L166.5 100"/>
+    <path stroke-width="6" d="M100 33.5 L100 84"/>
+    <path stroke-width="6" d="M100 116 L100 166.5"/>
+  </g>
+</svg>

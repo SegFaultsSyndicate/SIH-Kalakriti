@@ -1,0 +1,123 @@
+/*
+ * Kalakriti icons — Batch 4
+ * ---------------------------------------------------------------
+ * Sizing, stroke-weight variants, the charkha spinner's animation, and the
+ * upload-zone's state visibility. Everything here is transform/opacity only
+ * — nothing animates a layout property — and every animation has a
+ * prefers-reduced-motion variant, per the batch brief.
+ * ---------------------------------------------------------------
+ */
+
+.k-icon {
+  width: 1.25rem;   /* 20px, matches the default stroke-width-1.5 icon */
+  height: 1.25rem;
+  flex: none;
+  vertical-align: -0.2em;
+}
+
+/* Weight is a stroke-width swap on the same path, never a redrawn icon —
+   stroke-geometry-spec.md. Apply to an ancestor or the icon itself. */
+.k-icon--dense svg,
+.k-icon--dense.k-icon { --k-icon-stroke: 1.25; }
+.k-icon--bold svg,
+.k-icon--bold.k-icon { --k-icon-stroke: 2; }
+.k-icon [stroke="currentColor"],
+.k-icon svg [stroke="currentColor"] {
+  stroke-width: var(--k-icon-stroke, 1.5);
+}
+
+/* ---- charkha spinner ---------------------------------------------------- */
+
+.k-spinner {
+  width: 2rem;
+  height: 2rem;
+  color: var(--k-accent-primary-text, currentColor);
+}
+
+/* Indeterminate: the whole wheel rotates. */
+.k-spinner--indeterminate {
+  animation: k-spin 1.1s linear infinite;
+  transform-origin: 11px 12px;   /* the wheel's own centre, not the viewBox centre */
+}
+
+@keyframes k-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Determinate: no rotation. Progress is thread winding onto the spindle,
+   driven by --k-spin-progress (0-1) from real backend state — never a timer.
+   The spindle circle's stroke-dasharray equals its own circumference
+   (2 * pi * 2.2 ≈ 13.82); dashoffset counts the thread down as it winds on. */
+.k-spinner--determinate circle:last-of-type {
+  stroke-dasharray: 13.82;
+  stroke-dashoffset: calc(13.82 * (1 - var(--k-spin-progress, 0)));
+  transition: stroke-dashoffset 0.2s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-spinner--indeterminate {
+    animation: k-spin-pulse 1.6s ease-in-out infinite;
+    transform: none;
+  }
+  @keyframes k-spin-pulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+}
+
+/* ---- upload zone --------------------------------------------------------- */
+
+/*
+ * <UploadZone state="idle|drag|uploading|success|error" /> toggles this
+ * attribute on the host; the five <g data-upload-state> groups in
+ * upload-zone.svg are drawn once and shown one at a time here, rather than
+ * swapped in JS, so there is exactly one asset to keep in sync.
+ */
+.k-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 2px dashed var(--k-border-interactive);
+  border-radius: var(--k-radius-md, 4px);
+  color: var(--k-text-secondary);
+  padding: 2rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.k-upload-zone__label { color: var(--k-text-primary); font-size: 0.85rem; text-align: center; }
+.k-upload-zone svg { width: 2.5rem; height: 2.5rem; }
+.k-upload-zone svg > g { display: none; }
+.k-upload-zone[data-state="idle"] svg > [data-upload-state="idle"] { display: block; }
+.k-upload-zone[data-state="drag"] svg > [data-upload-state="drag"] { display: block; }
+.k-upload-zone[data-state="uploading"] svg > [data-upload-state="uploading"] { display: block; }
+.k-upload-zone[data-state="success"] svg > [data-upload-state="success"] { display: block; }
+.k-upload-zone[data-state="error"] svg > [data-upload-state="error"] { display: block; }
+
+.k-upload-zone[data-state="drag"] {
+  border-color: var(--k-accent-primary-text);
+  border-style: solid;
+  color: var(--k-accent-primary-text);
+}
+.k-upload-zone[data-state="uploading"] {
+  border-color: var(--k-accent-secondary);
+  color: var(--k-accent-secondary);
+}
+.k-upload-zone[data-state="uploading"] svg > [data-upload-state="uploading"] {
+  animation: k-spin 1.1s linear infinite;
+  transform-origin: 12px 11px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-upload-zone[data-state="uploading"] svg > [data-upload-state="uploading"] {
+    animation: k-spin-pulse 1.6s ease-in-out infinite;
+    transform: none;
+  }
+}
+.k-upload-zone[data-state="success"] {
+  border-color: var(--k-accent-success);
+  color: var(--k-accent-success);
+}
+.k-upload-zone[data-state="error"] {
+  border-color: var(--k-accent-danger);
+  color: var(--k-accent-danger);
+}

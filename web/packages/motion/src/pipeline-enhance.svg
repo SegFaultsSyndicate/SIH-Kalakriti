@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- ML pipeline, stage 1: enhance. A sparkle/wand — the image-enhancement step. State (pending/active/complete/failed) is drawn by motion.css around this glyph, not inside it. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L12 7"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 17 L12 21"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4.5 8 L7.5 9.8"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.5 14.2 L19.5 16"/><path fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" d="M9 15 L 10.4 11.4 L 14 10 L 10.4 8.6 L 9 5 L 7.6 8.6 L 4 10 L 7.6 11.4 Z"/>
+</svg>

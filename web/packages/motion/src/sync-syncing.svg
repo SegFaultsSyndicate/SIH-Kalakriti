@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Sync state: syncing. A thread being drawn — motion.css animates this path's stroke-dashoffset from full to zero (the "thread drawing itself in") rather than rotating a spinner, so syncing reads distinctly from the charkha loading indicator. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M4 16 Q9 8 12 12 Q15 16 20 8"/>
+</svg>

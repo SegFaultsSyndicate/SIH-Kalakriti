@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure. Empty loom, warp strung and waiting, no weft yet — "no listings yet". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 55 L 70 185 L 250 185 L 250 55"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M92.5 55 L92.5 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M115 55 L115 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M137.5 55 L137.5 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 55 L160 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M182.5 55 L182.5 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M205 55 L205 181"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M227.5 55 L227.5 181"/>
+</svg>

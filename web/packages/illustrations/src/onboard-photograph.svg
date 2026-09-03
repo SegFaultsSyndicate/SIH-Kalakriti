@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure (folded cloth) with two hands and arms — reduced Warli line, no torso — holding a phone up to it — "photograph your work". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M58 90 L152 90 A3 3 0 0 1 155 93 L155 157 A3 3 0 0 1 152 160 L58 160 A3 3 0 0 1 55 157 L55 93 A3 3 0 0 1 58 90 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M65 100 L65 150 M75 100 L75 150 M85 100 L85 150 M95 100 L95 150"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M140 130 L165 110 L150 100"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M140 130 L175 145 L160 155"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M156 85 L199 85 A6 6 0 0 1 205 91 L205 159 A6 6 0 0 1 199 165 L156 165 A6 6 0 0 1 150 159 L150 91 A6 6 0 0 1 156 85 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M166 148 A11 11 0 1 0 188 148 A11 11 0 1 0 166 148"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M172 148 A5 5 0 1 0 182 148 A5 5 0 1 0 172 148"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M174 100 A3 3 0 1 0 180 100 A3 3 0 1 0 174 100 Z"/>
+</svg>

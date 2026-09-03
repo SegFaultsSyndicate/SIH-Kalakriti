@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Failure moment: a broken thread — one continuous line that snaps and the two ends drop out of alignment, brief. Static by default; motion.css adds a quick separate-and-settle on the two ends, under the 400ms UI-feedback cap. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 7 Q8 9 9.5 11"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.5 13 Q17 15.5 20 17"/><path fill="currentColor" d="M8.2 11 A1.3 1.3 0 1 0 10.8 11 A1.3 1.3 0 1 0 8.2 11 Z"/><path fill="currentColor" d="M13.2 13 A1.3 1.3 0 1 0 15.8 13 A1.3 1.3 0 1 0 13.2 13 Z"/>
+</svg>

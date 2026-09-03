@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Jaali (octagonal-star lattice), bold density. Horizontal section divider, seamlessly tileable along X at 32x32. Negative space is the subject; hard corners per stroke-geometry-spec. Inherits currentColor, intended at 12-24% opacity against the section text colour. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M9.37 1.25 L 22.63 1.25 L 32 9.89 L 32 22.11 L 22.63 30.75 L 9.37 30.75 L 0 22.11 L 0 9.89 Z M12.95 9.22 L 19.05 9.22 L 23.36 13.19 L 23.36 18.81 L 19.05 22.79 L 12.95 22.79 L 8.64 18.81 L 8.64 13.19 Z M16 12.76 L 19.25 16 L 16 19.25 L 12.76 16 Z"/>
+  </g>
+</svg>

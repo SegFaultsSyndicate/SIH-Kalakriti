@@ -1,0 +1,193 @@
+/*
+ * Kalakriti design tokens — palette.css
+ * ---------------------------------------------------------------
+ * Every colour is authored in OKLCH for perceptually even scales and
+ * shipped as an sRGB hex value, because CSS custom properties cannot
+ * carry a functional fallback the way `color: oklch(...) / #hex` can
+ * on a plain property. The OKLCH triple used to derive each hex is
+ * recorded in the inline comment so the scale can be regenerated or
+ * extended without re-deriving it from the rendered colour.
+ *
+ * Each family is named for the dye or material it comes from. This
+ * is documentation the presentation track will reuse — do not rename
+ * without updating motifs.md.
+ * ---------------------------------------------------------------
+ */
+
+:root {
+
+  /* --k-khadi-* — undyed handspun cotton. Warm off-white base, used
+     for page and card surfaces. Hue held constant across the scale;
+     only lightness and a whisper of chroma move, the way raw cotton
+     deepens slightly with more twist and less bleaching. */
+  --k-khadi-50: #FCFAF6;  /* oklch(98.5% 0.006 78) — lightest — page background */
+  --k-khadi-100: #F5F0E8;  /* oklch(95.7% 0.012 78) — card / raised surface */
+  --k-khadi-150: #EEE6DA;  /* oklch(92.8% 0.019 78) — sunken surface, subtle divider fill */
+  --k-khadi-200: #E7DCCC;  /* oklch(90.0% 0.025 78) — deepest khadi — pressed states */
+
+  /* --k-ink-* — lamp-black (kajal soot) with a warm cast, not a
+     neutral black. Used for text and, at 950, as the dark-theme
+     base surface — this is the 'khadi becomes deep warm brown-black'
+     move: ink-950 is dark mode's page background. */
+  --k-ink-700: #554B44;  /* oklch(42.0% 0.018 55) — secondary text on light surfaces */
+  --k-ink-800: #3C332E;  /* oklch(33.0% 0.015 55) — raised surface, dark theme */
+  --k-ink-900: #241E1A;  /* oklch(24.0% 0.013 55) — primary text on light surfaces */
+  --k-ink-950: #0F0A07;  /* oklch(15.0% 0.010 55) — darkest — dark theme page background */
+
+  /* --k-terracotta-* — fired clay. Primary accent / call-to-action.
+     300–400 sit on the unfired, sun-dried end; 700–800 are
+     kiln-fired and fully oxidised. */
+  --k-terracotta-300: #EFC7B8;  /* oklch(86.0% 0.050 42) — tint — badges, subtle fills */
+  --k-terracotta-400: #DAA490;  /* oklch(76.4% 0.070 42) — tint, dark-theme accent text/icons */
+  --k-terracotta-500: #C48268;  /* oklch(66.8% 0.090 42) — mid — illustration fills */
+  --k-terracotta-600: #AD6041;  /* oklch(57.2% 0.110 42) — mid-strong — hover states */
+  --k-terracotta-700: #963D14;  /* oklch(47.6% 0.130 42) — primary CTA background (light theme) */
+  --k-terracotta-800: #7E1300;  /* oklch(38.0% 0.150 42) — high-contrast CTA background */
+
+  /* --k-indigo-* — Ajrakh resist-dye indigo. Secondary accent: links,
+     informational states. 300 is the first dip; 900 is repeatedly
+     over-dyed indigo, near-black-blue. */
+  --k-indigo-300: #BECFEC;  /* oklch(85.0% 0.045 262) — tint, dark-theme link text */
+  --k-indigo-400: #98AED5;  /* oklch(74.8% 0.062 262) — tint */
+  --k-indigo-500: #748FBE;  /* oklch(64.7% 0.078 262) — mid — illustration fills */
+  --k-indigo-600: #5170A8;  /* oklch(54.5% 0.095 262) — mid-strong */
+  --k-indigo-700: #305191;  /* oklch(44.3% 0.112 262) — link / info text (light theme) */
+  --k-indigo-800: #0E3279;  /* oklch(34.2% 0.128 262) — hover / pressed link */
+  --k-indigo-900: #000E62;  /* oklch(24.0% 0.145 262) — high-contrast link text */
+
+  /* --k-haldi-* — turmeric. Warning / attention accent, used sparingly.
+     Turmeric stains readily and unevenly by design — kept out of
+     large surfaces, reserved for chips and inline flags. */
+  --k-haldi-300: #FADA99;  /* oklch(90.0% 0.090 85) — chip background (light theme) */
+  --k-haldi-400: #E4BD6A;  /* oklch(81.5% 0.111 85) — dark-theme warning text */
+  --k-haldi-500: #CEA033;  /* oklch(73.0% 0.133 85) — focus/illustration mid-tone */
+  --k-haldi-600: #B88400;  /* oklch(64.5% 0.154 85) — chip background, denser */
+  --k-haldi-700: #A26700;  /* oklch(56.0% 0.175 85) — warning text on light surfaces */
+
+  /* --k-madder-* — madder root red. Danger / destructive accent.
+     Distinct hue from terracotta (22° vs 42°) so the two are never
+     confused at a glance — clay is a material, madder is a warning. */
+  --k-madder-400: #E68582;  /* oklch(72.0% 0.120 22) — tint, dark-theme danger text */
+  --k-madder-500: #CB6060;  /* oklch(62.0% 0.136 22) — mid */
+  --k-madder-600: #B03A3F;  /* oklch(52.0% 0.152 22) — mid-strong — hover */
+  --k-madder-700: #93011E;  /* oklch(42.0% 0.169 22) — danger text on light surfaces */
+  --k-madder-800: #760000;  /* oklch(32.0% 0.185 22) — high-contrast danger text */
+
+  /* --k-neem-* — neem/leaf green, deliberately muted (low chroma) so
+     it never competes with terracotta as 'the' accent. Success only. */
+  --k-neem-300: #B4CCB1;  /* oklch(82.0% 0.045 142) — tint */
+  --k-neem-400: #8FAB8B;  /* oklch(71.0% 0.055 142) — dark-theme success text */
+  --k-neem-500: #6A8A66;  /* oklch(60.0% 0.065 142) — mid */
+  --k-neem-600: #476B43;  /* oklch(49.0% 0.075 142) — mid-strong */
+  --k-neem-700: #254D21;  /* oklch(38.0% 0.085 142) — success text on light surfaces */
+
+  /* --k-stone-* — warm-biased neutral, for borders and non-text UI
+     structure. Never used for body text — see motifs.md for why
+     ink carries all text roles instead. */
+  --k-stone-100: #EEEAE7;  /* oklch(94.0% 0.006 64) — hairline on dark, faint */
+  --k-stone-200: #CECAC6;  /* oklch(84.0% 0.007 64) — hairline divider (light theme) */
+  --k-stone-300: #AFAAA5;  /* oklch(74.0% 0.009 64) — decorative border, low emphasis */
+  --k-stone-400: #918B86;  /* oklch(64.0% 0.010 64) — interactive border (dark theme) */
+  --k-stone-500: #746D68;  /* oklch(54.0% 0.012 64) — interactive border (light theme) */
+  --k-stone-600: #58514B;  /* oklch(44.0% 0.013 64) — stone mid */
+  --k-stone-700: #3D3630;  /* oklch(34.0% 0.015 64) — hairline divider (dark theme) */
+  --k-stone-800: #251E17;  /* oklch(24.0% 0.016 64) — stone deepest */
+}
+
+/*
+ * Semantic aliases
+ * ---------------------------------------------------------------
+ * Every text-on-surface pairing below carries its MEASURED contrast
+ * ratio (Björn Ottosson OKLCH→linear-sRGB, then WCAG relative
+ * luminance — computed, not eyeballed). Three complete theme
+ * mappings: light, dark, high-contrast.
+ *
+ * Dark mode is not inverted light mode: the base surface becomes
+ * --k-ink-950 (a warm near-black, not a neutral #111), and the
+ * terracotta / haldi accents move to their lighter, lower-chroma
+ * steps (400 / 300) rather than reusing the light theme's 700s,
+ * which is what keeps a fired-clay orange from turning muddy on a
+ * near-black ground.
+ * ---------------------------------------------------------------
+ */
+
+:root,
+[data-theme="light"] {
+  --k-surface-base:        var(--k-khadi-50);
+  --k-surface-raised:      var(--k-khadi-100);
+  --k-surface-sunken:      var(--k-khadi-150);
+  --k-surface-pressed:     var(--k-khadi-200);
+
+  --k-text-primary:        var(--k-ink-900);   /* on surface-base: 15.79:1 */
+  --k-text-secondary:      var(--k-ink-700);   /* on surface-base: 8.14:1 */
+  --k-text-on-accent:      var(--k-khadi-50);  /* on accent-primary-bg: 6.74:1 */
+
+  --k-border-hairline:     var(--k-stone-200); /* decorative only — no contrast requirement */
+  --k-border-interactive:  var(--k-stone-500); /* on surface-base: 4.86:1 (≥3:1 non-text UI) */
+
+  --k-accent-primary-bg:   var(--k-terracotta-700); /* text-on-accent on this: 6.74:1 */
+  --k-accent-primary-text: var(--k-terracotta-700); /* on surface-base: 6.74:1 */
+  --k-accent-secondary:    var(--k-indigo-700);      /* on surface-base: 7.43:1 — links */
+  --k-accent-warning-bg:   var(--k-haldi-300);
+  --k-accent-warning-text: var(--k-ink-900);          /* on accent-warning-bg: 12.20:1 */
+  --k-accent-danger:       var(--k-madder-700);       /* on surface-base: 8.86:1 */
+  --k-accent-success:      var(--k-neem-700);         /* on surface-base: 9.26:1 */
+
+  --k-focus-ring:          var(--k-terracotta-700);   /* on surface-base: 6.74:1 (≥3:1 required) */
+}
+
+[data-theme="dark"] {
+  --k-surface-base:        var(--k-ink-950);
+  --k-surface-raised:      var(--k-ink-900);
+  --k-surface-sunken:      var(--k-ink-800);
+  --k-surface-pressed:     var(--k-ink-700);
+
+  --k-text-primary:        var(--k-khadi-100); /* on surface-base: 17.35:1 */
+  --k-text-secondary:      var(--k-stone-300); /* on surface-base: 8.52:1 */
+  --k-text-on-accent:      var(--k-ink-950);   /* on accent-primary-bg: 9.09:1 */
+
+  --k-border-hairline:     var(--k-stone-700); /* decorative only */
+  --k-border-interactive:  var(--k-stone-400); /* on surface-base: 5.84:1 */
+
+  --k-accent-primary-bg:   var(--k-terracotta-400); /* lighter step — text-on-accent: 9.09:1 */
+  --k-accent-primary-text: var(--k-terracotta-300); /* on surface-base: 12.68:1 */
+  --k-accent-secondary:    var(--k-indigo-300);      /* on surface-base: 12.45:1 */
+  --k-accent-warning-bg:   var(--k-haldi-600);
+  --k-accent-warning-text: var(--k-haldi-400);        /* on surface-base: 11.03:1 */
+  --k-accent-danger:       var(--k-madder-400);       /* on surface-base: 7.53:1 */
+  --k-accent-success:      var(--k-neem-400);         /* on surface-base: 7.81:1 */
+
+  --k-focus-ring:          var(--k-terracotta-300);   /* on surface-base: 12.68:1 */
+}
+
+[data-theme="high-contrast"] {
+  --k-surface-base:        var(--k-khadi-50);
+  --k-surface-raised:      var(--k-khadi-50);   /* HC drops the tonal step; hairline carries the boundary instead */
+  --k-surface-sunken:      var(--k-khadi-100);
+  --k-surface-pressed:     var(--k-khadi-150);
+
+  --k-text-primary:        var(--k-ink-950);   /* on surface-base: 18.85:1 (AAA) */
+  --k-text-secondary:      var(--k-ink-800);   /* on surface-base: 11.74:1 (AAA) */
+  --k-text-on-accent:      var(--k-khadi-50);  /* on accent-primary-bg (terracotta-800): 10.18:1 */
+
+  --k-border-hairline:     var(--k-ink-700);   /* on surface-base: 8.14:1 — HC borders must be seen, not implied */
+  --k-border-interactive:  var(--k-ink-700);
+
+  --k-accent-primary-bg:   var(--k-terracotta-800); /* text-on-accent on this: 10.18:1 */
+  --k-accent-primary-text: var(--k-terracotta-800); /* on surface-base: 10.18:1 */
+  --k-accent-secondary:    var(--k-indigo-900);      /* on surface-base: 16.21:1 */
+  --k-accent-warning-bg:   var(--k-haldi-400);
+  --k-accent-warning-text: var(--k-ink-950);          /* on accent-warning-bg: 11.03:1 */
+  --k-accent-danger:       var(--k-madder-800);       /* on surface-base: 11.34:1 */
+  --k-accent-success:      var(--k-neem-700);         /* on surface-base: 9.26:1 */
+
+  --k-focus-ring:          var(--k-terracotta-800);   /* on surface-base: 10.18:1, thicker ring drawn by component, not token */
+}
+
+/*
+ * data-theme="high-contrast-dark" reuses the dark palette's darkest/
+ * lightest extremes the same way: --k-text-primary: var(--k-khadi-50)
+ * (17.35:1 already, no change needed), --k-border-hairline and
+ * --k-border-interactive both promoted to var(--k-khadi-100) at
+ * 17.35:1 against ink-950. Omitted above for length; same pattern.
+ */

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Kalakriti print — Batch 8. Single-colour variant, pure black — for one-colour print processes. A4 sheet (210x297mm), 8 tags,
+     90x54mm each, 10mm page margin, corner crop marks for trimming.
+     Literal mm on the root svg and explicit hex fills are deliberate here
+     only — this file is opened by a print pipeline, not a browser; see
+     packages/print/README.md. QR slot geometry and its
+     not-yet-scan-verified caveat are reused from patterns/qr-frame.svg. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+  <rect width="210" height="297" fill="#FFFFFF"/>
+  <g transform="translate(10 10)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(110 10)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(10 84.33)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(110 84.33)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(10 158.67)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(110 158.67)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(10 233)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g><g transform="translate(110 233)"><g>
+    <rect width="90" height="54" fill="#FFFFFF"/>
+    <rect x="1.5" y="1.5" width="87" height="51" fill="none" stroke="#000000" stroke-width="0.3"/>
+    <g transform="translate(72 4) scale(0.07)" color="#000000" fill="#000000"><g fill="currentColor" fill-rule="evenodd"><path d="M3.5 100a96.5 96.5 0 1 1 193 0 96.5 96.5 0 1 1-193 0m9 0a87.5 87.5 0 1 0 175 0 87.5 87.5 0 1 0-175 0"/><path d="M181 102.1h9v-4.2h-9Zm-11.9 40.22 7.79 4.5 2.1-3.64-7.79-4.5Zm-30.42 28.88 4.5 7.79 3.64-2.1-4.5-7.79ZM97.9 181v9h4.2v-9Zm-40.22-11.9-4.5 7.79 3.64 2.1 4.5-7.79ZM28.8 138.68l-7.79 4.5 2.1 3.64 7.79-4.5ZM19 97.9h-9v4.2h9Zm11.9-40.22-7.79-4.5-2.1 3.64 7.79 4.5ZM61.32 28.8l-4.5-7.79-3.64 2.1 4.5 7.79ZM102.1 19v-9h-4.2v9Zm40.22 11.9 4.5-7.79-3.64-2.1-4.5 7.79Zm28.88 30.42 7.79-4.5-2.1-3.64-7.79 4.5Z"/></g><path fill="currentColor" d="M35.22 88h129.56v24H35.22ZM88 35.22h24V82H88ZM88 118h24v46.78H88Z"/></g>
+    <text x="6" y="10" font-family="ui-serif, Georgia, serif" font-size="6" fill="#000000">Kalakriti</text>
+    <text x="6" y="15" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.6" fill="#000000" opacity="0.75">Verified handmade provenance</text>
+    <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="3" fill="#000000">
+      <text x="6" y="26">Artisan</text>
+      <line x1="6" y1="28" x2="84" y2="28" stroke="#000000" stroke-width="0.25"/>
+      <text x="6" y="35">Craft</text>
+      <line x1="6" y1="37" x2="66" y2="37" stroke="#000000" stroke-width="0.25"/>
+    </g>
+    <g transform="translate(70 34) scale(0.07)" color="#000000" stroke="#000000" fill="none"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g></g>
+    <text x="6" y="50" font-family="ui-sans-serif, system-ui, sans-serif" font-size="2.2" fill="#000000" opacity="0.6">QR filled by backend at print time — scan not yet verified on paper</text>
+  </g></g>
+  <g>
+    <path d="M8.5 10 L5.5 10 M10 8.5 L10 5.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 10 L104.5 10 M100 8.5 L100 5.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 64 L5.5 64 M10 65.5 L10 68.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 64 L104.5 64 M100 65.5 L100 68.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 10 L105.5 10 M110 8.5 L110 5.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 10 L204.5 10 M200 8.5 L200 5.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 64 L105.5 64 M110 65.5 L110 68.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 64 L204.5 64 M200 65.5 L200 68.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 84.33 L5.5 84.33 M10 82.83 L10 79.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 84.33 L104.5 84.33 M100 82.83 L100 79.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 138.33 L5.5 138.33 M10 139.83 L10 142.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 138.33 L104.5 138.33 M100 139.83 L100 142.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 84.33 L105.5 84.33 M110 82.83 L110 79.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 84.33 L204.5 84.33 M200 82.83 L200 79.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 138.33 L105.5 138.33 M110 139.83 L110 142.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 138.33 L204.5 138.33 M200 139.83 L200 142.83" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 158.67 L5.5 158.67 M10 157.17 L10 154.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 158.67 L104.5 158.67 M100 157.17 L100 154.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 212.67 L5.5 212.67 M10 214.17 L10 217.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 212.67 L104.5 212.67 M100 214.17 L100 217.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 158.67 L105.5 158.67 M110 157.17 L110 154.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 158.67 L204.5 158.67 M200 157.17 L200 154.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 212.67 L105.5 212.67 M110 214.17 L110 217.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 212.67 L204.5 212.67 M200 214.17 L200 217.17" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 233 L5.5 233 M10 231.5 L10 228.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 233 L104.5 233 M100 231.5 L100 228.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M8.5 287 L5.5 287 M10 288.5 L10 291.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M101.5 287 L104.5 287 M100 288.5 L100 291.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 233 L105.5 233 M110 231.5 L110 228.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 233 L204.5 233 M200 231.5 L200 228.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M108.5 287 L105.5 287 M110 288.5 L110 291.5" stroke="#000000" stroke-width="0.15"/>
+    <path d="M201.5 287 L204.5 287 M200 288.5 L200 291.5" stroke="#000000" stroke-width="0.15"/></g>
+</svg>

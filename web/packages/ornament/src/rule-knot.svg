@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure (warp/weft crossing), reduced from the logomark. Centred motif for the interrupted hairline rule: the warp thread breaks with clear air either side of the weft passing over it, so the knot reads as weave rather than as a plus sign. Legibility floor is 20px, not 16px — it is a rule ornament, not an icon. -->
+  <path fill="currentColor" d="M2 10.5 H22 V13.5 H2 Z M10.5 2 H13.5 V9 H10.5 Z M10.5 15 H13.5 V22 H10.5 Z"/>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- leather (craft icon). none — abstracts the making process, not a motif. Use: craft category navigation and filters. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 6 L 19 6 L 17 19 L 7 19 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8.4 9.5 A0.6 0.6 0 1 0 9.6 9.5 A0.6 0.6 0 1 0 8.4 9.5 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.4 9.5 A0.6 0.6 0 1 0 15.6 9.5 A0.6 0.6 0 1 0 14.4 9.5 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7.7 13 A0.6 0.6 0 1 0 8.9 13 A0.6 0.6 0 1 0 7.7 13 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15.1 13 A0.6 0.6 0 1 0 16.3 13 A0.6 0.6 0 1 0 15.1 13 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8.4 16.3 A0.6 0.6 0 1 0 9.6 16.3 A0.6 0.6 0 1 0 8.4 16.3 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.4 16.3 A0.6 0.6 0 1 0 15.6 16.3 A0.6 0.6 0 1 0 14.4 16.3 Z"/>
+</svg>

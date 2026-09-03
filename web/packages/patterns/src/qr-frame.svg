@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Jaali. Decorative surround for the provenance QR. The QR itself is NOT drawn here — the consuming page places its own QR image inside the 172.8x172.8 clear inner square (out of a 240x240 frame), which reserves 14% of the frame on every side as quiet zone. Per ISO/IEC 18004 a QR needs a quiet zone of at least 4 modules; at the smallest module count this system's QR uses (~25 modules across for a typical provenance URL), 14% of the frame is several modules, comfortably over the minimum, but the exact margin depends on the QR's own module count and must be confirmed for the final printed size. THIS HAS NOT BEEN VERIFIED WITH A REAL PHONE SCAN — the prompt pack's own warning: test with a printed tag before week three, not on demo morning. -->
+  <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <path d="M6 120 A114 114 0 1 0 234 120 A114 114 0 1 0 6 120"/>
+    <path d="M229 120 L239 120 M225.29 148.21 L234.95 150.8 M214.4 174.5 L223.06 179.5 M197.07 197.07 L204.15 204.15 M174.5 214.4 L179.5 223.06 M148.21 225.29 L150.8 234.95 M120 229 L120 239 M91.79 225.29 L89.2 234.95 M65.5 214.4 L60.5 223.06 M42.93 197.07 L35.85 204.15 M25.6 174.5 L16.94 179.5 M14.71 148.21 L5.05 150.8 M11 120 L1 120 M14.71 91.79 L5.05 89.2 M25.6 65.5 L16.94 60.5 M42.93 42.93 L35.85 35.85 M65.5 25.6 L60.5 16.94 M91.79 14.71 L89.2 5.05 M120 11 L120 1 M148.21 14.71 L150.8 5.05 M174.5 25.6 L179.5 16.94 M197.07 42.93 L204.15 35.85 M214.4 65.5 L223.06 60.5 M225.29 91.79 L234.95 89.2"/>
+  </g>
+</svg>

@@ -1,0 +1,215 @@
+/*
+ * Kalakriti motion — Batch 7
+ * ---------------------------------------------------------------
+ * See MOTION-SPEC.md for the durations/easings table and the full rules.
+ * The one that matters most while editing this file: every @keyframes
+ * block below animates only transform, opacity, stroke-dashoffset or
+ * stroke-dasharray — nothing that triggers layout. gen-batch7.mjs checks
+ * this mechanically; don't add a width/height/top/left/margin keyframe
+ * without also updating that check.
+ *
+ * The charkha spinner (Batch 4, icons.css) and the skeleton shimmer
+ * (Batch 6, patterns.css) already cover two of this batch's deliverables
+ * and are not redefined here — import those stylesheets alongside this one.
+ * ---------------------------------------------------------------
+ */
+
+/* ---- ML pipeline progress ------------------------------------------------ */
+
+/*
+ * Each stage glyph (pipeline-*.svg) sits inside a ring; the ring's
+ * appearance is entirely CSS, driven by data-state on the wrapper — the
+ * glyph SVG never changes. See PipelineProgress.svelte: stage state comes
+ * from a `stages` prop, never a timer.
+ */
+.k-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.k-pipeline-station {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--k-border-hairline);
+  color: var(--k-text-secondary);
+  flex: none;
+}
+.k-pipeline-station svg { width: 1.25rem; height: 1.25rem; }
+
+.k-pipeline-station[data-state="pending"] {
+  opacity: 0.5;
+}
+.k-pipeline-station[data-state="active"] {
+  border-color: var(--k-accent-primary-text);
+  color: var(--k-accent-primary-text);
+  animation: k-pipeline-pulse 1.4s ease-in-out infinite;
+}
+.k-pipeline-station[data-state="complete"] {
+  border-color: var(--k-accent-success);
+  color: var(--k-accent-success);
+}
+.k-pipeline-station[data-state="failed"] {
+  border-color: var(--k-accent-danger);
+  color: var(--k-accent-danger);
+}
+@keyframes k-pipeline-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.75; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-pipeline-station[data-state="active"] { animation: none; opacity: 0.85; }
+}
+
+.k-pipeline-thread {
+  flex: 1 1 1.5rem;
+  min-width: 1rem;
+  height: 2px;
+  background: var(--k-border-hairline);
+  position: relative;
+}
+.k-pipeline-thread[data-crossed="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--k-accent-success);
+  transform-origin: left center;
+  animation: k-thread-cross 0.4s ease-out forwards;
+}
+@keyframes k-thread-cross {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-pipeline-thread[data-crossed="true"]::after { animation: none; transform: scaleX(1); }
+}
+
+/* ---- sync state icon ------------------------------------------------------ */
+
+/*
+ * <SyncState state="offline|pending|syncing|synced" /> swaps the icon
+ * component itself (four small, independent files) rather than toggling
+ * layers in one asset — unlike upload-zone.svg (Batch 4), these four states
+ * share no common geometry to layer onto.
+ */
+.k-sync-state { width: 1rem; height: 1rem; color: var(--k-text-secondary); }
+.k-sync-state--syncing {
+  color: var(--k-accent-secondary);
+}
+.k-sync-state--syncing path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: k-thread-draw 0.9s ease-out infinite;
+}
+@keyframes k-thread-draw {
+  0% { stroke-dashoffset: 24; opacity: 1; }
+  70% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-sync-state--syncing path { animation: none; stroke-dashoffset: 0; opacity: 0.7; }
+}
+.k-sync-state--synced { color: var(--k-accent-success); }
+
+/* ---- success / failure moments -------------------------------------------- */
+
+/*
+ * Brief, both under the 400ms UI-feedback cap, both with a static resting
+ * frame (the animation is a one-time flourish on mount, not a loop).
+ */
+.k-moment { width: 1.5rem; height: 1.5rem; }
+.k-moment--success {
+  color: var(--k-accent-success);
+}
+.k-moment--success path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: k-thread-draw-once 0.4s ease-out forwards;
+}
+.k-moment--failure {
+  color: var(--k-accent-danger);
+}
+.k-moment--failure path:first-of-type { animation: k-snap-left 0.35s ease-out forwards; }
+.k-moment--failure path:last-of-type { animation: k-snap-right 0.35s ease-out forwards; }
+@keyframes k-thread-draw-once {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes k-snap-left {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-1px, -1px); }
+}
+@keyframes k-snap-right {
+  from { transform: translate(0, 0); }
+  to { transform: translate(1px, 1px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-moment--success path,
+  .k-moment--failure path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* ---- seal draw-on ---------------------------------------------------------- */
+
+/*
+ * SealAnimation.svelte swaps seal-draw.svg (this animation) for the real
+ * filled identity/seal.svg once the draw completes — see that component
+ * for the timing. 400ms draw, per the UI-feedback cap; the crossfade that
+ * follows is separate and also short.
+ */
+.k-seal-draw path {
+  stroke-dasharray: 700;      /* longer than any single path here; safe over-estimate */
+  stroke-dashoffset: 700;
+  animation: k-seal-draw-on 0.4s ease-out forwards;
+}
+.k-seal-draw path:nth-of-type(2) { animation-delay: 0.05s; }
+.k-seal-draw path:nth-of-type(3) { animation-delay: 0.1s; }
+.k-seal-draw path:nth-of-type(4) { animation-delay: 0.15s; }
+.k-seal-draw path:nth-of-type(5) { animation-delay: 0.2s; }
+@keyframes k-seal-draw-on {
+  to { stroke-dashoffset: 0; }
+}
+.k-seal-crossfade-in { animation: k-fade-in 0.2s ease-out forwards; }
+.k-seal-crossfade-out { animation: k-fade-out 0.2s ease-out forwards; }
+@keyframes k-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes k-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .k-seal-draw path { animation: none; stroke-dashoffset: 0; }
+  .k-seal-crossfade-in, .k-seal-crossfade-out { animation: none; }
+}
+
+/* ---- voice waveform --------------------------------------------------------- */
+
+.k-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 2rem;
+}
+.k-waveform__bar {
+  width: 3px;
+  height: 100%;               /* full track height; --k-bar-level scales it down via transform */
+  flex: none;
+  background: var(--k-accent-secondary);
+  border-radius: 2px;
+  transform: scaleY(var(--k-bar-level, 0.1));
+  transform-origin: center;
+  transition: transform 0.06s linear;   /* smooths real analyser data, not a synthetic loop */
+}
+.k-waveform--reduced {
+  align-items: center;
+}
+.k-waveform__level-text {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: var(--k-text-secondary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-waveform__bar { transition: none; }
+}

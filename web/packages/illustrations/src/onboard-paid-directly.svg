@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Warli figure-abstraction. A single direct thread from buyer to artisan, no intermediary node — "you are paid directly". -->
+  <path fill="currentColor" d="M62.52 116.94 A7.48 7.48 0 1 0 77.48 116.94 A7.48 7.48 0 1 0 62.52 116.94 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 130.4 L 53 155.9 L 87 155.9 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 155.9 L 55.72 176.3 L 84.28 176.3 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55.72 176.3 L51.3 195"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M84.28 176.3 L88.7 195"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 135.5 L56.4 154.2"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M70 135.5 L83.6 154.2"/>
+  <path fill="currentColor" d="M242.52 116.94 A7.48 7.48 0 1 0 257.48 116.94 A7.48 7.48 0 1 0 242.52 116.94 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M250 130.4 L 233 155.9 L 267 155.9 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M250 155.9 L 235.72 176.3 L 264.28 176.3 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M235.72 176.3 L231.3 195"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M264.28 176.3 L268.7 195"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M250 135.5 L236.4 154.2"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M250 135.5 L263.6 154.2"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M95 130 L225 130"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M210 122 L 225 130 L 210 138"/>
+  <path fill="var(--k-illustration-accent, #B5462B)" d="M156 130 A4 4 0 1 0 164 130 A4 4 0 1 0 156 130 Z"/>
+</svg>

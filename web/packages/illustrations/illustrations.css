@@ -1,0 +1,67 @@
+/*
+ * Kalakriti illustrations — Batch 5
+ * ---------------------------------------------------------------
+ * Every illustration takes at most two colours: currentColor (the section's
+ * text colour) plus --k-illustration-accent, a single accent used sparingly
+ * for the one detail each scene wants to draw the eye to (an unattached
+ * thread end, a direct payment line, the machine-made FFT peak). Define the
+ * accent per theme so it shifts the same way the terracotta accent does
+ * elsewhere in the system.
+ * ---------------------------------------------------------------
+ * Requires palette.css for the --k-* tokens this derives from.
+ */
+
+:root, [data-theme="light"] { --k-illustration-accent: var(--k-terracotta-700); }
+[data-theme="dark"] { --k-illustration-accent: var(--k-terracotta-400); }
+[data-theme="high-contrast"] { --k-illustration-accent: var(--k-terracotta-800); }
+
+.k-illustration {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  color: var(--k-text-secondary);
+}
+
+/* ---- hero backdrop ----------------------------------------------------- */
+
+/*
+ * hero-backdrop-tile.svg is a 60x60 pattern, not a fixed-width scene — see
+ * the file's own comment for why. Sits BEHIND a photo, never on top of one;
+ * the ::before keeps it out of the hero's own stacking context so content
+ * z-indexes don't have to account for it.
+ *
+ * This is a CSS mask over background-color: currentColor, not a
+ * background-image — the same rule Batch 3's ornament.css documents at
+ * length: an SVG loaded via background-image is an isolated document where
+ * currentColor resolves to black. Don't "simplify" this back to
+ * background-image; see ornament.css's header comment for the full reasoning.
+ */
+.k-hero-backdrop { position: relative; isolation: isolate; }
+.k-hero-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--k-text-primary);
+  background-color: currentColor;
+  -webkit-mask-image: url("./src/hero-backdrop-tile.svg");
+          mask-image: url("./src/hero-backdrop-tile.svg");
+  -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+  -webkit-mask-size: 60px 60px;
+          mask-size: 60px 60px;
+  opacity: 0.05;                 /* recommended range 0.04-0.06 */
+}
+[data-theme="dark"] .k-hero-backdrop::before { opacity: 0.04; }
+.k-hero-backdrop > * { position: relative; z-index: 1; }
+
+/* ---- craft process strip ------------------------------------------------ */
+
+.k-process-strip {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.k-process-step { width: 96px; color: var(--k-text-secondary); }
+.k-process-step svg { width: 96px; height: 96px; }

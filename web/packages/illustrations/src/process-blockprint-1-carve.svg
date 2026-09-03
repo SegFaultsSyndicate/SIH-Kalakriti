@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Process step 1 of 4 (block printing): carve. Step number shown as a dot count, not a numeral. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M38 30 L87 30 A3 3 0 0 1 90 33 L90 72 A3 3 0 0 1 87 75 L38 75 A3 3 0 0 1 35 72 L35 33 A3 3 0 0 1 38 30 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M50 45 L65 45 M50 60 L75 60"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M80 30 L95 45"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 98 L10 98 A4 4 0 0 1 14 102 L14 114 A4 4 0 0 1 10 118 L6 118 A4 4 0 0 1 2 114 L2 102 A4 4 0 0 1 6 98 Z"/>
+  <path fill="currentColor" d="M9 108 A2 2 0 1 0 13 108 A2 2 0 1 0 9 108 Z"/>
+</svg>

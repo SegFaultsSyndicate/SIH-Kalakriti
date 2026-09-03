@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- cluster (domain icon). Tradition: kolam-derived node arrangement (rotational layout, not a drawn continuous line). Use: product-specific UI states. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.8 6 A2.2 2.2 0 1 0 8.2 6 A2.2 2.2 0 1 0 3.8 6"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15.8 6 A2.2 2.2 0 1 0 20.2 6 A2.2 2.2 0 1 0 15.8 6"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.8 18 A2.2 2.2 0 1 0 8.2 18 A2.2 2.2 0 1 0 3.8 18"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15.8 18 A2.2 2.2 0 1 0 20.2 18 A2.2 2.2 0 1 0 15.8 18"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.4 12 A2.6 2.6 0 1 0 14.6 12 A2.6 2.6 0 1 0 9.4 12"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7.7 7.7 L10.2 10.2 M16.3 7.7 L13.8 10.2 M7.7 16.3 L10.2 13.8 M16.3 16.3 L13.8 13.8"/>
+</svg>

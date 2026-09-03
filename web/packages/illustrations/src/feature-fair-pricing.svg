@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- A balance scale weighing material, hours (accent thread) and skill (a small block) on one side — "fair pricing". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 60 L160 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M90 90 L230 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M90 90 L65 130 A26 22 0 0 0 115 130 L90 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M230 90 L205 130 A26 22 0 0 0 255 130 L230 90"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M152 160 L168 160 A2 2 0 0 1 170 162 L170 178 A2 2 0 0 1 168 180 L152 180 A2 2 0 0 1 150 178 L150 162 A2 2 0 0 1 152 160 Z"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55 105 L100 118"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M52 105 A3 3 0 1 0 58 105 A3 3 0 1 0 52 105 Z"/>
+  <path fill="none" stroke="var(--k-illustration-accent, #B5462B)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M97 118 A3 3 0 1 0 103 118 A3 3 0 1 0 97 118 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M202 100 L222 100 A2 2 0 0 1 224 102 L224 116 A2 2 0 0 1 222 118 L202 118 A2 2 0 0 1 200 116 L200 102 A2 2 0 0 1 202 100 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M205 108 L219 108"/>
+</svg>

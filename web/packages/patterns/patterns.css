@@ -1,0 +1,230 @@
+/*
+ * Kalakriti patterns and surfaces — Batch 6
+ * ---------------------------------------------------------------
+ * All six pattern tiles apply as CSS masks over background-color:
+ * currentColor, never background-image — the rule Batch 3's ornament.css
+ * documents at length and Batch 5's illustrations.css repeats: an SVG
+ * loaded via background-image is an isolated document where currentColor
+ * resolves to black. Do not "simplify" any rule below back to
+ * background-image.
+ *
+ * Requires palette.css for the --k-* tokens.
+ * ---------------------------------------------------------------
+ */
+
+/* ---- pattern tiles ----------------------------------------------------- */
+
+/*
+ * .k-pattern--<name> on any element applies that tile as a repeating mask.
+ * Opacity is NOT set here — each tile's recommended range differs (see the
+ * SVG's own comment and the contact sheet), and 8% is a hard ceiling behind
+ * body text per the batch brief's Do-Not, so the caller sets it deliberately
+ * rather than inheriting a default that might drift past that ceiling.
+ */
+.k-pattern {
+  position: relative;
+  isolation: isolate;
+}
+.k-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: currentColor;
+  -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+}
+.k-pattern > * { position: relative; z-index: 1; }
+
+.k-pattern--ajrakh::before      { -webkit-mask-image: url("./src/pattern-ajrakh.svg");         mask-image: url("./src/pattern-ajrakh.svg");         -webkit-mask-size: 24px 24px; mask-size: 24px 24px; }
+.k-pattern--bagru::before       { -webkit-mask-image: url("./src/pattern-bagru.svg");          mask-image: url("./src/pattern-bagru.svg");          -webkit-mask-size: 40px 40px; mask-size: 40px 40px; }
+.k-pattern--dabu::before        { -webkit-mask-image: url("./src/pattern-dabu.svg");           mask-image: url("./src/pattern-dabu.svg");           -webkit-mask-size: 16px 16px; mask-size: 16px 16px; }
+.k-pattern--kolam::before       { -webkit-mask-image: url("./src/pattern-kolam-dotgrid.svg");  mask-image: url("./src/pattern-kolam-dotgrid.svg");  -webkit-mask-size: 24px 24px; mask-size: 24px 24px; }
+.k-pattern--warp-weft::before   { -webkit-mask-image: url("./src/pattern-warp-weft.svg");      mask-image: url("./src/pattern-warp-weft.svg");      -webkit-mask-size: 12px 12px; mask-size: 12px 12px; }
+.k-pattern--jaali::before       { -webkit-mask-image: url("./src/pattern-jaali-fill.svg");     mask-image: url("./src/pattern-jaali-fill.svg");     -webkit-mask-size: 28px 28px; mask-size: 28px 28px; }
+
+/* ---- paper grain --------------------------------------------------------- */
+
+/*
+ * SVG (feTurbulence) by default — measure it on a throttled low-end profile
+ * before shipping. If it costs frames, add .k-grain--raster instead: same
+ * visual role, a static PNG (paper-grain.png, ~1.5KB) with no filter cost.
+ */
+.k-grain {
+  position: relative;
+  isolation: isolate;
+}
+.k-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--k-text-primary);
+  background-color: currentColor;
+  -webkit-mask-image: url("./src/paper-grain.svg");
+          mask-image: url("./src/paper-grain.svg");
+  -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+  -webkit-mask-size: 200px 200px;
+          mask-size: 200px 200px;
+  opacity: 0.05;   /* recommended 4-7% */
+}
+.k-grain > * { position: relative; z-index: 1; }
+
+.k-grain--raster::before {
+  -webkit-mask-image: none;
+          mask-image: none;
+  background-color: transparent;
+  background-image: url("./src/paper-grain.png");
+  background-repeat: repeat;
+  background-size: 48px 48px;
+  opacity: 0.35;   /* the PNG is already near-white noise, needs less opacity than the mask version */
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] .k-grain--raster::before { mix-blend-mode: screen; }
+
+/* ---- section background treatments --------------------------------------- */
+
+/*
+ * Three alternating page-section styles so the buyer home doesn't read as
+ * one flat scroll. Each carries its own text-colour mapping — indigo-panel
+ * in particular does NOT reuse --k-text-primary, since that token assumes a
+ * khadi/ink surface, not an indigo one.
+ */
+
+.k-section--khadi-plain {
+  background: var(--k-surface-base);
+  color: var(--k-text-primary);
+}
+
+.k-section--khadi-weft {
+  background: var(--k-surface-base);
+  color: var(--k-text-primary);
+}
+.k-section--khadi-weft.k-pattern::before {
+  -webkit-mask-image: url("./src/pattern-warp-weft.svg");
+          mask-image: url("./src/pattern-warp-weft.svg");
+  -webkit-mask-size: 12px 12px;
+          mask-size: 12px 12px;
+  opacity: 0.045;
+}
+
+.k-section--indigo-panel {
+  background: var(--k-indigo-800);
+  color: var(--k-khadi-50);              /* 11.50:1 measured against indigo-800 */
+}
+.k-section--indigo-panel a,
+.k-section--indigo-panel .k-accent-text {
+  color: var(--k-terracotta-300);        /* 7.73:1 against indigo-800 */
+}
+.k-section--indigo-panel .k-warning-text {
+  color: var(--k-haldi-300);             /* 8.88:1 against indigo-800 */
+}
+[data-theme="dark"] .k-section--indigo-panel {
+  background: var(--k-indigo-900);       /* 16.26:1 against khadi-50 — dark theme sits one step darker */
+}
+
+/* ---- card surface variants ------------------------------------------------ */
+
+/*
+ * Three variants replace shadowed cards entirely — no drop shadow anywhere
+ * in this system. block-print-edged is Batch 3's .k-card--printed
+ * (ornament.css); it is not redefined here, only referenced, so there is
+ * one source of truth for that border-image.
+ */
+
+.k-card {
+  background: var(--k-surface-raised);
+  color: var(--k-text-primary);
+  border-radius: var(--k-radius-lg, 8px);
+}
+
+.k-card--flat {
+  border: none;
+}
+
+.k-card--hairline {
+  border: 1px solid var(--k-border-hairline);
+}
+
+/* .k-card--printed: see packages/ornament/ornament.css — reused, not duplicated. */
+
+/* ---- loading skeleton shimmer --------------------------------------------- */
+
+/*
+ * Built from the weft-grid mask, not a generic grey sweep. transform/opacity
+ * only — nothing here animates a layout property.
+ */
+.k-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--k-surface-sunken);
+  border-radius: var(--k-radius-md, 4px);
+  isolation: isolate;
+}
+.k-skeleton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  color: var(--k-text-secondary);
+  background-color: currentColor;
+  -webkit-mask-image: url("./src/pattern-warp-weft.svg");
+          mask-image: url("./src/pattern-warp-weft.svg");
+  -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+  -webkit-mask-size: 12px 12px;
+          mask-size: 12px 12px;
+  opacity: 0.16;
+}
+.k-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(100deg, transparent 35%, var(--k-surface-base) 50%, transparent 65%);
+  opacity: 0.5;
+  transform: translateX(-100%);
+  animation: k-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes k-shimmer {
+  to { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-skeleton::after {
+    animation: none;
+    transform: none;
+    opacity: 0.28;   /* static — still reads as "not-yet-loaded", no motion */
+  }
+}
+
+/* ---- QR frame ------------------------------------------------------------- */
+
+/*
+ * qr-frame.svg draws the surround only — it does not draw the QR. Place the
+ * actual QR image centered inside .k-qr-frame__slot, sized to fill it
+ * exactly. The slot's size is fixed by the frame's own quiet-zone math (see
+ * the SVG's comment): shrinking or offsetting the QR inside this slot
+ * re-opens the quiet-zone risk the frame exists to prevent.
+ *
+ * NOT verified with a real phone scan — the prompt pack's own warning:
+ * test with a printed tag before week three, not on demo morning.
+ */
+.k-qr-frame {
+  position: relative;
+  width: 15rem;
+  height: 15rem;
+  color: var(--k-text-primary);
+}
+.k-qr-frame > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.k-qr-frame__slot {
+  position: absolute;
+  inset: 14%;             /* matches QUIET_PCT in scripts/gen-batch6.mjs — keep in sync if the frame is regenerated at a different ratio */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.k-qr-frame__slot img,
+.k-qr-frame__slot svg { width: 100%; height: 100%; }

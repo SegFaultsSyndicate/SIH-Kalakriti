@@ -1,0 +1,310 @@
+/*
+ * Kalakriti ornament — Batch 3
+ * ---------------------------------------------------------------
+ * WHY THESE ARE MASKS AND NOT BACKGROUND IMAGES.
+ *
+ * An SVG referenced from background-image or border-image — data: URI
+ * included — is loaded into an isolated document. currentColor there
+ * resolves to black and the --k-* custom properties are invisible to it.
+ * A divider delivered that way looks right in a contact sheet and is wrong
+ * in the product.
+ *
+ * So every tileable asset below is applied as a mask over
+ * background-color: currentColor. The colour comes from the host element,
+ * exactly as the Batch 0 currentColor rule requires, and nothing is lost
+ * because every Batch 3 asset is monochrome by design.
+ *
+ * Do not "simplify" these back to background-image.
+ * ---------------------------------------------------------------
+ * Requires palette.css for the --k-* tokens.
+ */
+
+/* ---- section dividers ------------------------------------------------ */
+
+.k-divider {
+  display: block;
+  width: 100%;
+  flex: none;
+  color: var(--k-text-primary);
+  opacity: 0.18;          /* dividers are structure, not content */
+}
+
+/* Dividers carry no meaning. Set aria-hidden="true" at the call site, or use
+   the Svelte component, which does it for you. */
+
+/* High contrast: a divider at 18% is a smudge, and a smudge is worse than no
+   ornament for a user who chose this theme. Either it is a boundary or it is
+   not there. */
+[data-theme="high-contrast"] .k-divider { opacity: 0.4; }
+
+.k-divider--jaali-hex-16 {
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 4.44 L 7 0.88 L 14 4.44 M0 11.56 L 7 15.13 L 14 11.56 M0 4.44 L 0 11.56 M14 4.44 L 14 11.56'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 4.44 L 7 0.88 L 14 4.44 M0 11.56 L 7 15.13 L 14 11.56 M0 4.44 L 0 11.56 M14 4.44 L 14 11.56'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 14px 16px;
+          mask-size: 14px 16px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-hex-24 {
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 21 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 6.56 L 10.5 1.13 L 21 6.56 M0 17.44 L 10.5 22.88 L 21 17.44 M0 6.56 L 0 17.44 M21 6.56 L 21 17.44 M10.5 9.61 L 12.89 12 L 10.5 14.39 L 8.11 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 21 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 6.56 L 10.5 1.13 L 21 6.56 M0 17.44 L 10.5 22.88 L 21 17.44 M0 6.56 L 0 17.44 M21 6.56 L 21 17.44 M10.5 9.61 L 12.89 12 L 10.5 14.39 L 8.11 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 21px 24px;
+          mask-size: 21px 24px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-hex-32 {
+  height: 32px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 28 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 8.63 L 14 1.25 L 28 8.63 M0 23.38 L 14 30.75 L 28 23.38 M0 8.63 L 0 23.38 M28 8.63 L 28 23.38 M7.56 12.61 L 14 9.22 L 20.44 12.61 L 20.44 19.39 L 14 22.79 L 7.56 19.39 Z M14 12.76 L 17.25 16 L 14 19.25 L 10.76 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 28 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 8.63 L 14 1.25 L 28 8.63 M0 23.38 L 14 30.75 L 28 23.38 M0 8.63 L 0 23.38 M28 8.63 L 28 23.38 M7.56 12.61 L 14 9.22 L 20.44 12.61 L 20.44 19.39 L 14 22.79 L 7.56 19.39 Z M14 12.76 L 17.25 16 L 14 19.25 L 10.76 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 28px 32px;
+          mask-size: 28px 32px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-octstar-16 {
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M3.36 0.88 L 12.64 0.88 L 16 3.87 L 16 12.13 L 12.64 15.13 L 3.36 15.13 L 0 12.13 L 0 3.87 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M3.36 0.88 L 12.64 0.88 L 16 3.87 L 16 12.13 L 12.64 15.13 L 3.36 15.13 L 0 12.13 L 0 3.87 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 16px 16px;
+          mask-size: 16px 16px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-octstar-24 {
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M7.03 1.13 L 16.97 1.13 L 24 7.5 L 24 16.5 L 16.97 22.88 L 7.03 22.88 L 0 16.5 L 0 7.5 Z M12 9.61 L 14.39 12 L 12 14.39 L 9.61 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M7.03 1.13 L 16.97 1.13 L 24 7.5 L 24 16.5 L 16.97 22.88 L 7.03 22.88 L 0 16.5 L 0 7.5 Z M12 9.61 L 14.39 12 L 12 14.39 L 9.61 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 24px 24px;
+          mask-size: 24px 24px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-octstar-32 {
+  height: 32px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M9.37 1.25 L 22.63 1.25 L 32 9.89 L 32 22.11 L 22.63 30.75 L 9.37 30.75 L 0 22.11 L 0 9.89 Z M12.95 9.22 L 19.05 9.22 L 23.36 13.19 L 23.36 18.81 L 19.05 22.79 L 12.95 22.79 L 8.64 18.81 L 8.64 13.19 Z M16 12.76 L 19.25 16 L 16 19.25 L 12.76 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M9.37 1.25 L 22.63 1.25 L 32 9.89 L 32 22.11 L 22.63 30.75 L 9.37 30.75 L 0 22.11 L 0 9.89 Z M12.95 9.22 L 19.05 9.22 L 23.36 13.19 L 23.36 18.81 L 19.05 22.79 L 12.95 22.79 L 8.64 18.81 L 8.64 13.19 Z M16 12.76 L 19.25 16 L 16 19.25 L 12.76 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 32px 32px;
+          mask-size: 32px 32px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-interlace-16 {
+  height: 16px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M8 0.88 L 16 8 L 8 15.13 L 0 8 Z M3.2 3.2 H12.8 V12.8 H3.2 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='0.75' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M8 0.88 L 16 8 L 8 15.13 L 0 8 Z M3.2 3.2 H12.8 V12.8 H3.2 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 16px 16px;
+          mask-size: 16px 16px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-interlace-24 {
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M12 1.13 L 24 12 L 12 22.88 L 0 12 Z M4.8 4.8 H19.2 V19.2 H4.8 Z M12 9.6 L 14.4 12 L 12 14.4 L 9.6 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.25' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M12 1.13 L 24 12 L 12 22.88 L 0 12 Z M4.8 4.8 H19.2 V19.2 H4.8 Z M12 9.6 L 14.4 12 L 12 14.4 L 9.6 12 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 24px 24px;
+          mask-size: 24px 24px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--jaali-interlace-32 {
+  height: 32px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M16 1.25 L 32 16 L 16 30.75 L 0 16 Z M6.4 6.4 H25.6 V25.6 H6.4 Z M16 9.22 L 23.36 16 L 16 22.79 L 8.64 16 Z M16 12.8 L 19.2 16 L 16 19.2 L 12.8 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M16 1.25 L 32 16 L 16 30.75 L 0 16 Z M6.4 6.4 H25.6 V25.6 H6.4 Z M16 9.22 L 23.36 16 L 16 22.79 L 8.64 16 Z M16 12.8 L 19.2 16 L 16 19.2 L 12.8 16 Z'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 32px 32px;
+          mask-size: 32px 32px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--blockprint-running-20 {
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' fill-rule='evenodd' d='M0 1.5 H20 V2.5 H0 Z M0 17.5 H20 V18.5 H0 Z M10 5 L 15 10 L 10 15 L 5 10 Z M10 8 L 12 10 L 10 12 L 8 10 Z M-0.75 5.5 H0.75 V14.5 H-0.75 Z M19.25 5.5 H20.75 V14.5 H19.25 Z'/%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' fill-rule='evenodd' d='M0 1.5 H20 V2.5 H0 Z M0 17.5 H20 V18.5 H0 Z M10 5 L 15 10 L 10 15 L 5 10 Z M10 8 L 12 10 L 10 12 L 8 10 Z M-0.75 5.5 H0.75 V14.5 H-0.75 Z M19.25 5.5 H20.75 V14.5 H19.25 Z'/%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 20px 20px;
+          mask-size: 20px 20px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+.k-divider--blockprint-band-32 {
+  height: 32px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' fill-rule='evenodd' d='M0 1.5 H32 V2.5 H0 Z M0 29.5 H32 V30.5 H0 Z M0 8.5 H32 V9.5 H0 Z M0 22.5 H32 V23.5 H0 Z M1 4.5 H3 V6.5 H1 Z M1 25.5 H3 V27.5 H1 Z M9 4.5 H11 V6.5 H9 Z M9 25.5 H11 V27.5 H9 Z M17 4.5 H19 V6.5 H17 Z M17 25.5 H19 V27.5 H17 Z M25 4.5 H27 V6.5 H25 Z M25 25.5 H27 V27.5 H25 Z M8 11 L 13 16 L 8 21 L 3 16 Z M7.25 12.5 H8.75 V19.5 H7.25 Z M4.5 15.25 H11.5 V16.75 H4.5 Z M24 11 L 29 16 L 24 21 L 19 16 Z M23.25 12.5 H24.75 V19.5 H23.25 Z M20.5 15.25 H27.5 V16.75 H20.5 Z M0 13.5 L 2.5 16 L 0 18.5 L -2.5 16 Z M16 13.5 L 18.5 16 L 16 18.5 L 13.5 16 Z M32 13.5 L 34.5 16 L 32 18.5 L 29.5 16 Z'/%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' fill-rule='evenodd' d='M0 1.5 H32 V2.5 H0 Z M0 29.5 H32 V30.5 H0 Z M0 8.5 H32 V9.5 H0 Z M0 22.5 H32 V23.5 H0 Z M1 4.5 H3 V6.5 H1 Z M1 25.5 H3 V27.5 H1 Z M9 4.5 H11 V6.5 H9 Z M9 25.5 H11 V27.5 H9 Z M17 4.5 H19 V6.5 H17 Z M17 25.5 H19 V27.5 H17 Z M25 4.5 H27 V6.5 H25 Z M25 25.5 H27 V27.5 H25 Z M8 11 L 13 16 L 8 21 L 3 16 Z M7.25 12.5 H8.75 V19.5 H7.25 Z M4.5 15.25 H11.5 V16.75 H4.5 Z M24 11 L 29 16 L 24 21 L 19 16 Z M23.25 12.5 H24.75 V19.5 H23.25 Z M20.5 15.25 H27.5 V16.75 H20.5 Z M0 13.5 L 2.5 16 L 0 18.5 L -2.5 16 Z M16 13.5 L 18.5 16 L 16 18.5 L 13.5 16 Z M32 13.5 L 34.5 16 L 32 18.5 L 29.5 16 Z'/%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 32px 32px;
+          mask-size: 32px 32px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+}
+
+/* ---- hairline rules -------------------------------------------------- */
+
+/* The plain hairline is CSS only. It has no SVG, so it cannot fail to load. */
+.k-rule {
+  border: 0;
+  border-top: 1px solid var(--k-border-hairline);
+  margin: 0;
+}
+
+/* Double rule with woven infill. If the mask fails, the @supports block below
+   restores a plain 1px line. */
+.k-rule--woven {
+  height: 8px;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 0.5 H8 M0 7.5 H8 M4 0.5 V7.5 M0 4 H2.8 M5.2 4 H8'/%3E %3C/g%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cg fill='none' stroke='currentColor' stroke-width='1' stroke-linecap='butt' stroke-linejoin='miter'%3E %3Cpath d='M0 0.5 H8 M0 7.5 H8 M4 0.5 V7.5 M0 4 H2.8 M5.2 4 H8'/%3E %3C/g%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 8px 8px;
+          mask-size: 8px 8px;
+  -webkit-mask-position: left center;
+          mask-position: left center;
+  border-top: 0;
+  color: var(--k-text-secondary);
+  opacity: 0.4;
+}
+
+@supports not ((-webkit-mask-image: none) or (mask-image: none)) {
+  .k-rule--woven {
+    background-color: transparent;
+    border-top: 1px solid var(--k-border-hairline);
+    height: 1px;
+  }
+}
+
+/* Hairline interrupted by a centred motif. The rule is drawn by the two
+   pseudo-elements, so the motif sits in a real gap rather than on top of a
+   line. Put an inline rule-knot.svg inside the element. */
+.k-rule-motif {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--k-border-hairline);
+}
+.k-rule-motif::before,
+.k-rule-motif::after {
+  content: "";
+  flex: 1 1 0;
+  border-top: 1px solid currentColor;
+}
+.k-rule-motif > * {
+  flex: none;
+  width: 1.25rem;    /* 20px — the knot's legibility floor; below this the
+                        warp interruption closes up and it reads as a plus */
+  height: 1.25rem;
+  color: var(--k-text-secondary);
+  opacity: 0.55;
+}
+
+/* ---- weft page texture ----------------------------------------------- */
+
+/* Applied to a ::before so the texture sits under content and never over it,
+   and so the opacity here does not cascade into the page's own children. */
+.k-weft-surface { position: relative; isolation: isolate; }
+.k-weft-surface > * { position: relative; z-index: 1; }
+.k-weft-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--k-text-primary);
+  background-color: currentColor;
+  opacity: var(--k-weft-opacity, 0.05);   /* recommended range 0.03-0.06 */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' d='M2 0 H4 V8 H2 Z M2 10 H4 V12 H2 Z M8 0 H10 V2 H8 Z M8 4 H10 V12 H8 Z M0 2 H2 V4 H0 Z M4 2 H12 V4 H4 Z M0 8 H8 V10 H0 Z M10 8 H12 V10 H10 Z'/%3E %3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='currentColor' d='M2 0 H4 V8 H2 Z M2 10 H4 V12 H2 Z M8 0 H10 V2 H8 Z M8 4 H10 V12 H8 Z M0 2 H2 V4 H0 Z M4 2 H12 V4 H4 Z M0 8 H8 V10 H0 Z M10 8 H12 V10 H10 Z'/%3E %3C/svg%3E");
+  -webkit-mask-repeat: repeat;
+          mask-repeat: repeat;
+  -webkit-mask-size: 12px 12px;
+          mask-size: 12px 12px;
+}
+
+/* Dark themes need slightly less: a light thread on a dark ground reads
+   brighter than a dark thread on a light one at the same opacity. */
+[data-theme="dark"] .k-weft-surface::before { opacity: var(--k-weft-opacity, 0.035); }
+[data-theme="high-contrast"] .k-weft-surface::before { opacity: 0; }
+
+/* ---- kolam corner ---------------------------------------------------- */
+
+.k-kolam-corner {
+  width: 3rem;
+  height: 3rem;
+  color: var(--k-accent-primary-text);
+  opacity: 0.5;
+}
+.k-kolam-corner--tr { transform: scaleX(-1); }
+.k-kolam-corner--br { transform: rotate(180deg); }
+.k-kolam-corner--bl { transform: scaleY(-1); }
+
+/* ---- printed card edge ----------------------------------------------- */
+
+/*
+ * This is the one Batch 3 asset that cannot use currentColor. A border-image
+ * loads in an isolated document, so the colour has to be baked into the data
+ * URI — one bake per theme, below. The consequence is that the card edge
+ * follows the theme rather than the element's text colour, which for a card
+ * frame is the right trade.
+ *
+ * If a dynamic edge colour is ever needed, the upgrade is
+ * -webkit-mask-box-image on a ::before over background-color: currentColor,
+ * keeping the border-image below as the Firefox fallback.
+ *
+ * border-image-slice must be a percentage: a viewBox-only SVG has no intrinsic
+ * pixel size, so a px slice is undefined.
+ */
+.k-card--printed {
+  border: 6px solid var(--k-border-hairline);   /* fallback if the image fails */
+  border-radius: var(--k-radius-none, 0);
+  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23241E1A' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+  background: var(--k-surface-raised);
+  padding: 1rem;
+}
+[data-theme="dark"] .k-card--printed {
+  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23F5F0E8' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+}
+[data-theme="high-contrast"] .k-card--printed {
+  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%230F0A07' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+}

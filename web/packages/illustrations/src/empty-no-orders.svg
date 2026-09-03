@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Handloom structure (folded cloth) beside an open ledger — "no orders yet". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M92 150 L228 150 A2 2 0 0 1 230 152 L230 162 A2 2 0 0 1 228 164 L92 164 A2 2 0 0 1 90 162 L90 152 A2 2 0 0 1 92 150 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M88 136 L232 136 A2 2 0 0 1 234 138 L234 148 A2 2 0 0 1 232 150 L88 150 A2 2 0 0 1 86 148 L86 138 A2 2 0 0 1 88 136 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M84 122 L236 122 A2 2 0 0 1 238 124 L238 134 A2 2 0 0 1 236 136 L84 136 A2 2 0 0 1 82 134 L82 124 A2 2 0 0 1 84 122 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M192 70 L248 70 A2 2 0 0 1 250 72 L250 144 A2 2 0 0 1 248 146 L192 146 A2 2 0 0 1 190 144 L190 72 A2 2 0 0 1 192 70 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 86 L240 86"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 100 L240 100"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 114 L230 114"/>
+</svg>

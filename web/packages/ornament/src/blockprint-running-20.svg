@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Block print (Ajrakh/Bagru running border). Simple repeating band for card edges and section rules, tileable along X at 20x20. Fill-led, with resist-dye negative space cut by fill-rule evenodd. The separator tick is split across the seam and completed by the neighbouring tile. -->
+  <path fill="currentColor" fill-rule="evenodd" d="M0 1.5 H20 V2.5 H0 Z M0 17.5 H20 V18.5 H0 Z M10 5 L 15 10 L 10 15 L 5 10 Z M10 8 L 12 10 L 10 12 L 8 10 Z M-0.75 5.5 H0.75 V14.5 H-0.75 Z M19.25 5.5 H20.75 V14.5 H19.25 Z"/>
+</svg>

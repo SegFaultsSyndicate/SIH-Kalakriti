@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Kolam (sikku) L-corner ornament for framing featured content. One continuous closed line looping around a five-dot L on the 24px dot grid; the line encircles every dot and touches none, which is the tradition’s defining constraint. Rotate for the other three corners: top-right scaleX(-1), bottom-right rotate(180deg), bottom-left scaleY(-1). -->
+  <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M74 24 A14 14 0 0 1 48 31.21 A14 14 0 0 1 24 31.21 A14 14 0 0 1 19.21 36 A14 14 0 0 1 26 48 A14 14 0 0 1 19.21 60 A14 14 0 0 1 26 72 A14 14 0 1 1 4.79 60 A14 14 0 0 1 4.79 36 A14 14 0 1 1 24 16.79 A14 14 0 0 1 48 16.79 A14 14 0 0 1 74 24 Z"/>
+  <path fill="currentColor" d="M58.4 24 A1.6 1.6 0 1 0 61.6 24 A1.6 1.6 0 1 0 58.4 24 Z M34.4 24 A1.6 1.6 0 1 0 37.6 24 A1.6 1.6 0 1 0 34.4 24 Z M10.4 24 A1.6 1.6 0 1 0 13.6 24 A1.6 1.6 0 1 0 10.4 24 Z M10.4 48 A1.6 1.6 0 1 0 13.6 48 A1.6 1.6 0 1 0 10.4 48 Z M10.4 72 A1.6 1.6 0 1 0 13.6 72 A1.6 1.6 0 1 0 10.4 72 Z"/>
+</svg>

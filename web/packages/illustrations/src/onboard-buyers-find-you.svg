@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Kolam-derived node network across an abstract outline of India — "buyers find you across India". -->
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M30 210 L 60 40 L 290 30 L 270 215"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 60 L90 110"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 60 L230 100"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M90 110 L70 180"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M230 100 L250 175"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 60 L200 140"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 140 L160 190"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 190 L70 180"/>
+  <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M200 140 L250 175"/>
+  <path fill="currentColor" d="M156 60 A4 4 0 1 0 164 60 A4 4 0 1 0 156 60 Z"/>
+  <path fill="currentColor" d="M86 110 A4 4 0 1 0 94 110 A4 4 0 1 0 86 110 Z"/>
+  <path fill="currentColor" d="M226 100 A4 4 0 1 0 234 100 A4 4 0 1 0 226 100 Z"/>
+  <path fill="currentColor" d="M66 180 A4 4 0 1 0 74 180 A4 4 0 1 0 66 180 Z"/>
+  <path fill="currentColor" d="M156 190 A4 4 0 1 0 164 190 A4 4 0 1 0 156 190 Z"/>
+  <path fill="currentColor" d="M246 175 A4 4 0 1 0 254 175 A4 4 0 1 0 246 175 Z"/>
+  <path fill="currentColor" d="M196 140 A4 4 0 1 0 204 140 A4 4 0 1 0 196 140 Z"/>
+  <path fill="var(--k-illustration-accent, #B5462B)" d="M154.5 60 A5.5 5.5 0 1 0 165.5 60 A5.5 5.5 0 1 0 154.5 60 Z"/>
+</svg>

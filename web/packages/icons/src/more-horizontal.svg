@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- more-horizontal (core icon). none — global UI iconography, not a licensed motif. Use: general UI chrome. -->
+  <path fill="currentColor" d="M4.4 12 A1.6 1.6 0 1 0 7.6 12 A1.6 1.6 0 1 0 4.4 12 Z"/>
+  <path fill="currentColor" d="M10.4 12 A1.6 1.6 0 1 0 13.6 12 A1.6 1.6 0 1 0 10.4 12 Z"/>
+  <path fill="currentColor" d="M16.4 12 A1.6 1.6 0 1 0 19.6 12 A1.6 1.6 0 1 0 16.4 12 Z"/>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "name": "@kalakriti/icons",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "svelte": "./src/Icon.svelte",
+      "types": "./src/icons.d.ts"
+    },
+    "./manifest": "./src/manifest.js"
+  },
+  "files": ["src", "dist"],
+  "scripts": {
+    "generate": "node ../../scripts/gen-batch4.mjs",
+    "validate": "node ../../scripts/validate-all.mjs"
+  },
+  "devDependencies": {
+    "svgo": "^3.0.0"
+  }
+}

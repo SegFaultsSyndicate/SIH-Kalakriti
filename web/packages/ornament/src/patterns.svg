@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Kalakriti ornament patterns, Batch 3. Inline this whole file once per
+     document (it renders nothing on its own), then reference a pattern with
+     fill="url(#k-jaali-hex-24)". Every pattern inherits currentColor from the
+     element that references it, so it takes the section’s text colour, which
+     is the reason this exists as an inlinable sprite rather than as a
+     background-image. Ids are namespaced k-* to survive being inlined
+     alongside anything else. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="k-jaali-hex-16" patternUnits="userSpaceOnUse" width="14" height="16">
+      <g fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M0 4.44 L 7 0.88 L 14 4.44 M0 11.56 L 7 15.13 L 14 11.56 M0 4.44 L 0 11.56 M14 4.44 L 14 11.56"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-hex-24" patternUnits="userSpaceOnUse" width="21" height="24">
+      <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M0 6.56 L 10.5 1.13 L 21 6.56 M0 17.44 L 10.5 22.88 L 21 17.44 M0 6.56 L 0 17.44 M21 6.56 L 21 17.44 M10.5 9.61 L 12.89 12 L 10.5 14.39 L 8.11 12 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-hex-32" patternUnits="userSpaceOnUse" width="28" height="32">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M0 8.63 L 14 1.25 L 28 8.63 M0 23.38 L 14 30.75 L 28 23.38 M0 8.63 L 0 23.38 M28 8.63 L 28 23.38 M7.56 12.61 L 14 9.22 L 20.44 12.61 L 20.44 19.39 L 14 22.79 L 7.56 19.39 Z M14 12.76 L 17.25 16 L 14 19.25 L 10.76 16 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-octstar-16" patternUnits="userSpaceOnUse" width="16" height="16">
+      <g fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M3.36 0.88 L 12.64 0.88 L 16 3.87 L 16 12.13 L 12.64 15.13 L 3.36 15.13 L 0 12.13 L 0 3.87 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-octstar-24" patternUnits="userSpaceOnUse" width="24" height="24">
+      <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M7.03 1.13 L 16.97 1.13 L 24 7.5 L 24 16.5 L 16.97 22.88 L 7.03 22.88 L 0 16.5 L 0 7.5 Z M12 9.61 L 14.39 12 L 12 14.39 L 9.61 12 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-octstar-32" patternUnits="userSpaceOnUse" width="32" height="32">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M9.37 1.25 L 22.63 1.25 L 32 9.89 L 32 22.11 L 22.63 30.75 L 9.37 30.75 L 0 22.11 L 0 9.89 Z M12.95 9.22 L 19.05 9.22 L 23.36 13.19 L 23.36 18.81 L 19.05 22.79 L 12.95 22.79 L 8.64 18.81 L 8.64 13.19 Z M16 12.76 L 19.25 16 L 16 19.25 L 12.76 16 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-interlace-16" patternUnits="userSpaceOnUse" width="16" height="16">
+      <g fill="none" stroke="currentColor" stroke-width="0.75" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M8 0.88 L 16 8 L 8 15.13 L 0 8 Z M3.2 3.2 H12.8 V12.8 H3.2 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-interlace-24" patternUnits="userSpaceOnUse" width="24" height="24">
+      <g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M12 1.13 L 24 12 L 12 22.88 L 0 12 Z M4.8 4.8 H19.2 V19.2 H4.8 Z M12 9.6 L 14.4 12 L 12 14.4 L 9.6 12 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-jaali-interlace-32" patternUnits="userSpaceOnUse" width="32" height="32">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M16 1.25 L 32 16 L 16 30.75 L 0 16 Z M6.4 6.4 H25.6 V25.6 H6.4 Z M16 9.22 L 23.36 16 L 16 22.79 L 8.64 16 Z M16 12.8 L 19.2 16 L 16 19.2 L 12.8 16 Z"/>
+      </g>
+    </pattern>
+    <pattern id="k-blockprint-running-20" patternUnits="userSpaceOnUse" width="20" height="20">
+      <path fill="currentColor" fill-rule="evenodd" d="M0 1.5 H20 V2.5 H0 Z M0 17.5 H20 V18.5 H0 Z M10 5 L 15 10 L 10 15 L 5 10 Z M10 8 L 12 10 L 10 12 L 8 10 Z M-0.75 5.5 H0.75 V14.5 H-0.75 Z M19.25 5.5 H20.75 V14.5 H19.25 Z"/>
+    </pattern>
+    <pattern id="k-blockprint-band-32" patternUnits="userSpaceOnUse" width="32" height="32">
+      <path fill="currentColor" fill-rule="evenodd" d="M0 1.5 H32 V2.5 H0 Z M0 29.5 H32 V30.5 H0 Z M0 8.5 H32 V9.5 H0 Z M0 22.5 H32 V23.5 H0 Z M1 4.5 H3 V6.5 H1 Z M1 25.5 H3 V27.5 H1 Z M9 4.5 H11 V6.5 H9 Z M9 25.5 H11 V27.5 H9 Z M17 4.5 H19 V6.5 H17 Z M17 25.5 H19 V27.5 H17 Z M25 4.5 H27 V6.5 H25 Z M25 25.5 H27 V27.5 H25 Z M8 11 L 13 16 L 8 21 L 3 16 Z M7.25 12.5 H8.75 V19.5 H7.25 Z M4.5 15.25 H11.5 V16.75 H4.5 Z M24 11 L 29 16 L 24 21 L 19 16 Z M23.25 12.5 H24.75 V19.5 H23.25 Z M20.5 15.25 H27.5 V16.75 H20.5 Z M0 13.5 L 2.5 16 L 0 18.5 L -2.5 16 Z M16 13.5 L 18.5 16 L 16 18.5 L 13.5 16 Z M32 13.5 L 34.5 16 L 32 18.5 L 29.5 16 Z"/>
+    </pattern>
+    <pattern id="k-rule-double-woven-8" patternUnits="userSpaceOnUse" width="8" height="8">
+      <g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter">
+        <path d="M0 0.5 H8 M0 7.5 H8 M4 0.5 V7.5 M0 4 H2.8 M5.2 4 H8"/>
+      </g>
+    </pattern>
+    <pattern id="k-weft-texture-12" patternUnits="userSpaceOnUse" width="12" height="12">
+      <path fill="currentColor" d="M2 0 H4 V8 H2 Z M2 10 H4 V12 H2 Z M8 0 H10 V2 H8 Z M8 4 H10 V12 H8 Z M0 2 H2 V4 H0 Z M4 2 H12 V4 H4 Z M0 8 H8 V10 H0 Z M10 8 H12 V10 H10 Z"/>
+    </pattern>
+  </defs>
+</svg>

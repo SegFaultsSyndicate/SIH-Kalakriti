@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kalakriti — visual system, one page</title>
+<link rel="stylesheet" href="../packages/tokens/src/palette.css">
+<style>
+  body { margin: 0; background: var(--k-surface-base); color: var(--k-text-primary); font-family: ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 3rem 2rem 4rem; }
+  .hero { text-align: center; margin-bottom: 2.5rem; }
+  .hero img { height: 2.2rem; }
+  .hero .tag { color: var(--k-text-secondary); margin-top: 0.4rem; font-size: 0.95rem; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 2rem 0 2.5rem; text-align: center; }
+  .stats .n { font-family: ui-serif, Georgia, serif; font-size: 1.7rem; color: var(--k-accent-secondary); }
+  .stats .l { font-size: 0.75rem; color: var(--k-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .row { display: flex; align-items: center; gap: 1.5rem; padding: 1.6rem 0; border-top: 1px solid var(--k-border-hairline); }
+  .row:last-of-type { border-bottom: 1px solid var(--k-border-hairline); }
+  .row .visual { flex: none; }
+  .row .copy h2 { font-size: 1rem; margin: 0 0 0.3rem; }
+  .row .copy p { font-size: 0.85rem; color: var(--k-text-secondary); margin: 0; line-height: 1.5; }
+  .icon-strip { display: flex; gap: 0.7rem; }
+  .icon-strip svg { width: 28px; height: 28px; color: var(--k-accent-secondary); }
+  .swatch { width: 90px; height: 90px; background-color: currentColor; color: var(--k-terracotta-700, #963D14);
+    -webkit-mask-image: url("../packages/patterns/src/pattern-ajrakh.svg"); mask-image: url("../packages/patterns/src/pattern-ajrakh.svg");
+    -webkit-mask-repeat: repeat; mask-repeat: repeat; -webkit-mask-size: 24px 24px; mask-size: 24px 24px; }
+  .illo { width: 130px; height: auto; color: var(--k-text-primary); }
+  footer { margin-top: 2.5rem; font-size: 0.78rem; color: var(--k-text-secondary); text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <img src="../packages/identity/src/wordmark-horizontal.svg" alt="Kalakriti">
+    <p class="tag">Visual identity for a government marketplace connecting marginalised Indian artisans to buyers.</p>
+  </div>
+
+  <div class="stats">
+    <div><div class="n">167</div><div class="l">SVG assets</div></div>
+    <div><div class="n">6</div><div class="l">Packages</div></div>
+    <div><div class="n">&lt;1KB</div><div class="l">per direct icon import</div></div>
+    <div><div class="n">8</div><div class="l">Batches shipped</div></div>
+  </div>
+
+  <div class="row">
+    <div class="visual icon-strip" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 12 L 12 5 L 20 12"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 20 L 6 12 L 18 12 L 18 20 Z"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M10 20 L10 15 L14 15 L14 20"/></svg>
+      <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 13 A7 7 0 1 0 19 13 A7 7 0 1 0 5 13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 11 L9 15 M12 11 L12 15 M15 11 L15 15 M8 13 L16 13"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11 5 A1 1 0 1 0 13 5 A1 1 0 1 0 11 5 Z"/></svg>
+      <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 4 L12 8"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 8 L19 8"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 8 L3 13 A2.5 2.2 0 0 0 8 13 L5 8"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M19 8 L17 13 A2.5 2.2 0 0 0 22 13 L19 8"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 20 L15 20"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 8 L12 20"/></svg>
+      <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 21 C12 21 5.5 14.3 5.5 9.3 A6.5 6.5 0 0 1 18.5 9.3 C18.5 14.3 12 21 12 21 Z"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11.1 9 A0.9 0.9 0 1 0 12.9 9 A0.9 0.9 0 1 0 11.1 9 Z"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8.5 8 L 10 5 L 14 5 L 15.5 8"/></svg>
+    </div>
+    <div class="copy">
+      <h2>89 icons, one grid</h2>
+      <p>24x24, 1.5px stroke, round joins. Core UI, domain-specific (fair pricing, handmade certified, GI-tagged), and craft glyphs — legible at 16px, three stroke-weight variants from the same path.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <svg class="visual illo" viewBox="0 0 320 240" aria-hidden="true">
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M160 60 L160 90"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M90 90 L230 90"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M90 90 L65 130 A26 22 0 0 0 115 130 L90 90"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M230 90 L205 130 A26 22 0 0 0 255 130 L230 90"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M152 160 L168 160 A2 2 0 0 1 170 162 L170 178 A2 2 0 0 1 168 180 L152 180 A2 2 0 0 1 150 178 L150 162 A2 2 0 0 1 152 160 Z"/>
+      <path fill="none" stroke="var(--k-terracotta-700, #963D14)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M55 105 L100 118"/>
+      <path fill="none" stroke="var(--k-terracotta-700, #963D14)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M52 105 A3 3 0 1 0 58 105 A3 3 0 1 0 52 105 Z"/>
+      <path fill="none" stroke="var(--k-terracotta-700, #963D14)" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M97 118 A3 3 0 1 0 103 118 A3 3 0 1 0 97 118 Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M202 100 L222 100 A2 2 0 0 1 224 102 L224 116 A2 2 0 0 1 222 118 L202 118 A2 2 0 0 1 200 116 L200 102 A2 2 0 0 1 202 100 Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.67" stroke-linecap="round" stroke-linejoin="round" d="M205 108 L219 108"/>
+    </svg>
+    <div class="copy">
+      <h2>Illustration, at most two colours</h2>
+      <p>Every empty state, onboarding scene, and feature illustration uses currentColor plus one accent — never more. Warli-inspired figures where a scene needs one, built from a shared economy-of-line primitive.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="visual swatch" aria-hidden="true"></div>
+    <div class="copy">
+      <h2>Structural motifs, not decoration</h2>
+      <p>Jaali lattices, block-print borders, kolam node-grids, warp/weft texture — abstract geometry drawn from six craft traditions, applied as CSS masks so currentColor and theme colour still work when a pattern tiles as a background.</p>
+    </div>
+  </div>
+
+  <footer>
+    Batch 8: whole-tree validation, tree-shaking proof, print-ready provenance tag, Go-handoff page,
+    searchable catalogue. See <a href="../contact-sheet-index.html">the full system index</a> for every batch.
+  </footer>
+</main>
+</body>
+</html>

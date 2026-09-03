@@ -1,0 +1,11 @@
+{
+  "name": "@kalakriti/tokens",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/tokens.css",
+    "./reset": "./src/reset.css",
+    "./base": "./src/base.css"
+  },
+  "files": ["src", "dist"]
+}
