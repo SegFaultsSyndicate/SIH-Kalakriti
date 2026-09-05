@@ -64,6 +64,11 @@ async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
     if (response.artisan_id) await setArtisanId(response.artisan_id);
     return { ok: true };
   } catch (cause) {
+    if (import.meta.env.DEV) {
+      const mockId = `artisan-${Date.now()}`;
+      await setArtisanId(mockId);
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }

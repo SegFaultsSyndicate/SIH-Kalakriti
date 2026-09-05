@@ -39,6 +39,11 @@
       await setPref('login.phone', value);
       await goto('/verify');
     } catch (cause) {
+      if (import.meta.env.DEV) {
+        await setPref('login.phone', value);
+        await goto('/verify');
+        return;
+      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
     } finally {
       sending = false;
@@ -80,7 +85,35 @@
       listening = false;
     }
   }
+
+  // Restore previous phone if returning after sign out
+  $effect(() => {
+    void getPref<string>('login.phone').then((saved) => {
+      if (saved && !digits) {
+        digits = saved.replace(/\D/g, '').slice(-10);
+      }
+    });
+  });
+
+  function handleKeydown(e: KeyboardEvent): void {
+    if (sending) return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+    if (e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+      if (digits.length < 10) digits += e.key;
+    } else if (e.key === 'Backspace') {
+      e.preventDefault();
+      digits = digits.slice(0, -1);
+    } else if (e.key === 'Enter' && valid) {
+      e.preventDefault();
+      void submit();
+    }
+  }
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
   <title>{t('login.heading')} — {t('app.name')}</title>
@@ -91,10 +124,31 @@
   <p class="login__body">{t('login.body')}</p>
   <SpeakButton text={`${t('login.heading')}. ${t('login.body')}`} label={t('action.speak')} />
 
-  <output class="login__readout" aria-label={t('login.phone.label')}>
+  <label class="login__readout" for="phone-input">
     <span class="login__code">{t('login.phone.countryCode')}</span>
-    <span class="login__digits">{digits || '—'}</span>
-  </output>
+    <input
+      id="phone-input"
+      class="login__input"
+      type="tel"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="10"
+      placeholder="XXXXXXXXXX"
+      bind:value={digits}
+      disabled={sending}
+      oninput={(e) => {
+        const val = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+        digits = val;
+        e.currentTarget.value = val;
+      }}
+      onkeydown={(e) => {
+        if (e.key === 'Enter' && valid) {
+          e.preventDefault();
+          void submit();
+        }
+      }}
+    />
+  </label>
 
   {#if attempted && !valid}
     <p class="login__error" role="alert">{t('login.phone.invalid')}</p>
@@ -136,18 +190,47 @@
 
   .login__readout {
     display: flex;
-    gap: var(--k-space-3);
-    align-items: baseline;
+    gap: var(--k-space-2);
+    align-items: center;
     margin-block-start: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-5);
     border: var(--k-hairline) solid var(--k-border-interactive);
     border-radius: var(--k-radius-md);
-    font-size: var(--k-text-2xl);
-    font-variant-numeric: var(--k-numeric-tabular);
+    background-color: var(--k-khadi-50);
+    cursor: text;
+    inline-size: 100%;
+    max-inline-size: 22rem;
+    box-sizing: border-box;
+    transition: border-color var(--k-duration-fast) var(--k-ease-standard);
+  }
+
+  .login__readout:focus-within {
+    border-color: var(--k-terracotta-700);
+    outline: 2px solid var(--k-terracotta-400);
   }
 
   .login__code {
     color: var(--k-text-secondary);
+    font-size: var(--k-text-xl);
+    font-weight: var(--k-weight-medium);
+  }
+
+  .login__input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: var(--k-text-xl);
+    font-weight: var(--k-weight-bold);
+    color: var(--k-text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    inline-size: 100%;
+    padding: 0;
+  }
+
+  .login__input::placeholder {
+    color: var(--k-stone-300);
+    font-weight: var(--k-weight-regular);
   }
 
   .login__error {

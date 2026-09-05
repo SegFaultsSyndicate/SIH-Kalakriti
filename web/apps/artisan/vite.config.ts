@@ -90,7 +90,7 @@ export default defineConfig({
             name: 'नया सामान जोड़ें',
             short_name: 'नया सामान',
             description: 'Photograph a new piece and start a listing',
-            url: '/listings/new',
+            url: '/listing/new/capture',
             icons: [{ src: '/icons/app-icon-192.png', sizes: '192x192' }],
           },
           {
@@ -237,7 +237,16 @@ export default defineConfig({
     exclude: WORKSPACE_PACKAGES,
   },
 
-  server: { port: 5173, strictPort: false },
+  server: {
+    port: 5173,
+    strictPort: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
   preview: { port: 4173, strictPort: true },
 
   /*

@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "api:gen": "openapi-typescript ../../../services/bff/openapi.json -o src/generated/schema.d.ts",
+    "api:check": "pnpm api:gen && git diff --exit-code -- src/generated/schema.d.ts",
     "test": "vitest run"
   },
   "dependencies": {

@@ -29,12 +29,27 @@ export async function patchDraft(patch: Partial<RegistrationDraft>): Promise<voi
   await setPref(DRAFT_PREF_KEY, { ...current, ...patch });
 }
 
+const STORAGE_ARTISAN_ID_KEY = 'kalakriti.artisan.id';
+
 export async function getArtisanId(): Promise<string | undefined> {
-  return getPref<string>(ARTISAN_ID_PREF_KEY);
+  const pref = await getPref<string>(ARTISAN_ID_PREF_KEY);
+  if (pref !== undefined) return pref;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(STORAGE_ARTISAN_ID_KEY) ?? undefined;
+    }
+  } catch {}
+  return undefined;
 }
 
 export async function setArtisanId(id: string | undefined): Promise<void> {
   await setPref(ARTISAN_ID_PREF_KEY, id);
+  try {
+    if (typeof localStorage !== 'undefined') {
+      if (id === undefined) localStorage.removeItem(STORAGE_ARTISAN_ID_KEY);
+      else localStorage.setItem(STORAGE_ARTISAN_ID_KEY, id);
+    }
+  } catch {}
 }
 
 /** Live updates to the artisan id -- the root layout's route guard watches this so a registration completing (or, on terminal failure, rolling back) is reflected without a reload. */

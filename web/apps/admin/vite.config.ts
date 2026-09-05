@@ -33,7 +33,16 @@ export default defineConfig({
 
   optimizeDeps: { exclude: WORKSPACE_PACKAGES },
 
-  server: { port: 5175, strictPort: false },
+  server: {
+    port: 5175,
+    strictPort: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
   preview: { port: 4175, strictPort: true },
 
   /*

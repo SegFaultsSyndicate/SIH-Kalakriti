@@ -17,13 +17,47 @@
   import { formatRelativeTime, locale } from '@kalakriti/i18n';
   import { OutboxView, network, db, type DraftRecord } from '@kalakriti/offline';
   import { Icon } from '@kalakriti/icons';
-  import { Button } from '@kalakriti/ui';
   import { syncEngine } from '$lib/sync';
+  import { getArtisanId } from '$lib/registration';
+  import { cachedOrders, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
 
   const t = $derived(locale.t);
 
   const outbox = new OutboxView();
   $effect(() => outbox.start());
+
+  let artisanId = $state<string | undefined>(undefined);
+  let orders = $state<BulkOrder[]>([]);
+
+  $effect(() => {
+    void (async () => {
+      artisanId = await getArtisanId();
+      orders = await cachedOrders();
+    })();
+  });
+
+  interface HomeLotRow {
+    order: BulkOrder;
+    lot: OrderLot;
+    kind: 'direct' | 'collective';
+  }
+
+  const actionableLots = $derived.by((): HomeLotRow[] => {
+    if (!artisanId) return [];
+    const lots = myLots(orders, artisanId);
+    return lots
+      .map((lot) => {
+        const order = orders.find((o) => o.id === lot.bulk_order_id);
+        if (!order) return undefined;
+        return { order, lot, kind: (order.lots?.length ?? 1) > 1 ? 'collective' : 'direct' } as HomeLotRow;
+      })
+      .filter((r): r is HomeLotRow => r !== undefined && needsAction(r.lot));
+  });
+
+  function lotHref(row: HomeLotRow): string {
+    if (row.lot.state === 'OFFERED') return `/orders/${row.order.id}/lots/${row.lot.id}/offer`;
+    return `/orders/${row.order.id}/lots/${row.lot.id}`;
+  }
 
   let drafts = $state<DraftRecord[]>([]);
   $effect(() => {
@@ -151,7 +185,20 @@
 
 <section class="lots" aria-labelledby="lots-heading">
   <h2 id="lots-heading">{t('home.lots.heading')}</h2>
-  <p class="lots__empty">{t('home.lots.empty')}</p>
+  {#if actionableLots.length === 0}
+    <p class="lots__empty">{t('home.lots.empty')}</p>
+  {:else}
+    <ul role="list" class="lots__list">
+      {#each actionableLots as row (row.lot.id)}
+        <li class="lots__row">
+          <a href={lotHref(row)} class="lots__link">
+            <span>{row.kind === 'direct' ? t('orders.kind.direct') : t('orders.kind.collective')} ({t('orders.units', { count: String(row.lot.quantity ?? 1) })})</span>
+            <span class="lots__row-status">{row.lot.state}</span>
+          </a>
+        </li>
+      {/each}
+    </ul>
+  {/if}
 </section>
 
 <style>
@@ -303,6 +350,29 @@
 
   .attention__row-status {
     color: var(--k-accent-danger);
+    font-size: var(--k-text-sm);
+  }
+
+  .lots__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lots__row {
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .lots__link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-block: var(--k-space-2);
+    color: var(--k-text-primary);
+    text-decoration: none;
+  }
+
+  .lots__row-status {
+    color: var(--k-accent-warning);
     font-size: var(--k-text-sm);
   }
 </style>

@@ -30,6 +30,98 @@
   let refreshing = $state(false);
   let refreshStats = $state<Awaited<ReturnType<typeof refreshCraftIndex>> | undefined>();
 
+  const MOCK_CRAFTS_DATA: Craft[] = [
+    {
+      id: 'craft-1',
+      slug: 'ajrakh-block-printing',
+      display_name: 'Ajrakh Block Printing',
+      gi_registration_no: 'GI-384',
+      regions: ['Kutch, Gujarat', 'Barmer, Rajasthan'],
+      techniques: ['hand-block-printing', 'resist-dyeing', 'indigo-dyeing'],
+      materials: ['cotton', 'natural-indigo', 'madder'],
+    },
+    {
+      id: 'craft-2',
+      slug: 'blue-pottery',
+      display_name: 'Jaipur Blue Pottery',
+      gi_registration_no: 'GI-180',
+      regions: ['Jaipur, Rajasthan'],
+      techniques: ['quartz-body-moulding', 'cobalt-glazing'],
+      materials: ['quartz', 'fullers-earth', 'cobalt-oxide'],
+    },
+    {
+      id: 'craft-3',
+      slug: 'madhubani-painting',
+      display_name: 'Madhubani Painting',
+      gi_registration_no: 'GI-105',
+      regions: ['Mithila, Bihar'],
+      techniques: ['line-drawing', 'natural-pigment-painting'],
+      materials: ['handmade-paper', 'natural-pigment'],
+    },
+    {
+      id: 'craft-4',
+      slug: 'patan-patola',
+      display_name: 'Patan Patola Weaving',
+      gi_registration_no: 'GI-232',
+      regions: ['Patan, Gujarat'],
+      techniques: ['double-ikat-weaving', 'silk-twisting'],
+      materials: ['mulberry-silk', 'natural-dye'],
+    },
+    {
+      id: 'craft-5',
+      slug: 'banarasi-brocade-weaving',
+      display_name: 'Banarasi Brocade Weaving',
+      gi_registration_no: 'GI-99',
+      regions: ['Varanasi, Uttar Pradesh'],
+      techniques: ['jacquard-weaving', 'zari-brocade'],
+      materials: ['silk', 'zari'],
+    },
+    {
+      id: 'craft-6',
+      slug: 'pashmina-weaving',
+      display_name: 'Kashmir Pashmina Weaving',
+      gi_registration_no: 'GI-46',
+      regions: ['Srinagar, Jammu & Kashmir'],
+      techniques: ['hand-spinning', 'twill-weaving'],
+      materials: ['pashmina-wool'],
+    },
+    {
+      id: 'craft-7',
+      slug: 'channapatna-toys',
+      display_name: 'Channapatna Toys',
+      gi_registration_no: 'GI-23',
+      regions: ['Ramanagara, Karnataka'],
+      techniques: ['wood-lathe-turning', 'lac-turnery'],
+      materials: ['ivory-wood', 'lac', 'vegetable-dye'],
+    },
+    {
+      id: 'craft-8',
+      slug: 'dhokra-casting',
+      display_name: 'Dhokra Metal Casting',
+      gi_registration_no: 'GI-83',
+      regions: ['Bastar, Chhattisgarh', 'Bankura, West Bengal'],
+      techniques: ['lost-wax-casting'],
+      materials: ['brass', 'beeswax'],
+    },
+    {
+      id: 'craft-9',
+      slug: 'warli-painting',
+      display_name: 'Warli Tribal Painting',
+      regions: ['Thane, Maharashtra'],
+      techniques: ['line-drawing', 'natural-pigment-painting'],
+      materials: ['rice-paste', 'ochre-canvas'],
+    },
+    {
+      id: 'craft-10',
+      slug: 'pattachitra',
+      display_name: 'Pattachitra Scroll Painting',
+      gi_registration_no: 'GI-108',
+      regions: ['Raghurajpur, Odisha'],
+      techniques: ['cloth-canvas-preparation', 'natural-pigment-painting'],
+      materials: ['tussar-silk', 'natural-pigment'],
+    },
+  ];
+
   async function load(): Promise<void> {
     loading = true;
     loadError = '';
@@ -37,7 +129,11 @@
       const res = await listCrafts();
       crafts = res.crafts ?? [];
     } catch (cause) {
-      loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      if (import.meta.env.DEV) {
+        crafts = MOCK_CRAFTS_DATA;
+      } else {
+        loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      }
     } finally {
       loading = false;
     }

@@ -26,7 +26,8 @@
     "e2e": "pnpm -F @kalakriti/e2e test",
     "size": "SIZE_BUDGET_ENFORCE=1 pnpm -r --filter \"./apps/*\" build",
     "assets:icons": "node scripts/gen-maskable-icons.mjs",
-    "assets:validate": "node scripts/validate-all.mjs"
+    "assets:validate": "node scripts/validate-all.mjs",
+    "assets:check-provenance": "node scripts/check-provenance-assets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",

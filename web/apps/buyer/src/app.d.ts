@@ -9,6 +9,14 @@
 /// <reference types="vite-plugin-pwa/svelte" />
 /// <reference types="vite-plugin-pwa/info" />
 
+declare module 'virtual:pwa-register' {
+  export function registerSW(options?: {
+    immediate?: boolean;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+  }): (reloadPage?: boolean) => Promise<void>;
+}
+
 declare global {
   namespace App {
     interface Error {

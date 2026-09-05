@@ -29,6 +29,7 @@
     restoreAccessToken,
     setUnauthorizedHandler,
     createLoginRedirectHandler,
+    setSessionRefreshHandler,
     setAcceptLanguage,
   } from '@kalakriti/api';
   import {
@@ -79,7 +80,11 @@
 
   $effect(() => {
     setUnauthorizedHandler(createLoginRedirectHandler((url) => goto(url)));
-    return () => setUnauthorizedHandler(undefined);
+    setSessionRefreshHandler((token) => session.establish(token));
+    return () => {
+      setUnauthorizedHandler(undefined);
+      setSessionRefreshHandler(undefined);
+    };
   });
 
   $effect(() => {

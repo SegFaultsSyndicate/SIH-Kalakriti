@@ -27,6 +27,7 @@
   import { Money, SpeakButton } from '@kalakriti/ui';
   import { Card } from '@kalakriti/patterns';
   import type { components } from '@kalakriti/api';
+  import { clampRecommendedRange } from './price-advisory';
 
   type Advice = components['schemas']['PriceAdvisory'];
   type Driver = NonNullable<Advice['drivers']>[number];
@@ -40,6 +41,15 @@
   const t = $derived(locale.t);
 
   const floor = $derived(advice.drivers?.find((d) => d.name === 'cost_floor'));
+  const range = $derived(
+    advice.recommended_min?.amount_paise != null && advice.recommended_max?.amount_paise != null
+      ? clampRecommendedRange(
+          advice.recommended_min.amount_paise,
+          advice.recommended_max.amount_paise,
+          floor?.value ? Number(floor.value) : 0,
+        )
+      : undefined,
+  );
   // recommended_min/max repeat the headline range as driver rows; cost_floor
   // gets its own distinct treatment above. Showing all three again here would
   // read as the same number three times, not as more information.
@@ -59,11 +69,11 @@
 </script>
 
 <div class="k-price-advisory">
-  {#if advice.recommended_min?.amount_paise != null && advice.recommended_max?.amount_paise != null}
+  {#if range}
     <div class="k-price-advisory__range">
       <p class="k-price-advisory__range-label">{t('pricing.advisory.rangeLabel')}</p>
       <p class="k-price-advisory__range-value">
-        {formatMoneyRange(advice.recommended_min.amount_paise, advice.recommended_max.amount_paise, locale.code)}
+        {formatMoneyRange(range.min, range.max, locale.code)}
       </p>
       <p class="k-price-advisory__caption">{t('pricing.advisory.caption')}</p>
     </div>

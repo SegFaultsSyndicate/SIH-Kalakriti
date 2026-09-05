@@ -59,9 +59,18 @@ export interface ListingDraftFields {
   packaging?: { fragile?: boolean; oversized?: boolean; requires_custom_crating?: boolean };
   translations?: ListingTranslation[];
   /** MOCK, from ml-mock.ts's pipeline result -- local-only, never sent. See ml_wiring.md. */
-  attributes?: { key: string; labelKey: MessageKey; value: string; source: 'MODEL' | 'ARTISAN' }[];
+  attributes?: {
+    key: string;
+    labelKey: MessageKey;
+    value: string;
+    source: 'MODEL' | 'ARTISAN';
+    confidence: number;
+    needs_artisan_input: boolean;
+  }[];
   /** MOCK, from ml-mock.ts -- sentence-to-attribute pairs for the review screen's tap-highlight. */
   claims?: { sentenceIndex: number; attributeKey: string }[];
+  /** Local selection used to keep the artisan's chosen primary image first. */
+  primaryPhotoId?: string;
   reviewApproved?: boolean;
   termsAccepted?: boolean;
 }
@@ -155,12 +164,49 @@ export async function removeCapturedMedia(draftId: string, mediaId: string): Pro
       updatedAt: Date.now(),
     });
   }
+
   const pending = await db.outbox
     .filter((e) => e.mediaIds.includes(mediaId) && e.status !== 'syncing')
     .toArray();
   await Promise.all(pending.map((e) => db.outbox.delete(e.id)));
   const stillQueued = await db.outbox.filter((e) => e.mediaIds.includes(mediaId)).count();
   if (stillQueued === 0) await db.media.delete(mediaId);
+}
+
+/** Reorders the captured photos and keeps the selected order in IndexedDB. */
+export async function reorderPhotos(draftId: string, orderedPhotoIds: string[]): Promise<void> {
+  await db.transaction('rw', db.drafts, db.media, async () => {
+    const draft = await db.drafts.get(draftId);
+    if (!draft) throw new Error('draft not found');
+    const media = (await db.media.bulkGet(draft.mediaIds)).filter(
+      (item): item is MediaRecord => !!item && item.kind === 'photo',
+    );
+    const existing = new Set(media.map((item) => item.id));
+    if (
+      orderedPhotoIds.length !== media.length ||
+      orderedPhotoIds.some((id) => !existing.has(id)) ||
+      new Set(orderedPhotoIds).size !== orderedPhotoIds.length
+    ) {
+      throw new Error('photo order must include every captured photo exactly once');
+    }
+    await Promise.all(orderedPhotoIds.map((id, order) => db.media.update(id, { order })));
+    await db.drafts.update(draftId, {
+      mediaIds: [...orderedPhotoIds, ...draft.mediaIds.filter((id) => !existing.has(id))],
+      updatedAt: Date.now(),
+    });
+  });
+}
+
+/** Makes one captured photo primary by moving it to the first upload position. */
+export async function setPrimaryPhoto(draftId: string, mediaId: string): Promise<void> {
+  const draft = await db.drafts.get(draftId);
+  if (!draft) throw new Error('draft not found');
+  const photos = (await db.media.bulkGet(draft.mediaIds))
+    .filter((item): item is MediaRecord => !!item && item.kind === 'photo')
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  if (!photos.some((photo) => photo.id === mediaId)) throw new Error('primary photo must be captured on this draft');
+  await reorderPhotos(draftId, [mediaId, ...photos.filter((photo) => photo.id !== mediaId).map((photo) => photo.id)]);
+  await patchFields(draftId, { primaryPhotoId: mediaId });
 }
 
 async function pendingEntries(draftId: string, kind: string): Promise<{ id: string }[]> {
@@ -237,6 +283,10 @@ export async function queueListingUpdate(
  * since core-svc refuses to submit a listing with no copy to review.
  */
 export async function publishListing(draftId: string): Promise<void> {
+  const draft = await db.drafts.get(draftId);
+  if (!draft || !(fieldsOf(draft).reviewApproved === true)) {
+    throw new Error('listing requires explicit approval before publication');
+  }
   const blockers = [
     ...(await pendingEntries(draftId, 'listing.create')),
     ...(await pendingEntries(draftId, 'listing.update')),

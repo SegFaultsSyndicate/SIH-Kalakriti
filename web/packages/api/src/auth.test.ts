@@ -1,9 +1,16 @@
 // packages/api/src/auth.test.ts
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getAccessToken, restoreAccessToken, setAccessToken } from './auth';
+import {
+  getAccessToken,
+  getRefreshToken,
+  restoreAccessToken,
+  setAccessToken,
+  setRefreshToken,
+} from './auth';
 
 beforeEach(() => {
   setAccessToken(undefined);
+  setRefreshToken(undefined);
 });
 
 describe('access token', () => {
@@ -30,5 +37,17 @@ describe('access token', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(await restoreAccessToken()).toBeUndefined();
+  });
+
+  it('persists and restores the refresh token alongside the access token', async () => {
+    setAccessToken('access-token');
+    setRefreshToken('refresh-token');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    setAccessToken(undefined);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await restoreAccessToken();
+
+    expect(getRefreshToken()).toBe('refresh-token');
   });
 });

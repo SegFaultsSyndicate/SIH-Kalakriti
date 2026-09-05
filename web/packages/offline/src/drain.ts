@@ -79,10 +79,35 @@ export async function drainOutbox(send: SendFn, options: DrainOptions = {}): Pro
       if (entry.status !== 'pending' && t - entry.updatedAt < backoffMs(entry.attempts, base, max)) {
         continue; // backoff not elapsed yet
       }
-      if (!(await dependencySatisfied(entry))) continue;
+      if (!(await dependencySatisfied(entry))) {
+        // A dependent intent must not remain silently pending forever when an
+        // upstream intent has been rejected permanently.
+        const blockedDependency = await db.outbox
+          .where('id')
+          .anyOf(entry.dependsOn)
+          .filter((dependency) => dependency.status === 'blocked' || dependency.status === 'needsAttention')
+          .first();
+        if (blockedDependency) {
+          await db.outbox.update(entry.id, {
+            status: 'needsAttention',
+            lastError: `dependency:${blockedDependency.id}`,
+            updatedAt: t,
+          });
+        }
+        continue;
+      }
 
       await db.outbox.update(entry.id, { status: 'syncing', updatedAt: t });
-      const result = await send(entry);
+      let result: SendResult;
+      try {
+        result = await send(entry);
+      } catch (cause: unknown) {
+        result = {
+          ok: false,
+          retryable: true,
+          error: cause instanceof Error ? cause.message : String(cause),
+        };
+      }
 
       if (result.ok) {
         await discard(entry.id);

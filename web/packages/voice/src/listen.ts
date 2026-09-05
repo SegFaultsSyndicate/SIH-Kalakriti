@@ -8,11 +8,44 @@
 // still owns raw audio *capture* (a MediaRecorder blob, for upload); this is
 // the separate, live-transcript path for voice input and voice navigation.
 
+interface RecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  readonly [index: number]: { readonly transcript: string };
+}
+
+interface RecognitionEvent {
+  readonly resultIndex: number;
+  readonly results: { readonly length: number; readonly [index: number]: RecognitionResult };
+}
+
+interface RecognitionErrorEvent {
+  readonly error: string;
+}
+
+interface Recognition {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  onresult: ((event: RecognitionEvent) => void) | null;
+  onerror: ((event: RecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+type RecognitionConstructor = new () => Recognition;
+
 export function listenSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  const speechWindow = window as Window & {
+    SpeechRecognition?: RecognitionConstructor;
+    webkitSpeechRecognition?: RecognitionConstructor;
+  };
   return (
-    typeof window !== 'undefined' &&
-    (typeof window.SpeechRecognition !== 'undefined' ||
-      typeof window.webkitSpeechRecognition !== 'undefined')
+    typeof speechWindow.SpeechRecognition !== 'undefined' ||
+    typeof speechWindow.webkitSpeechRecognition !== 'undefined'
   );
 }
 
@@ -32,7 +65,14 @@ export interface ListenHandle {
 
 /** Starts listening immediately. Returns a handle rather than a promise so the caller can stop it. */
 export function listen(options: ListenOptions = {}): ListenHandle {
-  const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+  if (typeof window === 'undefined') {
+    return { result: Promise.reject(new Error('SpeechRecognition is not available')), stop: () => {} };
+  }
+  const speechWindow = window as Window & {
+    SpeechRecognition?: RecognitionConstructor;
+    webkitSpeechRecognition?: RecognitionConstructor;
+  };
+  const Ctor = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
   if (!Ctor) {
     return { result: Promise.reject(new Error('SpeechRecognition is not available')), stop: () => {} };
   }
@@ -46,7 +86,7 @@ export function listen(options: ListenOptions = {}): ListenHandle {
   let finalTranscript = '';
 
   const result = new Promise<string>((resolve, reject) => {
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: RecognitionEvent) => {
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const r = event.results[i];
@@ -55,7 +95,7 @@ export function listen(options: ListenOptions = {}): ListenHandle {
       }
       options.onPartial?.((finalTranscript + interim).trim());
     };
-    recognition.onerror = (event) => reject(new Error(event.error));
+    recognition.onerror = (event: RecognitionErrorEvent) => reject(new Error(event.error));
     recognition.onend = () => resolve(finalTranscript.trim());
     recognition.start();
   });

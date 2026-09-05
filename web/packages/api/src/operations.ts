@@ -50,6 +50,16 @@ export function verifyOtp(body: OtpVerifyBody, options?: CallOptions): Promise<O
   return call('/auth/otp/verify', { ...options, method: 'POST', body }) as Promise<OtpVerifyResponse>;
 }
 
+type RefreshTokenBody = Json<paths['/auth/refresh']['post']['requestBody']>;
+type RefreshTokenResponse = Json<paths['/auth/refresh']['post']['responses'][200]>;
+
+export function refreshToken(
+  body: RefreshTokenBody,
+  options?: CallOptions,
+): Promise<RefreshTokenResponse> {
+  return call('/auth/refresh', { ...options, method: 'POST', body }) as Promise<RefreshTokenResponse>;
+}
+
 type RegisterArtisanBody = Json<paths['/artisans']['post']['requestBody']>;
 type RegisterArtisanResponse = Json<paths['/artisans']['post']['responses'][201]>;
 
@@ -58,6 +68,21 @@ export function registerArtisan(
   options?: CallOptions,
 ): Promise<RegisterArtisanResponse> {
   return call('/artisans', { ...options, method: 'POST', body }) as Promise<RegisterArtisanResponse>;
+}
+
+type GetArtisanProfileResponse = Json<paths['/artisans/me']['get']['responses'][200]>;
+
+export function getArtisanProfile(options?: CallOptions): Promise<GetArtisanProfileResponse> {
+  return call('/artisans/me', { ...options, method: 'GET' }) as Promise<GetArtisanProfileResponse>;
+}
+
+type UpdateArtisanProfileBody = Json<paths['/artisans/me']['patch']['requestBody']>;
+
+export function updateArtisanProfile(
+  body: UpdateArtisanProfileBody,
+  options?: CallOptions,
+): Promise<void> {
+  return call('/artisans/me', { ...options, method: 'PATCH', body }) as Promise<void>;
 }
 
 type ListListingsQuery = paths['/listings']['get']['parameters']['query'];
@@ -300,6 +325,15 @@ type ListIncomeStatementsResponse = Json<paths['/statements']['get']['responses'
 
 export function listIncomeStatements(options?: CallOptions): Promise<ListIncomeStatementsResponse> {
   return call('/statements', { ...options, method: 'GET' }) as Promise<ListIncomeStatementsResponse>;
+}
+
+type GetStatementResponse = Json<paths['/statements/{id}']['get']['responses'][200]>;
+
+export function getStatement(id: string, options?: CallOptions): Promise<GetStatementResponse> {
+  return call(`/statements/${encodeURIComponent(id)}`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<GetStatementResponse>;
 }
 
 type SuggestResponse = Json<paths['/search/suggest']['get']['responses'][200]>;

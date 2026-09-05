@@ -13,13 +13,10 @@
 // fails at runtime, in the field, on a phone. If a field is needed and the
 // spec does not have it, the spec changes first.
 //
-// The real services/bff/openapi.json has 6 paths today. Per-domain wrappers
-// for media, pricing, orders/bulk, follows, statements and insights don't
-// exist here because those endpoints don't exist in the spec yet -- adding
-// them would mean hand-typing a shape, which is exactly what this package
-// exists to refuse to do. Same for silent token refresh: there is no
-// /auth/refresh path, so a 401 is reported, not repaired -- wire
-// setUnauthorizedHandler(createLoginRedirectHandler(goto)) once at app start
+// All browser operations are generated from services/bff/openapi.json and
+// wrapped in operations.ts. Wire the auth handlers once at app start:
+// setUnauthorizedHandler(createLoginRedirectHandler(goto)) and
+// setSessionRefreshHandler(...)
 // (goto from '$app/navigation', injected rather than imported here since
 // that alias only resolves inside a real SvelteKit app).
 
@@ -30,20 +27,33 @@ export {
   getAcceptLanguage,
   setUnauthorizedHandler,
   getUnauthorizedHandler,
+  setSessionRefreshHandler,
+  getSessionRefreshHandler,
+  type SessionRefreshHandler,
   type UnauthorizedHandler,
   DEFAULT_TIMEOUT_MS,
 } from './config';
-export { setAccessToken, getAccessToken, restoreAccessToken } from './auth';
+export {
+  setAccessToken,
+  getAccessToken,
+  setRefreshToken,
+  getRefreshToken,
+  restoreAccessToken,
+} from './auth';
 export { decodeJwtClaims } from './jwt';
 export { session, type SessionStatus } from './session.svelte';
 export { requireRole, type RequireRoleOptions } from './requireRole';
 export { createLoginRedirectHandler, type LoginRedirectOptions } from './unauthorized-redirect';
 export { completeOtpVerification } from './auth-flow';
+export { refreshSession } from './session-refresh';
 export { messageKeyFor } from './errors';
 export {
   requestOtp,
   verifyOtp,
+  refreshToken,
   registerArtisan,
+  getArtisanProfile,
+  updateArtisanProfile,
   listListings,
   createListing,
   getListing,
@@ -65,6 +75,7 @@ export {
   markFeedItemRead,
   getFollowerCount,
   generateStatement,
+  getStatement,
   listIncomeStatements,
   suggest,
   getListingSummary,

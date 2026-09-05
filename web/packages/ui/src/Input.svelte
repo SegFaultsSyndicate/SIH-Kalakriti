@@ -17,7 +17,7 @@
   }
 
   let {
-    value = $bindable(''),
+    value = $bindable(),
     type = 'text',
     placeholder,
     disabled = false,

@@ -9,4 +9,5 @@ use (
 	./services/core-svc
 	./services/insight-svc
 	./services/search-svc
+	./tests/integration
 )

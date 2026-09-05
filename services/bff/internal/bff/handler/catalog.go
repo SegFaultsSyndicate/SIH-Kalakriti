@@ -38,6 +38,7 @@ type Listing struct {
 type Artisan struct {
 	ID          string
 	DisplayName string
+	District    string
 	ClusterID   *string
 }
 

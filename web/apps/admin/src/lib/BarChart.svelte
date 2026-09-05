@@ -34,7 +34,7 @@
   let { caption, rows, formatValue = (v) => String(v) }: Props = $props();
 
   const t = $derived(locale.t);
-  const maxValue = $derived(Math.max(1, ...rows.filter((r) => !r.suppressed).map((r) => r.value)));
+  const maxValue = $derived(Math.max(1, ...rows.filter((r) => !r.suppressed && Number.isFinite(r.value)).map((r) => r.value)));
 
   let selected = $state('chart');
 </script>
@@ -54,7 +54,7 @@
           <p class="barchart__empty">{t('insights.noData')}</p>
         {:else}
           <ul class="barchart__bars">
-            {#each rows as row (row.label)}
+            {#each rows as row, i (row.label + '-' + i)}
               <li class="barchart__row">
                 <span class="barchart__label">{row.label}</span>
                 {#if row.suppressed}
@@ -81,7 +81,7 @@
               </tr>
             </thead>
             <tbody>
-              {#each rows as row (row.label)}
+              {#each rows as row, i (row.label + '-' + i)}
                 <tr>
                   <th scope="row">{row.label}</th>
                   <td>{row.suppressed ? t('insights.suppressed') : formatValue(row.value)}</td>

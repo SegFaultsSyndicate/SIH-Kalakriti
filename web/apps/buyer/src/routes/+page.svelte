@@ -19,6 +19,8 @@
   import { locale } from '@kalakriti/i18n';
   import { SectionHeader, Skeleton } from '@kalakriti/ui';
   import { Section } from '@kalakriti/patterns';
+  import { HeroBackdrop } from '@kalakriti/illustrations';
+  import { Divider } from '@kalakriti/ornament';
   import { Icon } from '@kalakriti/icons';
   import { listListings, listCrafts, search, getListingSummary, getArtisanStorefront, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
@@ -110,7 +112,7 @@
 
 <h1 class="visually-hidden">{t('buyer.home.title')}</h1>
 
-<section class="hero">
+<HeroBackdrop element="section" class="hero">
   {#if heroImage}
     <img class="hero__image" src={heroImage} alt="" fetchpriority="high" />
   {/if}
@@ -118,7 +120,7 @@
     <p class="hero__tagline">{t('app.tagline')}</p>
     <a class="hero__cta" href="/search">{t('home.hero.cta')}</a>
   </div>
-</section>
+</HeroBackdrop>
 
 <Section variant="khadi-plain">
   <SectionHeader kicker={t('home.shopByCraft.kicker')} heading={t('home.shopByCraft.heading')} />
@@ -137,6 +139,8 @@
     </ul>
   {/if}
 </Section>
+
+<Divider variant="blockprint-running" density="medium" />
 
 {#if giListings.length > 0}
   <Section variant="khadi-weft">
@@ -229,7 +233,7 @@
     clip: rect(0 0 0 0);
   }
 
-  .hero {
+  :global(.hero) {
     position: relative;
     aspect-ratio: 16 / 9;
     min-block-size: 16rem;

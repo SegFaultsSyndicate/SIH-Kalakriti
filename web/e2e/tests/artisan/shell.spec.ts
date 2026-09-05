@@ -107,7 +107,7 @@ test('the manifest is served and declares what installability needs', async ({
   expect(maskable.length).toBeGreaterThanOrEqual(2);
 
   expect(manifest.shortcuts.map((s: { url: string }) => s.url)).toEqual([
-    '/listings/new',
+    '/listing/new/capture',
     '/orders',
   ]);
 });

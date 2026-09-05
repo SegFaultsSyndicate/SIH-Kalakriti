@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint src",
-    "test": "vitest src",
+    "test": "vitest run src",
     "size": "vite build && du -sh build"
   },
   "dependencies": {

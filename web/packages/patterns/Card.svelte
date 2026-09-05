@@ -9,7 +9,7 @@
   that entirely.
 -->
 <script>
-  /** @type {'flat'|'hairline'|'printed'} */
+  /** @type {'flat'|'hairline'|'printed'|'media'} */
   export let variant = 'flat';
   export let element = 'div';
 

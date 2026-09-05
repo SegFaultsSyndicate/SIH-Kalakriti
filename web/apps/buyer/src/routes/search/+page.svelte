@@ -25,7 +25,7 @@
   import { locale } from '@kalakriti/i18n';
   import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Skeleton, Switch } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
-  import { search, searchVoice, getListingSummary, type components } from '@kalakriti/api';
+  import { search, searchVoice, getListingSummary, suggest, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
 
   type SearchHit = components['schemas']['SearchHit'];
@@ -45,6 +45,41 @@
   let understood = $state<components['schemas']['StructuredFiltersUnderstood'] | undefined>(undefined);
   let didYouMean = $state<string[]>([]);
   let voiceOpen = $state(false);
+
+  let suggestions = $state<string[]>([]);
+  let showSuggestions = $state(false);
+
+  $effect(() => {
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      suggestions = [];
+      showSuggestions = false;
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await suggest(trimmed);
+        suggestions = res.suggestions ?? [];
+        showSuggestions = suggestions.length > 0;
+      } catch {
+        suggestions = [];
+        showSuggestions = false;
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  });
+
+  function selectSuggestion(item: string): void {
+    q = item;
+    showSuggestions = false;
+    limit = 20;
+    const params = new URLSearchParams({ q });
+    if (giOnly) params.set('gi_tagged', 'true');
+    if (madeToOrder) params.set('made_to_order', 'true');
+    if (material) params.set('material', material);
+    void goto(`/search?${params.toString()}`, { keepFocus: true, noScroll: true });
+    void runSearch();
+  }
 
   async function runSearch(): Promise<void> {
     loading = true;
@@ -77,14 +112,27 @@
   function onSubmit(event: SubmitEvent): void {
     event.preventDefault();
     limit = 20;
-    void goto(`/search?q=${encodeURIComponent(q)}`, { keepFocus: true, noScroll: true });
+    const params = new URLSearchParams({ q });
+    if (giOnly) params.set('gi_tagged', 'true');
+    if (madeToOrder) params.set('made_to_order', 'true');
+    if (material) params.set('material', material);
+    void goto(`/search?${params.toString()}`, { keepFocus: true, noScroll: true });
     void runSearch();
   }
 
-  function removeUnderstood(field: 'gi_only' | 'made_to_order'): void {
+  function removeUnderstood(field: 'gi_only' | 'made_to_order' | 'material' | 'colour' | 'price', value?: string): void {
     if (field === 'gi_only') giOnly = false;
     if (field === 'made_to_order') madeToOrder = false;
-    void runSearch();
+    if (field === 'material' && value) {
+      material = material === value ? '' : material;
+      if (understood) understood = { ...understood, materials: (understood.materials ?? []).filter((item) => item !== value) };
+    } else if (field === 'colour' && value && understood) {
+      understood = { ...understood, colours: (understood.colours ?? []).filter((item) => item !== value) };
+    } else if (field === 'price' && understood) {
+      understood = { ...understood, min_price: undefined, max_price: undefined };
+    } else {
+      void runSearch();
+    }
   }
 
   function loadMore(): void {
@@ -144,15 +192,28 @@
   <title>{t('search.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<h1>{t('search.heading')}</h1>
+<div class="search-container">
+  <form class="search-bar" onsubmit={onSubmit}>
+    <Input type="search" bind:value={q} placeholder={t('search.placeholder')} onfocus={() => { if (suggestions.length > 0) showSuggestions = true; }} />
+    <button type="button" class="search-bar__voice" onclick={() => (voiceOpen = true)} aria-label={t('search.voice.label')}>
+      <Icon name="microphone" />
+    </button>
+    <Button type="submit">{t('nav.search')}</Button>
+  </form>
 
-<form class="search-bar" onsubmit={onSubmit}>
-  <Input type="search" bind:value={q} placeholder={t('search.placeholder')} />
-  <button type="button" class="search-bar__voice" onclick={() => (voiceOpen = true)} aria-label={t('search.voice.label')}>
-    <Icon name="microphone" />
-  </button>
-  <Button type="submit">{t('nav.search')}</Button>
-</form>
+  {#if showSuggestions && suggestions.length > 0}
+    <ul class="search-suggestions" role="listbox">
+      {#each suggestions as item}
+        <li>
+          <button type="button" class="search-suggestions__item" onclick={() => selectSuggestion(item)}>
+            <Icon name="search" />
+            <span>{item}</span>
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
 
 {#if understood}
   <div class="chips" role="list">
@@ -160,10 +221,10 @@
     {#if understood.listing_type === 'MADE_TO_ORDER'}
       <Chip label={t('search.filters.madeToOrder')} onremove={() => removeUnderstood('made_to_order')} />
     {/if}
-    {#each understood.colours ?? [] as colour (colour)}<Chip label={colour} />{/each}
-    {#each understood.materials ?? [] as m (m)}<Chip label={m} />{/each}
+    {#each understood.colours ?? [] as colour (colour)}<Chip label={colour} onremove={() => removeUnderstood('colour', colour)} />{/each}
+    {#each understood.materials ?? [] as m (m)}<Chip label={m} onremove={() => removeUnderstood('material', m)} />{/each}
     {#if understood.min_price || understood.max_price}
-      <Chip label={t('search.filters.price')} />
+      <Chip label={t('search.filters.price')} onremove={() => removeUnderstood('price')} />
     {/if}
   </div>
 {/if}
@@ -224,11 +285,52 @@
 </Dialog>
 
 <style>
+  .search-container {
+    position: relative;
+  }
+
   .search-bar {
     display: flex;
     gap: var(--k-space-2);
     align-items: center;
     margin-block: var(--k-space-4);
+  }
+
+  .search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: var(--k-surface-elevated, #fff);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin: 0;
+    margin-block-start: -0.5rem;
+    margin-block-end: var(--k-space-4);
+    padding: var(--k-space-1);
+    list-style: none;
+  }
+
+  .search-suggestions__item {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    width: 100%;
+    padding: var(--k-space-2) var(--k-space-3);
+    border: none;
+    background: none;
+    border-radius: var(--k-radius-sm);
+    text-align: left;
+    font-size: var(--k-text-sm);
+    color: var(--k-text-primary);
+    cursor: pointer;
+  }
+
+  .search-suggestions__item:hover,
+  .search-suggestions__item:focus-visible {
+    background-color: var(--k-surface-sunken);
   }
 
   .search-bar :global(input) {

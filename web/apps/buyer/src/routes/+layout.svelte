@@ -13,6 +13,14 @@
   import { Icon } from '@kalakriti/icons';
   import { ErrorBoundary } from '@kalakriti/observability';
   import { env } from '$env/dynamic/public';
+  import {
+    session,
+    restoreAccessToken,
+    setSessionRefreshHandler,
+    setUnauthorizedHandler,
+    createLoginRedirectHandler,
+  } from '@kalakriti/api';
+  import { goto } from '$app/navigation';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -29,11 +37,27 @@
     void a11y.init();
   });
   $effect(() => a11y.start());
+  $effect(() => {
+    setUnauthorizedHandler(createLoginRedirectHandler((url) => goto(url)));
+    setSessionRefreshHandler((token) => session.establish(token));
+    return () => {
+      setUnauthorizedHandler(undefined);
+      setSessionRefreshHandler(undefined);
+    };
+  });
+
+  $effect(() => {
+    void (async () => {
+      const token = await restoreAccessToken();
+      if (token) session.establish(token);
+    })();
+  });
 
   // registerType is 'autoUpdate', so registration is all this needs to do:
   // a new worker takes over on the next navigation with no prompt. Correct
   // here and deliberately not what the artisan app does.
   onMount(async () => {
+    // @ts-expect-error virtual:pwa-register is injected by vite-plugin-pwa at build time.
     const { registerSW } = await import('virtual:pwa-register');
     registerSW({ immediate: true });
   });
@@ -62,6 +86,9 @@
       </a>
       <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
         <Icon name="collective-order" />
+      </a>
+      <a class="shell__icon-link" href="/assets" aria-label={t('assets.title')}>
+        <Icon name="info" />
       </a>
       <LanguageSelector />
       <AccessibilityControl statementHref="/accessibility" />

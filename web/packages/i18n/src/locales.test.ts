@@ -1,6 +1,6 @@
 // packages/i18n/src/locales.test.ts
 import { describe, expect, it } from 'vitest';
-import { LOCALES, LOCALE_CODES, isLocaleCode, resolveLocale } from './locales';
+import { LOCALES, LOCALE_CODES, SUPPORTED_LOCALES, isLocaleCode, resolveLocale } from './locales';
 
 describe('LOCALES', () => {
   it('lists all 22 Eighth Schedule languages, plus English', () => {
@@ -9,6 +9,8 @@ describe('LOCALES', () => {
     // the demo and as the catalogue's source of truth.
     expect(LOCALE_CODES).toHaveLength(23);
     expect(LOCALE_CODES).toContain('en');
+    expect(SUPPORTED_LOCALES).toHaveLength(22);
+    expect(SUPPORTED_LOCALES).not.toContain('en');
   });
 
   it('gives every locale a resolvable Intl tag', () => {
@@ -17,9 +19,10 @@ describe('LOCALES', () => {
     }
   });
 
-  it('exactly en and hi report complete coverage; the rest report fallback', () => {
+  it('reports complete coverage for translated languages; the rest report fallback', () => {
+    const complete = new Set(['en', 'hi', 'bn', 'gu', 'mr', 'or', 'pa', 'sd', 'ta', 'te', 'ur']);
     for (const code of LOCALE_CODES) {
-      const expected = code === 'en' || code === 'hi' ? 'complete' : 'fallback';
+      const expected = complete.has(code) ? 'complete' : 'fallback';
       expect(LOCALES[code].coverage).toBe(expected);
     }
   });

@@ -30,6 +30,7 @@
 // outgrows what a native Intl object expresses -- not yet, here.
 
 import { en, type MessageKey, type Messages } from './messages/en';
+import { FALLBACK_CATALOGUES } from './messages/fallback';
 import { interpolate, selectPluralKey, type MessageValues } from './format-message';
 import {
   DEFAULT_LOCALE,
@@ -41,9 +42,6 @@ import {
 } from './locales';
 
 declare global {
-  interface ImportMetaEnv {
-    readonly DEV?: boolean;
-  }
   interface ImportMeta {
     readonly env: ImportMetaEnv;
   }
@@ -62,10 +60,27 @@ export type Translate = (key: MessageKey, values?: MessageValues) => string;
  * lists only the translated ones, and set() never throws for a code that's
  * missing from it.
  */
-const CATALOGUE_LOADERS: Partial<Record<LocaleCode, () => Promise<Partial<Messages>>>> = {
+const CATALOGUE_LOADERS: Record<LocaleCode, () => Promise<Partial<Messages>>> = {
   en: async () => en,
   hi: async () => (await import('./messages/hi')).hi,
-};
+  bn: async () => (await import('./messages/bn')).bn,
+  ta: async () => (await import('./messages/ta')).ta,
+  te: async () => (await import('./messages/te')).te,
+  gu: async () => (await import('./messages/gu')).gu,
+  mr: async () => (await import('./messages/mr')).mr,
+  sd: async () => (await import('./messages/sd')).sd,
+  ur: async () => (await import('./messages/ur')).ur,
+  pa: async () => (await import('./messages/pa')).pa,
+  or: async () => (await import('./messages/or')).or,
+  ...Object.fromEntries(
+    Object.keys(FALLBACK_CATALOGUES)
+      .filter(
+        (code) =>
+          !['en', 'hi', 'bn', 'ta', 'te', 'gu', 'mr', 'sd', 'ur', 'pa', 'or'].includes(code),
+      )
+      .map((code) => [code, async () => FALLBACK_CATALOGUES[code as LocaleCode]]),
+  ),
+} as Record<LocaleCode, () => Promise<Partial<Messages>>>;
 
 /**
  * Whether the artisan has ever explicitly chosen a language (as opposed to
@@ -92,6 +107,7 @@ class LocaleState {
   #code = $state<LocaleCode>(DEFAULT_LOCALE);
   #catalogue = $state<Partial<Messages>>({});
   #hiCatalogue = $state<Partial<Messages> | null>(null);
+  #hiCataloguePromise: Promise<Partial<Messages>> | null = null;
   #loading = $state(false);
 
   get code(): LocaleCode {
@@ -122,7 +138,8 @@ class LocaleState {
    * to remember to tear down.
    */
   get t(): Translate {
-    // Referenced so the getter re-derives when either catalogue changes.
+    // Referenced so the getter re-derives when code or either catalogue changes.
+    void this.#code;
     void this.#catalogue;
     void this.#hiCatalogue;
     return (key, values) => interpolate(this.#lookup(key), values);
@@ -160,16 +177,17 @@ class LocaleState {
     const { persist = true } = options;
     this.#loading = true;
     try {
-      const load = CATALOGUE_LOADERS[code];
-      this.#catalogue = load ? await load() : {};
+      this.#catalogue = await CATALOGUE_LOADERS[code]();
       this.#code = code;
 
-      if (code !== 'en' && code !== 'hi' && this.#hiCatalogue === null) {
-        // Fire and forget: the fallback chain works without it (falls
-        // straight to English) until this resolves, then upgrades.
-        void CATALOGUE_LOADERS.hi?.().then((hi) => {
+      if (code !== 'en' && code !== 'hi') {
+        // Load Hindi before resolving set(), so a caller never observes the
+        // temporary English fallback for a scheduled language.
+        this.#hiCataloguePromise ??= CATALOGUE_LOADERS.hi().then((hi) => {
           this.#hiCatalogue = hi;
+          return hi;
         });
+        await this.#hiCataloguePromise;
       }
 
       if (typeof document !== 'undefined') {

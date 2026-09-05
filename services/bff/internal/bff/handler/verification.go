@@ -110,12 +110,20 @@ func (h *VerificationHandler) ServeJSON(w http.ResponseWriter, r *http.Request) 
 	resp := map[string]any{
 		"short_code":        prov.ShortCode,
 		"content_hash":      prov.ContentHash,
+		"media_hashes":      prov.MediaHashes,
 		"signature":         hex.EncodeToString(prov.Signature),
 		"signature_algo":    prov.SignatureAlgo,
 		"public_key_id":     prov.PublicKeyID,
 		"technique_matched": prov.TechniqueMatched,
 		"sealed_at":         prov.SealedAt.Format(time.RFC3339),
 		"verify_url":        fmt.Sprintf("%s/v/%s", h.verifyURL, code),
+	}
+	if data, err := h.fetchVerificationData(ctx, code); err == nil {
+		resp["listing_title"] = data.ListingTitle
+		resp["artisan_name"] = data.ArtisanName
+		resp["artisan_district"] = data.ArtisanDistrict
+		resp["craft_name"] = data.CraftName
+		resp["signature_valid"] = data.SignatureValid
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -127,6 +135,7 @@ func (h *VerificationHandler) ServeJSON(w http.ResponseWriter, r *http.Request) 
 type verificationData struct {
 	Code             string
 	ArtisanName      string
+	ArtisanDistrict  string
 	ClusterName      string
 	CraftName        string
 	TechniqueMatched bool
@@ -170,6 +179,7 @@ func (h *VerificationHandler) fetchVerificationData(ctx context.Context, code st
 	return &verificationData{
 		Code:             code,
 		ArtisanName:      artisan.DisplayName,
+		ArtisanDistrict:  artisan.District,
 		ClusterName:      clusterName,
 		CraftName:        craft.DisplayName,
 		TechniqueMatched: prov.TechniqueMatched,

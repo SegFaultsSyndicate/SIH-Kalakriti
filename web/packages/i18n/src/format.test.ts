@@ -1,6 +1,6 @@
 // packages/i18n/src/format.test.ts
 import { describe, expect, it } from 'vitest';
-import { formatMoney, formatMoneyRange } from './format';
+import { formatDate, formatMoney, formatMoneyRange, formatNumber, formatRelativeTime } from './format';
 
 describe('formatMoney', () => {
   it('never renders a raw paise integer', () => {
@@ -34,5 +34,16 @@ describe('formatMoney', () => {
 
   it('formats a price band as one range', () => {
     expect(formatMoneyRange(120000, 180000, 'en')).toBe('₹1,200–1,800');
+  });
+
+  it('uses Indic digit grouping for Hindi and Bengali locales', () => {
+    expect(formatNumber(12345678, 'hi')).toBe('1,23,45,678');
+    expect(formatNumber(12345678, 'bn')).toBe('১,২৩,৪৫,৬৭৮');
+  });
+
+  it('formats dates and relative time with the selected locale', () => {
+    const date = new Date('2026-01-15T00:00:00Z');
+    expect(formatDate(date, 'hi', { timeZone: 'UTC', dateStyle: 'long' })).toContain('2026');
+    expect(formatRelativeTime(new Date('2026-01-13T00:00:00Z'), 'hi', date)).toBe('परसों');
   });
 });

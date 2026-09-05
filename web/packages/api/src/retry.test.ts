@@ -153,7 +153,7 @@ describe('call retry behaviour', () => {
 
     expect(attempts).toBe(1);
     expect(seenPaths).toEqual(['/listings']);
-    expect(getAccessToken()).toBe('stale-token'); // no /auth/refresh in the spec -- nothing repairs it
+    expect(getAccessToken()).toBe('stale-token'); // no refresh token is available
   });
 
   it('propagates a 401 unchanged when no unauthorized handler is set', async () => {

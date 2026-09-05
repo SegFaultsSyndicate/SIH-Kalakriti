@@ -58,4 +58,15 @@ describe('evictOldestCachedMedia', () => {
 
     expect(freed).toBe(0);
   });
+
+  it('honors the eviction limit', async () => {
+    await db.media.bulkAdd([
+      { id: 'm1', blob: blob(), mimeType: 'image/jpeg', byteSize: 1, uploaded: true, capturedAt: 1 },
+      { id: 'm2', blob: blob(), mimeType: 'image/jpeg', byteSize: 1, uploaded: true, capturedAt: 2 },
+    ]);
+
+    expect(await evictOldestCachedMedia(1)).toBe(1);
+    expect(await db.media.get('m1')).toBeUndefined();
+    expect(await db.media.get('m2')).toBeDefined();
+  });
 });

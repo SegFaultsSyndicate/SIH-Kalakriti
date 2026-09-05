@@ -27,6 +27,14 @@ export const en = {
   'a11y.contrast.normal': 'Normal contrast',
   'a11y.contrast.high': 'High contrast',
   'a11y.reduceMotion': 'Reduce motion',
+  'a11y.readableFont': 'Dyslexia / readable font',
+  'a11y.lineSpacing': 'Relaxed line spacing',
+  'a11y.highlightLinks': 'Highlight all links',
+  'a11y.monochrome': 'Grayscale / monochrome',
+  'a11y.bigCursor': 'Large cursor',
+  'a11y.readScreen': 'Read screen aloud',
+  'a11y.reset': 'Reset all to default',
+  'a11y.resetDone': 'Accessibility settings reset to default',
   'a11y.language': 'Language',
   'a11y.loading': 'Loading',
   'a11y.settings': 'Accessibility settings',
@@ -47,6 +55,16 @@ export const en = {
   'a11y.statement.contact.title': 'Report a problem',
   'a11y.statement.contact.body':
     'If something does not work with your assistive technology, write to accessibility@kalakriti.gov.in or call the helpline listed on the Ministry of Social Justice and Empowerment website. Tell us the page, what you were using, and what happened -- that is what gets it fixed.',
+  'a11y.statement.contact.email': 'accessibility@kalakriti.gov.in',
+  'a11y.artisan.context.title': 'For artisans',
+  'a11y.artisan.context.body':
+    'The artisan app supports capture, drafts, and publishing on low-end phones and slower connections. Offline work is saved on the device; screen-reader and keyboard checks still need a real-device pass.',
+  'a11y.buyer.context.title': 'For buyers',
+  'a11y.buyer.context.body':
+    'The buyer app is a catalogue and ordering experience. Product media, provenance details, and order controls are designed to remain usable with enlarged text and keyboard navigation.',
+  'a11y.admin.context.title': 'For ministry staff',
+  'a11y.admin.context.body':
+    'The administration app provides desktop dashboards, cluster tools, and moderation queues. It has no offline mode; policy and moderation data are always fetched from the service.',
 
   'nav.home': 'Home',
   'nav.listings': 'My work',
@@ -55,6 +73,59 @@ export const en = {
   'nav.profile': 'Profile',
   'nav.search': 'Search',
   'nav.dashboard': 'Dashboard',
+
+  'profile.heading': 'My Profile',
+  'profile.verifiedArtisan': 'Verified Artisan',
+  'profile.masterArtisan': 'Master Artisan • {craft}',
+  'profile.followers': '{count} buyers follow and support your craft',
+  'profile.a11ySettings': 'Accessibility Settings',
+  'profile.badgeGi': 'GI Tagged Craft',
+  'profile.badgeGiSub': 'Authentic Geographical Origin',
+  'profile.badgeHandloom': 'AI Handloom Verified',
+  'profile.badgeHandloomSub': 'FFT Peak Spectrum Verified',
+  'profile.badgeHandmade': 'Handmade Certified',
+  'profile.badgeHandmadeSub': 'Zero Industrial Automation',
+  'profile.badgeVishwakarma': 'PM Vishwakarma',
+  'profile.badgeVishwakarmaSub': 'Ministry Certified Beneficiary',
+  'profile.metric.cataloged': 'Cataloged Pieces',
+  'profile.metric.viewCatalog': 'View Catalog →',
+  'profile.metric.onTime': 'On-Time Fulfilment',
+  'profile.metric.allLots': 'All Collective Lots',
+  'profile.metric.fee': 'Platform Fee',
+  'profile.metric.feeSub': 'Below ₹1.5L Floor',
+  'profile.metric.payouts': 'Net Direct Payouts',
+  'profile.metric.payoutsSub': 'Direct to Artisan Bank',
+  'profile.guild.title': 'Craft Heritage & Cluster Guild',
+  'profile.guild.pehchan': 'Pehchan: {id}',
+  'profile.guild.primaryCraft': 'Primary Craft Speciality',
+  'profile.guild.geoHub': 'Geographic Production Hub',
+  'profile.guild.cfc': 'Cluster Facility Centre (CFC)',
+  'profile.guild.shg': 'Self Help Group (SHG)',
+  'profile.tools.title': 'Artisan Services & Tools',
+  'profile.tools.incomeProof': 'Certified Income Proof (PDF)',
+  'profile.tools.incomeProofDesc': 'Official cryptographically signed statement for bank credit, Mudra schemes, and Kisan Credit Cards.',
+  'profile.tools.generateStatement': 'Generate Statement',
+  'profile.tools.businessCard': 'Digital Business Card',
+  'profile.tools.businessCardDesc': 'Share your verified credentials, story, and catalog with buyers directly on WhatsApp.',
+  'profile.tools.shareWhatsapp': 'Share on WhatsApp',
+  'profile.tools.storefront': 'Public Buyer Storefront',
+  'profile.tools.storefrontDesc': 'Preview your craft storefront exactly as buyers across India view it on the marketplace.',
+  'profile.tools.openMarketplace': 'Open Marketplace',
+  'profile.tools.addProduct': 'Add New Product',
+  'profile.tools.addProductDesc': 'Photograph a piece with your camera, get AI attribute analysis and fair price recommendations.',
+  'profile.tools.startListing': 'Start New Listing',
+  'profile.langPrefTitle': 'Language & Display Preferences',
+  'profile.langPrefDesc': 'Choose your preferred Indian language for voice prompts and labels:',
+  'profile.moreLanguages': 'More Indian Languages ({count})',
+  'profile.lessLanguages': 'Show fewer languages',
+  'profile.contrast': 'Contrast: {mode}',
+  'profile.textSize': 'Text Size: {scale}%',
+  'profile.fullA11yStatement': 'Full Accessibility Statement →',
+  'profile.session.loggedAs': 'Logged in as {phone}',
+  'profile.session.active': 'Active Device Session',
+  'profile.session.signOut': 'Sign Out',
+  'profile.languageUpdated': 'Language updated to {lang}',
+  'profile.loggedOut': 'Logged out successfully.',
 
   'action.back': 'Back',
   'action.skip': 'Skip',
@@ -130,10 +201,57 @@ export const en = {
   'error.500.action': 'Try again',
 
   'buyer.home.title': 'Kalakriti',
+  'buyer.verify.eyebrow': 'Kalakriti provenance',
+  'assets.kicker': 'visual system',
+  'assets.title': 'Kalakriti assets',
+  'assets.body': 'The identity, motifs and verification surfaces that make this marketplace rooted, legible and trustworthy.',
+  'assets.identityTitle': 'Identity and provenance',
+  'assets.linksTitle': 'Browse the complete asset catalogue',
+  'assets.docsLink': 'Open searchable asset documentation',
+  'assets.contactSheetsLink': 'Open batch contact sheets',
+  'assets.pitchLink': 'Open the visual pitch summary',
+  'assets.illustrationsTitle': 'Illustrations in context',
+  'assets.provenanceIllustration': 'Provenance illustration',
+  'assets.fairPricingIllustration': 'Fair pricing illustration',
+  'assets.buyersIllustration': 'Buyers across India illustration',
+  'assets.photographIllustration': 'Photograph your work illustration',
+  'assets.printTagLink': 'Download the A4 provenance tag',
+  'buyer.verify.title': 'Check an item’s provenance',
+  'buyer.verify.code': 'Verification code',
+  'buyer.verify.technique': 'Technique evidence',
+  'buyer.verify.match': 'Matches the artisan’s claim',
+  'buyer.verify.noMatch': 'Does not match the artisan’s claim',
+  'buyer.verify.sealed': 'Sealed on',
+  'buyer.verify.hash': 'Record hash',
+  'buyer.verify.mediaHashes': 'Evidence media hashes',
+  'buyer.verify.listing': 'Item',
+  'buyer.verify.artisan': 'Artisan',
+  'buyer.verify.district': 'District',
+  'buyer.verify.craft': 'Craft',
+  'buyer.verify.handloom': 'Handloom evidence',
+  'buyer.verify.handloomUnavailable': 'Not included in this sealed record',
+  'buyer.verify.note':
+    'This page reports only the sealed record returned by Kalakriti. An unverifiable code is not proof of fraud, but it is not proof of authenticity either.',
+  'buyer.verify.verified.title': 'Record found',
+  'buyer.verify.verified.body':
+    'A sealed provenance record was found for this code, and its technique evidence matches the artisan’s claim.',
+  'buyer.verify.mismatch.title': 'Record found — technique does not match',
+  'buyer.verify.mismatch.body':
+    'A sealed record exists, but its technique evidence does not match the artisan’s claim. Consider this item unconfirmed.',
+  'buyer.verify.insufficient.title': 'Record found — evidence is inconclusive',
+  'buyer.verify.insufficient.body':
+    'A sealed record exists, but the available evidence is not enough to make a technique judgement.',
+  'buyer.verify.invalid.title': 'We cannot verify this code',
+  'buyer.verify.invalid.body':
+    'The code {code} does not match a sealed provenance record. Check the printed tag and try again.',
+  'buyer.verify.error.title': 'Verification is unavailable',
+  'buyer.verify.error.body':
+    'We could not reach the verification service. Check your connection and try again.',
   'admin.home.title': 'Kalakriti administration',
   'admin.home.signedOut': 'Sign in to see the dashboard.',
   'admin.home.noAccess': 'Your account has no dashboard sections to show.',
-  'admin.login.phoneHint': 'Field-staff and ministry accounts sign in the same way as artisans and buyers.',
+  'admin.login.phoneHint':
+    'Field-staff and ministry accounts sign in the same way as artisans and buyers.',
   'verify.submit': 'Verify',
 
   'nav.insights': 'Insights',
@@ -147,7 +265,8 @@ export const en = {
   'palette.placeholder': 'Search pages…',
   'palette.empty': 'No matching page.',
 
-  'insights.accessRestricted': 'Your account does not have the ministry role required to view this page.',
+  'insights.accessRestricted':
+    'Your account does not have the ministry role required to view this page.',
   'insights.loading': 'Loading…',
   'insights.chart': 'Chart',
   'insights.table': 'Table',
@@ -160,18 +279,21 @@ export const en = {
   'insights.stateCode': 'State code',
   'insights.applyFilters': 'Apply filters',
   'insights.dyingCraftWatch': 'Dying-craft watch',
-  'insights.dyingCraftNote': 'Crafts with the steepest decline in active artisans, ranked by decline rate — the most policy-relevant figure on this dashboard.',
+  'insights.dyingCraftNote':
+    'Crafts with the steepest decline in active artisans, ranked by decline rate — the most policy-relevant figure on this dashboard.',
   'insights.declineRate': 'Decline rate',
   'insights.exportCsv': 'Export CSV',
   'insights.artisansByDistrict': 'Artisans onboarded by district',
   'insights.artisanCount': 'Artisan count',
   'insights.gmvByDistrict': 'GMV by district',
-  'insights.suppressionNote': 'Districts with fewer than 5 artisans are suppressed for privacy, not shown as zero.',
+  'insights.suppressionNote':
+    'Districts with fewer than 5 artisans are suppressed for privacy, not shown as zero.',
   'insights.totalGmv': 'Total GMV',
   'insights.medianEarnings': 'Median artisan earnings by district',
   'insights.averageEarnings': 'Average earnings',
   'insights.incomeUplift': 'Income uplift: before vs. after 90 days on the platform',
-  'insights.upliftNote': 'Median earnings for the 90 days before an artisan joined against the 90 days after — small buckets suppressed the same way as GMV.',
+  'insights.upliftNote':
+    'Median earnings for the 90 days before an artisan joined against the 90 days after — small buckets suppressed the same way as GMV.',
   'insights.medianBefore': 'Median before',
   'insights.medianAfter': 'Median after',
   'insights.listingsByCraft': 'Listings published by craft',
@@ -196,7 +318,8 @@ export const en = {
   'clusters.roleMaster': 'Master craftsperson',
   'clusters.addMember': 'Add member',
   'clusters.bulkOnboarding': 'Bulk artisan onboarding',
-  'clusters.bulkHint': 'CSV with columns display_name, phone_e164, craft_ids, languages, state_code, district. Separate multiple craft_ids or languages with ; — craft_ids are craft UUIDs from /crafts, languages are names like ENGLISH or HINDI.',
+  'clusters.bulkHint':
+    'CSV with columns display_name, phone_e164, craft_ids, languages, state_code, district. Separate multiple craft_ids or languages with ; — craft_ids are craft UUIDs from /crafts, languages are names like ENGLISH or HINDI.',
   'clusters.sheetSummary': '{valid} row(s) valid, {invalid} row(s) with errors.',
   'clusters.errorRowsCaption': 'Rows with validation errors',
   'clusters.row': 'Row',
@@ -212,14 +335,16 @@ export const en = {
   'clusters.shgCreated': 'Self-help group created.',
   'clusters.shgSaved': 'Roster saved.',
   'clusters.shareSplit': 'Member share split',
-  'clusters.shareHint': 'Every member and their whole-percent share of group earnings. Shares must sum to exactly 100.',
+  'clusters.shareHint':
+    'Every member and their whole-percent share of group earnings. Shares must sum to exactly 100.',
   'clusters.sharePct': 'Share %',
   'clusters.addShareRow': 'Add member',
   'clusters.shareTotal': 'Total: {total}%',
   'clusters.shareMustSum100': 'shares must sum to exactly 100',
   'clusters.saveShgMembers': 'Save roster',
 
-  'moderation.humanDecisionNote': 'Detection models flag; a person decides. Nothing on this page acts automatically, and there is no bulk action.',
+  'moderation.humanDecisionNote':
+    'Detection models flag; a person decides. Nothing on this page acts automatically, and there is no bulk action.',
   'moderation.modelFlagged': 'Model flagged',
   'moderation.evidenceHeading': 'Model evidence',
   'moderation.techniqueClaimed': 'Technique claimed',
@@ -229,7 +354,8 @@ export const en = {
   'moderation.isHandloom': 'Handloom verified',
   'moderation.yes': 'Yes',
   'moderation.no': 'No',
-  'moderation.noProvenance': 'No sealed provenance record — nothing for a model to have flagged.',
+  'moderation.noProvenance':
+    'No sealed provenance record — nothing for a model to have flagged.',
   'moderation.reasonPlaceholder': 'Reason for suspension (required)',
   'moderation.reasonRequired': 'A reason is required to suspend a listing.',
   'moderation.suspend': 'Suspend listing',
@@ -240,7 +366,8 @@ export const en = {
   'crafts.refreshIndex': 'Refresh index',
   'crafts.refreshed': 'Craft index refreshed.',
   'crafts.refreshResult': 'Index rebuilt: {crafts} crafts, {aliases} aliases.',
-  'crafts.aliasGapNote': 'Alias editing across scripts and merging duplicate crafts are not available yet — the backend has no alias-write or merge endpoint. Browsing and the manual index refresh below are real.',
+  'crafts.aliasGapNote':
+    'Alias editing across scripts and merging duplicate crafts are not available yet — the backend has no alias-write or merge endpoint. Browsing and the manual index refresh below are real.',
   'crafts.search': 'Search',
   'crafts.searchPlaceholder': 'Name, technique or material',
   'crafts.regions': 'Regions',
@@ -352,13 +479,15 @@ export const en = {
   'purchase.quantity': 'Quantity',
   'purchase.minOrder': 'Minimum order: {count}',
   'purchase.deliveryNotes': 'Delivery address & notes',
-  'purchase.deliveryNotesHint': 'There is no separate address field yet — write the delivery address here along with any instructions.',
+  'purchase.deliveryNotesHint':
+    'There is no separate address field yet — write the delivery address here along with any instructions.',
   'purchase.neededBy': 'Need it by',
   'purchase.unitPrice': 'Unit price',
   'purchase.total': 'Total',
   'purchase.advanceDue': 'Advance due now ({pct}%)',
   'purchase.balanceOnDispatch': 'Balance on dispatch',
-  'purchase.noPaymentGateway': 'This build places the order; taking payment is not wired up yet, so nothing is charged.',
+  'purchase.noPaymentGateway':
+    'This build places the order; taking payment is not wired up yet, so nothing is charged.',
   'purchase.submit': 'Place order',
   'purchase.submitting': 'Placing order…',
   'purchase.success': 'Order placed — allocation is starting now',
@@ -376,11 +505,14 @@ export const en = {
   'bulkOrder.quantity': 'Total units needed',
   'bulkOrder.deadline': 'Required by',
   'bulkOrder.budgetBand': 'Budget band',
-  'bulkOrder.budgetBand.hint': "Not sent to the order yet — there's no budget field on the backend — but it's folded into your delivery notes so the reviewing team sees it.",
+  'bulkOrder.budgetBand.hint':
+    "Not sent to the order yet — there's no budget field on the backend — but it's folded into your delivery notes so the reviewing team sees it.",
   'bulkOrder.delivery': 'Delivery details',
   'bulkOrder.feasibility': '{count} artisans practise this craft in our network',
-  'bulkOrder.feasibility.low': 'Only {count} artisan practises this craft — a large order may take longer to fully allocate',
-  'bulkOrder.feasibility.none': 'No artisans are registered for this craft yet — this order may not be allocatable',
+  'bulkOrder.feasibility.low':
+    'Only {count} artisan practises this craft — a large order may take longer to fully allocate',
+  'bulkOrder.feasibility.none':
+    'No artisans are registered for this craft yet — this order may not be allocatable',
   'bulkOrder.review.heading': 'Review your requirement',
   'bulkOrder.next': 'Next',
   'bulkOrder.back': 'Back',
@@ -406,7 +538,8 @@ export const en = {
   'allocation.live.declined': '{artisan} declined the lot',
   'allocation.live.expired': "{artisan}'s offer expired without a response",
   'allocation.live.progressed': '{artisan} reported {pct}% progress',
-  'allocation.live.gaveUp': '{artisan} gave up their lot of {quantity} units — reallocating to another artisan',
+  'allocation.live.gaveUp':
+    '{artisan} gave up their lot of {quantity} units — reallocating to another artisan',
   'allocation.live.qcPassed': "{artisan}'s lot passed quality inspection",
   'allocation.live.qcFailed': "{artisan}'s lot needs rework after inspection",
   'allocation.live.orderState': 'Order status: {state}',
@@ -423,17 +556,20 @@ export const en = {
   'allocation.state.AMENDMENT_PENDING': 'Amendment pending',
   'allocation.state.COMPLETED': 'Completed',
   'allocation.state.CANCELLED': 'Cancelled',
-  'allocation.amendment.banner': 'A change to quantity or deadline is pending review on this order. There is no self-serve accept/reject for this yet — the team handling your order will be in touch.',
+  'allocation.amendment.banner':
+    'A change to quantity or deadline is pending review on this order. There is no self-serve accept/reject for this yet — the team handling your order will be in touch.',
 
   // Buyer order history
   'buyer.orders.heading': 'Your orders',
   'buyer.orders.empty': "You haven't placed any orders on this device yet.",
-  'orders.empty.hint': 'Order history is remembered on this device only — there is no cross-device order list yet.',
+  'orders.empty.hint':
+    'Order history is remembered on this device only — there is no cross-device order list yet.',
   'orders.notFound': 'This order could not be found.',
   'orders.viewAllocation': 'View allocation',
   'orders.dispute.entry': 'Report an issue',
   'orders.dispute.heading': 'Report an issue with this order',
-  'orders.dispute.body': "There's no in-app dispute flow yet. Email the order id below to our support team and they'll pick it up.",
+  'orders.dispute.body':
+    "There's no in-app dispute flow yet. Email the order id below to our support team and they'll pick it up.",
   'orders.dispute.mailSubject': 'Order issue: {orderId}',
   'orders.dispute.mailLink': 'Email support',
   'orders.dispute.close': 'Close',
@@ -511,7 +647,8 @@ export const en = {
   'login.phone.invalid': 'Enter a 10-digit phone number.',
   'login.voice.prompt': 'Say your 10-digit phone number.',
   'login.submit': 'Send code',
-  'login.offline': 'You need an internet connection to receive a code. We will try again as soon as you are back online.',
+  'login.offline':
+    'You need an internet connection to receive a code. We will try again as soon as you are back online.',
 
   'verify.heading': 'Enter the code',
   'verify.body': 'Enter the 6-digit code sent to {phone}.',
@@ -520,7 +657,8 @@ export const en = {
   'verify.resend': 'Resend code',
   'verify.resend.wait': 'Resend code in {seconds}s',
   'verify.invalid': 'That code is not right. Check the message and try again.',
-  'verify.offline': 'You need an internet connection to verify this code. We will send it as soon as you are back online.',
+  'verify.offline':
+    'You need an internet connection to verify this code. We will send it as soon as you are back online.',
   'verify.submitting': 'Checking your code',
 
   'register.name.heading': 'What is your name?',
@@ -530,7 +668,8 @@ export const en = {
   'register.craft.heading': 'What craft do you practise?',
   'register.craft.search': 'Search crafts',
   'register.craft.voice': 'Say the name of your craft.',
-  'register.craft.empty': 'No craft matches that. Try another word, or choose "Something else".',
+  'register.craft.empty':
+    'No craft matches that. Try another word, or choose "Something else".',
   'craft.weaving.name': 'Weaving',
   'craft.block-printing.name': 'Block printing',
   'craft.pottery.name': 'Pottery',
@@ -582,7 +721,8 @@ export const en = {
 
   'orders.heading': 'My orders',
   'orders.empty': 'No orders yet.',
-  'orders.emptyBody': 'Lot offers and orders will show up here — you may also get a notification with a link.',
+  'orders.emptyBody':
+    'Lot offers and orders will show up here — you may also get a notification with a link.',
   'orders.offlineNote': "You're offline — showing what was last loaded.",
   'orders.kind.direct': 'Direct order',
   'orders.kind.collective': 'Collective lot',
@@ -617,15 +757,18 @@ export const en = {
   'lotOffer.shipDateLabel': 'Date you can ship by',
   'lotOffer.declineReasonLabel': 'Reason for declining',
   'lotOffer.confirmAccept.title': 'Confirm accepting this lot',
-  'lotOffer.confirmAccept.body': "You're agreeing to make and ship this quantity by the date you give.",
+  'lotOffer.confirmAccept.body':
+    "You're agreeing to make and ship this quantity by the date you give.",
   'lotOffer.confirmAccept.confirm': 'Yes, accept this lot',
   'lotOffer.confirmDecline.title': 'Confirm declining this lot',
-  'lotOffer.confirmDecline.body': "You're turning down this offer. It will go to another artisan.",
+  'lotOffer.confirmDecline.body':
+    "You're turning down this offer. It will go to another artisan.",
   'lotOffer.confirmDecline.confirm': 'Yes, decline this lot',
 
   'lotProgress.heading': 'Production progress',
   'lotProgress.offlineNote': "You're offline — progress reports need a connection.",
-  'lotProgress.reworkNotice': 'Quality inspection asked for changes. Fix the issue, then report 100% again to send it back for a fresh check.',
+  'lotProgress.reworkNotice':
+    'Quality inspection asked for changes. Fix the issue, then report 100% again to send it back for a fresh check.',
   'lotProgress.report.heading': 'Report progress',
   'lotProgress.resubmit.heading': 'Ready for another check?',
   'lotProgress.progressLabel': 'Percent complete',
@@ -685,7 +828,7 @@ export const en = {
   'earnings.perOrder.heading': 'Completed orders',
 
   'notifications.heading': 'Notifications',
-  'notifications.empty': "Nothing here yet.",
+  'notifications.empty': 'Nothing here yet.',
   'notifications.group.orders': 'Orders',
   'notifications.group.listings': 'Listings',
   'notifications.group.social': 'Followers',
@@ -722,15 +865,19 @@ export const en = {
   'listing.capture.retake': 'Retake',
   'listing.capture.remove': 'Remove photo',
   'listing.capture.hint': 'Add at least one clear photo of the whole piece.',
-  'listing.capture.locked': "Photos are locked in now that you're further along — go back before the story step to change them.",
+  'listing.capture.locked':
+    "Photos are locked in now that you're further along — go back before the story step to change them.",
   'listing.quality.issue.blurry': 'This photo looks blurry. Try holding steady and retake it.',
-  'listing.quality.issue.noSubject': "We can't see the product clearly. Move closer and retake it.",
+  'listing.quality.issue.noSubject':
+    "We can't see the product clearly. Move closer and retake it.",
 
   'listing.video.heading': 'Add a video',
   'listing.video.add': 'Record a video',
   'listing.video.remove': 'Remove video',
-  'listing.video.hint': 'A short video is optional, but helps buyers see the craft in your hands.',
-  'listing.video.locked': "The video is locked in now that you're further along — go back before the story step to change it.",
+  'listing.video.hint':
+    'A short video is optional, but helps buyers see the craft in your hands.',
+  'listing.video.locked':
+    "The video is locked in now that you're further along — go back before the story step to change it.",
 
   'listing.story.heading': 'Tell us about it',
   'listing.story.craftLabel': 'Craft',
@@ -816,7 +963,8 @@ export const en = {
   'listings.bulk.pause': 'Pause selling',
   'listings.bulk.resume': 'Resume selling',
   'listings.bulk.duplicate': 'Duplicate as draft',
-  'listings.bulk.duplicated': 'Copied {count} listing(s) as new drafts. Photos were not copied — add new ones.',
+  'listings.bulk.duplicated':
+    'Copied {count} listing(s) as new drafts. Photos were not copied — add new ones.',
   'listings.bulk.pauseError': "Couldn't pause {title}.",
   'listings.bulk.resumeError': "Couldn't resume {title}.",
   'listings.detail.back': 'Back to my listings',
@@ -831,35 +979,44 @@ export const en = {
   'listings.detail.aiGuessed': 'AI-guessed',
   'listings.detail.saveCopy': 'Save changes',
   'listings.detail.attributesHeading': 'Details',
-  'listings.detail.attributesNote': 'Guessed from your photos. Edit any that are wrong — your answer always wins.',
+  'listings.detail.attributesNote':
+    'Guessed from your photos. Edit any that are wrong — your answer always wins.',
   'listings.detail.priceHeading': 'Price',
   'listings.detail.savePrice': 'Save price',
   'listings.detail.provenanceLink': 'Seal provenance for this listing',
 
   'pricing.advisory.rangeLabel': 'Suggested price range',
   'pricing.advisory.caption': 'A range, not a rule — you decide the final price.',
-  'pricing.advisory.floorLabel': "Never suggested below this — it's your materials and a fair wage for your time",
+  'pricing.advisory.floorLabel':
+    "Never suggested below this — it's your materials and a fair wage for your time",
   'pricing.advisory.listen': 'Listen to this',
   'pricing.advisory.shortfall': 'Short of the floor by',
-  'pricing.advisory.disclaimer': 'This is a tool to help you price your work. It never sets your price for you.',
-  'pricing.anomaly.underpriced': "This price is below what your materials and time cost. You can still use it — it's your call.",
-  'pricing.anomaly.overpriced': "This price is well above similar listings. That's fine if your piece is special — just checking.",
-  'pricing.driver.cost_floor': 'Your materials plus a fair wage for your time — the floor no suggestion goes below.',
+  'pricing.advisory.disclaimer':
+    'This is a tool to help you price your work. It never sets your price for you.',
+  'pricing.anomaly.underpriced':
+    "This price is below what your materials and time cost. You can still use it — it's your call.",
+  'pricing.anomaly.overpriced':
+    "This price is well above similar listings. That's fine if your piece is special — just checking.",
+  'pricing.driver.cost_floor':
+    'Your materials plus a fair wage for your time — the floor no suggestion goes below.',
   'pricing.driver.wage_rate': 'The fair hourly wage used for your state.',
   'pricing.driver.wage_state': 'State used for the wage rate.',
   'pricing.driver.market_p25': 'Lower end of what similar pieces sell for nearby.',
   'pricing.driver.market_p50': 'Typical price for similar pieces nearby.',
   'pricing.driver.market_p75': 'Higher end of what similar pieces sell for nearby.',
   'pricing.driver.market_sample_size': 'Number of similar listings this is based on.',
-  'pricing.driver.timing_multiplier': 'Adjustment for the current season or an upcoming festival.',
+  'pricing.driver.timing_multiplier':
+    'Adjustment for the current season or an upcoming festival.',
   'pricing.driver.recommended_min': 'Lower end of the suggested range.',
   'pricing.driver.recommended_max': 'Higher end of the suggested range.',
-  'pricing.driver.market_widened': 'Not enough similar listings nearby, so this looked across your whole craft instead.',
+  'pricing.driver.market_widened':
+    'Not enough similar listings nearby, so this looked across your whole craft instead.',
   'pricing.driver.timing_festival': 'Upcoming festival affecting demand.',
 
   'provenance.heading': 'Seal provenance',
   'provenance.back': 'Back to listing',
-  'provenance.intro': 'Add a few photos or a short video showing the piece being made, then confirm the technique. This becomes permanent, printable proof for buyers.',
+  'provenance.intro':
+    'Add a few photos or a short video showing the piece being made, then confirm the technique. This becomes permanent, printable proof for buyers.',
   'provenance.addEvidence': 'Add evidence',
   'provenance.removeEvidence': 'Remove',
   'provenance.evidenceHint': 'Close-ups of the technique in progress work best.',
@@ -872,7 +1029,8 @@ export const en = {
   'provenance.summary.claimedTechnique': 'Technique',
   'provenance.summary.timestamp': 'Time',
   'provenance.summary.contentHash': 'Record hash',
-  'provenance.hashNote': "The exact record — this evidence, this technique, this time — gets hashed and signed once you seal. That hash doesn't exist until then.",
+  'provenance.hashNote':
+    "The exact record — this evidence, this technique, this time — gets hashed and signed once you seal. That hash doesn't exist until then.",
   'provenance.sealButton': 'Seal now — this is permanent',
   'provenance.sealedAlt': 'Sealed',
   'provenance.sealedHeading': 'Sealed',
@@ -884,7 +1042,8 @@ export const en = {
   'provenance.technique.match': 'Matches what you described',
   'provenance.technique.mismatch': "Doesn't match what you described",
   'provenance.technique.insufficientEvidence': "Couldn't tell from this evidence",
-  'provenance.technique.insufficientEvidenceDetail': 'This is common with unusual angles or lighting — it is not a rejection. You can seal anyway, or add clearer close-ups first.',
+  'provenance.technique.insufficientEvidenceDetail':
+    'This is common with unusual angles or lighting — it is not a rejection. You can seal anyway, or add clearer close-ups first.',
   'provenance.technique.confidence': 'Confidence: {pct}',
   'provenance.technique.claimed': 'You said',
   'provenance.technique.observed': 'We saw',
@@ -895,9 +1054,11 @@ export const en = {
   'handloom.confidence': 'Confidence: {pct}',
   'handloom.fftRatio': 'Weave regularity ratio: {ratio}',
   'handloom.figureLink': 'See how this is measured',
-  'handloom.figureAlt': 'Side-by-side frequency spectrum comparing a handloom and a powerloom weave',
+  'handloom.figureAlt':
+    'Side-by-side frequency spectrum comparing a handloom and a powerloom weave',
   'handloom.listen': 'Listen to this',
-  'handloom.prototypeNote': 'This check is an early prototype: one measurement on one photo, not a certified test. Treat it as a helpful signal, not a final answer.',
+  'handloom.prototypeNote':
+    'This check is an early prototype: one measurement on one photo, not a certified test. Treat it as a helpful signal, not a final answer.',
 } as const;
 
 export type MessageKey = keyof typeof en;

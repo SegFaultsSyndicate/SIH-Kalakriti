@@ -20,7 +20,13 @@ export interface OptimisticOptions {
 /** Returns a disposer that stops watching without rolling back. */
 export async function applyOptimistic(options: OptimisticOptions): Promise<() => void> {
   options.apply();
-  const entry = await options.enqueue();
+  let entry: OutboxEntry;
+  try {
+    entry = await options.enqueue();
+  } catch (cause) {
+    options.rollback();
+    throw cause;
+  }
 
   const sub = liveQuery(() => db.outbox.get(entry.id)).subscribe((row) => {
     if (row === undefined) {

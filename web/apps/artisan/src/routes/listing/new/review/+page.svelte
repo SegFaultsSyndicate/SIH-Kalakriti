@@ -15,7 +15,7 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { locale, type MessageKey } from '@kalakriti/i18n';
-  import { Button, SpeakButton } from '@kalakriti/ui';
+  import { Button, Input, SpeakButton } from '@kalakriti/ui';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields } from '$lib/listing-draft';
 
@@ -28,6 +28,9 @@
     key: string;
     labelKey: MessageKey;
     value: string;
+    source: 'MODEL' | 'ARTISAN';
+    confidence: number;
+    needs_artisan_input: boolean;
   }
   interface Claim {
     sentenceIndex: number;
@@ -75,6 +78,12 @@
     await patchFields(draftId, { reviewApproved: true });
     await goto(`/listing/new/pricing?d=${draftId}`);
   }
+
+  async function editAttribute(attribute: Attribute, value: string): Promise<void> {
+    attribute.value = value;
+    attribute.needs_artisan_input = false;
+    await patchFields(draftId, { attributes });
+  }
 </script>
 
 <svelte:head>
@@ -111,8 +120,22 @@
         <ul role="list">
           {#each attributes as attribute (attribute.key)}
             <li class="review-attribute" class:review-attribute--highlighted={attribute.key === highlighted}>
-              <span class="review-attribute__label">{t(attribute.labelKey)}</span>
-              <span class="review-attribute__value">{attribute.value}</span>
+              <span class="review-attribute__label">
+                {t(attribute.labelKey)}
+                <span class="review-attribute__confidence">{Math.round(attribute.confidence * 100)}%</span>
+                {#if attribute.needs_artisan_input}
+                  <span class="review-attribute__needs-input">{t('listing.review.note')}</span>
+                {/if}
+              </span>
+              {#if attribute.needs_artisan_input}
+                <Input
+                  value={attribute.value}
+                  oninput={(event: Event) =>
+                    editAttribute(attribute, (event.currentTarget as HTMLInputElement).value)}
+                />
+              {:else}
+                <span class="review-attribute__value">{attribute.value}</span>
+              {/if}
             </li>
           {/each}
         </ul>

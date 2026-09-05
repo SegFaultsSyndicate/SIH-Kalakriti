@@ -100,6 +100,37 @@ describe('drainOutbox', () => {
     expect(row?.attempts).toBe(1);
   });
 
+  it('turns a dependent entry into needsAttention when its dependency is terminal', async () => {
+    const dependency = await enqueue({ kind: 'media.upload', payload: {} });
+    const dependent = await enqueue({
+      kind: 'listing.submit',
+      payload: {},
+      dependsOn: [dependency.id],
+    });
+    await db.outbox.update(dependency.id, { status: 'blocked' });
+
+    await drainOutbox(async () => ({ ok: true }));
+
+    expect(await db.outbox.get(dependent.id)).toMatchObject({
+      status: 'needsAttention',
+      lastError: `dependency:${dependency.id}`,
+    });
+  });
+
+  it('records a thrown send failure as a retryable outbox failure', async () => {
+    const entry = await enqueue({ kind: 'listing.submit', payload: {} });
+
+    await drainOutbox(async () => {
+      throw new Error('network interrupted');
+    });
+
+    expect(await db.outbox.get(entry.id)).toMatchObject({
+      status: 'failed',
+      attempts: 1,
+      lastError: 'network interrupted',
+    });
+  });
+
   it('surfaces terminal failure as needsAttention after maxAttempts, never dropping the row', async () => {
     const entry = await enqueue({ kind: 'listing.submit', payload: {} });
     const send: SendFn = async () => ({ ok: false, retryable: true, error: 'timeout' });

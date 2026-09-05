@@ -10,6 +10,7 @@ import { verifyOtp } from './operations';
 import type { CallOptions } from './retry';
 import { setAccessToken } from './auth';
 import { session } from './session.svelte';
+import { setRefreshToken } from './auth';
 
 /** Verifies the OTP, stores the access token, and establishes the session. Returns whether a token came back. */
 export async function completeOtpVerification(
@@ -20,6 +21,7 @@ export async function completeOtpVerification(
   if (response.access_token === undefined) return false;
 
   setAccessToken(response.access_token);
+  setRefreshToken(response.refresh_token);
   session.establish(response.access_token);
   return true;
 }

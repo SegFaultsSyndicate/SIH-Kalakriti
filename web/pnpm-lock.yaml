@@ -205,6 +205,9 @@ importers:
       '@kalakriti/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@kalakriti/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@kalakriti/illustrations':
         specifier: workspace:*
         version: link:../../packages/illustrations
@@ -223,6 +226,9 @@ importers:
       '@kalakriti/patterns':
         specifier: workspace:*
         version: link:../../packages/patterns
+      '@kalakriti/print':
+        specifier: workspace:*
+        version: link:../../packages/print
       '@kalakriti/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

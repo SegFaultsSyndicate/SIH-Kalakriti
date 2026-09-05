@@ -30,10 +30,16 @@
 >
   {@render children()}
 
-  {#snippet failed(_error, reset)}
+  {#snippet failed(error, reset)}
     <div class="k-error-boundary" role="alert">
       <h1>{title}</h1>
       <p>{body}</p>
+      {#if import.meta.env.DEV && error}
+        <details class="k-error-boundary__details">
+          <summary>Development Error Details</summary>
+          <pre>{error instanceof Error ? (error.stack || error.message) : String(error)}</pre>
+        </details>
+      {/if}
       <button type="button" onclick={reset}>{retryLabel}</button>
     </div>
   {/snippet}
@@ -47,6 +53,31 @@
     gap: var(--k-space-3);
     padding: var(--k-space-6) var(--k-gutter);
     text-align: start;
+  }
+
+  .k-error-boundary__details {
+    width: 100%;
+    margin-block: var(--k-space-2);
+    padding: var(--k-space-3);
+    background: #fdf2f2;
+    border: 1px solid #f87171;
+    border-radius: var(--k-radius-sm);
+    color: #991b1b;
+    font-size: 0.85rem;
+  }
+
+  .k-error-boundary__details summary {
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: var(--k-space-2);
+  }
+
+  .k-error-boundary__details pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 0.8rem;
   }
 
   .k-error-boundary button {

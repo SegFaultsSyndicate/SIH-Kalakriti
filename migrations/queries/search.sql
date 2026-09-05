@@ -115,7 +115,8 @@ WHERE l.id = @listing_id AND l.state = 'PUBLISHED';
 -- name: HydrateSearchHits :many
 SELECT DISTINCT ON (l.id)
     l.id AS listing_id, l.product_id, l.artisan_id, p.craft_id,
-    l.gi_certified, l.type AS listing_type, t.title, t.description
+    l.gi_certified, l.type AS listing_type, t.title, t.description,
+    COALESCE(t.machine_generated, false) AS machine_generated
 FROM listing l
 JOIN product p ON p.id = l.product_id
 LEFT JOIN listing_translation t ON t.listing_id = l.id

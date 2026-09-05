@@ -58,6 +58,39 @@
   let craftRows = $state<CraftMonthRow[]>([]);
   let dyingRows = $state<DyingCraftRow[]>([]);
 
+  const MOCK_DYING_CRAFTS: DyingCraftRow[] = [
+    { craft_id: 'c1', craft_name: 'Rogan Art of Kutch', decline_rate: 0.78, peak_artisans: 45, current_artisans: 10 },
+    { craft_id: 'c2', craft_name: 'Toda Tribal Embroidery', decline_rate: 0.65, peak_artisans: 82, current_artisans: 29 },
+    { craft_id: 'c3', craft_name: 'Surat Real Zari', decline_rate: 0.52, peak_artisans: 120, current_artisans: 58 },
+    { craft_id: 'c4', craft_name: 'Tangaliya Shawl Weaving', decline_rate: 0.44, peak_artisans: 68, current_artisans: 38 },
+    { craft_id: 'c5', craft_name: 'Usta Camel Hide Art', decline_rate: 0.36, peak_artisans: 50, current_artisans: 32 },
+    { craft_id: 'c6', craft_name: 'Mata ni Pachedi Ritual Cloth', decline_rate: 0.28, peak_artisans: 74, current_artisans: 53 },
+  ];
+
+  const MOCK_DISTRICT_DATA = [
+    { stateCode: 'IN-GJ', district: 'Kutch', artisanCount: 142, gmv: 84500000, avgEarnings: 5950000, medianBefore: 1800000, medianAfter: 4200000 },
+    { stateCode: 'IN-GJ', district: 'Surat', artisanCount: 128, gmv: 76000000, avgEarnings: 5930000, medianBefore: 1900000, medianAfter: 4400000 },
+    { stateCode: 'IN-GJ', district: 'Patan', artisanCount: 88, gmv: 62000000, avgEarnings: 7040000, medianBefore: 2200000, medianAfter: 5100000 },
+    { stateCode: 'IN-GJ', district: 'Ahmedabad', artisanCount: 64, gmv: 38000000, avgEarnings: 5930000, medianBefore: 1700000, medianAfter: 3900000 },
+    { stateCode: 'IN-RJ', district: 'Jaipur', artisanCount: 156, gmv: 91000000, avgEarnings: 5830000, medianBefore: 2100000, medianAfter: 4800000 },
+    { stateCode: 'IN-RJ', district: 'Jodhpur', artisanCount: 94, gmv: 52000000, avgEarnings: 5530000, medianBefore: 1650000, medianAfter: 3950000 },
+    { stateCode: 'IN-BR', district: 'Madhubani', artisanCount: 112, gmv: 56000000, avgEarnings: 5000000, medianBefore: 1500000, medianAfter: 3900000 },
+    { stateCode: 'IN-WB', district: 'Bankura', artisanCount: 76, gmv: 37000000, avgEarnings: 4860000, medianBefore: 1400000, medianAfter: 3600000 },
+    { stateCode: 'IN-KA', district: 'Mysuru', artisanCount: 82, gmv: 41000000, avgEarnings: 5000000, medianBefore: 1900000, medianAfter: 4100000 },
+    { stateCode: 'IN-MH', district: 'Thane', artisanCount: 68, gmv: 33000000, avgEarnings: 4850000, medianBefore: 1600000, medianAfter: 3800000 },
+  ];
+
+  const MOCK_CRAFTS: CraftMonthRow[] = [
+    { craft_name: 'Patan Patola Silk', listing_count: 84 },
+    { craft_name: 'Blue Pottery of Jaipur', listing_count: 76 },
+    { craft_name: 'Madhubani Painting', listing_count: 68 },
+    { craft_name: 'Kutch Ajrakh Block Print', listing_count: 55 },
+    { craft_name: 'Bankura Terracotta Horses', listing_count: 42 },
+    { craft_name: 'Warli Tribal Painting', listing_count: 39 },
+    { craft_name: 'Bidriware Silver Inlay', listing_count: 31 },
+    { craft_name: 'Sandalwood Carving', listing_count: 26 },
+  ];
+
   function districtKey(k: { state_code?: string; district?: string }): string {
     return `${k.state_code ?? ''}::${k.district ?? ''}`;
   }
@@ -98,9 +131,42 @@
       earningsRows = earnings.data ?? [];
       incomeRows = income.data ?? [];
       craftRows = craftMonth.data ?? [];
-      dyingRows = [...(dying.data ?? [])].sort((a, b) => (b.decline_rate ?? 0) - (a.decline_rate ?? 0));
+      dyingRows = [...(dying.data ?? [])].sort((a, b) => Math.abs(b.decline_rate ?? 0) - Math.abs(a.decline_rate ?? 0));
     } catch (cause) {
-      loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      if (import.meta.env.DEV) {
+        // Fallback mock data during development when the backend server is offline
+        const filtered = MOCK_DISTRICT_DATA.filter((d) => {
+          const matchState = !stateCode || d.stateCode.toLowerCase().includes(stateCode.trim().toLowerCase());
+          const matchDistrict = !district || d.district.toLowerCase().includes(district.trim().toLowerCase());
+          return matchState && matchDistrict;
+        });
+
+        roster = filtered.map((d) => ({
+          key: { stateCode: d.stateCode, district: d.district },
+          label: `${d.district}, ${d.stateCode}`,
+          artisanCount: d.artisanCount,
+        }));
+
+        earningsRows = filtered.map((d) => ({
+          state_code: d.stateCode,
+          district: d.district,
+          total_gmv: { amount_paise: d.gmv },
+          avg_earnings: { amount_paise: d.avgEarnings },
+        }));
+
+        incomeRows = filtered.map((d) => ({
+          state_code: d.stateCode,
+          district: d.district,
+          median_before: { amount_paise: d.medianBefore },
+          median_after: { amount_paise: d.medianAfter },
+          artisan_count: d.artisanCount,
+        }));
+
+        craftRows = MOCK_CRAFTS;
+        dyingRows = MOCK_DYING_CRAFTS;
+      } else {
+        loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      }
     } finally {
       loading = false;
     }
@@ -166,7 +232,7 @@
   );
 
   const dyingCraftRows = $derived<BarRow[]>(
-    dyingRows.map((r) => ({ label: r.craft_name ?? '', value: Math.round((r.decline_rate ?? 0) * 100) })),
+    dyingRows.map((r) => ({ label: r.craft_name ?? '', value: Math.round(Math.abs(r.decline_rate ?? 0) * 100) })),
   );
 
   function exportSection(name: string, headers: string[], rows: BarRow[]): void {
@@ -320,10 +386,18 @@
 
   .insights-filters {
     display: flex;
-    align-items: end;
+    align-items: flex-end;
     gap: var(--k-space-4);
     margin-block: var(--k-space-4) var(--k-space-6);
     flex-wrap: wrap;
+  }
+
+  .insights-filters :global(.k-field-group) {
+    margin-block-end: 0;
+  }
+
+  .insights-filters :global(.k-button) {
+    min-block-size: var(--k-touch-min);
   }
 
   .insights-error {

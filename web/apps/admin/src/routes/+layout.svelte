@@ -15,7 +15,13 @@
   import { locale } from '@kalakriti/i18n';
   import { SkipLink, RouteAnnouncer, AccessibilityControl, a11y } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
-  import { session, restoreAccessToken, setUnauthorizedHandler, createLoginRedirectHandler } from '@kalakriti/api';
+  import {
+    session,
+    restoreAccessToken,
+    setUnauthorizedHandler,
+    setSessionRefreshHandler,
+    createLoginRedirectHandler,
+  } from '@kalakriti/api';
   import { NAV_ITEMS } from '$lib/nav';
   import CommandPalette from '$lib/CommandPalette.svelte';
   import Breadcrumb from '$lib/Breadcrumb.svelte';
@@ -45,7 +51,11 @@
 
   $effect(() => {
     setUnauthorizedHandler(createLoginRedirectHandler((url) => goto(url)));
-    return () => setUnauthorizedHandler(undefined);
+    setSessionRefreshHandler((token) => session.establish(token));
+    return () => {
+      setUnauthorizedHandler(undefined);
+      setSessionRefreshHandler(undefined);
+    };
   });
 
   $effect(() => {
@@ -110,15 +120,17 @@
 
     <main class="shell__main" id="main-content" tabindex="-1">
       <Breadcrumb />
-      <ErrorBoundary
-        source="admin-shell"
-        dsn={env.PUBLIC_SENTRY_DSN}
-        title={t('error.boundary.title')}
-        body={t('error.boundary.body')}
-        retryLabel={t('error.boundary.retry')}
-      >
-        {@render children()}
-      </ErrorBoundary>
+      {#key currentPath}
+        <ErrorBoundary
+          source="admin-shell"
+          dsn={env.PUBLIC_SENTRY_DSN}
+          title={t('error.boundary.title')}
+          body={t('error.boundary.body')}
+          retryLabel={t('error.boundary.retry')}
+        >
+          {@render children()}
+        </ErrorBoundary>
+      {/key}
     </main>
   </div>
 

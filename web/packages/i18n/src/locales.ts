@@ -73,7 +73,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Beng',
     numberLocale: 'bn-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   brx: {
     tag: 'brx-IN',
@@ -100,7 +100,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Gujr',
     numberLocale: 'gu-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   kn: {
     tag: 'kn-IN',
@@ -163,7 +163,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'mr-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   ne: {
     tag: 'ne-IN',
@@ -181,7 +181,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Orya',
     numberLocale: 'or-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   pa: {
     tag: 'pa-IN',
@@ -190,7 +190,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Guru',
     numberLocale: 'pa-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   sa: {
     tag: 'sa-IN',
@@ -217,7 +217,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'sd-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   ta: {
     tag: 'ta-IN',
@@ -226,7 +226,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Taml',
     numberLocale: 'ta-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   te: {
     tag: 'te-IN',
@@ -235,7 +235,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Telu',
     numberLocale: 'te-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
   ur: {
     tag: 'ur-IN',
@@ -244,13 +244,16 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'ur-IN',
-    coverage: 'fallback',
+    coverage: 'complete',
   },
 } as const satisfies Record<string, LocaleMeta>;
 
 export type LocaleCode = keyof typeof LOCALES;
 
 export const LOCALE_CODES = Object.keys(LOCALES) as LocaleCode[];
+
+/** The 22 constitutionally scheduled languages (English is the source locale). */
+export const SUPPORTED_LOCALES = LOCALE_CODES.filter((code) => code !== 'en');
 
 export const DEFAULT_LOCALE: LocaleCode = 'hi';
 

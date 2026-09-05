@@ -11,6 +11,7 @@
   import { page } from '$app/state';
   import { locale } from '@kalakriti/i18n';
   import { EmptyState, Skeleton } from '@kalakriti/ui';
+  import { ProcessSequence } from '@kalakriti/illustrations';
   import { Icon } from '@kalakriti/icons';
   import { getCraft, type components } from '@kalakriti/api';
   import { craftIcon } from '$lib/craft-icon';
@@ -59,6 +60,14 @@
       {/if}
     </div>
   </header>
+
+  <ProcessSequence
+    craft={craft.slug === 'pottery'
+      ? 'pottery'
+      : craft.slug === 'block-printing'
+        ? 'blockprint'
+        : 'weaving'}
+  />
 
   <div class="craft-facts">
     {#if craft.regions && craft.regions.length > 0}

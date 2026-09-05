@@ -55,10 +55,10 @@ psql: ## Open a psql shell on the dev database
 # --- codegen -----------------------------------------------------------------
 
 proto: ## Generate Go and Python code from proto/
-	$(BUF) generate
+	$(BUF) generate proto --template buf.gen.yaml
 
 proto-lint: ## Lint and breaking-change-check the protos
-	$(BUF) lint
+	$(BUF) lint proto
 	$(BUF) format -d --exit-code
 
 sqlc: ## Generate type-safe query code from SQL

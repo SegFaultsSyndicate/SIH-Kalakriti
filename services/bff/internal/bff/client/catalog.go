@@ -671,6 +671,7 @@ func (c *Catalog) GetArtisan(ctx context.Context, artisanID string) (handler.Art
 	return handler.Artisan{
 		ID:          art.GetId(),
 		DisplayName: art.GetDisplayName(),
+		District:    art.GetRegion().GetDistrict(),
 		ClusterID:   art.ClusterId,
 	}, nil
 }

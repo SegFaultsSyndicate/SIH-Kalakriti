@@ -1,6 +1,6 @@
 // apps/artisan/src/lib/ml-mock.test.ts
 import { describe, expect, it } from 'vitest';
-import { assessPhotoQuality, runMockPipeline, type PipelineStageState } from './ml-mock';
+import { assessPhotoQuality, buildMockResult, runMockPipeline, type PipelineStageState } from './ml-mock';
 
 describe('assessPhotoQuality', () => {
   it('passes a normal-sized photo', async () => {
@@ -49,5 +49,13 @@ describe('runMockPipeline', () => {
     for (const claim of result.claims) {
       expect(attributeKeys.has(claim.attributeKey)).toBe(true);
     }
+  });
+
+  describe('buildMockResult', () => {
+    it('marks low-confidence attributes for artisan input', () => {
+      const result = buildMockResult('weaving', 'Silk stole');
+      expect(result.attributes.every((attribute) => typeof attribute.confidence === 'number')).toBe(true);
+      expect(result.attributes.some((attribute) => attribute.needs_artisan_input)).toBe(true);
+    });
   });
 });

@@ -69,6 +69,8 @@ export interface MockAttribute {
   labelKey: MessageKey;
   value: string;
   source: MockAttributeSource;
+  confidence: number;
+  needs_artisan_input: boolean;
 }
 
 export interface MockClaim {
@@ -108,9 +110,9 @@ export function buildMockResult(craftId: string | undefined, workingTitle: strin
   const craftLabel = craftId ? craftId.replace(/[-_]/g, ' ') : 'traditional craft';
 
   const attributes: MockAttribute[] = [
-    { key: 'craft', labelKey: 'listing.attribute.craft', value: craftLabel, source: 'MODEL' },
-    { key: 'material', labelKey: 'listing.attribute.material', value: 'Natural fibre and dye', source: 'MODEL' },
-    { key: 'technique', labelKey: 'listing.attribute.technique', value: 'Hand-finished', source: 'MODEL' },
+    { key: 'craft', labelKey: 'listing.attribute.craft', value: craftLabel, source: 'MODEL', confidence: 0.92, needs_artisan_input: false },
+    { key: 'material', labelKey: 'listing.attribute.material', value: 'Natural fibre and dye', source: 'MODEL', confidence: 0.48, needs_artisan_input: true },
+    { key: 'technique', labelKey: 'listing.attribute.technique', value: 'Hand-finished', source: 'MODEL', confidence: 0.76, needs_artisan_input: false },
   ];
 
   const sentences = [

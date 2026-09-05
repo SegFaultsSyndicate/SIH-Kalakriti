@@ -6,6 +6,8 @@ import {
   patchFields,
   addCapturedMedia,
   removeCapturedMedia,
+  setPrimaryPhoto,
+  reorderPhotos,
   ensureListingCreateQueued,
   queueListingUpdate,
   publishListing,
@@ -30,6 +32,32 @@ describe('addCapturedMedia / removeCapturedMedia', () => {
     expect(uploadEntries).toHaveLength(1);
     expect(uploadEntries[0].kind).toBe('media.upload');
     expect(uploadEntries[0].payload).toEqual({ localMediaId: media.id });
+  });
+
+  describe('photo ordering', () => {
+    it('persists the selected primary photo as the first uploaded image', async () => {
+      const draft = await createDraft();
+      const first = await addCapturedMedia(draft.id, new Blob(['first']), 'image/jpeg', 'photo', 0);
+      const second = await addCapturedMedia(draft.id, new Blob(['second']), 'image/jpeg', 'photo', 1);
+
+      await setPrimaryPhoto(draft.id, second.id);
+
+      const stored = await db.drafts.get(draft.id);
+      expect((stored?.fields as { primaryPhotoId?: string }).primaryPhotoId).toBe(second.id);
+      const media = await db.media.bulkGet([first.id, second.id]);
+      expect(media.find((item) => item?.id === second.id)?.order).toBe(0);
+      expect(media.find((item) => item?.id === first.id)?.order).toBe(1);
+    });
+
+    it('reorders only the draft photos and rejects an incomplete order', async () => {
+      const draft = await createDraft();
+      const first = await addCapturedMedia(draft.id, new Blob(['first']), 'image/jpeg', 'photo', 0);
+      const second = await addCapturedMedia(draft.id, new Blob(['second']), 'image/jpeg', 'photo', 1);
+
+      await expect(reorderPhotos(draft.id, [second.id, first.id])).resolves.toBeUndefined();
+      expect((await db.media.bulkGet([first.id, second.id])).map((item) => item?.order)).toEqual([1, 0]);
+      await expect(reorderPhotos(draft.id, [first.id])).rejects.toThrow('photo order');
+    });
   });
 
   it('removing media before its upload sends cancels the queued upload and deletes the blob', async () => {
@@ -83,9 +111,16 @@ describe('ensureListingCreateQueued', () => {
 });
 
 describe('queueListingUpdate / publishListing', () => {
-  it('an update queued before create resolves depends on the create entry', async () => {
+  it('refuses to queue publication until the draft has been explicitly approved', async () => {
     const draft = await createDraft();
     await patchFields(draft.id, { craftId: 'weaving' });
+    await expect(publishListing(draft.id)).rejects.toThrow('explicit approval');
+    expect(await db.outbox.where('draftId').equals(draft.id).count()).toBe(0);
+  });
+
+  it('an update queued before create resolves depends on the create entry', async () => {
+    const draft = await createDraft();
+    await patchFields(draft.id, { craftId: 'weaving', reviewApproved: true });
     await ensureListingCreateQueued(draft.id);
     const createEntry = (await db.outbox.where('draftId').equals(draft.id).toArray()).find(
       (e) => e.kind === 'listing.create',
@@ -101,7 +136,7 @@ describe('queueListingUpdate / publishListing', () => {
 
   it('publish chains submit after every create/update, and approve after submit', async () => {
     const draft = await createDraft();
-    await patchFields(draft.id, { craftId: 'weaving' });
+    await patchFields(draft.id, { craftId: 'weaving', reviewApproved: true });
     await ensureListingCreateQueued(draft.id);
     await queueListingUpdate(draft.id, { price: { amount_paise: 50_000 } });
 

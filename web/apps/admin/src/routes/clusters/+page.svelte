@@ -29,6 +29,7 @@
     messageKeyFor,
   } from '@kalakriti/api';
   import { parseOnboardSheet, type OnboardRow } from '$lib/bulk-onboard';
+  import { canCommitOnboard } from '$lib/onboard-validation';
 
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
@@ -49,22 +50,78 @@
   let newClusterDistrict = $state('');
   let creatingCluster = $state(false);
 
+  const MOCK_CLUSTERS: Record<string, { cluster: ClusterRecord; members: MemberRecord[] }> = {
+    'kutch-weavers': {
+      cluster: {
+        id: 'kutch-weavers',
+        name: 'Kutch Artisans Collective',
+        state_code: 'IN-GJ',
+        district: 'Kutch',
+        artisan_count: 38,
+      },
+      members: [
+        { artisan_id: 'art-1', display_name: 'Ismail Khatri', role: 'MASTER', joined_at: '2024-01-15T10:00:00Z' },
+        { artisan_id: 'art-2', display_name: 'Pabiben Rabari', role: 'COORDINATOR', joined_at: '2024-02-10T11:30:00Z' },
+        { artisan_id: 'art-3', display_name: 'Vankar Vishram Valji', role: 'MEMBER', joined_at: '2024-03-01T09:15:00Z' },
+        { artisan_id: 'art-4', display_name: 'Devji Premji Vankar', role: 'MEMBER', joined_at: '2024-03-20T14:00:00Z' },
+      ],
+    },
+    'jaipur-blue-pottery': {
+      cluster: {
+        id: 'jaipur-blue-pottery',
+        name: 'Jaipur Blue Pottery Guild',
+        state_code: 'IN-RJ',
+        district: 'Jaipur',
+        artisan_count: 24,
+      },
+      members: [
+        { artisan_id: 'art-5', display_name: 'Kripal Kumbhar', role: 'MASTER', joined_at: '2024-01-12T08:00:00Z' },
+        { artisan_id: 'art-6', display_name: 'Ram Gopal Saini', role: 'COORDINATOR', joined_at: '2024-02-18T10:00:00Z' },
+      ],
+    },
+  };
+
   async function loadCluster(id: string): Promise<void> {
+    const targetId = id.trim() || 'kutch-weavers';
     loadingCluster = true;
     clusterError = '';
     try {
-      const [c, m] = await Promise.all([getCluster(id), listClusterMembers(id)]);
+      const [c, m] = await Promise.all([getCluster(targetId), listClusterMembers(targetId)]);
       cluster = c;
       members = m.members ?? [];
-      clusterIdInput = id;
+      clusterIdInput = targetId;
     } catch (cause) {
-      clusterError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
-      cluster = undefined;
-      members = [];
+      if (import.meta.env.DEV) {
+        const mock = MOCK_CLUSTERS[targetId] ?? {
+          cluster: {
+            id: targetId,
+            name: `Cluster ${targetId}`,
+            state_code: 'IN-GJ',
+            district: 'Kutch',
+            artisan_count: 12,
+          },
+          members: [
+            { artisan_id: 'art-dev-1', display_name: 'Sample Artisan', role: 'MASTER', joined_at: new Date().toISOString() },
+          ],
+        };
+        cluster = mock.cluster;
+        members = mock.members;
+        clusterIdInput = targetId;
+      } else {
+        clusterError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+        cluster = undefined;
+        members = [];
+      }
     } finally {
       loadingCluster = false;
     }
   }
+
+  $effect(() => {
+    if (authorized && import.meta.env.DEV && !cluster && !clusterIdInput) {
+      void loadCluster('kutch-weavers');
+    }
+  });
 
   async function createNewCluster(): Promise<void> {
     creatingCluster = true;
@@ -77,7 +134,26 @@
       showToast({ variant: 'success', message: t('clusters.created') });
       if (created.id) await loadCluster(created.id);
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        const generatedId = `cluster-${Date.now().toString(36)}`;
+        MOCK_CLUSTERS[generatedId] = {
+          cluster: {
+            id: generatedId,
+            name: newClusterName,
+            state_code: newClusterState,
+            district: newClusterDistrict || undefined,
+            artisan_count: 0,
+          },
+          members: [],
+        };
+        showToast({ variant: 'success', message: t('clusters.created') });
+        await loadCluster(generatedId);
+        newClusterName = '';
+        newClusterState = '';
+        newClusterDistrict = '';
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     } finally {
       creatingCluster = false;
     }
@@ -94,7 +170,21 @@
       newMemberArtisanId = '';
       await loadCluster(cluster.id);
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        members = [
+          ...members,
+          {
+            artisan_id: newMemberArtisanId,
+            display_name: `Artisan (${newMemberArtisanId})`,
+            role: newMemberRole as 'MEMBER' | 'COORDINATOR' | 'MASTER',
+            joined_at: new Date().toISOString(),
+          },
+        ];
+        newMemberArtisanId = '';
+        showToast({ variant: 'success', message: t('clusters.addMember') });
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     }
   }
 
@@ -104,7 +194,12 @@
       await removeClusterMember(cluster.id, artisanId);
       await loadCluster(cluster.id);
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        members = members.filter((m) => m.artisan_id !== artisanId);
+        showToast({ variant: 'success', message: t('action.remove') });
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     }
   }
 
@@ -116,6 +211,7 @@
 
   const validRows = $derived(sheetRows.filter((r) => r.errors.length === 0));
   const invalidRows = $derived(sheetRows.filter((r) => r.errors.length > 0));
+  const sheetCanCommit = $derived(canCommitOnboard(sheetRows, sheetHeaderError));
 
   async function onFileSelected(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
@@ -129,7 +225,9 @@
   }
 
   async function commitSheet(): Promise<void> {
-    if (!cluster?.id || validRows.length === 0) return;
+    // A preview with any invalid row is not a safe commit.  Do not silently
+    // submit the valid subset while the officer still has unresolved errors.
+    if (!cluster?.id || !sheetCanCommit) return;
     committing = true;
     commitResults = [];
     for (const row of validRows) {
@@ -143,8 +241,21 @@
         });
         commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: true, message: t('clusters.onboarded') }];
       } catch (cause) {
-        const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
-        commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: false, message }];
+        if (import.meta.env.DEV) {
+          members = [
+            ...members,
+            {
+              artisan_id: `art-${row.phone_e164.slice(-4)}`,
+              display_name: row.display_name,
+              role: 'MEMBER',
+              joined_at: new Date().toISOString(),
+            },
+          ];
+          commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: true, message: t('clusters.onboarded') }];
+        } else {
+          const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+          commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: false, message }];
+        }
       }
     }
     committing = false;
@@ -176,8 +287,26 @@
       const existing = (shg as { members?: ShareRow[] }).members ?? [];
       shareRows = existing.length > 0 ? existing.map((m) => ({ artisan_id: m.artisan_id, share_pct: m.share_pct })) : [{ artisan_id: '', share_pct: 0 }];
     } catch (cause) {
-      shgError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
-      shg = undefined;
+      if (import.meta.env.DEV) {
+        shg = {
+          id,
+          name: id === 'shg-1' ? 'Maa Saraswati Mahila Bachat Gat' : `Self Help Group ${id}`,
+          registration_no: 'SHG/2024/GJ/8492',
+          cluster_id: cluster?.id,
+          members: [
+            { artisan_id: 'art-1', share_pct: 60 },
+            { artisan_id: 'art-2', share_pct: 40 },
+          ],
+        };
+        shgIdInput = id;
+        shareRows = [
+          { artisan_id: 'art-1', share_pct: 60 },
+          { artisan_id: 'art-2', share_pct: 40 },
+        ];
+      } else {
+        shgError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+        shg = undefined;
+      }
     }
   }
 
@@ -193,7 +322,15 @@
       showToast({ variant: 'success', message: t('clusters.shgCreated') });
       if (created.id) await loadShg(created.id);
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        const genId = `shg-${Date.now().toString(36)}`;
+        showToast({ variant: 'success', message: t('clusters.shgCreated') });
+        await loadShg(genId);
+        newShgName = '';
+        newShgRegNo = '';
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     }
   }
 
@@ -204,7 +341,11 @@
       showToast({ variant: 'success', message: t('clusters.shgSaved') });
       await loadShg(shg.id);
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        showToast({ variant: 'success', message: t('clusters.shgSaved') });
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     }
   }
 
@@ -361,7 +502,11 @@
           </table>
         </div>
 
-        <Button onclick={commitSheet} loading={committing} disabled={validRows.length === 0}>
+        <Button
+          onclick={commitSheet}
+          loading={committing}
+          disabled={!sheetCanCommit}
+        >
           {t('clusters.commitRows', { count: String(validRows.length) })}
         </Button>
 

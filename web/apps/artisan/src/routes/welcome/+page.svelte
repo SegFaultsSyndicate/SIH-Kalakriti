@@ -8,7 +8,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { Illustration } from '@kalakriti/illustrations';
+  import { Illustration, ProcessSequence } from '@kalakriti/illustrations';
   import { SpeakButton, Button } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
@@ -24,6 +24,7 @@
 
 <div class="welcome">
   <Illustration name="onboard-paid-directly" size="14rem" class="welcome__illustration" />
+  <ProcessSequence craft="weaving" />
 
   <h1 class="welcome__heading">{t('welcome.heading')}</h1>
   <p class="welcome__body">{t('welcome.body')}</p>

@@ -39,6 +39,10 @@
   let followerCount = $state<number | undefined>(undefined);
   let listings = $state<ListingSummary[]>([]);
   let clips = $state<ProcessClip[]>([]);
+  // Follow state gap: The BFF exposes POST/DELETE /artisans/{id}/follow and
+  // GET /artisans/{id}/follower-count, but has no GET /artisans/{id}/is-following
+  // or caller-following query endpoint. Consequently, `following` initializes to false
+  // on page load and reflects only actions taken during the current page session.
   let following = $state(false);
   let followBusy = $state(false);
 
@@ -88,6 +92,16 @@
       followBusy = false;
     }
   }
+  let devAvatar = $state<string | undefined>(undefined);
+  $effect(() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const a = localStorage.getItem('kalakriti.artisan.avatar');
+        if (a) devAvatar = a;
+      }
+    } catch {}
+  });
+  const artisanAvatar = $derived(artisan?.image_url || devAvatar);
 </script>
 
 <svelte:head>
@@ -100,8 +114,12 @@
   <EmptyState illustration="empty-error" heading={t('artisan.notFound')} />
 {:else}
   <header class="storefront-header">
-    {#if artisan.image_url}
-      <img class="storefront-header__portrait" src={artisan.image_url} alt="" />
+    {#if artisanAvatar}
+      <img class="storefront-header__portrait" src={artisanAvatar} alt="" />
+    {:else}
+      <div class="storefront-header__initial-avatar">
+        <span>{(artisan.display_name || 'A').charAt(0).toUpperCase()}</span>
+      </div>
     {/if}
     <div>
       <h1>{artisan.display_name}</h1>
@@ -170,6 +188,19 @@
     aspect-ratio: 1;
     object-fit: cover;
     border-radius: 50%;
+  }
+
+  .storefront-header__initial-avatar {
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background-color: var(--k-terracotta-700, #96381e);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--k-text-3xl);
+    font-weight: var(--k-weight-bold);
   }
 
   .storefront-header__craft {

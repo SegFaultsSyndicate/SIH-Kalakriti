@@ -5,18 +5,25 @@
 // origin's storage unless it was asked to persist it.
 
 import { db } from './db';
-import { isMediaReferenced } from './outbox';
 
 /** Ask the browser not to evict this origin's storage under pressure. */
 export async function requestPersistentStorage(): Promise<boolean> {
   if (typeof navigator === 'undefined' || !navigator.storage?.persist) return false;
-  return navigator.storage.persist();
+  try {
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
 }
 
 export async function storageEstimate(): Promise<{ usage: number; quota: number } | null> {
   if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null;
-  const { usage = 0, quota = 0 } = await navigator.storage.estimate();
-  return { usage, quota };
+  try {
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    return { usage, quota };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -27,20 +34,24 @@ export async function storageEstimate(): Promise<{ usage: number; quota: number 
  * listing.submit entry is still queued), so upload status alone isn't enough.
  */
 export async function evictOldestCachedMedia(limit = 5): Promise<number> {
+  if (limit <= 0) return 0;
   // IndexedDB keys can't be booleans, so `uploaded` can't be queried with
   // `.equals()`; filter after the index gives us capturedAt order instead.
-  const uploaded = await db.media
-    .orderBy('capturedAt')
-    .filter((record) => record.uploaded)
-    .toArray();
-  let freed = 0;
-  for (const record of uploaded) {
-    if (freed >= limit) break;
-    if (await isMediaReferenced(record.id)) continue;
-    await db.media.delete(record.id);
-    freed += 1;
-  }
-  return freed;
+  return db.transaction('rw', db.media, db.outbox, async () => {
+    const uploaded = await db.media
+      .orderBy('capturedAt')
+      .filter((record) => record.uploaded)
+      .toArray();
+    let freed = 0;
+    for (const record of uploaded) {
+      if (freed >= limit) break;
+      const referenced = await db.outbox.filter((entry) => entry.mediaIds.includes(record.id)).count();
+      if (referenced > 0) continue;
+      await db.media.delete(record.id);
+      freed += 1;
+    }
+    return freed;
+  });
 }
 
 /** Call periodically (e.g. after a sync) to keep usage under `thresholdRatio` of quota. */

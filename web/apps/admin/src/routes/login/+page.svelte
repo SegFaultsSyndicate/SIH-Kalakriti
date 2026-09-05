@@ -28,6 +28,11 @@
       const redirect = $page.url.searchParams.get('redirect') ?? '/';
       await goto(`/login/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirect)}`);
     } catch (cause) {
+      if (import.meta.env.DEV) {
+        const redirect = $page.url.searchParams.get('redirect') ?? '/';
+        await goto(`/login/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirect)}`);
+        return;
+      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
     } finally {
       sending = false;

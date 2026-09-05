@@ -39,6 +39,18 @@
   let loading = $state(true);
   let listing = $state<ListingSummary | undefined>(undefined);
   let activeMediaIndex = $state(0);
+  let devAvatar = $state<string | undefined>(undefined);
+
+  $effect(() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const a = localStorage.getItem('kalakriti.artisan.avatar');
+        if (a) devAvatar = a;
+      }
+    } catch {}
+  });
+
+  const artisanAvatar = $derived(listing?.artisan_image_url || devAvatar);
 
   $effect(() => {
     const id = listingId;
@@ -158,7 +170,25 @@
       </p>
       <h1>{title}</h1>
       {#if listing.artisan_name}
-        <p class="listing__artisan">{t('listing.by', { name: listing.artisan_name })}{listing.artisan_district ? ` · ${listing.artisan_district}` : ''}</p>
+        <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title="View artisan profile">
+          <div class="listing__artisan-avatar">
+            {#if artisanAvatar}
+              <img src={artisanAvatar} alt={listing.artisan_name} class="listing__artisan-avatar-img" />
+            {:else}
+              <span class="listing__artisan-avatar-initial">{listing.artisan_name.charAt(0).toUpperCase()}</span>
+            {/if}
+            <span class="listing__artisan-verified" title="Govt & AI Verified Artisan">
+              <Icon name="verified-artisan" />
+            </span>
+          </div>
+          <div class="listing__artisan-info">
+            <span class="listing__artisan-name">{t('listing.by', { name: listing.artisan_name })}</span>
+            <span class="listing__artisan-sub">
+              {#if listing.artisan_district}<span>{listing.artisan_district}</span> • {/if}
+              <span class="listing__artisan-view">View artisan storefront →</span>
+            </span>
+          </div>
+        </a>
       {/if}
       <p class="listing__price"><Money paise={listing.price?.amount_paise ?? 0} /></p>
 
@@ -305,9 +335,83 @@
     color: var(--k-accent-primary-text);
   }
 
-  .listing__artisan {
+  .listing__artisan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-3);
+    padding: var(--k-space-2) var(--k-space-3);
+    margin-block-end: var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-surface-sunken);
+    text-decoration: none;
+    color: inherit;
+    transition: background-color var(--k-duration-fast) var(--k-ease-standard),
+                border-color var(--k-duration-fast) var(--k-ease-standard);
+  }
+
+  .listing__artisan-badge:hover {
+    background-color: var(--k-surface-raised);
+    border-color: var(--k-accent-primary-border, #c45b37);
+  }
+
+  .listing__artisan-avatar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-terracotta-700, #96381e);
+    color: #fff;
+    font-weight: var(--k-weight-bold);
+    font-size: var(--k-text-md);
+    flex-shrink: 0;
+  }
+
+  .listing__artisan-avatar-img {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: var(--k-radius-pill);
+    object-fit: cover;
+  }
+
+  .listing__artisan-verified {
+    position: absolute;
+    inset-inline-end: -4px;
+    inset-block-end: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+    border: 1.5px solid var(--k-surface-base, #fff);
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-neem-600, #2e7d32);
+    color: #fff;
+  }
+
+  .listing__artisan-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: start;
+  }
+
+  .listing__artisan-name {
+    font-weight: var(--k-weight-semibold);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-primary);
+  }
+
+  .listing__artisan-sub {
+    font-size: var(--k-text-xs);
     color: var(--k-text-secondary);
-    margin-block-end: var(--k-space-2);
+  }
+
+  .listing__artisan-view {
+    color: var(--k-accent-primary-text, #96381e);
   }
 
   .listing__price {

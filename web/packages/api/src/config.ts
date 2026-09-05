@@ -15,9 +15,8 @@ export function getAcceptLanguage(): string {
 }
 
 /**
- * Called once per request on a 401. There is no /auth/refresh in
- * services/bff/openapi.json yet, so a 401 cannot be silently repaired -- this
- * is how the app's router finds out it needs to send the artisan to login.
+ * Called when a request cannot be recovered by the shared refresh flow. This
+ * is how the app's router finds out it needs to send the user to login.
  */
 export type UnauthorizedHandler = (path: string) => void;
 
@@ -29,6 +28,18 @@ export function setUnauthorizedHandler(fn: UnauthorizedHandler | undefined): voi
 
 export function getUnauthorizedHandler(): UnauthorizedHandler | undefined {
   return unauthorizedHandler;
+}
+
+export type SessionRefreshHandler = (accessToken: string) => void;
+
+let sessionRefreshHandler: SessionRefreshHandler | undefined;
+
+export function setSessionRefreshHandler(fn: SessionRefreshHandler | undefined): void {
+  sessionRefreshHandler = fn;
+}
+
+export function getSessionRefreshHandler(): SessionRefreshHandler | undefined {
+  return sessionRefreshHandler;
 }
 
 /** Per-request AbortController timeout when the caller doesn't specify one. */

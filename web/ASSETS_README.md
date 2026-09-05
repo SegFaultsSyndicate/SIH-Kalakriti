@@ -477,5 +477,19 @@ It is an index, not an eighth rendered sheet — Batch 8 has no new visual
 package to catalogue. `docs/pitch-summary.html` is the one-page visual
 summary.
 
-## Still to come
-Nothing — all 8 batches are complete.
+## Verification status
+
+Run `node scripts/check-provenance-assets.mjs` to verify that the required
+identity, QR-frame, provenance CSS and A4 print assets exist, that the QR
+quiet-zone declaration remains intact, and that the standalone provenance
+stylesheet still references its pattern assets.
+
+Two checks require physical/browser comparison and are intentionally not
+claimed as automated passes:
+
+- Print `packages/print/src/tag-a4-colour.svg`, insert a real QR at the
+  backend variable-data slot, and scan it with a phone at final size.
+- Render the Svelte verification route and `provenance-demo.html` at the same
+  viewport, then compare screenshots. Shared tokens and asset references make
+  them consistent, but this repository does not claim pixel parity without
+  that comparison.

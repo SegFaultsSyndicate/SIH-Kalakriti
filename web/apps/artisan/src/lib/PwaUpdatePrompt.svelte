@@ -25,6 +25,7 @@
   onMount(async () => {
     // Dynamic import so the registration code is not on the critical path and
     // so a build without the PWA plugin (unit tests) does not fail to resolve.
+    // @ts-expect-error virtual:pwa-register is injected by vite-plugin-pwa at build time.
     const { registerSW } = await import('virtual:pwa-register');
     updateServiceWorker = registerSW({
       immediate: true,

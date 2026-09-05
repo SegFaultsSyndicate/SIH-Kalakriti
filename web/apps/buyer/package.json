@@ -8,13 +8,14 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint src",
-    "test": "vitest src",
+    "test": "vitest run src",
     "size": "vite build && du -sh build"
   },
   "dependencies": {
     "@kalakriti/api": "workspace:*",
     "@kalakriti/i18n": "workspace:*",
     "@kalakriti/icons": "workspace:*",
+    "@kalakriti/identity": "workspace:*",
     "@kalakriti/illustrations": "workspace:*",
     "@kalakriti/motion": "workspace:*",
     "@kalakriti/observability": "workspace:*",

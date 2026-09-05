@@ -10,4 +10,30 @@
   <title>{t('a11y.statement.title')} — {t('admin.home.title')}</title>
 </svelte:head>
 
-<AccessibilityStatement />
+<article class="statement">
+  <AccessibilityStatement />
+  <section aria-labelledby="admin-context">
+    <h2 id="admin-context">{t('a11y.admin.context.title')}</h2>
+    <p>{t('a11y.admin.context.body')}</p>
+  </section>
+  <p class="statement__contact">
+    <a href="mailto:accessibility@kalakriti.gov.in">{t('a11y.statement.contact.email')}</a>
+  </p>
+</article>
+
+<style>
+  .statement {
+    display: grid;
+    gap: var(--k-space-4);
+  }
+  .statement :global(h1) {
+    margin-block-end: 0;
+  }
+  .statement section {
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    padding-block-start: var(--k-space-4);
+  }
+  .statement__contact {
+    margin-block-start: var(--k-space-2);
+  }
+</style>

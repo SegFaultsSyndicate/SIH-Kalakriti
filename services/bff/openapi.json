@@ -100,6 +100,49 @@
         }
       }
     },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refresh_token"
+                ],
+                "properties": {
+                  "refresh_token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "access_token"
+                  ],
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/artisans": {
       "post": {
         "summary": "Register artisan",
@@ -2751,6 +2794,136 @@
           }
         }
       }
+    },
+    "/artisans/me": {
+      "get": {
+        "summary": "Get caller's artisan profile",
+        "description": "Returns the profile of the currently authenticated artisan.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The artisan profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtisanProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update caller's artisan profile",
+        "description": "Updates mutable profile fields for the authenticated artisan.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtisanProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Profile updated successfully"
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statements/{id}": {
+      "get": {
+        "summary": "Get an income statement by ID",
+        "description": "Returns the income statement for the given statement ID.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The income statement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeStatementSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3786,6 +3959,76 @@
           "extra_lead_time_days": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ArtisanProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "phone_e164",
+          "craft_ids",
+          "verified"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "phone_e164": {
+            "type": "string"
+          },
+          "craft_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "years_of_experience": {
+            "type": "integer"
+          },
+          "region": {
+            "type": "object",
+            "properties": {
+              "state_code": {
+                "type": "string"
+              },
+              "district": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "UpdateArtisanProfileRequest": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "photo_media_id": {
+            "type": "string"
+          },
+          "years_of_experience": {
+            "type": "integer"
           }
         }
       }

@@ -46,6 +46,53 @@
     return verdict?.matches === false || loom?.is_handloom === false;
   }
 
+  const MOCK_MODERATION_ITEMS: Summary[] = [
+    {
+      id: 'list-mod-1',
+      state: 'PUBLISHED',
+      artisan_name: 'Lakshmi Devi',
+      craft_name: 'Madhubani Painting',
+      translations: [
+        { language: 'LANGUAGE_ENGLISH', title: 'Traditional Madhubani Kohbar Painting on Handmade Paper' },
+      ],
+      provenance: {
+        technique_verdict: {
+          claimed: 'Traditional bamboo nib fine line drawing',
+          observed: 'Machine screen printing pattern detected',
+          matches: false,
+          confidence: 0.88,
+          explanation: 'Repetitive dot frequency in border motif indicates rotary screen printing rather than freehand line work.',
+        },
+        loom_verdict: {
+          is_handloom: true,
+          confidence: 0.95,
+        },
+      },
+    },
+    {
+      id: 'list-mod-2',
+      state: 'PUBLISHED',
+      artisan_name: 'Sita Sharma',
+      craft_name: 'Patan Patola',
+      translations: [
+        { language: 'LANGUAGE_ENGLISH', title: 'Authentic 8-Ply Double Ikat Silk Saree' },
+      ],
+      provenance: {
+        technique_verdict: {
+          claimed: 'Pure double ikat handloom weaving',
+          observed: 'Double ikat warp and weft tie-dye verified',
+          matches: true,
+          confidence: 0.94,
+          explanation: 'Characteristic feathering along warp-weft intersections confirms genuine double ikat technique.',
+        },
+        loom_verdict: {
+          is_handloom: true,
+          confidence: 0.98,
+        },
+      },
+    },
+  ];
+
   async function load(): Promise<void> {
     loading = true;
     loadError = '';
@@ -57,9 +104,23 @@
       );
       const resolved = summaries.filter((s): s is Summary => s !== undefined);
       resolved.sort((a, b) => Number(isFlagged(b)) - Number(isFlagged(a)));
+      for (const item of resolved) {
+        if (item.id && reasonDrafts[item.id] === undefined) {
+          reasonDrafts[item.id] = '';
+        }
+      }
       items = resolved;
     } catch (cause) {
-      loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      if (import.meta.env.DEV) {
+        for (const item of MOCK_MODERATION_ITEMS) {
+          if (item.id && reasonDrafts[item.id] === undefined) {
+            reasonDrafts[item.id] = '';
+          }
+        }
+        items = MOCK_MODERATION_ITEMS;
+      } else {
+        loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      }
     } finally {
       loading = false;
     }
@@ -81,7 +142,12 @@
       showToast({ variant: 'success', message: t('moderation.suspended') });
       await load();
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        items = items.map((it) => (it.id === id ? { ...it, state: 'SUSPENDED' } : it));
+        showToast({ variant: 'success', message: t('moderation.suspended') });
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     } finally {
       acting = { ...acting, [id]: false };
     }
@@ -94,7 +160,12 @@
       showToast({ variant: 'success', message: t('moderation.reinstated') });
       await load();
     } catch (cause) {
-      showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      if (import.meta.env.DEV) {
+        items = items.map((it) => (it.id === id ? { ...it, state: 'PUBLISHED' } : it));
+        showToast({ variant: 'success', message: t('moderation.reinstated') });
+      } else {
+        showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });
+      }
     } finally {
       acting = { ...acting, [id]: false };
     }
@@ -175,7 +246,10 @@
         <div class="moderation-item__actions">
           {#if item.state === 'PUBLISHED'}
             <Textarea
-              bind:value={reasonDrafts[item.id ?? '']}
+              value={reasonDrafts[item.id ?? ''] ?? ''}
+              oninput={(e) => {
+                reasonDrafts = { ...reasonDrafts, [item.id ?? '']: (e.currentTarget as HTMLTextAreaElement).value };
+              }}
               placeholder={t('moderation.reasonPlaceholder')}
               rows={2}
               aria-label={t('moderation.reasonPlaceholder')}
