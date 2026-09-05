@@ -20,12 +20,13 @@
   Requires: import '@kalakriti/ornament/ornament.css'
 -->
 <script>
-  /** @type {'jaali-hex'|'jaali-octstar'|'jaali-interlace'|'blockprint-running'|'blockprint-band'} */
-  export let variant = 'jaali-hex';
-  /** @type {'fine'|'medium'|'bold'} — jaali variants only. */
-  export let density = 'medium';
-  /** Override the default 0.18. Dividers are structure; keep this low. */
-  export let opacity = undefined;
+  /**
+   * @typedef {object} Props
+   * @property {'jaali-hex'|'jaali-octstar'|'jaali-interlace'|'blockprint-running'|'blockprint-band'} [variant]
+   * @property {'fine'|'medium'|'bold'} [density] jaali variants only.
+   * @property {number} [opacity] Override the default 0.18. Dividers are
+   *   structure; keep this low.
+   */
 
   const HEIGHT = {
     'jaali-hex': { fine: 16, medium: 24, bold: 32 },
@@ -35,8 +36,11 @@
     'blockprint-band': { fine: 32, medium: 32, bold: 32 },
   };
 
-  $: height = HEIGHT[variant][density];
-  $: modifier = `k-divider--${variant}-${height}`;
+  /** @type {Props & Record<string, unknown>} */
+  let { variant = 'jaali-hex', density = 'medium', opacity, ...rest } = $props();
+
+  const height = $derived(HEIGHT[variant][density]);
+  const modifier = $derived(`k-divider--${variant}-${height}`);
 </script>
 
 <div
@@ -44,5 +48,5 @@
   style={opacity === undefined ? undefined : `opacity:${opacity}`}
   role="presentation"
   aria-hidden="true"
-  {...$$restProps}
+  {...rest}
 ></div>

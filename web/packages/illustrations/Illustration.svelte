@@ -23,32 +23,44 @@
 
   const modules = import.meta.glob('./src/*.svg', { eager: true, import: 'default' });
 
-  export let name;
-  export let title = undefined;
-  export let size = undefined; // any CSS length, e.g. "20rem" — sets width only
-  let className = undefined;
-  export { className as class };
+  /**
+   * @typedef {object} Props
+   * @property {string} name
+   * @property {string} [title] Accessible name. Omit for a decorative scene,
+   *   which most empty-state art is -- the surrounding copy carries the
+   *   meaning and a duplicated label is noise for a screen-reader user.
+   * @property {string} [size] Any CSS length, e.g. "20rem". Sets width only.
+   * @property {string} [class]
+   */
 
-  $: entry = ILLUSTRATIONS.find((i) => i.name === name);
-  $: Component = entry ? modules['./' + entry.file] : undefined;
-  $: titleId = title ? `k-ill-title-${name}` : undefined;
+  /** @type {Props & Record<string, unknown>} */
+  let { name, title, size, class: className, ...rest } = $props();
 
-  if (!entry && typeof console !== 'undefined') {
-    console.warn(`<Illustration name="${name}"> does not match any entry in packages/illustrations/manifest.js`);
-  }
+  const entry = $derived(ILLUSTRATIONS.find((i) => i.name === name));
+  const Component = $derived(entry ? modules['./' + entry.file] : undefined);
+
+  $effect(() => {
+    if (!entry) {
+      console.warn(
+        `<Illustration name="${name}"> does not match any entry in packages/illustrations/manifest.js`,
+      );
+    }
+  });
 </script>
 
+<!--
+  aria-label, not a <title> child: the SVG components are generated as
+  `<svg {...props}>{@html contents}</svg>` with no slot, so a child <title>
+  is dropped and an aria-labelledby pointing at it dangles. See Icon.svelte.
+-->
 {#if Component}
-  <svelte:component
-    this={Component}
+  <Component
     class="k-illustration {className || ''}"
     role={title ? 'img' : undefined}
-    aria-labelledby={title ? titleId : undefined}
+    aria-label={title}
     aria-hidden={title ? undefined : 'true'}
     focusable="false"
-    {...$$restProps}
+    {...rest}
     style={size ? `width:${size}` : undefined}
-  >
-    {#if title}<title id={titleId}>{title}</title>{/if}
-  </svelte:component>
+  />
 {/if}

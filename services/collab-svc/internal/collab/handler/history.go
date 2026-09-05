@@ -64,7 +64,7 @@ func (h *HistoryStore) ListEventsSince(ctx context.Context, orderID string, sinc
 // the graceful skip instead of a decode error).
 func decodeHistoricalPayload(ev *fulfilmentv1.OrderEvent, eventType string, raw json.RawMessage) {
 	switch eventType {
-	case "LOT_OFFERED", "LOT_ACCEPTED", "LOT_DECLINED", "LOT_PROGRESSED":
+	case "LOT_OFFERED", "LOT_ACCEPTED", "LOT_DECLINED", "LOT_PROGRESSED", "LOT_GAVE_UP":
 		var p lotEventPayload
 		if err := json.Unmarshal(raw, &p); err != nil {
 			return
@@ -77,6 +77,8 @@ func decodeHistoricalPayload(ev *fulfilmentv1.OrderEvent, eventType string, raw 
 			ev.Payload = &fulfilmentv1.OrderEvent_LotAccepted{LotAccepted: lot}
 		case "LOT_DECLINED":
 			ev.Payload = &fulfilmentv1.OrderEvent_LotDeclined{LotDeclined: lot}
+		case "LOT_GAVE_UP":
+			ev.Payload = &fulfilmentv1.OrderEvent_LotGaveUp{LotGaveUp: lot}
 		default:
 			ev.Payload = &fulfilmentv1.OrderEvent_LotProgressed{LotProgressed: lot}
 		}

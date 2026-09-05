@@ -56,6 +56,28 @@ func (f *Follow) GetFeed(ctx context.Context, userID string, limit, offset int32
 	return out, nil
 }
 
+// MarkFeedItemRead marks one feed item read; the caller must be its recipient.
+func (f *Follow) MarkFeedItemRead(ctx context.Context, notificationID, userID string) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	_, err := f.follow.MarkFeedItemRead(ctx, &socialv1.MarkFeedItemReadRequest{NotificationId: notificationID, UserId: userID})
+	return grpcErr(err)
+}
+
+// GetFollowerCount reports how many buyers currently follow one artisan --
+// recognition shown on the artisan's own profile, not a metric to chase.
+func (f *Follow) GetFollowerCount(ctx context.Context, artisanID string) (int32, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := f.follow.GetFollowerCount(ctx, &socialv1.GetFollowerCountRequest{ArtisanId: artisanID})
+	if err != nil {
+		return 0, grpcErr(err)
+	}
+	return resp.GetCount(), nil
+}
+
 func feedItemToMap(item *socialv1.FeedItem) map[string]any {
 	m := map[string]any{
 		"id":         item.GetId(),

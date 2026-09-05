@@ -5,7 +5,19 @@
   "exports": {
     ".": "./src/tokens.css",
     "./reset": "./src/reset.css",
-    "./base": "./src/base.css"
+    "./base": "./src/base.css",
+    "./palette.css": "./src/palette.css",
+    "./brand": "./src/brand.js",
+    "./fonts-indic": "./src/fonts-indic.css",
+    "./type-specimens.html": "./src/type-specimens.html"
   },
-  "files": ["src", "dist"]
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@fontsource-variable/anek-bangla": "^5.3.0",
+    "@fontsource-variable/anek-devanagari": "^5.3.0",
+    "@fontsource-variable/anek-latin": "^5.3.0",
+    "@fontsource-variable/anek-tamil": "^5.3.0"
+  }
 }

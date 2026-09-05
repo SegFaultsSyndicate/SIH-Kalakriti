@@ -584,7 +584,11 @@ func (f *Fulfilment) ReportProgress(ctx context.Context, in ReportProgressInput)
 	if lot.ArtisanID != in.ArtisanID {
 		return domain.OrderLot{}, pkgdomain.Forbidden("lot does not belong to this artisan")
 	}
-	if lot.State != domain.LotAccepted && lot.State != domain.LotInProduction {
+	// QC_FAILED is a legal starting point too: a rework resubmission is just
+	// another progress report, moving the lot back toward QC_PENDING once the
+	// artisan says it's ready again -- CanTransitionLot(QC_FAILED, QC_PENDING)
+	// already allows this edge, ReportProgress just never exercised it.
+	if lot.State != domain.LotAccepted && lot.State != domain.LotInProduction && lot.State != domain.LotQCFailed {
 		return domain.OrderLot{}, pkgdomain.Conflict("lot is not in production, state is " + string(lot.State))
 	}
 
@@ -623,6 +627,70 @@ func (f *Fulfilment) ReportProgress(ctx context.Context, in ReportProgressInput)
 	if err != nil {
 		return domain.OrderLot{}, fmt.Errorf("reporting progress on lot %s: %w", in.LotID, err)
 	}
+	return updated, nil
+}
+
+// RequestReallocationInput gives up an artisan's own accepted lot.
+type RequestReallocationInput struct {
+	LotID          uuid.UUID
+	ArtisanID      uuid.UUID
+	Reason         string
+	IdempotencyKey string
+}
+
+// RequestReallocation is the artisan-initiated counterpart to SubmitQC's
+// give-up branch: the same ACCEPTED/IN_PRODUCTION/QC_FAILED -> REALLOCATED
+// edge the domain transition table already allows for a QC-driven give-up,
+// now reachable by the artisan themself when they know upfront they cannot
+// finish -- a non-punitive path instead of silently missing the ship date
+// and forcing a QC failure to discover it. Mirrors SubmitQC's own give-up
+// handling: no payment split line is ever generated for a lot that never
+// reaches COMPLETED, and the freed units are reoffered the same way.
+func (f *Fulfilment) RequestReallocation(ctx context.Context, in RequestReallocationInput) (domain.OrderLot, error) {
+	if in.Reason == "" {
+		return domain.OrderLot{}, pkgdomain.InvalidInput("reason is required")
+	}
+	lot, err := f.store.GetLot(ctx, in.LotID)
+	if err != nil {
+		return domain.OrderLot{}, fmt.Errorf("loading lot %s: %w", in.LotID, err)
+	}
+	if lot.ArtisanID != in.ArtisanID {
+		return domain.OrderLot{}, pkgdomain.Forbidden("lot does not belong to this artisan")
+	}
+	if lot.State == domain.LotReallocated {
+		// Replay of an already-applied give-up: idempotent no-op.
+		return lot, nil
+	}
+	from := lot.State
+	if !domain.CanTransitionLot(from, domain.LotReallocated) {
+		return domain.OrderLot{}, pkgdomain.Conflict("cannot give up a lot in state " + string(from))
+	}
+
+	var updated domain.OrderLot
+	err = f.store.InTx(ctx, func(ctx context.Context, tx Tx) error {
+		var err error
+		updated, err = tx.TransitionLot(ctx, in.LotID, from, domain.LotReallocated, domain.LotTransitionFields{DeclineReason: &in.Reason})
+		if err != nil {
+			return err
+		}
+		reservation, hasReservation, err := f.store.GetReservationForLot(ctx, in.LotID)
+		if err != nil {
+			return fmt.Errorf("loading reservation for lot %s: %w", in.LotID, err)
+		}
+		if hasReservation {
+			if err := tx.ReleaseReservation(ctx, reservation.ID); err != nil {
+				return err
+			}
+		}
+		return tx.RecordEvent(ctx, ids.New(), lot.BulkOrderID, &lot.ID, "LOT_GAVE_UP", updated)
+	})
+	if err != nil {
+		return domain.OrderLot{}, fmt.Errorf("requesting reallocation for lot %s: %w", in.LotID, err)
+	}
+	// Same as SubmitQC's give-up branch: reoffer freed capacity after commit,
+	// not from inside the transaction -- see reofferAfterGiveUp's own doc
+	// comment for the durability tradeoff this accepts.
+	f.reofferAfterGiveUp(ctx, lot.BulkOrderID, in.IdempotencyKey)
 	return updated, nil
 }
 

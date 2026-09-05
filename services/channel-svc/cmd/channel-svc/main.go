@@ -219,7 +219,7 @@ func run() error {
 
 	// Follow gRPC service: FollowArtisan/UnfollowArtisan/GetFeed for bff.
 	followSvc := service.NewFollow(r)
-	followHandler := handler.NewFollow(followSvc, notifSvc)
+	followHandler := handler.NewFollow(followSvc, notifSvc, notifSvc)
 
 	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recoveryInterceptor(log)))
 	socialv1.RegisterFollowServiceServer(grpcServer, followHandler)

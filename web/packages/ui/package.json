@@ -4,12 +4,27 @@
   "type": "module",
   "exports": {
     ".": {
-      "svelte": "./src/index.ts"
-    }
+      "types": "./src/index.ts",
+      "svelte": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./ui.css": "./src/ui.css"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "dependencies": {
     "@kalakriti/i18n": "workspace:*",
-    "@kalakriti/tokens": "workspace:*"
+    "@kalakriti/icons": "workspace:*",
+    "@kalakriti/illustrations": "workspace:*",
+    "@kalakriti/motion": "workspace:*",
+    "@kalakriti/offline": "workspace:*",
+    "@kalakriti/ornament": "workspace:*",
+    "@kalakriti/patterns": "workspace:*",
+    "@kalakriti/tokens": "workspace:*",
+    "@kalakriti/voice": "workspace:*"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
   }
 }

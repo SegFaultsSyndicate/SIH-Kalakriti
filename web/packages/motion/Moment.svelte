@@ -14,19 +14,25 @@
   import Success from './src/sync-synced.svg';
   import Failure from './src/failure-thread.svg';
 
-  /** @type {'success'|'failure'} */
-  export let kind = 'success';
-  export let title = undefined;
+  /**
+   * @typedef {object} Props
+   * @property {'success'|'failure'} [kind]
+   * @property {string} [title] Accessible name. A success or failure moment
+   *   shown without adjacent text MUST carry one -- it is the only thing
+   *   announcing the outcome.
+   */
 
-  $: Component = kind === 'success' ? Success : Failure;
+  /** @type {Props & Record<string, unknown>} */
+  let { kind = 'success', title, ...rest } = $props();
+
+  const Component = $derived(kind === 'success' ? Success : Failure);
 </script>
 
-<svelte:component
-  this={Component}
+<Component
   class="k-moment k-moment--{kind}"
   role={title ? 'img' : undefined}
   aria-label={title}
   aria-hidden={title ? undefined : 'true'}
   focusable="false"
-  {...$$restProps}
+  {...rest}
 />

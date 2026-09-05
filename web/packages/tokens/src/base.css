@@ -1,0 +1,190 @@
+/*
+ * Kalakriti design tokens — base.css
+ * ---------------------------------------------------------------
+ * Element defaults for the product surfaces. Everything here is the
+ * unstyled baseline a page gets for free; components override, they
+ * do not re-establish.
+ *
+ * The page ground is khadi with a paper grain, not a flat grey. The
+ * grain is a 2.4KB tiling SVG from @kalakriti/patterns, served from the
+ * app's static/ directory so it is one cached request the service
+ * worker precaches rather than a base64 payload inlined into every
+ * stylesheet.
+ * ---------------------------------------------------------------
+ */
+
+@layer base {
+  body {
+    font-family: var(--k-font-body);
+    font-size: var(--k-text-base);
+    color: var(--k-text-primary);
+    background-color: var(--k-surface-base);
+  }
+
+  /*
+   * Paper grain.
+   *
+   * APPLIED AS A MASK OVER A PAINTED COLOUR, NEVER AS background-image.
+   * The tile is authored with fill="currentColor" and an
+   * feTurbulence-driven alpha channel. An SVG loaded through
+   * background-image -- data: URI included -- is an isolated document
+   * where currentColor resolves to black, so that same file used that
+   * way paints black noise across the whole page at up to 90% alpha.
+   * As a mask only the alpha channel is read, the colour comes from
+   * this element, and the grain is khadi-on-khadi as intended.
+   * ornament.css and patterns.css document the same rule for every
+   * other tile in the system. Do not "simplify" this back.
+   *
+   * --k-page-grain is set by the app to a url(); with no app value
+   * nothing is painted, which is the correct default for a surface
+   * that has not shipped the tile.
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--k-text-primary);
+    opacity: var(--k-page-grain-opacity, 0.05);
+    -webkit-mask-image: var(--k-page-grain, none);
+    mask-image: var(--k-page-grain, none);
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    -webkit-mask-size: 180px 180px;
+    mask-size: 180px 180px;
+  }
+
+  /* Grain is a light-theme affordance. On the dark ground it reads as
+     noise, so it is dropped rather than re-tuned. Opacity, not
+     mask-image: the theme should not need to know how it is drawn. */
+  [data-theme='dark'],
+  [data-theme='high-contrast'],
+  [data-theme='high-contrast-dark'] {
+    --k-page-grain-opacity: 0;
+  }
+
+  /* prefers-contrast: more gets the same treatment as the explicit
+     high-contrast theme: no texture competing with the text. */
+  @media (prefers-contrast: more) {
+    :root {
+      --k-page-grain-opacity: 0;
+    }
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--k-font-display);
+    line-height: var(--k-leading-tight);
+    letter-spacing: var(--k-tracking-tight);
+  }
+
+  h1 {
+    font-size: var(--k-text-2xl);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  h2 {
+    font-size: var(--k-text-xl);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  h3 {
+    font-size: var(--k-text-lg);
+    font-weight: var(--k-weight-medium);
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: var(--k-text-md);
+    font-weight: var(--k-weight-semibold);
+    line-height: var(--k-leading-snug);
+  }
+
+  p,
+  li {
+    max-inline-size: var(--k-measure-base);
+  }
+
+  a {
+    color: var(--k-accent-secondary);
+    /* Underline is kept: link-ness must not be carried by colour alone. */
+    text-decoration-thickness: max(1px, 0.06em);
+    text-underline-offset: 0.18em;
+  }
+
+  a:hover {
+    text-decoration-thickness: max(2px, 0.1em);
+  }
+
+  hr {
+    border: 0;
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  small {
+    font-size: var(--k-text-sm);
+  }
+
+  /*
+   * Tabular numerals. Prices are int64 paise rendered by
+   * @kalakriti/i18n formatMoney, and a proportional figure set makes a
+   * column of them ragged and makes a live-updating one jitter. Applied
+   * to tables by default and available as a class for the many places a
+   * price appears outside one.
+   */
+  table,
+  .k-tabular {
+    font-variant-numeric: var(--k-numeric-tabular);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--k-font-mono);
+    font-size: 0.92em;
+  }
+
+  ::selection {
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+  }
+
+  /*
+   * Skip link. Required by GIGW 3.0 and by the keyboard contract; it
+   * lives in base rather than in a component because every app root
+   * layout renders one and none of them should be able to restyle it
+   * into invisibility.
+   */
+  .k-skip-link {
+    position: absolute;
+    inset-block-start: var(--k-space-2);
+    inset-inline-start: var(--k-space-2);
+    z-index: var(--k-z-skiplink);
+    padding: var(--k-space-3) var(--k-space-4);
+    background-color: var(--k-surface-raised);
+    color: var(--k-text-primary);
+    border: var(--k-rule) solid var(--k-border-interactive);
+    border-radius: var(--k-radius-md);
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+
+  .k-skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  /* Visually hidden but available to assistive tech and to voice
+     control, which needs the accessible name to match a spoken label. */
+  .k-visually-hidden:not(:focus):not(:active) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

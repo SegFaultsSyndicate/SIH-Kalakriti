@@ -14,17 +14,24 @@
 
   const ICONS = { offline: Offline, pending: Pending, syncing: Syncing, synced: Synced };
 
-  /** @type {'offline'|'pending'|'syncing'|'synced'} */
-  export let state = 'synced';
-  export let title = undefined;
+  /**
+   * @typedef {object} Props
+   * @property {'offline'|'pending'|'syncing'|'synced'} [state]
+   * @property {string} [title] The state named in words. Sync state is never
+   *   carried by the glyph alone.
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { state = 'synced', title, ...rest } = $props();
+
+  const Component = $derived(ICONS[state]);
 </script>
 
-<svelte:component
-  this={ICONS[state]}
+<Component
   class="k-sync-state k-sync-state--{state}"
   role={title ? 'img' : undefined}
   aria-label={title}
   aria-hidden={title ? undefined : 'true'}
   focusable="false"
-  {...$$restProps}
+  {...rest}
 />

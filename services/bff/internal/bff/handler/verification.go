@@ -228,7 +228,11 @@ func (h *VerificationHandler) renderPage(w http.ResponseWriter, r *http.Request,
 	w.Header().Set("X-OG-Title", fmt.Sprintf("Provenance: %s", data.ArtisanName))
 	w.Header().Set("X-OG-Description", fmt.Sprintf("Authenticated %s by %s", data.CraftName, data.ArtisanName))
 
-	if err := h.tmpl.Execute(w, data); err != nil {
+	view := struct {
+		*verificationData
+		CSS template.CSS
+	}{data, template.CSS(verificationPageCSS)}
+	if err := h.tmpl.Execute(w, view); err != nil {
 		fmt.Printf("template error: %v\n", err)
 	}
 }
@@ -248,127 +252,122 @@ func (h *VerificationHandler) renderNotFound(w http.ResponseWriter, r *http.Requ
 	notFoundTmpl.Execute(w, notFoundData)
 }
 
-const verificationPageTemplate = `<!DOCTYPE html>
+// verificationPageCSS is the standalone stylesheet for the public provenance
+// page, built from the same tokens web/packages/tokens/src ships (values
+// copied literally since a Go html/template has no CSS custom-property
+// pipeline of its own -- token names kept in comments so a palette change
+// is easy to find and mirror here). No @font-face/@import: the page must
+// render correctly with the network otherwise blocked, so it falls back to
+// the system stack rather than fetch a webfont.
+const verificationPageCSS = `:root{color-scheme:light}
+body{margin:0;padding:0;background:#FCFAF6;color:#241E1A;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.55}
+.k-verify{max-width:34rem;margin:0 auto;padding:2rem 1rem 4rem}
+.k-verify__mark{display:flex;align-items:center;gap:.5rem;font-size:.833rem;letter-spacing:.08em;text-transform:uppercase;color:#554B44;margin-block-end:2rem}
+.k-verify__status{border-block:2px solid;padding:1rem 0;margin-block-end:2rem}
+.k-verify__status--valid{border-color:#254D21;color:#254D21}
+.k-verify__status--invalid{border-color:#93011E;color:#93011E}
+.k-verify__status-title{font-size:1.2rem;font-weight:600;margin:0 0 .25rem}
+.k-verify__status-body{margin:0;color:#241E1A;font-size:.9rem}
+.k-verify h1{font-size:1.44rem;font-weight:600;margin:0 0 .25rem;line-height:1.15}
+.k-verify__subtitle{color:#554B44;margin:0 0 2rem}
+.k-verify__fields{margin:0;padding:0}
+.k-verify__field{display:flex;justify-content:space-between;gap:1rem;padding:.75rem 0;border-block-end:1px solid #CECAC6}
+.k-verify__field:first-child{border-block-start:1px solid #CECAC6}
+.k-verify__label{color:#554B44;font-size:.9rem}
+.k-verify__value{color:#241E1A;font-weight:500;text-align:right}
+.k-verify__badge{display:inline-block;font-size:.833rem;font-weight:600;padding:.125rem .5rem;border-radius:2px}
+.k-verify__badge--yes{background:#B4CCB1;color:#254D21}
+.k-verify__badge--no{background:#EFC7B8;color:#7E1300}
+.k-verify__code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#F5F0E8;padding:.125rem .375rem;border-radius:2px}
+.k-verify__footer{margin-block-start:2rem;color:#554B44;font-size:.833rem}
+.k-verify__footer a{color:#305191}
+@media (prefers-color-scheme:dark){
+  :root{color-scheme:dark}
+  body{background:#0F0A07;color:#F5F0E8}
+  .k-verify__mark{color:#AFAAA5}
+  .k-verify__subtitle,.k-verify__label,.k-verify__footer{color:#AFAAA5}
+  .k-verify__field{border-color:#3D3630}
+  .k-verify__field:first-child{border-color:#3D3630}
+  .k-verify__code{background:#3C332E}
+  .k-verify__status--valid{border-color:#8FAB8B;color:#8FAB8B}
+  .k-verify__status--invalid{border-color:#E68582;color:#E68582}
+}`
+
+const verificationPageTemplate = `{{define "verify"}}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Provenance Verification - {{.ArtisanName}}</title>
+    <title>Provenance verification — {{.ArtisanName}}</title>
+    <meta name="description" content="Authenticated {{.CraftName}} by {{.ArtisanName}}">
     <meta property="og:title" content="Provenance: {{.ArtisanName}}">
     <meta property="og:description" content="Authenticated {{.CraftName}} by {{.ArtisanName}}">
     <meta property="og:url" content="{{.VerifyURL}}">
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { margin-top: 0; color: #333; }
-        .status { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
-        .status.valid { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status.invalid { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .field { margin-bottom: 15px; }
-        .label { font-weight: 600; color: #666; font-size: 14px; }
-        .value { color: #333; font-size: 16px; margin-top: 4px; }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: 600; }
-        .badge.yes { background: #d4edda; color: #155724; }
-        .badge.no { background: #f8d7da; color: #721c24; }
-        .code { font-family: monospace; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; }
-    </style>
+    <style>{{.CSS}}</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Provenance Verified</h1>
+    <main class="k-verify">
+        <p class="k-verify__mark">Kalakriti · Provenance</p>
 
         {{if .SignatureValid}}
-        <div class="status valid">
-            ✓ This item's provenance has been cryptographically verified.
-        </div>
+        <section class="k-verify__status k-verify__status--valid" role="status">
+            <p class="k-verify__status-title">Verified</p>
+            <p class="k-verify__status-body">This item's provenance record was cryptographically signed and has not been altered.</p>
+        </section>
         {{else}}
-        <div class="status invalid">
-            ⚠ Signature verification failed.
-        </div>
+        <section class="k-verify__status k-verify__status--invalid" role="status">
+            <p class="k-verify__status-title">Signature could not be verified</p>
+            <p class="k-verify__status-body">The record's signature did not check out against the signing key on file. Treat this tag as unverified.</p>
+        </section>
         {{end}}
 
-        <div class="field">
-            <div class="label">Artisan</div>
-            <div class="value">{{.ArtisanName}}</div>
-        </div>
+        <h1>{{.ListingTitle}}</h1>
+        <p class="k-verify__subtitle">by {{.ArtisanName}}</p>
 
-        <div class="field">
-            <div class="label">Cluster</div>
-            <div class="value">{{.ClusterName}}</div>
-        </div>
-
-        <div class="field">
-            <div class="label">Craft</div>
-            <div class="value">{{.CraftName}}</div>
-        </div>
-
-        <div class="field">
-            <div class="label">Technique Verified</div>
-            <div class="value">
-                {{if .TechniqueMatched}}
-                <span class="badge yes">YES</span>
-                {{else}}
-                <span class="badge no">NO</span>
-                {{end}}
+        <dl class="k-verify__fields">
+            <div class="k-verify__field"><dt class="k-verify__label">Craft</dt><dd class="k-verify__value">{{.CraftName}}</dd></div>
+            <div class="k-verify__field"><dt class="k-verify__label">Cluster</dt><dd class="k-verify__value">{{.ClusterName}}</dd></div>
+            <div class="k-verify__field">
+                <dt class="k-verify__label">Technique matches claim</dt>
+                <dd class="k-verify__value">{{if .TechniqueMatched}}<span class="k-verify__badge k-verify__badge--yes">Confirmed</span>{{else}}<span class="k-verify__badge k-verify__badge--no">Not confirmed</span>{{end}}</dd>
             </div>
-        </div>
-
-        <div class="field">
-            <div class="label">GI Certified</div>
-            <div class="value">
-                {{if .GICertified}}
-                <span class="badge yes">YES</span>
-                {{else}}
-                <span class="badge no">NO</span>
-                {{end}}
+            <div class="k-verify__field">
+                <dt class="k-verify__label">Geographical Indication</dt>
+                <dd class="k-verify__value">{{if .GICertified}}<span class="k-verify__badge k-verify__badge--yes">GI tagged</span>{{else}}<span class="k-verify__badge k-verify__badge--no">Not GI tagged</span>{{end}}</dd>
             </div>
-        </div>
+            <div class="k-verify__field"><dt class="k-verify__label">Sealed on</dt><dd class="k-verify__value">{{.SealedAt}}</dd></div>
+            <div class="k-verify__field"><dt class="k-verify__label">Verification code</dt><dd class="k-verify__value"><span class="k-verify__code">{{.Code}}</span></dd></div>
+        </dl>
 
-        <div class="field">
-            <div class="label">Sealed</div>
-            <div class="value">{{.SealedAt}}</div>
-        </div>
-
-        <div class="field">
-            <div class="label">Verification Code</div>
-            <div class="value"><span class="code">{{.Code}}</span></div>
-        </div>
-    </div>
+        <p class="k-verify__footer">This page renders without JavaScript, so a printed tag verifies the same way it looks here even on a low-end phone or a weak connection.</p>
+    </main>
 </body>
-</html>`
+</html>{{end}}`
 
 const notFoundPageTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Code Not Found</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-        h1 { color: #721c24; }
-        .message { color: #666; font-size: 16px; margin: 20px 0; }
-        .code { font-family: monospace; background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 3px; }
-    </style>
+    <title>We cannot verify this tag</title>
+    <style>` + verificationPageCSS + `</style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚠ Cannot Verify This Tag</h1>
-        <div class="message">
-            {{if .Code}}
-            The verification code <span class="code">{{.Code}}</span> is not recognized.
-            {{else}}
-            No verification code was provided.
-            {{end}}
-        </div>
-        <div class="message">
-            This may mean:
-            <ul style="text-align: left; display: inline-block; margin-top: 10px;">
-                <li>The code was entered incorrectly</li>
-                <li>The tag is not genuine</li>
-                <li>The provenance record has not been sealed yet</li>
-            </ul>
-        </div>
-    </div>
+    <main class="k-verify">
+        <p class="k-verify__mark">Kalakriti · Provenance</p>
+        <section class="k-verify__status k-verify__status--invalid" role="status">
+            <p class="k-verify__status-title">We cannot verify this tag</p>
+            <p class="k-verify__status-body">
+                {{if .Code}}The code <span class="k-verify__code">{{.Code}}</span> does not match a sealed provenance record.{{else}}No verification code was given.{{end}}
+            </p>
+        </section>
+        <p class="k-verify__subtitle">This can honestly mean any of a few things:</p>
+        <dl class="k-verify__fields">
+            <div class="k-verify__field"><dt class="k-verify__label">Mistyped or damaged code</dt><dd class="k-verify__value">Check the printed tag and try again</dd></div>
+            <div class="k-verify__field"><dt class="k-verify__label">Not yet sealed</dt><dd class="k-verify__value">The artisan hasn't frozen provenance for this piece yet</dd></div>
+            <div class="k-verify__field"><dt class="k-verify__label">Not genuine</dt><dd class="k-verify__value">The tag doesn't correspond to any Kalakriti-verified item</dd></div>
+        </dl>
+        <p class="k-verify__footer">An unverifiable tag is not proof of fraud, but it is not proof of anything either — treat it as unverified rather than assume it is real.</p>
+    </main>
 </body>
 </html>`

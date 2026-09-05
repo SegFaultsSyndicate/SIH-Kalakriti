@@ -6,6 +6,9 @@
     ".": "./src/index.ts"
   },
   "files": ["src"],
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "svelte": "^5.0.0"
   }

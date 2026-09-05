@@ -15,11 +15,20 @@
 -->
 <script>
   import Frame from './src/qr-frame.svg';
+
+  /**
+   * @typedef {object} Props
+   * @property {import('svelte').Snippet} [children] The QR code itself. The
+   *   frame preserves the quiet zone around this slot -- do not shrink it.
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { children, ...rest } = $props();
 </script>
 
-<div class="k-qr-frame" {...$$restProps}>
+<div class="k-qr-frame" {...rest}>
   <Frame aria-hidden="true" focusable="false" />
   <div class="k-qr-frame__slot">
-    <slot />
+    {@render children?.()}
   </div>
 </div>

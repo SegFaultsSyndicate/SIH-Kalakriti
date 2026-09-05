@@ -1,0 +1,27 @@
+{
+  "name": "@kalakriti/illustrations",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./illustrations.d.ts",
+      "svelte": "./index.js",
+      "default": "./index.js"
+    },
+    "./illustrations.css": "./illustrations.css",
+    "./manifest": "./manifest.js",
+    "./src/*": "./src/*",
+    "./*.svelte": "./*.svelte"
+  },
+  "files": [
+    "src",
+    "index.js",
+    "*.svelte",
+    "illustrations.css",
+    "manifest.js",
+    "illustrations.d.ts"
+  ],
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}

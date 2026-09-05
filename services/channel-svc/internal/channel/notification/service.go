@@ -118,6 +118,12 @@ func (s *Service) MarkRead(ctx context.Context, id uuid.UUID) error {
 	return s.repo.MarkNotificationRead(ctx, id, time.Now().UTC())
 }
 
+// Get fetches one notification by id, so a caller can check who it belongs
+// to before acting on it (see MarkFeedItemRead's ownership check).
+func (s *Service) Get(ctx context.Context, id uuid.UUID) (Notification, error) {
+	return s.repo.GetNotification(ctx, id)
+}
+
 // ListForUser lists notifications for a user.
 func (s *Service) ListForUser(ctx context.Context, recipientID string, limit, offset int) ([]Notification, error) {
 	return s.repo.ListNotificationsForUser(ctx, recipientID, limit, offset)

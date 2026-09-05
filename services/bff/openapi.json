@@ -20,9 +20,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["phone"],
+                "required": [
+                  "phone"
+                ],
                 "properties": {
-                  "phone": {"type": "string", "description": "E.164 phone number"}
+                  "phone": {
+                    "type": "string",
+                    "description": "E.164 phone number"
+                  }
                 }
               }
             }
@@ -36,7 +41,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": {"type": "string", "example": "otp_sent"}
+                    "status": {
+                      "type": "string",
+                      "example": "otp_sent"
+                    }
                   }
                 }
               }
@@ -54,10 +62,17 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["phone", "otp"],
+                "required": [
+                  "phone",
+                  "otp"
+                ],
                 "properties": {
-                  "phone": {"type": "string"},
-                  "otp": {"type": "string"}
+                  "phone": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -71,8 +86,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "access_token": {"type": "string"},
-                    "refresh_token": {"type": "string"}
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -84,17 +103,27 @@
     "/artisans": {
       "post": {
         "summary": "Register artisan",
-        "security": [{"bearerAuth": []}],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["display_name"],
+                "required": [
+                  "display_name"
+                ],
                 "properties": {
-                  "display_name": {"type": "string"},
-                  "language": {"type": "string"}
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -108,7 +137,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "artisan_id": {"type": "string"}
+                    "artisan_id": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -119,10 +150,37 @@
     },
     "/listings": {
       "get": {
-        "summary": "List published listings",
+        "summary": "List listings",
+        "description": "Public callers only ever see PUBLISHED listings. An artisan who passes their own artisan_id also sees their own DRAFT, PENDING_ARTISAN_APPROVAL and SUSPENDED listings; a mismatched artisan_id is silently ignored and the published-only view applies.",
         "parameters": [
-          {"name": "craft_id", "in": "query", "schema": {"type": "string"}},
-          {"name": "state", "in": "query", "schema": {"type": "string"}}
+          {
+            "name": "craft_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artisan_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -134,7 +192,9 @@
                   "properties": {
                     "listings": {
                       "type": "array",
-                      "items": {"type": "object"}
+                      "items": {
+                        "$ref": "#/components/schemas/Listing"
+                      }
                     }
                   }
                 }
@@ -145,12 +205,19 @@
       },
       "post": {
         "summary": "Create listing",
-        "security": [{"bearerAuth": []}],
+        "description": "Registers the product (photos, craft, dimensions) and its sellable offer in one call.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {"type": "object"}
+              "schema": {
+                "$ref": "#/components/schemas/CreateListingRequest"
+              }
             }
           }
         },
@@ -162,8 +229,336 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "listing_id": {"type": "string"}
+                    "listing_id": {
+                      "type": "string"
+                    }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}": {
+      "get": {
+        "summary": "Get one listing",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Listing"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update listing",
+        "description": "Patches an existing listing. Fields omitted from the body keep their current server value; a commercial field sent as null explicitly clears it (stock_quantity only). Translations, when sent, replace the array wholesale. Media is not patchable here -- it is set at creation only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Listing updated"
+          }
+        }
+      }
+    },
+    "/listings/{id}/submit": {
+      "post": {
+        "summary": "Submit listing for the artisan's own review",
+        "description": "Moves the listing from DRAFT to PENDING_ARTISAN_APPROVAL. No request body.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Submitted for review"
+          }
+        }
+      }
+    },
+    "/listings/{id}/approve": {
+      "post": {
+        "summary": "Approve and publish listing",
+        "description": "The artisan's own sign-off on AI-generated copy. Moves the listing from PENDING_ARTISAN_APPROVAL to PUBLISHED. edited_translations, when sent, overrides the machine-generated translations with the artisan's edits before publishing.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "edited_translations": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ListingTranslation"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Approved and published"
+          }
+        }
+      }
+    },
+    "/listings/{id}/seal-provenance": {
+      "post": {
+        "summary": "Seal provenance",
+        "description": "Freezes process evidence for a PUBLISHED listing: hashes the given media, checks the artisan's claimed_technique against the model's observation, and (for textile crafts, unless skip_loom_check) records a loom verdict. Permanent -- nothing in the returned record can change after sealing.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "media",
+                  "claimed_technique"
+                ],
+                "properties": {
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Confirmed media ids -- the process evidence to freeze."
+                  },
+                  "claimed_technique": {
+                    "type": "string"
+                  },
+                  "skip_loom_check": {
+                    "type": "boolean",
+                    "description": "Set for non-textile crafts."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sealed provenance record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceRecord"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/upload-url": {
+      "post": {
+        "summary": "Request a presigned upload URL",
+        "description": "The returned upload_url is a presigned PUT to object storage, not a bff endpoint -- upload the raw bytes there directly, then call POST /media/{id}/confirm.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content_type",
+                  "size_bytes"
+                ],
+                "properties": {
+                  "content_type": {
+                    "type": "string",
+                    "example": "image/jpeg"
+                  },
+                  "size_bytes": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload URL issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "media_id": {
+                      "type": "string"
+                    },
+                    "upload_url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{id}/confirm": {
+      "post": {
+        "summary": "Confirm upload landed",
+        "description": "Tells core-svc the bytes were successfully PUT to upload_url. No request body.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Confirmed"
+          }
+        }
+      }
+    },
+    "/pricing/advise": {
+      "post": {
+        "summary": "Fair price advisory",
+        "description": "Cost floor, market band and (when chosen_price is supplied) an anomaly check against it.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "listing_id",
+                  "material_cost",
+                  "hours"
+                ],
+                "properties": {
+                  "listing_id": {
+                    "type": "string"
+                  },
+                  "material_cost": {
+                    "$ref": "#/components/schemas/Money"
+                  },
+                  "hours": {
+                    "type": "number"
+                  },
+                  "chosen_price": {
+                    "$ref": "#/components/schemas/Money"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Advisory",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceAdvisory"
                 }
               }
             }
@@ -173,25 +568,205 @@
     },
     "/search": {
       "get": {
-        "summary": "Search listings",
+        "summary": "Hybrid search with query understanding",
         "parameters": [
-          {"name": "q", "in": "query", "required": true, "schema": {"type": "string"}},
-          {"name": "craft_id", "in": "query", "schema": {"type": "string"}},
-          {"name": "region", "in": "query", "schema": {"type": "string"}}
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "craft_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "colour",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "material",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "price_min",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "paise"
+          },
+          {
+            "name": "price_max",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "paise"
+          },
+          {
+            "name": "gi_tagged",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "made_to_order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "provenance_verified",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
-            "description": "Search results",
+            "description": "Search results with the understood query and removable filter chips",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "results": {
-                      "type": "array",
-                      "items": {"type": "object"}
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/voice": {
+      "post": {
+        "summary": "Transcribe and search by voice",
+        "description": "Body is the raw recorded audio, not JSON. The Accept-Language header (BCP-47, e.g. hi-IN) picks the transcription language.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transcribed query and its search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SearchResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string"
+                        },
+                        "transcript_confidence": {
+                          "type": "number"
+                        }
+                      }
                     }
-                  }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "Get a bulk order",
+        "description": "Returns the order with its lots populated. A lot's artisan_id identifies which lots belong to the calling artisan when there is more than one on the order.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkOrder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -202,16 +777,1975 @@
     "/orders/{id}/events": {
       "get": {
         "summary": "Watch order events (SSE)",
-        "security": [{"bearerAuth": []}],
+        "description": "text/event-stream, one `data:` line per event -- the wire shape is OrderEvent (see components.schemas). Supports Last-Event-ID for resume after a reconnect; replays persisted history first, then forwards live events, so a client that reconnects with its last-seen id sees no gap and no duplicate ahead of that id.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
-          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "description": "RFC3339Nano instant; replay events after it before streaming live ones. Manual alternative to Last-Event-ID for a client managing its own reconnect.",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
           "200": {
             "description": "Event stream",
             "content": {
               "text/event-stream": {
-                "schema": {"type": "string"}
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/lots/{id}/respond": {
+      "post": {
+        "summary": "Accept or decline an offered lot",
+        "description": "Only legal while the lot is OFFERED. Accepting requires promised_ship_date; declining requires decline_reason.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Lot id."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accept"
+                ],
+                "properties": {
+                  "accept": {
+                    "type": "boolean"
+                  },
+                  "promised_ship_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Required when accept is true."
+                  },
+                  "decline_reason": {
+                    "type": "string",
+                    "description": "Required when accept is false."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "No content"
+          },
+          "409": {
+            "description": "Lot is no longer awaiting a response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/lots/{id}/progress": {
+      "post": {
+        "summary": "Report production progress",
+        "description": "Legal from ACCEPTED, IN_PRODUCTION, or QC_FAILED (a rework resubmission back toward QC_PENDING -- must be reported at 100 to move out of QC_FAILED, a lower value there is rejected). Reaching 100 moves the lot to QC_PENDING.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Lot id."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "progress_pct"
+                ],
+                "properties": {
+                  "progress_pct": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Confirmed media ids -- work-in-progress photographs."
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated lot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderLot"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lot is not in a state that accepts a progress report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/lots/{id}/reallocate": {
+      "post": {
+        "summary": "Give up a lot (request reallocation)",
+        "description": "The non-punitive path when an artisan cannot complete an accepted lot: moves it straight to REALLOCATED and frees its units for reoffer to another artisan, rather than leaving it to silently miss its ship date or fail QC. Legal from ACCEPTED, IN_PRODUCTION or QC_FAILED.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Lot id."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The lot, now REALLOCATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderLot"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lot cannot be given up from its current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed": {
+      "get": {
+        "summary": "Get the caller's notification feed",
+        "description": "Notifications addressed to the caller -- lot offers, order updates, follows -- newest first, up to 50. Group by `kind` client-side; there is no separate grouping endpoint.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feed items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "feed": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FeedItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/{id}/read": {
+      "post": {
+        "summary": "Mark one feed item read",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Notification id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "No content"
+          },
+          "403": {
+            "description": "Notification does not belong to the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/follower-count": {
+      "get": {
+        "summary": "Get an artisan's follower count",
+        "description": "Shown on the artisan's own profile as recognition -- how many buyers follow them -- not a metric framed for comparison or optimisation.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Follower count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statements": {
+      "post": {
+        "summary": "Generate an income statement",
+        "description": "Kicks off generation for the caller's own period; period_end is inclusive of the whole day for a bare YYYY-MM-DD (rolled to the start of the next day server-side). Returns the full record immediately, including download_url -- there is no separate fetch-by-id (see GET /statements).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "description": "RFC3339 or YYYY-MM-DD."
+                  },
+                  "end": {
+                    "type": "string",
+                    "description": "RFC3339 or YYYY-MM-DD."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The generated statement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statement_id": {
+                      "type": "string"
+                    },
+                    "short_code": {
+                      "type": "string",
+                      "description": "Public verification code, printable on the PDF."
+                    },
+                    "download_url": {
+                      "type": "string"
+                    },
+                    "verification_url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the caller's own income statements",
+        "description": "Newest first -- the earnings-over-time read model. insight-svc has no fetch-by-id, so this list (each row already carrying its own download_url) is the only way to see a statement generated earlier.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statement summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statements": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/IncomeStatementSummary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/suggest": {
+      "get": {
+        "summary": "Type-ahead completions",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/summary": {
+      "get": {
+        "summary": "Listing card summary: craft, materials, colours, resolved media URLs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/crafts": {
+      "get": {
+        "summary": "The whole craft ontology",
+        "responses": {
+          "200": {
+            "description": "Crafts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "crafts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Craft"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/crafts/{slug}": {
+      "get": {
+        "summary": "Craft landing page: what it is, GI status, region, and the artisans who practise it",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Craft detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CraftDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/storefront": {
+      "get": {
+        "summary": "Public artisan storefront profile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "artisan id or slug"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artisan storefront",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtisanStorefront"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/feed/process": {
+      "get": {
+        "summary": "Vertical process-provenance feed: craft-in-progress clips, newest first",
+        "responses": {
+          "200": {
+            "description": "Process clips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clips": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProcessClip"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/follow": {
+      "post": {
+        "summary": "Follow an artisan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Followed"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unfollow an artisan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Unfollowed"
+          }
+        }
+      }
+    },
+    "/orders/bulk": {
+      "post": {
+        "summary": "Create a bulk order",
+        "description": "Registers a buyer requirement against one listing; allocation into per-artisan lots happens asynchronously (see /orders/{id}/events). Works for both READY_STOCK and MADE_TO_ORDER listings -- a single-item purchase is quantity: 1 through this same endpoint, there is no separate cart/checkout RPC.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "listing_id",
+                  "quantity",
+                  "required_by"
+                ],
+                "properties": {
+                  "listing_id": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "required_by": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "customisations": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created, in ALLOCATING",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "order_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/artisans-by-category": {
+      "get": {
+        "summary": "Artisan counts by district and social category (ministry, unsuppressed)",
+        "description": "Every bucket, including those under 5 artisans -- insight-svc applies no small-bucket suppression to this query. Used as the full district roster the dashboard diffs the suppressed earnings/income endpoints against.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "state_code": {
+                            "type": "string"
+                          },
+                          "district": {
+                            "type": "string"
+                          },
+                          "social_category": {
+                            "type": "string"
+                          },
+                          "artisan_count": {
+                            "type": "integer"
+                          },
+                          "verified_count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/listings-by-craft-month": {
+      "get": {
+        "summary": "Listings published by craft over time (ministry, unsuppressed)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "craft_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "craft_id": {
+                            "type": "string"
+                          },
+                          "craft_name": {
+                            "type": "string"
+                          },
+                          "month": {
+                            "type": "string"
+                          },
+                          "listing_count": {
+                            "type": "integer"
+                          },
+                          "artisan_count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/earnings-by-district": {
+      "get": {
+        "summary": "GMV and average artisan earnings by district (ministry, small buckets suppressed)",
+        "description": "Districts with fewer than 5 artisans are omitted entirely, not rendered as a zero row -- diff against GET /insights/artisans-by-category to tell a suppressed district apart from one with no data at all.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "state_code": {
+                            "type": "string"
+                          },
+                          "district": {
+                            "type": "string"
+                          },
+                          "total_gmv": {
+                            "type": "object",
+                            "properties": {
+                              "amount_paise": {
+                                "type": "integer"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "total_net": {
+                            "type": "object",
+                            "properties": {
+                              "amount_paise": {
+                                "type": "integer"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "artisan_count": {
+                            "type": "integer"
+                          },
+                          "avg_earnings": {
+                            "type": "object",
+                            "properties": {
+                              "amount_paise": {
+                                "type": "integer"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/income-comparison": {
+      "get": {
+        "summary": "Median artisan earnings before vs. after 90 days on the platform, by district (ministry, small buckets suppressed)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "state_code": {
+                            "type": "string"
+                          },
+                          "district": {
+                            "type": "string"
+                          },
+                          "median_before": {
+                            "type": "object",
+                            "properties": {
+                              "amount_paise": {
+                                "type": "integer"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "median_after": {
+                            "type": "object",
+                            "properties": {
+                              "amount_paise": {
+                                "type": "integer"
+                              },
+                              "currency_code": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "artisan_count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/dying-crafts": {
+      "get": {
+        "summary": "Crafts ranked by declining active-artisan count (ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "craft_id": {
+                            "type": "string"
+                          },
+                          "craft_name": {
+                            "type": "string"
+                          },
+                          "decline_rate": {
+                            "type": "number"
+                          },
+                          "peak_artisans": {
+                            "type": "integer"
+                          },
+                          "current_artisans": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/refresh": {
+      "post": {
+        "summary": "Manually refresh the dashboard materialized views (ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "refreshed_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters": {
+      "post": {
+        "summary": "Register a cluster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "state_code"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "state_code": {
+                    "type": "string"
+                  },
+                  "district": {
+                    "type": "string"
+                  },
+                  "coordinator_phone_e164": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "craft_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "state_code": {
+                      "type": "string"
+                    },
+                    "district": {
+                      "type": "string"
+                    },
+                    "artisan_count": {
+                      "type": "integer"
+                    },
+                    "coordinator_phone_e164": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{id}": {
+      "get": {
+        "summary": "Fetch a cluster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cluster",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "craft_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "state_code": {
+                      "type": "string"
+                    },
+                    "district": {
+                      "type": "string"
+                    },
+                    "artisan_count": {
+                      "type": "integer"
+                    },
+                    "coordinator_phone_e164": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{id}/members": {
+      "get": {
+        "summary": "List a cluster's roster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "CLUSTER_MEMBER_ROLE_MEMBER",
+                              "CLUSTER_MEMBER_ROLE_COORDINATOR",
+                              "CLUSTER_MEMBER_ROLE_MASTER"
+                            ]
+                          },
+                          "joined_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add (or re-role) an artisan in a cluster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "artisan_id"
+                ],
+                "properties": {
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "MEMBER",
+                      "COORDINATOR",
+                      "MASTER"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Membership",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cluster_id": {
+                      "type": "string"
+                    },
+                    "artisan_id": {
+                      "type": "string"
+                    },
+                    "display_name": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "CLUSTER_MEMBER_ROLE_MEMBER",
+                        "CLUSTER_MEMBER_ROLE_COORDINATOR",
+                        "CLUSTER_MEMBER_ROLE_MASTER"
+                      ]
+                    },
+                    "joined_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{id}/members/{artisanId}": {
+      "delete": {
+        "summary": "Remove an artisan from a cluster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artisanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "removed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self-help-groups": {
+      "post": {
+        "summary": "Register a self-help group and its founding share split (cluster officer / ministry)",
+        "description": "members[].share_pct must sum to exactly 100 -- enforced server-side, not just by the UI.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "registration_no",
+                  "members"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "registration_no": {
+                    "type": "string"
+                  },
+                  "cluster_id": {
+                    "type": "string"
+                  },
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "artisan_id",
+                        "share_pct"
+                      ],
+                      "properties": {
+                        "artisan_id": {
+                          "type": "string"
+                        },
+                        "share_pct": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "registration_no": {
+                      "type": "string"
+                    },
+                    "cluster_id": {
+                      "type": "string"
+                    },
+                    "member_artisan_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "signatory_artisan_id": {
+                      "type": "string"
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "self_help_group_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "share_pct": {
+                            "type": "integer"
+                          },
+                          "joined_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self-help-groups/{id}": {
+      "get": {
+        "summary": "Fetch an SHG with its current roster (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SHG",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "registration_no": {
+                      "type": "string"
+                    },
+                    "cluster_id": {
+                      "type": "string"
+                    },
+                    "member_artisan_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "signatory_artisan_id": {
+                      "type": "string"
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "self_help_group_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "share_pct": {
+                            "type": "integer"
+                          },
+                          "joined_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self-help-groups/{id}/members": {
+      "put": {
+        "summary": "Replace an SHG's roster and share split wholesale (cluster officer / ministry)",
+        "description": "members[].share_pct must sum to exactly 100 -- enforced server-side, not just by the UI.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "members"
+                ],
+                "properties": {
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "artisan_id",
+                        "share_pct"
+                      ],
+                      "properties": {
+                        "artisan_id": {
+                          "type": "string"
+                        },
+                        "share_pct": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New roster",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "self_help_group_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "share_pct": {
+                            "type": "integer"
+                          },
+                          "joined_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/suspend": {
+      "post": {
+        "summary": "Suspend a published listing -- a human decision made from the moderation queue (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "product_id": {
+                      "type": "string"
+                    },
+                    "artisan_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "integer"
+                    },
+                    "currency": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/reinstate": {
+      "post": {
+        "summary": "Return a suspended listing to PUBLISHED (cluster officer / ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reinstated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "product_id": {
+                      "type": "string"
+                    },
+                    "artisan_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "integer"
+                    },
+                    "currency": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/crafts/refresh-index": {
+      "post": {
+        "summary": "Rebuild the craft ontology alias index from Postgres (ministry)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rebuilt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "craft_count": {
+                      "type": "integer"
+                    },
+                    "alias_count": {
+                      "type": "integer"
+                    },
+                    "built_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{id}/onboard": {
+      "post": {
+        "summary": "Register an artisan into a cluster on their behalf (cluster officer / ministry)",
+        "description": "Distinct from POST /artisans (self-registration, bound to the caller's own phone): this is the bulk-onboarding commit path, one call per validated CSV row.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "display_name",
+                  "phone_e164",
+                  "craft_ids",
+                  "languages",
+                  "region"
+                ],
+                "properties": {
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "phone_e164": {
+                    "type": "string"
+                  },
+                  "craft_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "region": {
+                    "type": "object",
+                    "required": [
+                      "state_code"
+                    ],
+                    "properties": {
+                      "state_code": {
+                        "type": "string"
+                      },
+                      "district": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "artisan_id": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
@@ -230,13 +2764,1029 @@
     "schemas": {
       "Error": {
         "type": "object",
-        "required": ["error", "message"],
+        "required": [
+          "error",
+          "message"
+        ],
         "properties": {
           "error": {
             "type": "string",
-            "enum": ["not_found", "conflict", "invalid_input", "forbidden", "unavailable", "internal_error"]
+            "enum": [
+              "not_found",
+              "conflict",
+              "invalid_input",
+              "forbidden",
+              "unavailable",
+              "internal_error"
+            ]
           },
-          "message": {"type": "string"}
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Money": {
+        "type": "object",
+        "required": [
+          "amount_paise"
+        ],
+        "properties": {
+          "amount_paise": {
+            "type": "integer",
+            "description": "Always integer paise. Never a float, never rupees."
+          },
+          "currency_code": {
+            "type": "string",
+            "description": "Defaults to INR, the only currency accepted today.",
+            "example": "INR"
+          }
+        }
+      },
+      "Dimensions": {
+        "type": "object",
+        "properties": {
+          "length_mm": {
+            "type": "integer"
+          },
+          "width_mm": {
+            "type": "integer"
+          },
+          "height_mm": {
+            "type": "integer"
+          },
+          "weight_g": {
+            "type": "integer"
+          }
+        }
+      },
+      "MadeToOrderTerms": {
+        "type": "object",
+        "properties": {
+          "lead_time_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "capacity_per_month": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accepting_orders": {
+            "type": "boolean"
+          },
+          "advance_pct": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customisation_options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomisationOption"
+            }
+          }
+        }
+      },
+      "PackagingMeta": {
+        "type": "object",
+        "properties": {
+          "fragile": {
+            "type": "boolean"
+          },
+          "oversized": {
+            "type": "boolean"
+          },
+          "requires_custom_crating": {
+            "type": "boolean"
+          },
+          "packed_dimensions": {
+            "$ref": "#/components/schemas/Dimensions"
+          }
+        }
+      },
+      "ListingTranslation": {
+        "type": "object",
+        "required": [
+          "language",
+          "title"
+        ],
+        "properties": {
+          "language": {
+            "type": "string",
+            "example": "hi"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "machine_generated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PriceAdvisory": {
+        "type": "object",
+        "description": "POST /pricing/advise's response. recommended_min is server-clamped to never fall below the cost_floor driver's value -- see BuildAdvisory in core-svc/internal/core/domain/pricing.go.",
+        "properties": {
+          "recommended_min": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "recommended_max": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "drivers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "enum": [
+                    "cost_floor",
+                    "wage_rate",
+                    "wage_state",
+                    "market_p25",
+                    "market_p50",
+                    "market_p75",
+                    "market_sample_size",
+                    "timing_multiplier",
+                    "recommended_min",
+                    "recommended_max",
+                    "market_widened",
+                    "timing_festival"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Money-valued drivers carry a raw paise integer as a string; others carry plain text."
+                },
+                "explanation_key": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "anomaly": {
+            "type": "object",
+            "description": "Present whenever chosen_price was supplied, regardless of level -- level is NONE when the price is unremarkable, UNDERPRICED when it is below the cost floor, or OVERPRICED when it is above 1.5x the market p75. Absent entirely when chosen_price was not supplied.",
+            "properties": {
+              "level": {
+                "type": "string",
+                "enum": [
+                  "NONE",
+                  "UNDERPRICED",
+                  "OVERPRICED"
+                ]
+              },
+              "shortfall_paise": {
+                "type": "integer"
+              },
+              "explanation_key": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "TechniqueVerdict": {
+        "type": "object",
+        "properties": {
+          "claimed": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "matches": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        }
+      },
+      "LoomVerdict": {
+        "type": "object",
+        "properties": {
+          "is_handloom": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "fft_peak_ratio": {
+            "type": "number"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          }
+        }
+      },
+      "ProvenanceRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "listing_id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "content_hash": {
+            "type": "string"
+          },
+          "previous_hash": {
+            "type": "string"
+          },
+          "signature_algo": {
+            "type": "string"
+          },
+          "qr_code": {
+            "type": "string",
+            "description": "Verification URL carrying the record id -- link to the public provenance page."
+          },
+          "sealed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "technique_verdict": {
+            "$ref": "#/components/schemas/TechniqueVerdict"
+          },
+          "loom_verdict": {
+            "$ref": "#/components/schemas/LoomVerdict"
+          },
+          "certificate_media_id": {
+            "type": "string"
+          }
+        }
+      },
+      "OrderLot": {
+        "type": "object",
+        "description": "One artisan's slice of a bulk order.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bulk_order_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "lot_value": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "OFFERED",
+              "ACCEPTED",
+              "DECLINED",
+              "EXPIRED",
+              "IN_PRODUCTION",
+              "QC_PENDING",
+              "QC_FAILED",
+              "COMPLETED",
+              "REALLOCATED"
+            ]
+          },
+          "offered_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "responds_by": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The offer lapses to EXPIRED after this instant."
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "promised_ship_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "progress_pct": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "decline_reason": {
+            "type": "string",
+            "description": "Set on decline, or as the give-up reason on REALLOCATED."
+          },
+          "reallocated_from_lot_id": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkOrder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "buyer_id": {
+            "type": "string"
+          },
+          "listing_id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "total_value": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "required_by": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ALLOCATING",
+              "PARTIALLY_ALLOCATED",
+              "CONFIRMED",
+              "IN_PRODUCTION",
+              "AMENDMENT_PENDING",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "allocated_quantity": {
+            "type": "integer"
+          },
+          "customisations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string"
+          },
+          "lots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderLot"
+            }
+          }
+        }
+      },
+      "FeedItem": {
+        "type": "object",
+        "description": "One notification -- a lot offer, an order update, a new follower -- addressed to the caller.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "description": "e.g. LOT_OFFERED, ORDER_CONFIRMED, ARTISAN_FOLLOWED. Group the feed by this client-side."
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Deep-link context, e.g. order_id, lot_id, listing_id."
+          },
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Absent while unread."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IncomeStatementSummary": {
+        "type": "object",
+        "properties": {
+          "statement_id": {
+            "type": "string"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "order_count": {
+            "type": "integer"
+          },
+          "gross_amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "net_amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "fee_amount": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "short_code": {
+            "type": "string"
+          },
+          "download_url": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateListingRequest": {
+        "type": "object",
+        "required": [
+          "craft_id"
+        ],
+        "properties": {
+          "craft_id": {
+            "type": "string"
+          },
+          "working_title": {
+            "type": "string"
+          },
+          "media": {
+            "type": "array",
+            "description": "Confirmed media_ids from POST /media/{id}/confirm, primary image first.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "voice_note_media_id": {
+            "type": "string"
+          },
+          "dimensions": {
+            "$ref": "#/components/schemas/Dimensions"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "READY_STOCK",
+              "MADE_TO_ORDER"
+            ]
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "stock_quantity": {
+            "type": "integer",
+            "description": "Required for READY_STOCK."
+          },
+          "min_order_quantity": {
+            "type": "integer",
+            "default": 1
+          },
+          "made_to_order_terms": {
+            "$ref": "#/components/schemas/MadeToOrderTerms"
+          },
+          "packaging": {
+            "$ref": "#/components/schemas/PackagingMeta"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingTranslation"
+            }
+          }
+        }
+      },
+      "UpdateListingRequest": {
+        "type": "object",
+        "description": "Every field is optional -- only fields present in the body are changed. stock_quantity sent as JSON null explicitly clears it.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "READY_STOCK",
+              "MADE_TO_ORDER"
+            ]
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "stock_quantity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "min_order_quantity": {
+            "type": "integer"
+          },
+          "made_to_order_terms": {
+            "$ref": "#/components/schemas/MadeToOrderTerms"
+          },
+          "packaging": {
+            "$ref": "#/components/schemas/PackagingMeta"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingTranslation"
+            }
+          }
+        }
+      },
+      "Listing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "READY_STOCK",
+              "MADE_TO_ORDER"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PENDING_ARTISAN_APPROVAL",
+              "PUBLISHED",
+              "SUSPENDED"
+            ]
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "min_order_quantity": {
+            "type": "integer"
+          },
+          "gi_certified": {
+            "type": "boolean"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingTranslation"
+            }
+          },
+          "stock_quantity": {
+            "type": "integer"
+          },
+          "provenance_id": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchHit": {
+        "type": "object",
+        "properties": {
+          "listing_id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "matched_terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "machine_generated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StructuredFiltersUnderstood": {
+        "type": "object",
+        "properties": {
+          "craft_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "colours": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gi_only": {
+            "type": "boolean"
+          },
+          "provenance_sealed_only": {
+            "type": "boolean"
+          },
+          "listing_type": {
+            "type": "string"
+          },
+          "min_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "max_price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "region": {
+            "type": "string"
+          }
+        }
+      },
+      "CraftSpan": {
+        "type": "object",
+        "properties": {
+          "craft_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            }
+          },
+          "understood": {
+            "$ref": "#/components/schemas/StructuredFiltersUnderstood"
+          },
+          "craft_spans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CraftSpan"
+            }
+          },
+          "detected_language": {
+            "type": "string"
+          },
+          "did_you_mean": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "query_id": {
+            "type": "string"
+          }
+        }
+      },
+      "ListingSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "artisan_name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "min_order_quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gi_certified": {
+            "type": "boolean"
+          },
+          "stock_quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingTranslation"
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "colours": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "craft_id": {
+            "type": "string"
+          },
+          "craft_name": {
+            "type": "string"
+          },
+          "craft_slug": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "made_to_order_terms": {
+            "$ref": "#/components/schemas/MadeToOrderTerms"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceRecord"
+          },
+          "story_audio_url": {
+            "type": "string"
+          },
+          "artisan_verified": {
+            "type": "boolean"
+          },
+          "artisan_bio": {
+            "type": "string"
+          },
+          "artisan_district": {
+            "type": "string"
+          },
+          "artisan_state_code": {
+            "type": "string"
+          },
+          "craft_gi_registration_no": {
+            "type": "string"
+          }
+        }
+      },
+      "Craft": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "gi_registration_no": {
+            "type": "string"
+          },
+          "gi_certified": {
+            "type": "boolean"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "techniques": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CraftDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "gi_registration_no": {
+            "type": "string"
+          },
+          "gi_certified": {
+            "type": "boolean"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "techniques": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "artisans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "display_name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ArtisanStorefront": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "craft_name": {
+            "type": "string"
+          },
+          "craft_slug": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "years_experience": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessClip": {
+        "type": "object",
+        "properties": {
+          "listing_id": {
+            "type": "string"
+          },
+          "listing_slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "artisan_name": {
+            "type": "string"
+          },
+          "video_url": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CustomisationOption": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "surcharge": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "extra_lead_time_days": {
+            "type": "integer",
+            "format": "int32"
+          }
         }
       }
     }

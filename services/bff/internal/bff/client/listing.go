@@ -4,12 +4,16 @@ package client
 import (
 	"context"
 	"strings"
+	"time"
 
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
 	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
+	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
+	inferencev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/inference/v1"
 )
 
 // maxTranslations and maxMediaRefs bound array fields a client controls, so a
@@ -24,12 +28,20 @@ const (
 // "listing" (its sellable offer) across two RPCs — CreateProduct and
 // UpsertListing — so CreateListing chains them in one call.
 type Listing struct {
-	catalog catalogv1.CatalogServiceClient
+	catalog  catalogv1.CatalogServiceClient
+	ontology catalogv1.OntologyServiceClient
+	identity identityv1.IdentityServiceClient
+	media    catalogv1.MediaServiceClient
 }
 
 // NewListing builds the listing client, sharing conn with core-svc's other services.
 func NewListing(conn grpc.ClientConnInterface) *Listing {
-	return &Listing{catalog: catalogv1.NewCatalogServiceClient(conn)}
+	return &Listing{
+		catalog:  catalogv1.NewCatalogServiceClient(conn),
+		ontology: catalogv1.NewOntologyServiceClient(conn),
+		identity: identityv1.NewIdentityServiceClient(conn),
+		media:    catalogv1.NewMediaServiceClient(conn),
+	}
 }
 
 // CreateListing registers the product and its sellable offer in one call.
@@ -270,6 +282,97 @@ func (l *Listing) GetListing(ctx context.Context, listingID string) (map[string]
 	return listingToMap(resp.GetListing()), nil
 }
 
+// GetListingSummary is GetListing plus every field the buyer-facing product
+// page (and search/home cards, which only use a subset) needs: craft name
+// and GI registration, materials, colours, image/video URLs, made-to-order
+// terms, the artisan's story (bio + district + voice note) and -- when
+// sealed -- the provenance verdicts. One listing page, one call: everything
+// below is a join this handler already had the clients for.
+func (l *Listing) GetListingSummary(ctx context.Context, listingID string) (map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := l.catalog.GetListing(ctx, &catalogv1.GetListingRequest{
+		ListingId:         listingID,
+		IncludeProduct:    true,
+		IncludeProvenance: true,
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	m := listingToMap(resp.GetListing())
+	if terms := resp.GetListing().GetMadeToOrderTerms(); terms != nil {
+		m["made_to_order_terms"] = madeToOrderTermsToMap(terms)
+	}
+	if prov := resp.GetProvenance(); prov != nil {
+		m["provenance"] = provenanceRecordToMap(prov)
+	}
+
+	product := resp.GetProduct()
+	if product == nil {
+		return m, nil
+	}
+	m["materials"] = product.GetMaterials()
+	m["colours"] = product.GetColours()
+	if vn := product.GetVoiceNote(); vn.GetId() != "" {
+		if url, err := l.media.GetMediaURL(ctx, &catalogv1.GetMediaURLRequest{MediaId: vn.GetId()}); err == nil {
+			m["story_audio_url"] = url.GetUrl()
+		}
+	}
+
+	if craft, err := l.ontology.GetCraft(ctx, &catalogv1.GetCraftRequest{CraftId: product.GetCraftId()}); err == nil {
+		m["craft_id"] = craft.GetCraft().GetId()
+		m["craft_name"] = craft.GetCraft().GetDisplayName()
+		m["craft_slug"] = craft.GetCraft().GetCode()
+		if reg := craft.GetCraft().GetGiRegistrationNo(); reg != "" {
+			m["craft_gi_registration_no"] = reg
+		}
+	}
+	if art, err := l.identity.GetArtisan(ctx, &identityv1.GetArtisanRequest{ArtisanId: resp.GetListing().GetArtisanId()}); err == nil {
+		a := art.GetArtisan()
+		m["artisan_name"] = a.GetDisplayName()
+		m["artisan_verified"] = a.GetVerified()
+		if a.Bio != nil {
+			m["artisan_bio"] = *a.Bio
+		}
+		if d := a.GetRegion().GetDistrict(); d != "" {
+			m["artisan_district"] = d
+		}
+		m["artisan_state_code"] = a.GetRegion().GetStateCode()
+	}
+
+	media := product.GetMedia()
+	if len(media) > maxMediaRefs {
+		media = media[:maxMediaRefs]
+	}
+	items := make([]map[string]any, len(media))
+	group, groupCtx := errgroup.WithContext(ctx)
+	for i, ref := range media {
+		i, ref := i, ref
+		group.Go(func() error {
+			url, err := l.media.GetMediaURL(groupCtx, &catalogv1.GetMediaURLRequest{MediaId: ref.GetId()})
+			items[i] = map[string]any{
+				"kind": trimEnumPrefix(ref.GetKind().String(), "MEDIA_KIND_"),
+				"url":  url.GetUrl(),
+			}
+			if err != nil {
+				items[i]["url"] = ""
+			}
+			return nil
+		})
+	}
+	_ = group.Wait()
+	m["media"] = items
+	for _, item := range items {
+		if item["kind"] == "IMAGE" && item["url"] != "" {
+			m["image_url"] = item["url"]
+			break
+		}
+	}
+	return m, nil
+}
+
 // ListListings pages through listings under the usual filters.
 func (l *Listing) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	ctx, cancel := withTimeout(ctx)
@@ -301,6 +404,128 @@ func (l *Listing) ListListings(ctx context.Context, filters map[string]any) ([]m
 		out = append(out, listingToMap(listing))
 	}
 	return out, nil
+}
+
+// SealProvenance freezes process evidence for a PUBLISHED listing: the media
+// hashed into the record, the artisan's declared technique (checked against
+// the model), and -- for textile crafts, unless skip_loom_check -- a loom
+// verdict. fields carries media (array of confirmed media ids, required),
+// claimed_technique (string, required) and skip_loom_check (bool, optional).
+func (l *Listing) SealProvenance(ctx context.Context, listingID, idempotencyKey string, fields map[string]any) (map[string]any, error) {
+	mediaIDs, err := stringSlice(fields, "media")
+	if err != nil {
+		return nil, err
+	}
+	if len(mediaIDs) > maxMediaRefs {
+		return nil, domain.InvalidInput("media: too many")
+	}
+	media := make([]*commonv1.MediaRef, len(mediaIDs))
+	for i, id := range mediaIDs {
+		media[i] = &commonv1.MediaRef{Id: id}
+	}
+
+	claimedTechnique, _ := fields["claimed_technique"].(string)
+	if claimedTechnique == "" {
+		return nil, domain.InvalidInput("claimed_technique: is required")
+	}
+	skipLoomCheck, _ := fields["skip_loom_check"].(bool)
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := l.catalog.SealProvenance(ctx, &catalogv1.SealProvenanceRequest{
+		ListingId:        listingID,
+		Media:            media,
+		ClaimedTechnique: claimedTechnique,
+		SkipLoomCheck:    skipLoomCheck,
+		IdempotencyKey:   idempotencyKey,
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return provenanceRecordToMap(resp.GetProvenance()), nil
+}
+
+// provenanceRecordToMap maps SealProvenance's response -- the richer,
+// request-time verdict shape a fresh seal has on hand. Distinct from the
+// leaner SealedProvenance a later short-code lookup returns (see
+// GetProvenanceByShortCode), which only has what was frozen at seal time.
+func provenanceRecordToMap(rec *catalogv1.ProvenanceRecord) map[string]any {
+	if rec == nil {
+		return nil
+	}
+	out := map[string]any{
+		"id":                rec.GetId(),
+		"listing_id":        rec.GetListingId(),
+		"product_id":        rec.GetProductId(),
+		"content_hash":      rec.GetContentHash(),
+		"signature_algo":    rec.GetSignatureAlgorithm(),
+		"qr_code":           rec.GetQrCode(),
+		"sealed_at":         rec.GetSealedAt().AsTime().Format(time.RFC3339),
+		"technique_verdict": techniqueVerdictToMap(rec.GetTechniqueVerdict()),
+	}
+	if rec.PreviousHash != nil {
+		out["previous_hash"] = *rec.PreviousHash
+	}
+	if lv := rec.GetLoomVerdict(); lv != nil {
+		out["loom_verdict"] = loomVerdictToMap(lv)
+	}
+	if cert := rec.GetCertificate(); cert != nil {
+		out["certificate_media_id"] = cert.GetId()
+	}
+	return out
+}
+
+// madeToOrderTermsToMap presents made-to-order as the feature the buyer is
+// paying for, not a stock shortage: lead time, monthly capacity, whether the
+// artisan is currently taking new orders, the advance split, and whatever
+// the buyer may customise.
+func madeToOrderTermsToMap(t *catalogv1.MadeToOrderTerms) map[string]any {
+	opts := make([]map[string]any, 0, len(t.GetCustomisationOptions()))
+	for _, o := range t.GetCustomisationOptions() {
+		opt := map[string]any{"name": o.GetName(), "values": o.GetValues()}
+		if o.Surcharge != nil {
+			opt["surcharge"] = moneyMap(o.GetSurcharge())
+		}
+		if o.ExtraLeadTimeDays != nil {
+			opt["extra_lead_time_days"] = *o.ExtraLeadTimeDays
+		}
+		opts = append(opts, opt)
+	}
+	return map[string]any{
+		"lead_time_days":        t.GetLeadTimeDays(),
+		"capacity_per_month":    t.GetCapacityPerMonth(),
+		"accepting_orders":      t.GetAcceptingOrders(),
+		"advance_pct":           t.GetAdvancePct(),
+		"customisation_options": opts,
+	}
+}
+
+func techniqueVerdictToMap(v *inferencev1.TechniqueVerdict) map[string]any {
+	if v == nil {
+		return nil
+	}
+	out := map[string]any{
+		"claimed":       v.GetClaimed(),
+		"observed":      v.GetObserved(),
+		"matches":       v.GetMatches(),
+		"confidence":    v.GetConfidence(),
+		"model_version": v.GetModelVersion(),
+	}
+	if v.Explanation != nil {
+		out["explanation"] = *v.Explanation
+	}
+	return out
+}
+
+func loomVerdictToMap(v *inferencev1.LoomVerdict) map[string]any {
+	return map[string]any{
+		"is_handloom":    v.GetIsHandloom(),
+		"confidence":     v.GetConfidence(),
+		"fft_peak_ratio": v.GetFftPeakRatio(),
+		"explanation":    v.GetExplanation(),
+		"model_version":  v.GetModelVersion(),
+	}
 }
 
 func listingToMap(l *catalogv1.Listing) map[string]any {

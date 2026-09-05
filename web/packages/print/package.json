@@ -1,0 +1,12 @@
+{
+  "name": "@kalakriti/print",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./src/*": "./src/*"
+  },
+  "files": [
+    "src"
+  ],
+  "description": "Print-ready assets: A4 provenance tags, seals, QR frames. Hardcoded mm dimensions for print pipelines."
+}

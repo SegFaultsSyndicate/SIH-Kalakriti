@@ -12,6 +12,21 @@
  * ---------------------------------------------------------------
  */
 
+/*
+ * CASCADE LAYER: pattern
+ * Surface treatment: tiles, grain, section grounds, skeletons. In the
+ * `pattern` layer, below `component`, so a component that needs a different
+ * ground simply says so and wins.
+ *
+ * The layer ORDER is declared once, by @kalakriti/tokens (tokens.css):
+ *   @layer reset, tokens, base, pattern, component, utility, app;
+ * This file only opts in. If an app imports this stylesheet without also
+ * importing @kalakriti/tokens, the layer is appended in first-seen order
+ * instead, which is still correct but no longer guaranteed -- import the
+ * tokens package first.
+ */
+@layer pattern {
+
 /* ---- pattern tiles ----------------------------------------------------- */
 
 /*
@@ -149,6 +164,19 @@
   border: 1px solid var(--k-border-hairline);
 }
 
+/*
+ * Image-led. overflow:hidden clips a full-bleed <Image> (or any first
+ * child) to the card's own radius -- without it a square photograph
+ * overhangs the rounded corner underneath it.
+ */
+.k-card--media {
+  border: 1px solid var(--k-border-hairline);
+  overflow: hidden;
+}
+.k-card--media .k-card__body {
+  padding: var(--k-space-4);
+}
+
 /* .k-card--printed: see packages/ornament/ornament.css — reused, not duplicated. */
 
 /* ---- loading skeleton shimmer --------------------------------------------- */
@@ -228,3 +256,5 @@
 }
 .k-qr-frame__slot img,
 .k-qr-frame__slot svg { width: 100%; height: 100%; }
+
+}

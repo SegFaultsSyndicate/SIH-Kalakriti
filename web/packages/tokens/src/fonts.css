@@ -1,0 +1,96 @@
+/*
+ * Kalakriti design tokens — fonts.css
+ * ---------------------------------------------------------------
+ * WHICH FACES SHIP, AND WHY THE INDIC SCRIPTS DO NOT.
+ *
+ * Display and body are both Anek Latin (Ek Type, OFL, variable 100-800).
+ * Anek is a nine-script superfamily drawn on one skeleton, which is the
+ * only reason a single face can carry both roles here: hierarchy comes
+ * from weight, size and tracking (base.css), not from a second download.
+ * Tiro Devanagari Hindi was the serif alternative and was rejected —
+ * a serif at 14px on a 320px screen in bright sunlight is the wrong
+ * call for the artisan app, which is the surface with the hardest
+ * legibility constraint.
+ *
+ * The Indic scripts are served by the PLATFORM face, not a webfont.
+ * Measured woff2 payloads (weight axis only, the smallest fontsource
+ * ships) against the 120KB per-locale font budget:
+ *
+ *   Anek Latin, latin subset                43.7 KB   <- shipped
+ *   Anek Devanagari, devanagari subset     251.6 KB
+ *   Noto Sans Devanagari var, devanagari   118.4 KB
+ *   Mukta 400+600, devanagari              197.2 KB
+ *   Anek Bangla, bengali subset            152.0 KB
+ *   Anek Tamil, tamil subset                49.7 KB
+ *
+ * Hindi is the default locale. Every complete Devanagari face breaks
+ * the budget on its own, before Latin, and the target device — a
+ * 16-32GB Android on 2G/3G — already has Noto Sans Devanagari
+ * installed. Spending a quarter of a megabyte over 2G to replace
+ * glyphs the phone already has is the wrong trade, so the Indic
+ * stacks below name the platform faces and download nothing.
+ *
+ * Deployments that are not bandwidth-constrained (the admin dashboard
+ * is desktop-only; the buyer web is mostly not on 2G) can opt into the
+ * self-hosted Indic faces with one extra import:
+ *
+ *   @import '@kalakriti/tokens/fonts-indic';
+ *
+ * The artisan app must not.
+ * ---------------------------------------------------------------
+ */
+
+/* Latin. fontsource already emits font-display: swap, unicode-range per
+   subset, and woff2 only, which is exactly the contract this layer needs;
+   re-declaring the @font-face rules by hand would only let them drift. */
+@import '@fontsource-variable/anek-latin/wght.css';
+
+:root {
+  /*
+   * One stack, ordered Latin first. Unicode-range matching does the
+   * routing: Latin codepoints resolve in Anek Latin and fetch its 43.7KB
+   * subset; Devanagari, Bengali, Tamil and the rest fall through to the
+   * platform face and fetch nothing. A locale whose script has no face at
+   * all still renders — sans-serif is the last entry, never a tofu box.
+   */
+  --k-font-display:
+    'Anek Latin Variable', 'Anek Devanagari Variable', 'Noto Sans Devanagari',
+    'Noto Sans Bengali', 'Noto Sans Tamil', 'Nirmala UI', system-ui, sans-serif;
+  --k-font-body: var(--k-font-display);
+
+  /* Mono is platform-only on purpose: it appears in provenance hashes and
+     order IDs, never in running text, and does not justify a download. */
+  --k-font-mono: ui-monospace, 'Cascadia Mono', 'Roboto Mono', 'Courier New', monospace;
+}
+
+/*
+ * Per-script leading.
+ *
+ * Devanagari, Bengali and Gurmukhi hang matras above and below the
+ * baseline; Tamil, Telugu, Kannada and Malayalam carry tall loops and
+ * deep descenders. Latin leading applied to any of them collides the
+ * marks of one line with the next, which is a legibility bug and not a
+ * taste one. The multipliers below are applied to --k-leading-normal
+ * rather than to a fixed size so they survive the text-scale control.
+ */
+:lang(hi),
+:lang(mr),
+:lang(ne),
+:lang(sa),
+:lang(bn),
+:lang(as),
+:lang(pa),
+:lang(or) {
+  --k-leading-normal: 1.75;
+  --k-leading-snug: 1.5;
+  --k-leading-tight: 1.35;
+}
+
+:lang(ta),
+:lang(te),
+:lang(kn),
+:lang(ml) {
+  --k-leading-normal: 1.8;
+  --k-leading-snug: 1.55;
+  --k-leading-tight: 1.4;
+}

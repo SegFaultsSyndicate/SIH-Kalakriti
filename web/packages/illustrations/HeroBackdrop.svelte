@@ -11,9 +11,16 @@
   over the tile, not a background-image).
 -->
 <script>
-  export let element = 'div';
+  /**
+   * @typedef {object} Props
+   * @property {string} [element]
+   * @property {import('svelte').Snippet} [children]
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { element = 'div', children, ...rest } = $props();
 </script>
 
-<svelte:element this={element} class="k-hero-backdrop" {...$$restProps}>
-  <slot />
+<svelte:element this={element} class="k-hero-backdrop" {...rest}>
+  {@render children?.()}
 </svelte:element>

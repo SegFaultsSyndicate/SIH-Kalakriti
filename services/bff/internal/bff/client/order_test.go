@@ -216,7 +216,7 @@ func TestOrderWatchOrderStreamsMappedEvents(t *testing.T) {
 		},
 	}}
 
-	events, err := o.WatchOrder(context.Background(), "order-1")
+	events, err := o.WatchOrder(context.Background(), "order-1", nil)
 	require.NoError(t, err)
 
 	select {

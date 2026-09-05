@@ -1,0 +1,108 @@
+/*
+ * Kalakriti design tokens — reset.css
+ * ---------------------------------------------------------------
+ * A reset, not a normalise. It removes defaults that fight the design
+ * system and keeps every default that carries accessibility meaning.
+ * Notably it does NOT set a root font-size in px: the browser default
+ * is what the user's own text-size setting moves.
+ * ---------------------------------------------------------------
+ */
+
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    margin: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Anchor targets clear a sticky header without a JS scroll handler. */
+    scroll-padding-block-start: var(--k-space-8);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html:focus-within {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    min-block-size: 100svb;
+    line-height: var(--k-leading-normal);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-inline-size: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Long craft names, district names and Indic compounds must break
+     rather than force a horizontal scroll on a 320px screen. */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  dd,
+  dt,
+  figcaption {
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: inherit;
+    font-size: inherit;
+    text-wrap: balance;
+  }
+
+  ul[role='list'],
+  ol[role='list'] {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  /* Focus is never removed. Components may replace this ring with a
+     better-fitting one, but the default must always be visible. */
+  :focus-visible {
+    outline: var(--k-focus-width) solid var(--k-focus-ring);
+    outline-offset: var(--k-focus-offset);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}

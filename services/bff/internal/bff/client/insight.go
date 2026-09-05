@@ -97,6 +97,87 @@ func (in *Insight) GetIncomeComparison(ctx context.Context, filters map[string]a
 	return rows, nil
 }
 
+// GetArtisansByCategory returns artisan counts by state/district/social
+// category. Unlike GetEarningsByDistrict and GetIncomeComparison, insight-svc
+// applies no small-bucket suppression to this query -- every row it returns
+// is raw, including buckets under 5 artisans. It doubles as the district
+// roster the ministry dashboard diffs the suppressed endpoints against: any
+// district present here but absent from an earnings/income response was
+// suppressed, not empty.
+func (in *Insight) GetArtisansByCategory(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	req := &insightv1.GetArtisansByCategoryRequest{
+		StateCode: stringFilter(filters, "state_code"),
+		District:  stringFilter(filters, "district"),
+	}
+	resp, err := in.insight.GetArtisansByCategory(ctx, req)
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	rows := make([]map[string]any, 0, len(resp.GetRows()))
+	for _, r := range resp.GetRows() {
+		rows = append(rows, map[string]any{
+			"state_code":      r.GetStateCode(),
+			"district":        r.GetDistrict(),
+			"social_category": r.GetSocialCategory(),
+			"artisan_count":   r.GetArtisanCount(),
+			"verified_count":  r.GetVerifiedCount(),
+		})
+	}
+	return rows, nil
+}
+
+// GetListingsByCraftMonth returns listing/artisan counts by craft and month,
+// unsuppressed (see GetArtisansByCategory's doc comment on why that matters).
+func (in *Insight) GetListingsByCraftMonth(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	req := &insightv1.GetListingsByCraftMonthRequest{}
+	if craftID := stringFilter(filters, "craft_id"); craftID != nil {
+		req.CraftId = craftID
+	}
+	if from, ok := filters["from_date"].(time.Time); ok {
+		req.FromDate = timestamppb.New(from)
+	}
+	if to, ok := filters["to_date"].(time.Time); ok {
+		req.ToDate = timestamppb.New(to)
+	}
+
+	resp, err := in.insight.GetListingsByCraftMonth(ctx, req)
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	rows := make([]map[string]any, 0, len(resp.GetRows()))
+	for _, r := range resp.GetRows() {
+		rows = append(rows, map[string]any{
+			"craft_id":      r.GetCraftId(),
+			"craft_name":    r.GetCraftName(),
+			"month":         r.GetMonth().AsTime().Format("2006-01-02"),
+			"listing_count": r.GetListingCount(),
+			"artisan_count": r.GetArtisanCount(),
+		})
+	}
+	return rows, nil
+}
+
+// RefreshMaterializedViews triggers a manual refresh of the dashboard's
+// materialized views and returns when it completed.
+func (in *Insight) RefreshMaterializedViews(ctx context.Context) (map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := in.insight.RefreshMaterializedViews(ctx, &insightv1.RefreshMaterializedViewsRequest{})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return map[string]any{"refreshed_at": resp.GetRefreshedAt().AsTime().Format(time.RFC3339)}, nil
+}
+
 // GetDyingCrafts returns the crafts with the steepest artisan decline.
 func (in *Insight) GetDyingCrafts(ctx context.Context, limit int32) ([]map[string]any, error) {
 	ctx, cancel := withTimeout(ctx)
@@ -144,15 +225,18 @@ func parseStatementBound(s string, exclusiveEnd bool) (time.Time, error) {
 	return time.Time{}, domain.InvalidInput("dates must be RFC3339 or YYYY-MM-DD: " + s)
 }
 
-// GenerateStatement kicks off income statement generation for one artisan's period.
-func (in *Insight) GenerateStatement(ctx context.Context, artisanID string, start, end string) (statementID string, err error) {
+// GenerateStatement kicks off income statement generation for one artisan's
+// period and returns the full response -- short_code, download_url and
+// verification_url included, not just the id -- since GetStatement (below)
+// cannot fetch any of that back afterwards.
+func (in *Insight) GenerateStatement(ctx context.Context, artisanID string, start, end string) (map[string]any, error) {
 	periodStart, err := parseStatementBound(start, false)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	periodEnd, err := parseStatementBound(end, true)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ctx, cancel := withTimeout(ctx)
@@ -164,17 +248,55 @@ func (in *Insight) GenerateStatement(ctx context.Context, artisanID string, star
 		PeriodEnd:   timestamppb.New(periodEnd),
 	})
 	if err != nil {
-		return "", grpcErr(err)
+		return nil, grpcErr(err)
 	}
-	return resp.GetStatementId(), nil
+	return map[string]any{
+		"statement_id":     resp.GetStatementId(),
+		"short_code":       resp.GetShortCode(),
+		"download_url":     resp.GetDownloadUrl(),
+		"verification_url": resp.GetVerificationUrl(),
+	}, nil
+}
+
+// ListIncomeStatements lists an artisan's own past statements, newest first
+// -- the earnings-over-time read model /earnings needs, and the only way to
+// see a statement generated earlier: see GetStatement's own doc comment on
+// why there is no fetch-by-id.
+func (in *Insight) ListIncomeStatements(ctx context.Context, artisanID string, limit, offset int32) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := in.insight.GetIncomeStatements(ctx, &insightv1.GetIncomeStatementsRequest{
+		ArtisanId: artisanID, Limit: limit, Offset: offset,
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	out := make([]map[string]any, 0, len(resp.GetStatements()))
+	for _, s := range resp.GetStatements() {
+		out = append(out, map[string]any{
+			"statement_id": s.GetStatementId(),
+			"period_start": s.GetPeriodStart().AsTime().Format(time.RFC3339),
+			"period_end":   s.GetPeriodEnd().AsTime().Format(time.RFC3339),
+			"order_count":  s.GetOrderCount(),
+			"gross_amount": moneyMap(s.GetGrossAmount()),
+			"net_amount":   moneyMap(s.GetNetAmount()),
+			"fee_amount":   moneyMap(s.GetFeeAmount()),
+			"short_code":   s.GetShortCode(),
+			"download_url": s.GetDownloadUrl(),
+			"created_at":   s.GetCreatedAt().AsTime().Format(time.RFC3339),
+		})
+	}
+	return out, nil
 }
 
 // GetStatement is not wired: insight-svc has no RPC that fetches one
 // statement by its bare id — only a list scoped to an artisan
-// (GetIncomeStatements) or a lookup by public short code
-// (VerifyIncomeStatement). handler.StatementService.GetStatement's signature
-// has neither an artisan id nor a short code to hand it, so there is no RPC
-// this can call.
+// (GetIncomeStatements, see ListIncomeStatements above) or a lookup by
+// public short code (VerifyIncomeStatement). handler.StatementService's
+// GetStatement signature has neither an artisan id nor a short code to hand
+// it, so there is no RPC this can call.
 func (in *Insight) GetStatement(ctx context.Context, statementID string) (map[string]any, error) {
 	return nil, domain.Unavailable("fetching a statement by id is not supported: insight-svc only lists by artisan or verifies by short code")
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -26,6 +28,7 @@ type APIHandler struct {
 	followSvc  FollowService
 	stmtSvc    StatementService
 	insightSvc InsightService
+	catalogSvc CatalogService
 }
 
 // AuthService is the auth-svc gRPC client interface.
@@ -55,14 +58,25 @@ type ListingService interface {
 	SubmitForReview(ctx context.Context, listingID, idempotencyKey string) error
 	ApproveListing(ctx context.Context, listingID, reviewerID, idempotencyKey string, editedTranslations []map[string]any) error
 	GetListing(ctx context.Context, listingID string) (map[string]any, error)
+	// GetListingSummary is GetListing plus craft name, materials, colours and
+	// resolved media URLs -- the buyer-marketplace card shape.
+	GetListingSummary(ctx context.Context, listingID string) (map[string]any, error)
 	ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	// SealProvenance freezes process evidence for a PUBLISHED listing. fields
+	// carries media (array of confirmed media ids), claimed_technique
+	// (string, required) and skip_loom_check (bool, optional -- non-textile
+	// crafts skip the weave check).
+	SealProvenance(ctx context.Context, listingID, idempotencyKey string, fields map[string]any) (map[string]any, error)
 }
 
-// SearchService is the search-svc gRPC client interface.
+// SearchService is the search-svc gRPC client interface. Search and
+// SearchVoice both return the full response map: results, understood (the
+// structured filters the query understander parsed out, for removable
+// chips), craft_spans, detected_language, did_you_mean and query_id.
 type SearchService interface {
-	Search(ctx context.Context, query string, filters map[string]any) ([]map[string]any, error)
+	Search(ctx context.Context, query string, filters map[string]any) (map[string]any, error)
 	Suggest(ctx context.Context, prefix string) ([]string, error)
-	SearchVoice(ctx context.Context, audioData []byte, language string) (query string, results []map[string]any, err error)
+	SearchVoice(ctx context.Context, audioData []byte, language string) (map[string]any, error)
 }
 
 // PricingService is the pricing-svc gRPC client interface. inputs carries
@@ -85,7 +99,18 @@ type OrderService interface {
 	CreateBulkOrder(ctx context.Context, buyerID, idempotencyKey string, fields map[string]any) (orderID string, err error)
 	GetOrder(ctx context.Context, orderID string) (map[string]any, error)
 	RespondToLot(ctx context.Context, lotID, artisanID, idempotencyKey string, accept bool, fields map[string]any) error
-	WatchOrder(ctx context.Context, orderID string) (<-chan map[string]any, error)
+	// ReportProgress records production progress (or a rework resubmission
+	// from QC_FAILED) against an artisan's own accepted lot. fields carries
+	// progress_pct (number, required), media (array of confirmed media ids,
+	// optional) and note (string, optional).
+	ReportProgress(ctx context.Context, lotID, artisanID, idempotencyKey string, fields map[string]any) (map[string]any, error)
+	// RequestReallocation gives up an artisan's own accepted lot they cannot
+	// complete. fields carries reason (string, required).
+	RequestReallocation(ctx context.Context, lotID, artisanID, idempotencyKey string, fields map[string]any) (map[string]any, error)
+	// WatchOrder streams order events. since, when non-nil, replays events
+	// after that instant before streaming live ones -- how a reconnected SSE
+	// client backfills without duplicate rows.
+	WatchOrder(ctx context.Context, orderID string, since *time.Time) (<-chan map[string]any, error)
 }
 
 // FollowService is the follow-svc gRPC client interface.
@@ -93,19 +118,26 @@ type FollowService interface {
 	FollowArtisan(ctx context.Context, followerID, artisanID string) error
 	UnfollowArtisan(ctx context.Context, followerID, artisanID string) error
 	GetFeed(ctx context.Context, userID string, limit, offset int32) ([]map[string]any, error)
+	MarkFeedItemRead(ctx context.Context, notificationID, userID string) error
+	GetFollowerCount(ctx context.Context, artisanID string) (int32, error)
 }
 
 // StatementService is the statement-svc gRPC client interface.
 type StatementService interface {
-	GenerateStatement(ctx context.Context, artisanID string, start, end string) (statementID string, err error)
+	GenerateStatement(ctx context.Context, artisanID string, start, end string) (map[string]any, error)
 	GetStatement(ctx context.Context, statementID string) (map[string]any, error)
+	// ListIncomeStatements lists an artisan's own past statements, newest first.
+	ListIncomeStatements(ctx context.Context, artisanID string, limit, offset int32) ([]map[string]any, error)
 }
 
 // InsightService is the insight-svc gRPC client interface.
 type InsightService interface {
+	GetArtisansByCategory(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	GetListingsByCraftMonth(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 	GetEarningsByDistrict(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 	GetIncomeComparison(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 	GetDyingCrafts(ctx context.Context, limit int32) ([]map[string]any, error)
+	RefreshMaterializedViews(ctx context.Context) (map[string]any, error)
 }
 
 // NewAPIHandler constructs the handler with all service clients.
@@ -120,6 +152,7 @@ func NewAPIHandler(
 	followSvc FollowService,
 	stmtSvc StatementService,
 	insightSvc InsightService,
+	catalogSvc CatalogService,
 ) *APIHandler {
 	return &APIHandler{
 		authSvc:    authSvc,
@@ -132,6 +165,7 @@ func NewAPIHandler(
 		followSvc:  followSvc,
 		stmtSvc:    stmtSvc,
 		insightSvc: insightSvc,
+		catalogSvc: catalogSvc,
 	}
 }
 
@@ -417,10 +451,27 @@ func (h *APIHandler) GetListing(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, listing)
 }
 
+// GetListingSummary handles GET /listings/{id}/summary -- the card shape
+// (craft name, materials, colours, resolved image/video URLs) used by search
+// results and editorial home sections. Split from GetListing because it costs
+// extra joins and signed-URL round trips a bare listing read shouldn't pay.
+func (h *APIHandler) GetListingSummary(w http.ResponseWriter, r *http.Request) {
+	listingID := httpx.URLParam(r, "id")
+	summary, err := h.listingSvc.GetListingSummary(r.Context(), listingID)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, summary)
+}
+
 func (h *APIHandler) ListListings(w http.ResponseWriter, r *http.Request) {
 	filters := map[string]any{
-		"craft_id": r.URL.Query().Get("craft_id"),
-		"state":    r.URL.Query().Get("state"),
+		"craft_id":   r.URL.Query().Get("craft_id"),
+		"state":      r.URL.Query().Get("state"),
+		"artisan_id": r.URL.Query().Get("artisan_id"),
+		"type":       r.URL.Query().Get("type"),
 	}
 
 	listings, err := h.listingSvc.ListListings(r.Context(), filters)
@@ -432,22 +483,72 @@ func (h *APIHandler) ListListings(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, map[string]any{"listings": listings})
 }
 
-// Search endpoints
-
-func (h *APIHandler) Search(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("q")
-	filters := map[string]any{
-		"craft_id": r.URL.Query().Get("craft_id"),
-		"region":   r.URL.Query().Get("region"),
-	}
-
-	results, err := h.searchSvc.Search(r.Context(), query, filters)
+func (h *APIHandler) SealProvenance(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.RequirePrincipal(r.Context())
 	if err != nil {
 		httpx.Error(w, err)
 		return
 	}
 
-	httpx.JSON(w, http.StatusOK, map[string]any{"results": results})
+	listingID := httpx.URLParam(r, "id")
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	record, err := h.listingSvc.SealProvenance(r.Context(), listingID, idempotencyKeyFrom(r), fields)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, record)
+}
+
+// Search endpoints
+
+// searchFilters collects every query param /search accepts into search-svc's
+// loose filter map. craft_id/region were the only ones ever wired through to
+// search-svc; colour/material/price/gi/made_to_order/sealed were accepted by
+// the domain and the SQL all along (services/search-svc/internal/search/repo/repo.go)
+// but never reached from here, so buyer-facing facets silently did nothing.
+func searchFilters(q url.Values) map[string]any {
+	filters := map[string]any{
+		"craft_id":    q.Get("craft_id"),
+		"region":      q.Get("region"),
+		"colours":     q["colour"],
+		"materials":   q["material"],
+		"gi_only":     q.Get("gi_tagged") == "true",
+		"sealed_only": q.Get("provenance_verified") == "true",
+	}
+	if v := q.Get("made_to_order"); v == "true" {
+		filters["listing_type"] = "MADE_TO_ORDER"
+	} else if v == "false" {
+		filters["listing_type"] = "READY_STOCK"
+	}
+	if v := q.Get("price_min"); v != "" {
+		filters["min_price_paise"] = v
+	}
+	if v := q.Get("price_max"); v != "" {
+		filters["max_price_paise"] = v
+	}
+	if v := q.Get("limit"); v != "" {
+		filters["limit"] = v
+	}
+	return filters
+}
+
+func (h *APIHandler) Search(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+
+	result, err := h.searchSvc.Search(r.Context(), query, searchFilters(r.URL.Query()))
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, result)
 }
 
 func (h *APIHandler) Suggest(w http.ResponseWriter, r *http.Request) {
@@ -469,16 +570,148 @@ func (h *APIHandler) SearchVoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	language := r.Header.Get("Accept-Language")
-	query, results, err := h.searchSvc.SearchVoice(r.Context(), audioData, language)
+	result, err := h.searchSvc.SearchVoice(r.Context(), audioData, language)
 	if err != nil {
 		httpx.Error(w, err)
 		return
 	}
 
-	httpx.JSON(w, http.StatusOK, map[string]any{
-		"query":   query,
-		"results": results,
-	})
+	httpx.JSON(w, http.StatusOK, result)
+}
+
+// Craft, storefront and process-feed endpoints (public, buyer-facing)
+
+// ListCrafts handles GET /crafts.
+func (h *APIHandler) ListCrafts(w http.ResponseWriter, r *http.Request) {
+	crafts, err := h.catalogSvc.ListCrafts(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"crafts": craftsToMaps(crafts)})
+}
+
+// GetCraft handles GET /crafts/{slug}, the craft landing page: what the
+// craft is, its region, GI status, and the artisans who practise it.
+func (h *APIHandler) GetCraft(w http.ResponseWriter, r *http.Request) {
+	slug := httpx.URLParam(r, "slug")
+	craft, err := h.catalogSvc.GetCraftBySlug(r.Context(), slug)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	artisans, err := h.catalogSvc.ListArtisansByCraft(r.Context(), craft.ID, 24)
+	if err != nil {
+		artisans = nil // an artisan-listing hiccup shouldn't blank the craft page itself
+	}
+
+	out := craftToMap(*craft)
+	out["artisans"] = artisansToMaps(artisans)
+	httpx.JSON(w, http.StatusOK, out)
+}
+
+// GetArtisanStorefront handles GET /artisans/{slug}/storefront: portrait,
+// story, district, cluster, verification status -- everything the buyer
+// storefront page needs beyond the catalog (GET /listings?artisan_id=) and
+// follower count (GET /artisans/{id}/follower-count), which the client
+// fetches separately.
+func (h *APIHandler) GetArtisanStorefront(w http.ResponseWriter, r *http.Request) {
+	slug := httpx.URLParam(r, "slug")
+	profile, err := h.catalogSvc.GetArtisanBySlug(r.Context(), slug)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, artisanProfileToMap(*profile))
+}
+
+// GetProcessFeed handles GET /feed/process: the vertical process-provenance
+// feed, most recent first. See client.Catalog.ListProcessClips for how it is
+// derived -- there is no dedicated feed store.
+func (h *APIHandler) GetProcessFeed(w http.ResponseWriter, r *http.Request) {
+	clips, err := h.catalogSvc.ListProcessClips(r.Context(), 20)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"clips": clipsToMaps(clips)})
+}
+
+func craftToMap(c Craft) map[string]any {
+	m := map[string]any{
+		"id":           c.ID,
+		"slug":         c.Slug,
+		"display_name": c.DisplayName,
+		"regions":      c.Regions,
+		"techniques":   c.Techniques,
+		"materials":    c.Materials,
+		"gi_certified": c.GIRegistrationNo != nil && *c.GIRegistrationNo != "",
+	}
+	if c.GIRegistrationNo != nil {
+		m["gi_registration_no"] = *c.GIRegistrationNo
+	}
+	return m
+}
+
+func craftsToMaps(crafts []Craft) []map[string]any {
+	out := make([]map[string]any, 0, len(crafts))
+	for _, c := range crafts {
+		out = append(out, craftToMap(c))
+	}
+	return out
+}
+
+func artisansToMaps(artisans []Artisan) []map[string]any {
+	out := make([]map[string]any, 0, len(artisans))
+	for _, a := range artisans {
+		out = append(out, map[string]any{"id": a.ID, "display_name": a.DisplayName})
+	}
+	return out
+}
+
+func artisanProfileToMap(p ArtisanProfile) map[string]any {
+	m := map[string]any{
+		"id":           p.ID,
+		"slug":         p.Slug,
+		"display_name": p.DisplayName,
+		"bio":          p.Bio,
+		"location":     p.Location,
+		"state_code":   p.StateCode,
+		"image_url":    p.ImageURL,
+		"craft_name":   p.CraftName,
+		"craft_slug":   p.CraftSlug,
+		"verified":     p.Verified,
+	}
+	if p.District != nil {
+		m["district"] = *p.District
+	}
+	if p.ClusterID != nil {
+		m["cluster_id"] = *p.ClusterID
+	}
+	if p.YearsExperience != nil {
+		m["years_experience"] = *p.YearsExperience
+	}
+	return m
+}
+
+func clipsToMaps(clips []ProcessClip) []map[string]any {
+	out := make([]map[string]any, 0, len(clips))
+	for _, c := range clips {
+		m := map[string]any{
+			"listing_id":   c.ListingID,
+			"listing_slug": c.ListingSlug,
+			"title":        c.Title,
+			"artisan_id":   c.ArtisanID,
+			"artisan_name": c.ArtisanName,
+			"video_url":    c.VideoURL,
+		}
+		if c.DurationMs != nil {
+			m["duration_ms"] = *c.DurationMs
+		}
+		out = append(out, m)
+	}
+	return out
 }
 
 // Pricing endpoints
@@ -585,7 +818,64 @@ func (h *APIHandler) RespondToLot(w http.ResponseWriter, r *http.Request) {
 	httpx.NoContent(w)
 }
 
+// ReportProgress handles POST /orders/lots/{id}/progress.
+func (h *APIHandler) ReportProgress(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	lotID := httpx.URLParam(r, "id")
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	lot, err := h.orderSvc.ReportProgress(r.Context(), lotID, p.Subject, idempotencyKeyFrom(r), fields)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, lot)
+}
+
+// RequestReallocation handles POST /orders/lots/{id}/reallocate — the
+// non-punitive give-up path when an artisan cannot complete a lot.
+func (h *APIHandler) RequestReallocation(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	lotID := httpx.URLParam(r, "id")
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	lot, err := h.orderSvc.RequestReallocation(r.Context(), lotID, p.Subject, idempotencyKeyFrom(r), fields)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, lot)
+}
+
 // WatchOrder handles GET /orders/{id}/events — SSE bridging gRPC WatchOrder.
+// Reconnect/backfill without duplicate rows works like this: each frame's
+// `id:` line IS the event's occurred_at timestamp (RFC3339Nano), not an
+// opaque counter, so when the browser auto-reconnects it sends that value
+// straight back as Last-Event-ID and it's already exactly what
+// WatchOrderRequest.since wants -- no separate id-to-timestamp store needed.
+// A manual reconnect (or a client managing its own retry) can pass the same
+// value as a ?since= query param instead. Either way the client should still
+// key rows by event_id, since a boundary event can be replayed once.
 func (h *APIHandler) WatchOrder(w http.ResponseWriter, r *http.Request) {
 	_, err := auth.RequirePrincipal(r.Context())
 	if err != nil {
@@ -594,7 +884,12 @@ func (h *APIHandler) WatchOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderID := httpx.URLParam(r, "id")
-	events, err := h.orderSvc.WatchOrder(r.Context(), orderID)
+	since := parseSince(r.Header.Get("Last-Event-ID"))
+	if since == nil {
+		since = parseSince(r.URL.Query().Get("since"))
+	}
+
+	events, err := h.orderSvc.WatchOrder(r.Context(), orderID, since)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -614,9 +909,21 @@ func (h *APIHandler) WatchOrder(w http.ResponseWriter, r *http.Request) {
 	// Stream events.
 	for event := range events {
 		data, _ := json.Marshal(event)
-		fmt.Fprintf(w, "data: %s\n\n", data)
+		id, _ := event["occurred_at"].(string)
+		fmt.Fprintf(w, "id: %s\ndata: %s\n\n", id, data)
 		flusher.Flush()
 	}
+}
+
+func parseSince(raw string) *time.Time {
+	if raw == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339Nano, raw)
+	if err != nil {
+		return nil
+	}
+	return &t
 }
 
 // Follow endpoints
@@ -669,6 +976,37 @@ func (h *APIHandler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, map[string]any{"feed": feed})
 }
 
+// MarkNotificationRead handles POST /feed/{id}/read.
+func (h *APIHandler) MarkNotificationRead(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	notificationID := httpx.URLParam(r, "id")
+	if err := h.followSvc.MarkFeedItemRead(r.Context(), notificationID, p.Subject); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.NoContent(w)
+}
+
+// GetFollowerCount handles GET /artisans/{id}/follower-count. Public: a
+// follower count is display data on any visitor's view of a storefront, not
+// something that needs a signed-in principal to read.
+func (h *APIHandler) GetFollowerCount(w http.ResponseWriter, r *http.Request) {
+	artisanID := httpx.URLParam(r, "id")
+	count, err := h.followSvc.GetFollowerCount(r.Context(), artisanID)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{"count": count})
+}
+
 // Statement endpoints
 
 func (h *APIHandler) GenerateStatement(w http.ResponseWriter, r *http.Request) {
@@ -687,13 +1025,31 @@ func (h *APIHandler) GenerateStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statementID, err := h.stmtSvc.GenerateStatement(r.Context(), p.Subject, req.Start, req.End)
+	statement, err := h.stmtSvc.GenerateStatement(r.Context(), p.Subject, req.Start, req.End)
 	if err != nil {
 		httpx.Error(w, err)
 		return
 	}
 
-	httpx.JSON(w, http.StatusCreated, map[string]string{"statement_id": statementID})
+	httpx.JSON(w, http.StatusCreated, statement)
+}
+
+// ListIncomeStatements handles GET /statements — the artisan's own earnings
+// history, newest first.
+func (h *APIHandler) ListIncomeStatements(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	statements, err := h.stmtSvc.ListIncomeStatements(r.Context(), p.Subject, 50, 0)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{"statements": statements})
 }
 
 func (h *APIHandler) GetStatement(w http.ResponseWriter, r *http.Request) {
@@ -743,7 +1099,10 @@ func (h *APIHandler) GetIncomeComparison(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	filters := map[string]any{}
+	filters := map[string]any{
+		"state_code": r.URL.Query().Get("state_code"),
+		"district":   r.URL.Query().Get("district"),
+	}
 	data, err := h.insightSvc.GetIncomeComparison(r.Context(), filters)
 	if err != nil {
 		httpx.Error(w, err)
@@ -767,4 +1126,68 @@ func (h *APIHandler) GetDyingCrafts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.JSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+func (h *APIHandler) GetArtisansByCategory(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.RequireRole(r.Context(), auth.RoleMinistry)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	filters := map[string]any{
+		"state_code": r.URL.Query().Get("state_code"),
+		"district":   r.URL.Query().Get("district"),
+	}
+	data, err := h.insightSvc.GetArtisansByCategory(r.Context(), filters)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+func (h *APIHandler) GetListingsByCraftMonth(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.RequireRole(r.Context(), auth.RoleMinistry)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	filters := map[string]any{"craft_id": r.URL.Query().Get("craft_id")}
+	if from := r.URL.Query().Get("from_date"); from != "" {
+		if t, err := time.Parse(time.RFC3339, from); err == nil {
+			filters["from_date"] = t
+		}
+	}
+	if to := r.URL.Query().Get("to_date"); to != "" {
+		if t, err := time.Parse(time.RFC3339, to); err == nil {
+			filters["to_date"] = t
+		}
+	}
+
+	data, err := h.insightSvc.GetListingsByCraftMonth(r.Context(), filters)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{"data": data})
+}
+
+func (h *APIHandler) RefreshInsights(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.RequireRole(r.Context(), auth.RoleMinistry)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	data, err := h.insightSvc.RefreshMaterializedViews(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, data)
 }

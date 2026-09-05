@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ../tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint src",
     "test": "vitest src",
     "size": "vite build && du -sh build"
@@ -15,14 +15,21 @@
     "@kalakriti/api": "workspace:*",
     "@kalakriti/i18n": "workspace:*",
     "@kalakriti/icons": "workspace:*",
+    "@kalakriti/illustrations": "workspace:*",
+    "@kalakriti/motion": "workspace:*",
+    "@kalakriti/observability": "workspace:*",
+    "@kalakriti/ornament": "workspace:*",
+    "@kalakriti/patterns": "workspace:*",
     "@kalakriti/tokens": "workspace:*",
     "@kalakriti/ui": "workspace:*",
-    "svelte": "^5.0.0",
-    "sveltekit": "^2.0.0"
+    "svelte": "^5.0.0"
   },
   "devDependencies": {
+    "@poppanator/sveltekit-svg": "^6.0.1",
+    "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.0.0",
-    "@testing-library/svelte": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "@testing-library/svelte": "^5.4.2",
     "vite": "^5.0.0",
     "vitest": "^1.0.0"
   }

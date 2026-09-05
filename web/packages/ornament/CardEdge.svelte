@@ -20,10 +20,17 @@
   Requires: import '@kalakriti/ornament/ornament.css'
 -->
 <script>
-  /** Tag to render. Use 'article'/'li' where the card is semantic. */
-  export let element = 'div';
+  /**
+   * @typedef {object} Props
+   * @property {string} [element] Tag to render. Use 'article'/'li' where the
+   *   card is semantic.
+   * @property {import('svelte').Snippet} [children]
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { element = 'div', children, ...rest } = $props();
 </script>
 
-<svelte:element this={element} class="k-card--printed" {...$$restProps}>
-  <slot />
+<svelte:element this={element} class="k-card--printed" {...rest}>
+  {@render children?.()}
 </svelte:element>

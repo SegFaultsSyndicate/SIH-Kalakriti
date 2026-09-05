@@ -219,6 +219,29 @@ func (h *Fulfilment) SubmitQC(ctx context.Context, req *fulfilmentv1.SubmitQCReq
 	}, nil
 }
 
+// RequestReallocation gives up an artisan's own accepted lot.
+func (h *Fulfilment) RequestReallocation(ctx context.Context, req *fulfilmentv1.RequestReallocationRequest) (*fulfilmentv1.RequestReallocationResponse, error) {
+	lotID, err := parseUUID("lot_id", req.GetLotId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+
+	lot, err := h.svc.RequestReallocation(ctx, service.RequestReallocationInput{
+		LotID:          lotID,
+		ArtisanID:      artisanID,
+		Reason:         req.GetReason(),
+		IdempotencyKey: req.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &fulfilmentv1.RequestReallocationResponse{Lot: lotToProto(lot)}, nil
+}
+
 // mediaRefIDs extracts the media row id from each ref; SubmitQC only needs
 // the id to persist (see qc_result.media_ids / qc_defect.media_ids), not the
 // bucket/key the media pipeline already owns.

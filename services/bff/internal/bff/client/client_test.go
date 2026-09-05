@@ -338,9 +338,9 @@ func TestInsightGenerateStatementRollsABareEndDateToIncludeTheWholeDay(t *testin
 		},
 	}}
 
-	id, err := in.GenerateStatement(context.Background(), "art-1", "2024-01-01", "2024-01-31")
+	statement, err := in.GenerateStatement(context.Background(), "art-1", "2024-01-01", "2024-01-31")
 	require.NoError(t, err)
-	assert.Equal(t, "stmt-1", id)
+	assert.Equal(t, "stmt-1", statement["statement_id"])
 }
 
 func TestInsightGenerateStatementTakesAnRFC3339EndExactlyAsGiven(t *testing.T) {
@@ -442,8 +442,10 @@ func TestSearchSearchAppliesCraftFilterAndMapsHits(t *testing.T) {
 		},
 	}}
 
-	results, err := s.Search(context.Background(), "ajrakh", map[string]any{"craft_id": "craft-1"})
+	out, err := s.Search(context.Background(), "ajrakh", map[string]any{"craft_id": "craft-1"})
 	require.NoError(t, err)
+	results, ok := out["results"].([]map[string]any)
+	require.True(t, ok)
 	require.Len(t, results, 1)
 	assert.Equal(t, "lst-1", results[0]["listing_id"])
 }

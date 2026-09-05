@@ -12,12 +12,32 @@ import (
 	socialv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/social/v1"
 
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/notification"
+	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/service"
 )
 
 // FollowSvc is what the handler needs from the follow service.
 type FollowSvc interface {
 	FollowArtisan(ctx context.Context, followerID string, artisanID uuid.UUID) error
 	UnfollowArtisan(ctx context.Context, followerID string, artisanID uuid.UUID) error
+	CountFollowers(ctx context.Context, artisanID uuid.UUID) (int, error)
+}
+
+// notificationOwnerAdapter satisfies service.NotificationOwnerRepo over the
+// notification.Service every other notification read/write already goes
+// through -- kept here rather than in package service, which must not import
+// package notification (see FeedSvc's own doc comment on that boundary).
+type notificationOwnerAdapter struct{ svc *notification.Service }
+
+func (a notificationOwnerAdapter) RecipientOf(ctx context.Context, id uuid.UUID) (string, error) {
+	n, err := a.svc.Get(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	return n.RecipientID, nil
+}
+
+func (a notificationOwnerAdapter) MarkNotificationRead(ctx context.Context, id uuid.UUID) error {
+	return a.svc.MarkRead(ctx, id)
 }
 
 // FeedSvc is what the handler needs to page a follower's feed. GetFeed is
@@ -31,13 +51,16 @@ type FeedSvc interface {
 // Follow implements social.v1.FollowService.
 type Follow struct {
 	socialv1.UnimplementedFollowServiceServer
-	follow FollowSvc
-	feed   FeedSvc
+	follow     FollowSvc
+	feed       FeedSvc
+	notifOwner notificationOwnerAdapter
 }
 
-// NewFollow builds the follow handler.
-func NewFollow(follow FollowSvc, feed FeedSvc) *Follow {
-	return &Follow{follow: follow, feed: feed}
+// NewFollow builds the follow handler. notif backs MarkFeedItemRead's
+// ownership check -- the same *notification.Service every other
+// notification read/write in this service already goes through.
+func NewFollow(follow FollowSvc, feed FeedSvc, notif *notification.Service) *Follow {
+	return &Follow{follow: follow, feed: feed, notifOwner: notificationOwnerAdapter{svc: notif}}
 }
 
 // FollowArtisan records a follow.
@@ -90,6 +113,34 @@ func (h *Follow) GetFeed(ctx context.Context, req *socialv1.GetFeedRequest) (*so
 		items = append(items, feedItemToProto(n))
 	}
 	return &socialv1.GetFeedResponse{Items: items}, nil
+}
+
+// MarkFeedItemRead marks one feed item read; the caller must be its recipient.
+func (h *Follow) MarkFeedItemRead(ctx context.Context, req *socialv1.MarkFeedItemReadRequest) (*socialv1.MarkFeedItemReadResponse, error) {
+	notificationID, err := parseUUID("notification_id", req.GetNotificationId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	if req.GetUserId() == "" {
+		return nil, pkgdomain.GRPCError(fmt.Errorf("user_id is required: %w", pkgdomain.ErrInvalidInput))
+	}
+	if err := service.MarkFeedItemRead(ctx, h.notifOwner, notificationID, req.GetUserId()); err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &socialv1.MarkFeedItemReadResponse{}, nil
+}
+
+// GetFollowerCount reports how many buyers currently follow one artisan.
+func (h *Follow) GetFollowerCount(ctx context.Context, req *socialv1.GetFollowerCountRequest) (*socialv1.GetFollowerCountResponse, error) {
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	count, err := h.follow.CountFollowers(ctx, artisanID)
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &socialv1.GetFollowerCountResponse{Count: int32(count)}, nil
 }
 
 func feedItemToProto(n notification.Notification) *socialv1.FeedItem {

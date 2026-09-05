@@ -7,6 +7,7 @@ package handler
 import (
 	"context"
 	"io"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -132,11 +133,12 @@ func responseToProto(result service.Result) *searchv1.SearchResponse {
 	hits := make([]*searchv1.SearchHit, 0, len(result.Hits))
 	for _, hit := range result.Hits {
 		item := &searchv1.SearchHit{
-			ListingId:    hit.ListingID.String(),
-			ProductId:    hit.ProductID.String(),
-			ArtisanId:    hit.ArtisanID.String(),
-			Score:        float32(hit.Score),
-			MatchedTerms: hit.MatchedTerms,
+			ListingId:        hit.ListingID.String(),
+			ProductId:        hit.ProductID.String(),
+			ArtisanId:        hit.ArtisanID.String(),
+			Score:            float32(hit.Score),
+			MatchedTerms:     hit.MatchedTerms,
+			MachineGenerated: hit.MachineGenerated && len(hit.MatchedTerms) > 0,
 		}
 		if hit.Label != "" {
 			label := hit.Label
@@ -145,13 +147,61 @@ func responseToProto(result service.Result) *searchv1.SearchResponse {
 		hits = append(hits, item)
 	}
 
-	return &searchv1.SearchResponse{
-		Hits:             hits,
-		DetectedLanguage: languageToProto(result.DetectedLanguage),
-		QueryId:          result.QueryID,
-		DidYouMean:       result.DidYouMean,
-		Page:             &commonv1.PageResponse{NextPageToken: ""},
+	spans := make([]*searchv1.CraftSpan, 0, len(result.Understood.Spans))
+	for _, span := range result.Understood.Spans {
+		spans = append(spans, &searchv1.CraftSpan{
+			CraftId:     span.CraftID.String(),
+			DisplayName: span.DisplayName,
+			Text:        span.Text,
+		})
 	}
+
+	return &searchv1.SearchResponse{
+		Hits:              hits,
+		DetectedLanguage:  languageToProto(result.DetectedLanguage),
+		QueryId:           result.QueryID,
+		DidYouMean:        result.DidYouMean,
+		Page:              &commonv1.PageResponse{NextPageToken: ""},
+		UnderstoodFilters: filtersToProto(result.Understood.Filters),
+		CraftSpans:        spans,
+	}
+}
+
+// filtersToProto is filtersFromProto's inverse, used to hand the query
+// understander's parsed filters back to the buyer as removable chips. Nil
+// when nothing was understood, so the client can tell "no filters parsed"
+// from "every filter is its zero value".
+func filtersToProto(f domain.Filters) *searchv1.StructuredFilters {
+	if f.IsZero() {
+		return nil
+	}
+	out := &searchv1.StructuredFilters{
+		Colours:              f.Colours,
+		Materials:            f.Materials,
+		GiOnly:               f.GIOnly,
+		ProvenanceSealedOnly: f.SealedOnly,
+	}
+	for _, id := range f.CraftIDs {
+		out.CraftIds = append(out.CraftIds, id.String())
+	}
+	if f.MinPricePaise != nil {
+		out.MinPrice = &commonv1.Money{AmountPaise: *f.MinPricePaise, CurrencyCode: "INR"}
+	}
+	if f.MaxPricePaise != nil {
+		out.MaxPrice = &commonv1.Money{AmountPaise: *f.MaxPricePaise, CurrencyCode: "INR"}
+	}
+	if f.StateCode != nil {
+		out.Region = &commonv1.GeoRegion{StateCode: *f.StateCode}
+	}
+	if f.ListingType != nil {
+		if v, ok := catalogv1.ListingType_value["LISTING_TYPE_"+strings.ToUpper(*f.ListingType)]; ok {
+			out.ListingType = catalogv1.ListingType(v)
+		}
+	}
+	if f.MaxLeadTimeDays != nil {
+		out.MaxLeadTimeDays = f.MaxLeadTimeDays
+	}
+	return out
 }
 
 func filtersFromProto(filters *searchv1.StructuredFilters) (domain.Filters, error) {

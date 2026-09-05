@@ -15,16 +15,22 @@
 <script>
   import Kolam from './src/kolam-corner.svg';
 
-  /** @type {'tl'|'tr'|'bl'|'br'} */
-  export let corner = 'tl';
-  export let title = undefined;
+  /**
+   * @typedef {object} Props
+   * @property {'tl'|'tr'|'bl'|'br'} [corner]
+   * @property {string} [title] Accessible name. Omit for decorative use,
+   *   which is what a corner ornament almost always is.
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { corner = 'tl', title, ...rest } = $props();
 </script>
 
 <Kolam
-  class="k-kolam-corner{corner === 'tl' ? '' : ` k-kolam-corner--${corner}`}"
+  class={corner === 'tl' ? 'k-kolam-corner' : `k-kolam-corner k-kolam-corner--${corner}`}
   role={title ? 'img' : undefined}
   aria-label={title}
   aria-hidden={title ? undefined : 'true'}
   focusable="false"
-  {...$$restProps}
+  {...rest}
 />

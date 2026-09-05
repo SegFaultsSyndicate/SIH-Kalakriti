@@ -1,0 +1,33 @@
+/*
+ * Kalakriti design tokens — fonts-indic.css  (OPTIONAL)
+ * ---------------------------------------------------------------
+ * Self-hosted Anek faces for the Indic scripts, so a page renders in
+ * the brand voice rather than the platform's Noto. Import it AFTER
+ * '@kalakriti/tokens' and only on a surface that can afford the bytes:
+ *
+ *   @import '@kalakriti/tokens';
+ *   @import '@kalakriti/tokens/fonts-indic';
+ *
+ * THE ARTISAN APP MUST NOT IMPORT THIS. See fonts.css for the measured
+ * payloads; the Devanagari subset alone is 251.6KB against a 120KB
+ * per-locale budget, on a device that already has the glyphs, over 2G.
+ *
+ * Nothing here changes a token NAME. Each family is inserted ahead of
+ * the platform fallback in the same --k-font-display stack, so a page
+ * that imports this file and one that does not lay out identically
+ * apart from the face. Unicode-range still routes per script: an
+ * English page loads none of these, a Hindi page loads only Devanagari.
+ * ---------------------------------------------------------------
+ */
+
+@import '@fontsource-variable/anek-devanagari/wght.css';
+@import '@fontsource-variable/anek-bangla/wght.css';
+@import '@fontsource-variable/anek-tamil/wght.css';
+
+:root {
+  --k-font-display:
+    'Anek Latin Variable', 'Anek Devanagari Variable', 'Anek Bangla Variable',
+    'Anek Tamil Variable', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil',
+    'Nirmala UI', system-ui, sans-serif;
+  --k-font-body: var(--k-font-display);
+}

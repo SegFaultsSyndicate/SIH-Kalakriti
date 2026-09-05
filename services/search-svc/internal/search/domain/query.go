@@ -195,6 +195,10 @@ type Hit struct {
 	Description string
 	GICertified bool
 	ListingType string
+	// MachineGenerated is true when Label/Description are a translation, not
+	// the artisan's own words in the requester's language -- a cross-lingual
+	// match when the query also matched a term in it.
+	MachineGenerated bool
 }
 
 // rrfK damps the contribution of the top of each list. 60 is the constant from

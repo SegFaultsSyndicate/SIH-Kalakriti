@@ -20,59 +20,79 @@
   the "recording is live" signal survives even with animation off.
 -->
 <script>
-  import { onDestroy } from 'svelte';
+  /**
+   * @typedef {object} Props
+   * @property {AnalyserNode} [analyser] Live Web Audio analyser. The bars are
+   *   driven by real amplitude data -- never a decorative loop, because a
+   *   waveform that moves while the microphone is dead is a lie the artisan
+   *   only discovers after recording nothing.
+   * @property {number} [bars]
+   * @property {(percent: number) => string} label Builds the accessible
+   *   name from the current level, e.g. `(p) => t('voice.level', { p })`.
+   *   From the i18n layer -- this used to be a hardcoded English string.
+   */
 
-  /** @type {AnalyserNode | undefined} */
-  export let analyser = undefined;
-  export let bars = 24;
+  /** @type {Props & Record<string, unknown>} */
+  let { analyser, bars = 24, label, ...rest } = $props();
 
-  let levels = new Array(bars).fill(0.05);
-  let levelPercent = 0;
-  let rafId;
-  let intervalId;
-  let reduced = false;
-
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    reduced = mq.matches;
-    mq.addEventListener?.('change', (e) => { reduced = e.matches; });
-  }
+  let levels = $state(new Array(bars).fill(0.05));
+  let levelPercent = $state(0);
+  let reduced = $state(false);
 
   function sample() {
-    if (!analyser) return 0;
+    if (!analyser) return;
     const data = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(data);
     const step = Math.floor(data.length / bars) || 1;
-    levels = Array.from({ length: bars }, (_, i) => {
-      const v = data[i * step] / 255;
-      return Math.max(0.06, v);
+    levels = Array.from({ length: bars }, (_, i) => Math.max(0.06, data[i * step] / 255));
+    levelPercent = Math.round(
+      (data.reduce((a, b) => a + b, 0) / data.length / 255) * 100,
+    );
+  }
+
+  // Track the media query live: a user who turns reduced motion on mid-
+  // recording gets the static meter without reloading.
+  $effect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    reduced = mq.matches;
+    const onChange = (/** @type {MediaQueryListEvent} */ e) => {
+      reduced = e.matches;
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  });
+
+  /*
+   * One sampling loop, torn down whenever its inputs change. The Svelte 4
+   * version started a loop from a reactive statement and never cancelled it,
+   * so every change of `analyser` or `reduced` left another
+   * requestAnimationFrame chain running for the life of the page.
+   */
+  $effect(() => {
+    if (!analyser) return;
+
+    if (reduced) {
+      // 4Hz: enough to prove the meter is live, not a redraw storm.
+      const id = setInterval(sample, 250);
+      return () => clearInterval(id);
+    }
+
+    let frame = requestAnimationFrame(function loop() {
+      sample();
+      frame = requestAnimationFrame(loop);
     });
-    levelPercent = Math.round((data.reduce((a, b) => a + b, 0) / data.length / 255) * 100);
-    return levelPercent;
-  }
-
-  $: if (analyser && !reduced) {
-    const loop = () => { sample(); rafId = requestAnimationFrame(loop); };
-    rafId = requestAnimationFrame(loop);
-  }
-  $: if (analyser && reduced) {
-    intervalId = setInterval(sample, 250); // 4Hz — enough to prove it's live, not a redraw storm
-  }
-
-  onDestroy(() => {
-    if (rafId) cancelAnimationFrame(rafId);
-    if (intervalId) clearInterval(intervalId);
+    return () => cancelAnimationFrame(frame);
   });
 </script>
 
 {#if reduced}
-  <div class="k-waveform k-waveform--reduced" role="img" aria-label="Recording level {levelPercent} percent">
+  <div class="k-waveform k-waveform--reduced" role="img" aria-label={label(levelPercent)} {...rest}>
     <div class="k-waveform__bar" style="--k-bar-level:{Math.max(0.06, levelPercent / 100)}"></div>
     <span class="k-waveform__level-text">{levelPercent}%</span>
   </div>
 {:else}
-  <div class="k-waveform" role="img" aria-label="Recording level {levelPercent} percent">
-    {#each levels as level}
+  <div class="k-waveform" role="img" aria-label={label(levelPercent)} {...rest}>
+    {#each levels as level, i (i)}
       <div class="k-waveform__bar" style="--k-bar-level:{level}"></div>
     {/each}
   </div>

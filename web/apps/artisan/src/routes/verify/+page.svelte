@@ -1,0 +1,159 @@
+<!--
+  apps/artisan/src/routes/verify/+page.svelte
+
+  Six-box code entry, auto-submitting the moment the sixth digit lands.
+  Verifying needs the same live round trip requesting a code does, so the
+  same "explain, do not pretend to queue" treatment as /login applies here --
+  see its header comment. On success this just navigates to `/`; the root
+  layout's guard sends a freshly-authenticated, not-yet-registered artisan on
+  to /register/name and a returning one straight home, so this screen does
+  not need to know which.
+-->
+<script lang="ts">
+  import { goto } from '$app/navigation';
+  import { locale } from '@kalakriti/i18n';
+  import { requestOtp, completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
+  import { getPref, network } from '@kalakriti/offline';
+  import { OtpInput, SpeakButton } from '@kalakriti/ui';
+
+  const RESEND_SECONDS = 30;
+
+  const t = $derived(locale.t);
+
+  let phone = $state('');
+  let code = $state('');
+  let verifying = $state(false);
+  let error = $state('');
+  let resendIn = $state(RESEND_SECONDS);
+  let resending = $state(false);
+
+  $effect(() => {
+    void getPref<string>('login.phone').then((value) => {
+      if (!value) {
+        void goto('/login');
+        return;
+      }
+      phone = value;
+    });
+  });
+
+  $effect(() => {
+    const timer = setInterval(() => {
+      resendIn = Math.max(0, resendIn - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  });
+
+  async function submit(otp: string): Promise<void> {
+    if (!network.online || verifying) return;
+    verifying = true;
+    error = '';
+    try {
+      const ok = await completeOtpVerification({ phone, otp });
+      if (ok) {
+        await goto('/');
+      } else {
+        error = t('verify.invalid');
+        code = '';
+      }
+    } catch (cause) {
+      error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      code = '';
+    } finally {
+      verifying = false;
+    }
+  }
+
+  async function resend(): Promise<void> {
+    if (resendIn > 0 || resending || !network.online) return;
+    resending = true;
+    try {
+      await requestOtp({ phone });
+      resendIn = RESEND_SECONDS;
+    } catch (cause) {
+      error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+    } finally {
+      resending = false;
+    }
+  }
+</script>
+
+<svelte:head>
+  <title>{t('verify.heading')} — {t('app.name')}</title>
+</svelte:head>
+
+<div class="verify">
+  <h1>{t('verify.heading')}</h1>
+  <p class="verify__body">{t('verify.body', { phone: `+91 ${phone}` })}</p>
+  <SpeakButton
+    text={`${t('verify.heading')}. ${t('verify.body', { phone })}`}
+    label={t('action.speak')}
+  />
+
+  {#if !network.online}
+    <p class="verify__offline" role="status">{t('verify.offline')}</p>
+  {:else}
+    <OtpInput bind:value={code} label={t('verify.code.label')} disabled={verifying} oncomplete={submit} />
+
+    {#if verifying}
+      <p role="status" aria-live="polite">{t('verify.submitting')}</p>
+    {/if}
+    {#if error}
+      <p class="verify__error" role="alert">{error}</p>
+    {/if}
+
+    <button
+      type="button"
+      class="verify__resend"
+      onclick={resend}
+      disabled={resendIn > 0 || resending}
+    >
+      {resendIn > 0 ? t('verify.resend.wait', { seconds: resendIn }) : t('verify.resend')}
+    </button>
+  {/if}
+</div>
+
+<style>
+  .verify {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--k-space-4);
+    padding-block: var(--k-space-6);
+    text-align: center;
+  }
+
+  .verify__body {
+    max-inline-size: var(--k-measure-narrow);
+    color: var(--k-text-secondary);
+  }
+
+  .verify__offline {
+    max-inline-size: var(--k-measure-narrow);
+    padding: var(--k-space-3);
+    border-inline-start: var(--k-rule-heavy) solid var(--k-accent-warning-bg);
+    background-color: var(--k-surface-sunken);
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+    text-align: start;
+  }
+
+  .verify__error {
+    color: var(--k-accent-danger);
+  }
+
+  .verify__resend {
+    min-block-size: var(--k-touch-min);
+    padding-inline: var(--k-space-4);
+    border: none;
+    background: none;
+    color: var(--k-accent-secondary);
+    font-size: var(--k-text-sm);
+    cursor: pointer;
+  }
+
+  .verify__resend:disabled {
+    color: var(--k-text-secondary);
+    cursor: not-allowed;
+  }
+</style>

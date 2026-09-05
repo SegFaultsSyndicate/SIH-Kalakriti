@@ -1,0 +1,23 @@
+{
+  "name": "@kalakriti/motion",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "svelte": "./index.js",
+      "default": "./index.js"
+    },
+    "./motion.css": "./motion.css",
+    "./src/*": "./src/*",
+    "./*.svelte": "./*.svelte"
+  },
+  "files": [
+    "src",
+    "index.js",
+    "*.svelte",
+    "motion.css"
+  ],
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}

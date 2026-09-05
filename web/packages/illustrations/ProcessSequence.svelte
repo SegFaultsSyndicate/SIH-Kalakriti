@@ -14,20 +14,28 @@
 
   const modules = import.meta.glob('./src/*.svg', { eager: true, import: 'default' });
 
-  /** @type {'blockprint'|'weaving'|'pottery'} */
-  export let craft;
-  /** @type {string[]} four labels, in step order */
-  export let labels = [];
+  /**
+   * @typedef {object} Props
+   * @property {'blockprint'|'weaving'|'pottery'} craft
+   * @property {string[]} [labels] Four labels, in step order. From the i18n
+   *   layer -- never hardcoded here.
+   */
 
-  $: steps = ILLUSTRATIONS
-    .filter((i) => i.group === 'process' && i.name.includes(`-${craft}-`))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  /** @type {Props & Record<string, unknown>} */
+  let { craft, labels = [], ...rest } = $props();
+
+  const steps = $derived(
+    ILLUSTRATIONS.filter((i) => i.group === 'process' && i.name.includes(`-${craft}-`)).sort(
+      (a, b) => a.name.localeCompare(b.name),
+    ),
+  );
 </script>
 
-<div class="k-process-strip" {...$$restProps}>
+<div class="k-process-strip" {...rest}>
   {#each steps as step, i (step.name)}
+    {@const Step = modules['./' + step.file]}
     <div class="k-process-step">
-      <svelte:component this={modules['./' + step.file]} aria-hidden="true" focusable="false" />
+      <Step aria-hidden="true" focusable="false" />
       {#if labels[i]}<div class="k-process-step__label">{labels[i]}</div>{/if}
     </div>
   {/each}

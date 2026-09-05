@@ -22,6 +22,10 @@ service FulfilmentService {
   rpc ReportProgress(ReportProgressRequest) returns (ReportProgressResponse);
   // Record a quality inspection outcome for a lot.
   rpc SubmitQC(SubmitQCRequest) returns (SubmitQCResponse);
+  // Artisan gives up an accepted lot they cannot complete; its units are
+  // freed for reoffer to another artisan rather than left to silently miss
+  // their ship date.
+  rpc RequestReallocation(RequestReallocationRequest) returns (RequestReallocationResponse);
   // Follow one bulk order's events until the caller disconnects.
   rpc WatchOrder(WatchOrderRequest) returns (stream WatchOrderResponse);
   // Cancel a bulk order before production has started. Not available once
@@ -221,6 +225,8 @@ message OrderEvent {
     BulkOrderState order_state_changed = 10;
     // The payout instruction settled.
     PaymentSplit payment_settled = 11;
+    // An artisan gave up an accepted lot; its units are being reoffered.
+    OrderLot lot_gave_up = 12;
   }
 }
 
@@ -376,6 +382,23 @@ message SubmitQCResponse {
   QCResult result = 1;
   // The lot, now COMPLETED or QC_FAILED.
   OrderLot lot = 2;
+}
+
+// RequestReallocationRequest gives up an artisan's own accepted lot.
+message RequestReallocationRequest {
+  // Lot being given up.
+  string lot_id = 1;
+  // Artisan giving it up; must own the lot.
+  string artisan_id = 2;
+  // Free-text reason, shown to whoever reviews reoffers.
+  string reason = 3;
+  // Caller-generated key.
+  string idempotency_key = 4;
+}
+
+// RequestReallocationResponse returns the lot, now REALLOCATED.
+message RequestReallocationResponse {
+  OrderLot lot = 1;
 }
 
 // WatchOrderRequest subscribes to one order's event stream.

@@ -1,0 +1,17 @@
+/*
+ * Kalakriti design tokens — entry point.
+ *
+ *   import '@kalakriti/tokens';          tokens only (palette + scale + fonts)
+ *   import '@kalakriti/tokens/reset';    the reset
+ *   import '@kalakriti/tokens/base';     element defaults
+ *
+ * Layer order is declared here, once, before anything is imported.
+ * Every later stylesheet in the system opts into one of these layers,
+ * so an app can override a component without a specificity fight and
+ * without !important.
+ */
+@layer reset, tokens, base, pattern, component, utility, app;
+
+@import './palette.css' layer(tokens);
+@import './scale.css' layer(tokens);
+@import './fonts.css' layer(tokens);

@@ -14,6 +14,19 @@
  * ---------------------------------------------------------------
  */
 
+/*
+ * CASCADE LAYER: component
+ * In the `component` layer.
+ *
+ * The layer ORDER is declared once, by @kalakriti/tokens (tokens.css):
+ *   @layer reset, tokens, base, pattern, component, utility, app;
+ * This file only opts in. If an app imports this stylesheet without also
+ * importing @kalakriti/tokens, the layer is appended in first-seen order
+ * instead, which is still correct but no longer guaranteed -- import the
+ * tokens package first.
+ */
+@layer component {
+
 /* ---- ML pipeline progress ------------------------------------------------ */
 
 /*
@@ -212,4 +225,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .k-waveform__bar { transition: none; }
+}
+
 }

@@ -11,6 +11,19 @@
  * Requires palette.css for the --k-* tokens this derives from.
  */
 
+/*
+ * CASCADE LAYER: component
+ * In the `component` layer.
+ *
+ * The layer ORDER is declared once, by @kalakriti/tokens (tokens.css):
+ *   @layer reset, tokens, base, pattern, component, utility, app;
+ * This file only opts in. If an app imports this stylesheet without also
+ * importing @kalakriti/tokens, the layer is appended in first-seen order
+ * instead, which is still correct but no longer guaranteed -- import the
+ * tokens package first.
+ */
+@layer component {
+
 :root, [data-theme="light"] { --k-illustration-accent: var(--k-terracotta-700); }
 [data-theme="dark"] { --k-illustration-accent: var(--k-terracotta-400); }
 [data-theme="high-contrast"] { --k-illustration-accent: var(--k-terracotta-800); }
@@ -65,3 +78,5 @@
 }
 .k-process-step { width: 96px; color: var(--k-text-secondary); }
 .k-process-step svg { width: 96px; height: 96px; }
+
+}

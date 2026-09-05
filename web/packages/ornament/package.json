@@ -1,0 +1,23 @@
+{
+  "name": "@kalakriti/ornament",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "svelte": "./index.js",
+      "default": "./index.js"
+    },
+    "./ornament.css": "./ornament.css",
+    "./src/*": "./src/*",
+    "./*.svelte": "./*.svelte"
+  },
+  "files": [
+    "src",
+    "index.js",
+    "*.svelte",
+    "ornament.css"
+  ],
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  }
+}

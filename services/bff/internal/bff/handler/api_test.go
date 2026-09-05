@@ -224,6 +224,14 @@ func (m *mockListingSvc) GetListing(ctx context.Context, listingID string) (map[
 	return nil, pkgdomain.NotFound("listing not found")
 }
 
+func (m *mockListingSvc) GetListingSummary(ctx context.Context, listingID string) (map[string]any, error) {
+	return nil, pkgdomain.NotFound("listing not found")
+}
+
 func (m *mockListingSvc) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	return nil, nil
+}
+
+func (m *mockListingSvc) SealProvenance(ctx context.Context, listingID, idempotencyKey string, fields map[string]any) (map[string]any, error) {
+	return nil, pkgdomain.NotFound("listing not found")
 }

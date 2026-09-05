@@ -3,7 +3,7 @@
 
     <Card>flat, the default</Card>
     <Card variant="hairline">...</Card>
-    <Card variant="printed">...</Card>   <!-- Batch 3's k-card--printed -->
+    <Card variant="printed">...</Card>   (Batch 3's k-card--printed)
 
   No card in this system uses a drop shadow — these three variants replace
   that entirely.

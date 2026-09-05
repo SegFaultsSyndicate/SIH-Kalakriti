@@ -1,0 +1,21 @@
+{
+  "name": "@kalakriti/voice",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "svelte": "./src/index.ts"
+    }
+  },
+  "files": ["src"],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kalakriti/i18n": "workspace:*",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}

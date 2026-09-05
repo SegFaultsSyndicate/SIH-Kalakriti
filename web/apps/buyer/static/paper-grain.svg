@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- Paper grain, feTurbulence-based. Tuned low (baseFrequency 0.9, 2 octaves) so it reads as handmade paper texture, not visual noise. Tile at 200x200; recommended opacity 4-7%. Verify on a throttled low-end profile before shipping — if it costs frames, use grain.png (below) instead; both are delivered so the choice can be made per-surface, not guessed. -->
+  <filter id="k-grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="7" result="noise"/>
+    <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0 0 0 0"/>
+  </filter>
+  <rect width="200" height="200" fill="currentColor" filter="url(#k-grain)"/>
+</svg>

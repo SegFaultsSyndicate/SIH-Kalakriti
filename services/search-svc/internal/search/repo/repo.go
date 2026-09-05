@@ -142,14 +142,15 @@ func (r *Repo) HydrateHits(ctx context.Context, listingIDs []uuid.UUID, language
 	out := make([]domain.Hit, 0, len(rows))
 	for _, row := range rows {
 		out = append(out, domain.Hit{
-			ListingID:   row.ListingID,
-			ProductID:   row.ProductID,
-			ArtisanID:   row.ArtisanID,
-			CraftID:     row.CraftID,
-			Label:       derefString(row.Title),
-			Description: derefString(row.Description),
-			GICertified: row.GiCertified,
-			ListingType: string(row.ListingType),
+			ListingID:        row.ListingID,
+			ProductID:        row.ProductID,
+			ArtisanID:        row.ArtisanID,
+			CraftID:          row.CraftID,
+			Label:            derefString(row.Title),
+			Description:      derefString(row.Description),
+			GICertified:      row.GiCertified,
+			ListingType:      string(row.ListingType),
+			MachineGenerated: row.MachineGenerated,
 		})
 	}
 	return out, nil

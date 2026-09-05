@@ -16,6 +16,10 @@ service FollowService {
   rpc UnfollowArtisan(UnfollowArtisanRequest) returns (UnfollowArtisanResponse);
   // Page through a follower's feed of notifications about artisans they follow.
   rpc GetFeed(GetFeedRequest) returns (GetFeedResponse);
+  // Mark one feed item read; the caller must be its recipient.
+  rpc MarkFeedItemRead(MarkFeedItemReadRequest) returns (MarkFeedItemReadResponse);
+  // Count of buyers currently following one artisan.
+  rpc GetFollowerCount(GetFollowerCountRequest) returns (GetFollowerCountResponse);
 }
 
 // FollowArtisanRequest names the follower and the artisan being followed.
@@ -68,4 +72,21 @@ message FeedItem {
   // Unset while unread.
   optional google.protobuf.Timestamp read_at = 6;
   google.protobuf.Timestamp created_at = 7;
+}
+
+// MarkFeedItemReadRequest identifies one feed item and the caller marking it read.
+message MarkFeedItemReadRequest {
+  string notification_id = 1;
+  // Caller must be this feed item's own recipient.
+  string user_id = 2;
+}
+
+message MarkFeedItemReadResponse {}
+
+message GetFollowerCountRequest {
+  string artisan_id = 1;
+}
+
+message GetFollowerCountResponse {
+  int32 count = 1;
 }

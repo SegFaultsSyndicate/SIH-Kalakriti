@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalakriti — type, colour and space specimens</title>
+
+    <!--
+      packages/tokens/src/type-specimens.html
+
+      Design review artefact. Open it; do not read it.
+
+      It loads the real token files by relative path rather than a copy, so it
+      cannot drift from what the apps ship. Opening it straight from the
+      filesystem works; the Anek faces resolve through node_modules and need
+      `pnpm install` to have run at /web.
+
+      Every contrast ratio printed below is COMPUTED IN THE PAGE from the
+      resolved colour values, never typed in by hand. If a token changes and a
+      pair drops under its threshold, the page says so in red the next time it
+      is opened.
+    -->
+    <link rel="stylesheet" href="../node_modules/@fontsource-variable/anek-latin/wght.css" />
+    <link
+      rel="stylesheet"
+      href="../node_modules/@fontsource-variable/anek-devanagari/wght.css"
+    />
+    <link rel="stylesheet" href="../node_modules/@fontsource-variable/anek-bangla/wght.css" />
+    <link rel="stylesheet" href="../node_modules/@fontsource-variable/anek-tamil/wght.css" />
+    <link rel="stylesheet" href="./tokens.css" />
+    <link rel="stylesheet" href="./fonts-indic.css" />
+    <link rel="stylesheet" href="./reset.css" />
+    <link rel="stylesheet" href="./base.css" />
+
+    <style>
+      /* Specimen chrome only. Nothing in this block is a product style. */
+      body {
+        font-family: var(--k-font-body);
+        padding: 0 var(--k-space-5) var(--k-space-10);
+      }
+      .wrap {
+        max-inline-size: 72rem;
+        margin-inline: auto;
+      }
+      h1 {
+        font-size: var(--k-text-3xl);
+      }
+      .kicker {
+        font-size: var(--k-text-xs);
+        letter-spacing: var(--k-tracking-kicker);
+        color: var(--k-text-secondary);
+      }
+      section {
+        margin-block-start: var(--k-space-8);
+        padding-block-start: var(--k-space-4);
+        border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+      }
+      section > h2 {
+        font-size: var(--k-text-lg);
+        margin-block-end: var(--k-space-4);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 8rem 1fr;
+        gap: var(--k-space-3);
+        align-items: baseline;
+        padding-block: var(--k-space-2);
+        border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+      }
+      .row code {
+        font-size: var(--k-text-xs);
+        color: var(--k-text-secondary);
+      }
+      .themes {
+        display: grid;
+        gap: var(--k-space-5);
+        grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+      }
+      .panel {
+        padding: var(--k-space-4);
+        border: var(--k-hairline) solid var(--k-border-hairline);
+        background: var(--k-surface-base);
+        color: var(--k-text-primary);
+      }
+      .pair {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--k-space-3);
+        align-items: center;
+        padding: var(--k-space-2) var(--k-space-3);
+        margin-block-end: 2px;
+        font-size: var(--k-text-sm);
+      }
+      .ratio {
+        font-variant-numeric: var(--k-numeric-tabular);
+        font-weight: var(--k-weight-semibold);
+        white-space: nowrap;
+      }
+      .fail {
+        outline: var(--k-rule) solid var(--k-accent-danger);
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+        gap: 2px;
+      }
+      .sw {
+        padding: var(--k-space-3) var(--k-space-2);
+        font-size: var(--k-text-2xs);
+        font-variant-numeric: var(--k-numeric-tabular);
+        line-height: var(--k-leading-snug);
+      }
+      .family {
+        grid-column: 1 / -1;
+        margin-block-start: var(--k-space-3);
+      }
+      .spaces {
+        display: grid;
+        grid-template-columns: 8rem 1fr;
+        gap: var(--k-space-2);
+        align-items: center;
+      }
+      .spaces span {
+        display: block;
+        block-size: 0.75rem;
+        background: var(--k-accent-primary-bg);
+      }
+      .controls {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--k-space-4);
+        align-items: center;
+        padding: var(--k-space-3) 0;
+        margin-block-end: var(--k-space-5);
+        background: var(--k-surface-base);
+        border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+        font-size: var(--k-text-sm);
+      }
+      .note {
+        max-inline-size: var(--k-measure-base);
+        color: var(--k-text-secondary);
+        font-size: var(--k-text-sm);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <div class="controls">
+        <label>
+          theme
+          <select id="theme">
+            <option value="light">light</option>
+            <option value="dark">dark</option>
+            <option value="high-contrast">high-contrast</option>
+          </select>
+        </label>
+        <label>
+          text scale
+          <select id="scale">
+            <option value="">100%</option>
+            <option value="large">125%</option>
+            <option value="xlarge">150%</option>
+            <option value="xxlarge">200%</option>
+          </select>
+        </label>
+        <strong id="verdict"></strong>
+      </div>
+
+      <p class="kicker">kalakriti design system</p>
+      <h1>Type, colour and space</h1>
+      <p class="note">
+        Set the text scale to 200% and confirm every display size below actually
+        grows. A clamp() with a px or vw ceiling silently stops responding, and this
+        control is how that gets caught.
+      </p>
+
+      <section>
+        <h2>Type scale</h2>
+        <div id="scale-latin"></div>
+      </section>
+
+      <section>
+        <h2>Four scripts</h2>
+        <p class="note">
+          Devanagari, Bengali and Tamil must render with no tofu boxes, and with
+          enough leading that matras and descenders clear the line below. Leading is
+          set per script by :lang() in fonts.css.
+        </p>
+        <div id="scripts"></div>
+      </section>
+
+      <section>
+        <h2>Semantic pairs, measured</h2>
+        <p class="note">
+          Ratios are computed from the resolved colours in this page. Body text needs
+          4.5:1; large text and non-text UI boundaries need 3:1.
+        </p>
+        <div class="themes" id="themes"></div>
+      </section>
+
+      <section>
+        <h2>Raw palette</h2>
+        <div class="swatches" id="swatches"></div>
+      </section>
+
+      <section>
+        <h2>Space scale</h2>
+        <div class="spaces" id="spaces"></div>
+      </section>
+    </div>
+
+    <script type="module">
+      const TYPE = ['2xs', 'xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl', '4xl'];
+
+      const SAMPLES = {
+        Latin: { lang: 'en', text: 'Kanchipuram silk, Tamil Nadu' },
+        Devanagari: { lang: 'hi', text: 'बनारसी बुनाई, उत्तर प्रदेश' },
+        Bengali: { lang: 'bn', text: 'জামদানি বুনন, পশ্চিমবঙ্গ' },
+        Tamil: { lang: 'ta', text: 'காஞ்சிபுரம் பட்டு, தமிழ்நாடு' },
+      };
+
+      // Foreground / background pairs, each with the ratio it must clear.
+      const PAIRS = [
+        ['--k-text-primary', '--k-surface-base', 4.5],
+        ['--k-text-secondary', '--k-surface-base', 4.5],
+        ['--k-text-primary', '--k-surface-raised', 4.5],
+        ['--k-accent-primary-text', '--k-surface-base', 4.5],
+        ['--k-accent-secondary', '--k-surface-base', 4.5],
+        ['--k-accent-danger', '--k-surface-base', 4.5],
+        ['--k-accent-success', '--k-surface-base', 4.5],
+        ['--k-text-on-accent', '--k-accent-primary-bg', 4.5],
+        ['--k-accent-warning-text', '--k-accent-warning-bg', 4.5],
+        ['--k-border-interactive', '--k-surface-base', 3],
+        ['--k-focus-ring', '--k-surface-base', 3],
+      ];
+
+      const FAMILIES = [
+        'khadi',
+        'ink',
+        'terracotta',
+        'indigo',
+        'haldi',
+        'madder',
+        'neem',
+        'stone',
+      ];
+      const STEPS = [50, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+
+      const $ = (id) => document.getElementById(id);
+
+      /* --- contrast, computed rather than transcribed ---------------------- */
+
+      const probe = document.createElement('span');
+      probe.hidden = true;
+      document.body.append(probe);
+
+      /** Let the browser resolve any CSS colour, so var() chains work. */
+      function rgb(value) {
+        probe.style.color = '';
+        probe.style.color = value;
+        const m = getComputedStyle(probe).color.match(/[\d.]+/g);
+        return m ? m.slice(0, 3).map(Number) : [0, 0, 0];
+      }
+
+      function channel(c) {
+        const v = c / 255;
+        return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      }
+
+      function luminance(value) {
+        const [r, g, b] = rgb(value);
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      }
+
+      function ratio(fg, bg) {
+        const a = luminance(fg);
+        const b = luminance(bg);
+        const hi = Math.max(a, b);
+        const lo = Math.min(a, b);
+        return (hi + 0.05) / (lo + 0.05);
+      }
+
+      /* --- render ----------------------------------------------------------- */
+
+      function renderTypeScale() {
+        $('scale-latin').innerHTML = TYPE.map(
+          (t) =>
+            '<div class="row"><code>--k-text-' +
+            t +
+            '</code><div style="font-family:var(--k-font-display);font-size:var(--k-text-' +
+            t +
+            ')">Chanderi and Maheshwari &middot; 1,23,456</div></div>',
+        ).join('');
+      }
+
+      function renderScripts() {
+        $('scripts').innerHTML = Object.entries(SAMPLES)
+          .map(
+            ([name, s]) =>
+              '<div class="row"><code>' +
+              name +
+              '</code><div lang="' +
+              s.lang +
+              '">' +
+              '<div style="font-family:var(--k-font-display);font-size:var(--k-text-2xl)">' +
+              s.text +
+              '</div><div style="font-size:var(--k-text-base)">' +
+              s.text +
+              ' ' +
+              s.text +
+              '</div><div style="font-size:var(--k-text-sm)">' +
+              s.text +
+              ' ' +
+              s.text +
+              ' ' +
+              s.text +
+              '</div></div></div>',
+          )
+          .join('');
+      }
+
+      function renderThemes() {
+        let failures = 0;
+        let total = 0;
+
+        const html = ['light', 'dark', 'high-contrast']
+          .map((theme) => {
+            // Resolve each theme's values off-screen so all three can be shown
+            // at once regardless of which one the page is currently set to.
+            const host = document.createElement('div');
+            host.dataset.theme = theme;
+            host.hidden = true;
+            document.body.append(host);
+            const cs = getComputedStyle(host);
+
+            const rows = PAIRS.map(([fgVar, bgVar, min]) => {
+              const fg = cs.getPropertyValue(fgVar).trim();
+              const bg = cs.getPropertyValue(bgVar).trim();
+              const r = ratio(fg, bg);
+              const ok = r >= min;
+              total += 1;
+              if (!ok) failures += 1;
+              return (
+                '<div class="pair' +
+                (ok ? '' : ' fail') +
+                '" style="background:' +
+                bg +
+                ';color:' +
+                fg +
+                '"><span>' +
+                fgVar.replace('--k-', '') +
+                ' on ' +
+                bgVar.replace('--k-', '') +
+                '</span><span class="ratio">' +
+                r.toFixed(2) +
+                ':1 / needs ' +
+                min +
+                (ok ? '' : ' FAIL') +
+                '</span></div>'
+              );
+            }).join('');
+
+            host.remove();
+            return (
+              '<div class="panel" data-theme="' +
+              theme +
+              '"><p class="kicker">' +
+              theme +
+              '</p>' +
+              rows +
+              '</div>'
+            );
+          })
+          .join('');
+
+        $('themes').innerHTML = html;
+        $('verdict').textContent = failures
+          ? failures + ' of ' + total + ' pairs below threshold'
+          : 'all ' + total + ' pairs pass';
+        $('verdict').style.color = failures
+          ? 'var(--k-accent-danger)'
+          : 'var(--k-accent-success)';
+      }
+
+      function renderSwatches() {
+        const cs = getComputedStyle(document.documentElement);
+        $('swatches').innerHTML = FAMILIES.map((family) => {
+          const cells = STEPS.map((n) => {
+            const value = cs.getPropertyValue('--k-' + family + '-' + n).trim();
+            if (!value) return '';
+            const onDark = luminance(value) < 0.35;
+            return (
+              '<div class="sw" style="background:' +
+              value +
+              ';color:' +
+              (onDark ? '#fff' : '#000') +
+              '">' +
+              n +
+              '<br />' +
+              value +
+              '</div>'
+            );
+          }).join('');
+          return '<p class="kicker family">' + family + '</p>' + cells;
+        }).join('');
+      }
+
+      function renderSpaces() {
+        let out = '';
+        for (let i = 0; i <= 10; i += 1) {
+          out +=
+            '<code>--k-space-' +
+            i +
+            '</code><span style="inline-size:var(--k-space-' +
+            i +
+            ')"></span>';
+        }
+        $('spaces').innerHTML = out;
+      }
+
+      $('theme').addEventListener('change', (e) => {
+        document.documentElement.dataset.theme = e.target.value;
+      });
+
+      $('scale').addEventListener('change', (e) => {
+        if (e.target.value) document.documentElement.dataset.textScale = e.target.value;
+        else delete document.documentElement.dataset.textScale;
+      });
+
+      document.documentElement.dataset.theme = 'light';
+      renderTypeScale();
+      renderScripts();
+      renderThemes();
+      renderSwatches();
+      renderSpaces();
+    </script>
+  </body>
+</html>

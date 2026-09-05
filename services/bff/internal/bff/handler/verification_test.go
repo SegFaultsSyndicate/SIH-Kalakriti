@@ -75,6 +75,56 @@ func (f *fakeCatalogClient) ListPublishedListings(ctx context.Context, limit, of
 	return nil, nil
 }
 
+func (f *fakeCatalogClient) ListCrafts(ctx context.Context) ([]Craft, error) {
+	return nil, nil
+}
+
+func (f *fakeCatalogClient) GetCraftBySlug(ctx context.Context, slug string) (*Craft, error) {
+	return nil, pkgdomain.NotFound("not implemented")
+}
+
+func (f *fakeCatalogClient) ListArtisansByCraft(ctx context.Context, craftID string, limit int32) ([]Artisan, error) {
+	return nil, nil
+}
+
+func (f *fakeCatalogClient) ListProcessClips(ctx context.Context, limit int32) ([]ProcessClip, error) {
+	return nil, nil
+}
+
+func (f *fakeCatalogClient) CreateCluster(ctx context.Context, name, stateCode string, district, coordinatorPhone *string, idempotencyKey string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) GetCluster(ctx context.Context, clusterID string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) ListClusterMembers(ctx context.Context, clusterID string) ([]map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) AddClusterMember(ctx context.Context, clusterID, artisanID, role, idempotencyKey string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) RemoveClusterMember(ctx context.Context, clusterID, artisanID, idempotencyKey string) (bool, error) {
+	return false, nil
+}
+func (f *fakeCatalogClient) CreateSelfHelpGroup(ctx context.Context, name, registrationNo string, clusterID *string, members []map[string]any, idempotencyKey string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) GetSelfHelpGroup(ctx context.Context, shgID string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) SetSelfHelpGroupMembers(ctx context.Context, shgID string, members []map[string]any, idempotencyKey string) (map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) SuspendListing(ctx context.Context, listingID, reason, idempotencyKey string) (Listing, error) {
+	return Listing{}, nil
+}
+func (f *fakeCatalogClient) ReinstateListing(ctx context.Context, listingID, idempotencyKey string) (Listing, error) {
+	return Listing{}, nil
+}
+func (f *fakeCatalogClient) RefreshCraftIndex(ctx context.Context, idempotencyKey string) (map[string]any, error) {
+	return nil, nil
+}
+
 // TestVerificationPageRendersForValidCode verifies the HTML page renders correctly.
 func TestVerificationPageRendersForValidCode(t *testing.T) {
 	catalog := &fakeCatalogClient{
@@ -137,7 +187,7 @@ func TestVerificationPageRendersForValidCode(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "Lakshmi Devi")
 	assert.Contains(t, w.Body.String(), "Kanchipuram Silk Weaving")
 	assert.Contains(t, w.Body.String(), "TESTCODE01")
-	assert.Contains(t, w.Body.String(), "Provenance Verified")
+	assert.Contains(t, w.Body.String(), "Kalakriti · Provenance")
 }
 
 // TestVerificationPageReturns404ForUnknownCode verifies the styled 404 page.
@@ -163,9 +213,9 @@ func TestVerificationPageReturns404ForUnknownCode(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	assert.Contains(t, w.Header().Get("Content-Type"), "text/html")
-	assert.Contains(t, w.Body.String(), "Cannot Verify This Tag")
+	assert.Contains(t, w.Body.String(), "We cannot verify this tag")
 	assert.Contains(t, w.Body.String(), "INVALIDCODE")
-	assert.Contains(t, w.Body.String(), "not recognized")
+	assert.Contains(t, w.Body.String(), "does not match a sealed")
 }
 
 // TestVerificationJSONEndpoint verifies the machine-readable JSON response.
@@ -291,8 +341,8 @@ func TestVerificationSignatureCheckedAgainstRealKey(t *testing.T) {
 		prov ProvenanceRecord
 		text string
 	}{
-		{"valid signature", valid, "cryptographically verified"},
-		{"tampered record", tampered, "Signature verification failed"},
+		{"valid signature", valid, "cryptographically signed"},
+		{"tampered record", tampered, "Signature could not be verified"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cache := redis.NewClient(&redis.Options{Addr: "localhost:6379"})

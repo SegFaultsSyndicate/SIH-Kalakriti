@@ -74,6 +74,19 @@ message SearchHit {
   optional string explanation = 6;
   // The full listing, when include_listings was set.
   optional catalog.v1.Listing listing = 7;
+  // True when the copy the query matched against was machine-translated
+  // into the requester's language, i.e. the artisan wrote it in a different
+  // language and this hit is a cross-lingual match.
+  bool machine_generated = 8;
+}
+
+// CraftSpan is one craft mention the query understander located in the raw
+// query text, kept verbatim because a craft name is a proper noun of the
+// trade and is never translated.
+message CraftSpan {
+  string craft_id = 1;
+  string display_name = 2;
+  string text = 3;
 }
 
 // FacetValue is one bucket of a search facet.
@@ -108,6 +121,12 @@ message SearchResponse {
   // buyer is told the page is adjacent to what they asked for rather than being
   // shown an empty result set. Empty when the hits are for the query as typed.
   repeated string did_you_mean = 6;
+  // Structured filters the query understander pulled out of the free-text
+  // query (e.g. a colour word, a price ceiling), so the buyer can see and
+  // remove what the system understood rather than trusting it silently.
+  optional StructuredFilters understood_filters = 7;
+  // Craft mentions the understander located in the query text.
+  repeated CraftSpan craft_spans = 8;
 }
 
 // SuggestRequest asks for type-ahead completions on a partial query.

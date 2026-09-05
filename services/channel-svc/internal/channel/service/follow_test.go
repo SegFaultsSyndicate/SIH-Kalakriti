@@ -39,6 +39,16 @@ func (f *fakeFollowRepo) DeleteFollow(_ context.Context, artisanID uuid.UUID, fo
 	return nil
 }
 
+func (f *fakeFollowRepo) GetFollowers(_ context.Context, artisanID uuid.UUID) ([]string, error) {
+	var out []string
+	for _, ins := range f.inserted {
+		if ins.artisanID == artisanID {
+			out = append(out, ins.followerID)
+		}
+	}
+	return out, nil
+}
+
 func TestFollowArtisanUsesTheListingPageSource(t *testing.T) {
 	repo := &fakeFollowRepo{}
 	svc := NewFollow(repo)

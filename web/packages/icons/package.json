@@ -4,17 +4,33 @@
   "type": "module",
   "exports": {
     ".": {
-      "svelte": "./src/Icon.svelte",
-      "types": "./src/icons.d.ts"
+      "types": "./icons.d.ts",
+      "svelte": "./index.js",
+      "default": "./index.js"
     },
-    "./manifest": "./src/manifest.js"
+    "./manifest": "./manifest.js",
+    "./icons.css": "./icons.css",
+    "./sprite": "./icons-sprite.svg",
+    "./src/*": "./src/*"
   },
-  "files": ["src", "dist"],
+  "files": [
+    "src",
+    "index.js",
+    "icons.js",
+    "manifest.js",
+    "icons.css",
+    "icons.d.ts",
+    "*.svelte",
+    "icons-sprite.svg"
+  ],
   "scripts": {
     "generate": "node ../../scripts/gen-batch4.mjs",
     "validate": "node ../../scripts/validate-all.mjs"
   },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
   "devDependencies": {
-    "svgo": "^3.0.0"
+    "svgo": "^3.3.2"
   }
 }

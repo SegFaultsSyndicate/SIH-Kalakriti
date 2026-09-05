@@ -1,0 +1,88 @@
+/* apps/admin/src/app.css */
+
+@import '@kalakriti/tokens';
+/*
+ * Self-hosted Anek faces for the Indic scripts. Opted into HERE and not in
+ * the artisan app: the Devanagari subset alone is 251.6KB against a 120KB
+ * per-locale budget, which is the wrong trade on 2G but a fine one on the
+ * connections this surface actually sees. See tokens/src/fonts.css.
+ */
+@import '@kalakriti/tokens/fonts-indic';
+@import '@kalakriti/tokens/reset';
+@import '@kalakriti/tokens/base';
+
+@import '@kalakriti/icons/icons.css';
+@import '@kalakriti/illustrations/illustrations.css';
+@import '@kalakriti/ornament/ornament.css';
+@import '@kalakriti/motion/motion.css';
+@import '@kalakriti/patterns/patterns.css';
+@import '@kalakriti/ui/ui.css';
+
+:root {
+  --k-page-grain: url('/paper-grain.svg');
+}
+
+@layer app {
+  .shell {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-block-size: 100dvb;
+  }
+
+  /*
+   * Header is a government-portal lockup, not a marketing bar: emblem and
+   * wordmark on the left, utilities on the right, one hairline underneath.
+   */
+  .shell__header {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-4);
+    padding: var(--k-space-4) var(--k-gutter);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .shell__lockup {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-3);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .shell__emblem {
+    inline-size: 2rem;
+    block-size: 2rem;
+    flex: none;
+  }
+
+  .shell__wordmark {
+    font-family: var(--k-font-display);
+    font-size: var(--k-text-lg);
+    font-weight: var(--k-weight-semibold);
+    letter-spacing: var(--k-tracking-tight);
+    line-height: var(--k-leading-tight);
+  }
+
+  .shell__ministry {
+    display: block;
+    font-family: var(--k-font-body);
+    font-size: var(--k-text-2xs);
+    font-weight: var(--k-weight-regular);
+    letter-spacing: var(--k-tracking-wide);
+    text-transform: uppercase;
+    color: var(--k-text-secondary);
+  }
+
+  .shell__main {
+    inline-size: min(100% - (2 * var(--k-gutter)), var(--k-container-admin));
+    margin-inline: auto;
+    padding-block: var(--k-space-7) var(--k-space-9);
+  }
+
+  .shell__footer {
+    padding: var(--k-space-5) var(--k-gutter);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+  }
+}

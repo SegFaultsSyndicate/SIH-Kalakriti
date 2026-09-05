@@ -36,6 +36,18 @@ func (m *Media) GenerateUploadURL(ctx context.Context, artisanID, contentType st
 	return resp.GetMediaId(), resp.GetUploadUrl(), nil
 }
 
+// GetMediaURL returns a time-limited download URL for a stored asset.
+func (m *Media) GetMediaURL(ctx context.Context, mediaID string) (string, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := m.media.GetMediaURL(ctx, &catalogv1.GetMediaURLRequest{MediaId: mediaID})
+	if err != nil {
+		return "", grpcErr(err)
+	}
+	return resp.GetUrl(), nil
+}
+
 // ConfirmUpload tells core-svc the bytes have landed.
 func (m *Media) ConfirmUpload(ctx context.Context, mediaID string) error {
 	ctx, cancel := withTimeout(ctx)

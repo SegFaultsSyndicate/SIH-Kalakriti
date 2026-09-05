@@ -1,0 +1,14 @@
+{
+  "name": "@kalakriti/identity",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./src/*": "./src/*",
+    "./raster/*": "./raster/*"
+  },
+  "files": [
+    "src",
+    "raster"
+  ],
+  "description": "Kalakriti brand identity: logomark, wordmark, emblem, seal, favicon. Contains State Emblem of India placeholder (legally protected, demo use only)."
+}

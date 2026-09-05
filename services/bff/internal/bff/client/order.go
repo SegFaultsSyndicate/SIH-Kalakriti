@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	commonv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/common/v1"
 	fulfilmentv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/fulfilment/v1"
 )
 
@@ -114,12 +115,78 @@ func (o *Order) RespondToLot(ctx context.Context, lotID, artisanID, idempotencyK
 	return nil
 }
 
+// ReportProgress records production progress against an accepted (or, for a
+// rework resubmission, QC_FAILED) lot. fields carries progress_pct (number,
+// required), media (array of confirmed media ids, optional) and note
+// (string, optional).
+func (o *Order) ReportProgress(ctx context.Context, lotID, artisanID, idempotencyKey string, fields map[string]any) (map[string]any, error) {
+	pct, ok := fields["progress_pct"].(float64)
+	if !ok {
+		return nil, domain.InvalidInput("progress_pct: is required")
+	}
+	mediaIDs, err := stringSlice(fields, "media")
+	if err != nil {
+		return nil, err
+	}
+	media := make([]*commonv1.MediaRef, len(mediaIDs))
+	for i, id := range mediaIDs {
+		media[i] = &commonv1.MediaRef{Id: id}
+	}
+	req := &fulfilmentv1.ReportProgressRequest{
+		LotId:          lotID,
+		ArtisanId:      artisanID,
+		ProgressPct:    int32(pct),
+		Media:          media,
+		IdempotencyKey: idempotencyKey,
+	}
+	if note, ok := fields["note"].(string); ok && note != "" {
+		req.Note = &note
+	}
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := o.fulfilment.ReportProgress(ctx, req)
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return orderLotToMap(resp.GetLot()), nil
+}
+
+// RequestReallocation gives up an artisan's own accepted lot they cannot
+// complete, so its units go back out to another artisan instead of quietly
+// missing the ship date. fields carries reason (string, required).
+func (o *Order) RequestReallocation(ctx context.Context, lotID, artisanID, idempotencyKey string, fields map[string]any) (map[string]any, error) {
+	reason, _ := fields["reason"].(string)
+	if reason == "" {
+		return nil, domain.InvalidInput("reason: is required")
+	}
+
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := o.fulfilment.RequestReallocation(ctx, &fulfilmentv1.RequestReallocationRequest{
+		LotId: lotID, ArtisanId: artisanID, Reason: reason, IdempotencyKey: idempotencyKey,
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return orderLotToMap(resp.GetLot()), nil
+}
+
 // WatchOrder streams one order's events until the caller disconnects
 // (ctx.Done()) or the backend closes the stream. Uses withAuth, not
-// withTimeout: a stream is meant to outlive callTimeout's 10 seconds.
-func (o *Order) WatchOrder(ctx context.Context, orderID string) (<-chan map[string]any, error) {
+// withTimeout: a stream is meant to outlive callTimeout's 10 seconds. since,
+// when non-nil, replays events that occurred after it before streaming live
+// ones -- the reconnect/backfill path (see handler.WatchOrder, which derives
+// it from the SSE Last-Event-ID).
+func (o *Order) WatchOrder(ctx context.Context, orderID string, since *time.Time) (<-chan map[string]any, error) {
 	ctx = withAuth(ctx)
-	stream, err := o.fulfilment.WatchOrder(ctx, &fulfilmentv1.WatchOrderRequest{BulkOrderId: orderID})
+	req := &fulfilmentv1.WatchOrderRequest{BulkOrderId: orderID}
+	if since != nil {
+		req.Since = timestamppb.New(*since)
+	}
+	stream, err := o.fulfilment.WatchOrder(ctx, req)
 	if err != nil {
 		return nil, grpcErr(err)
 	}
@@ -146,6 +213,7 @@ func orderEventToMap(e *fulfilmentv1.OrderEvent) map[string]any {
 	out := map[string]any{
 		"event_id":      e.GetEventId(),
 		"bulk_order_id": e.GetBulkOrderId(),
+		"occurred_at":   e.GetOccurredAt().AsTime().Format(time.RFC3339Nano),
 	}
 	switch p := e.GetPayload().(type) {
 	case *fulfilmentv1.OrderEvent_LotOffered:
@@ -158,16 +226,59 @@ func orderEventToMap(e *fulfilmentv1.OrderEvent) map[string]any {
 		out["type"], out["lot"] = "lot_expired", orderLotToMap(p.LotExpired)
 	case *fulfilmentv1.OrderEvent_LotProgressed:
 		out["type"], out["lot"] = "lot_progressed", orderLotToMap(p.LotProgressed)
+	case *fulfilmentv1.OrderEvent_LotGaveUp:
+		out["type"], out["lot"] = "lot_gave_up", orderLotToMap(p.LotGaveUp)
 	case *fulfilmentv1.OrderEvent_QcRecorded:
 		out["type"] = "qc_recorded"
-		out["passed"] = p.QcRecorded.GetPassed()
+		out["qc_result"] = qcResultToMap(p.QcRecorded)
 	case *fulfilmentv1.OrderEvent_OrderStateChanged:
 		out["type"] = "order_state_changed"
 		out["state"] = trimEnumPrefix(p.OrderStateChanged.String(), "BULK_ORDER_STATE_")
 	case *fulfilmentv1.OrderEvent_PaymentSettled:
 		out["type"] = "payment_settled"
+		out["payment_split"] = paymentSplitToMap(p.PaymentSettled)
 	}
 	return out
+}
+
+func qcResultToMap(r *fulfilmentv1.QCResult) map[string]any {
+	defects := make([]map[string]any, 0, len(r.GetDefects()))
+	for _, d := range r.GetDefects() {
+		defects = append(defects, map[string]any{
+			"code":           d.GetCode(),
+			"description":    d.GetDescription(),
+			"severity":       trimEnumPrefix(d.GetSeverity().String(), "DEFECT_SEVERITY_"),
+			"affected_units": d.GetAffectedUnits(),
+		})
+	}
+	m := map[string]any{
+		"lot_id":       r.GetLotId(),
+		"passed":       r.GetPassed(),
+		"defects":      defects,
+		"inspected_at": r.GetInspectedAt().AsTime().Format(time.RFC3339),
+	}
+	if r.Notes != nil {
+		m["notes"] = *r.Notes
+	}
+	return m
+}
+
+func paymentSplitToMap(s *fulfilmentv1.PaymentSplit) map[string]any {
+	lines := make([]map[string]any, 0, len(s.GetLines()))
+	for _, l := range s.GetLines() {
+		lines = append(lines, map[string]any{
+			"payee_id":     l.GetPayeeId(),
+			"lot_id":       l.GetLotId(),
+			"gross_amount": moneyMap(l.GetGrossAmount()),
+			"net_amount":   moneyMap(l.GetNetAmount()),
+		})
+	}
+	return map[string]any{
+		"gross_total":      moneyMap(s.GetGrossTotal()),
+		"commission_total": moneyMap(s.GetCommissionTotal()),
+		"net_total":        moneyMap(s.GetNetTotal()),
+		"lines":            lines,
+	}
 }
 
 func bulkOrderToMap(o *fulfilmentv1.BulkOrder) map[string]any {
@@ -196,12 +307,34 @@ func bulkOrderToMap(o *fulfilmentv1.BulkOrder) map[string]any {
 }
 
 func orderLotToMap(l *fulfilmentv1.OrderLot) map[string]any {
-	return map[string]any{
-		"id":         l.GetId(),
-		"artisan_id": l.GetArtisanId(),
-		"quantity":   l.GetQuantity(),
-		"state":      trimEnumPrefix(l.GetState().String(), "LOT_STATE_"),
+	m := map[string]any{
+		"id":            l.GetId(),
+		"bulk_order_id": l.GetBulkOrderId(),
+		"artisan_id":    l.GetArtisanId(),
+		"quantity":      l.GetQuantity(),
+		"unit_price":    moneyMap(l.GetUnitPrice()),
+		"lot_value":     moneyMap(l.GetLotValue()),
+		"state":         trimEnumPrefix(l.GetState().String(), "LOT_STATE_"),
+		"offered_at":    l.GetOfferedAt().AsTime().Format(time.RFC3339),
+		"responds_by":   l.GetRespondsBy().AsTime().Format(time.RFC3339),
+		"progress_pct":  l.GetProgressPct(),
 	}
+	if l.ClusterId != nil {
+		m["cluster_id"] = *l.ClusterId
+	}
+	if l.AcceptedAt != nil {
+		m["accepted_at"] = l.GetAcceptedAt().AsTime().Format(time.RFC3339)
+	}
+	if l.PromisedShipDate != nil {
+		m["promised_ship_date"] = l.GetPromisedShipDate().AsTime().Format(time.RFC3339)
+	}
+	if l.DeclineReason != nil {
+		m["decline_reason"] = *l.DeclineReason
+	}
+	if l.ReallocatedFromLotId != nil {
+		m["reallocated_from_lot_id"] = *l.ReallocatedFromLotId
+	}
+	return m
 }
 
 // stringMap converts a JSON-decoded object into map[string]string, rejecting

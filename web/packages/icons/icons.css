@@ -8,6 +8,22 @@
  * ---------------------------------------------------------------
  */
 
+/*
+ * CASCADE LAYER: component
+ * In the `component` layer. Note that a Svelte component's own scoped
+ * <style> block is UNLAYERED and therefore beats every layer here, which is
+ * the right default: a call site that restyles an icon should not have to
+ * know this file exists.
+ *
+ * The layer ORDER is declared once, by @kalakriti/tokens (tokens.css):
+ *   @layer reset, tokens, base, pattern, component, utility, app;
+ * This file only opts in. If an app imports this stylesheet without also
+ * importing @kalakriti/tokens, the layer is appended in first-seen order
+ * instead, which is still correct but no longer guaranteed -- import the
+ * tokens package first.
+ */
+@layer component {
+
 .k-icon {
   width: 1.25rem;   /* 20px, matches the default stroke-width-1.5 icon */
   height: 1.25rem;
@@ -120,4 +136,6 @@
 .k-upload-zone[data-state="error"] {
   border-color: var(--k-accent-danger);
   color: var(--k-accent-danger);
+}
+
 }

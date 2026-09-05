@@ -97,7 +97,7 @@ func (s *Server) mountRoutes() {
 	apiH := handler.NewAPIHandler(
 		cfg.AuthSvc, cfg.ArtisanSvc, cfg.MediaSvc, cfg.ListingSvc,
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
-		cfg.StmtSvc, cfg.InsightSvc,
+		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
 	)
 
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
@@ -132,8 +132,17 @@ func (s *Server) mountRoutes() {
 	// Public search and listing reads.
 	api.GET("/search", httpx.WrapHandler(apiH.Search))
 	api.GET("/search/suggest", httpx.WrapHandler(apiH.Suggest))
+	api.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
 	api.GET("/listings", httpx.WrapHandler(apiH.ListListings))
 	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
+	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
+
+	// Public craft ontology, artisan storefront and process feed reads.
+	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
+	api.GET("/crafts/:slug", httpx.WrapHandler(apiH.GetCraft))
+	api.GET("/artisans/:id/storefront", httpx.WrapHandler(apiH.GetArtisanStorefront))
+	api.GET("/artisans/:id/follower-count", httpx.WrapHandler(apiH.GetFollowerCount))
+	api.GET("/feed/process", httpx.WrapHandler(apiH.GetProcessFeed))
 
 	// Protected routes group (JWT required).
 	authed := api.Group("")
@@ -153,9 +162,7 @@ func (s *Server) mountRoutes() {
 	authed.PATCH("/listings/:id", httpx.WrapHandler(apiH.UpdateListing))
 	authed.POST("/listings/:id/submit", httpx.WrapHandler(apiH.SubmitListing))
 	authed.POST("/listings/:id/approve", httpx.WrapHandler(apiH.ApproveListing))
-
-	// Search voice.
-	authed.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
+	authed.POST("/listings/:id/seal-provenance", httpx.WrapHandler(apiH.SealProvenance))
 
 	// Pricing.
 	authed.POST("/pricing/advise", httpx.WrapHandler(apiH.AdvisePricing))
@@ -165,20 +172,45 @@ func (s *Server) mountRoutes() {
 	authed.GET("/orders/:id", httpx.WrapHandler(apiH.GetOrder))
 	authed.GET("/orders/:id/events", httpx.WrapHandler(apiH.WatchOrder))
 	authed.POST("/orders/lots/:id/respond", httpx.WrapHandler(apiH.RespondToLot))
+	authed.POST("/orders/lots/:id/progress", httpx.WrapHandler(apiH.ReportProgress))
+	authed.POST("/orders/lots/:id/reallocate", httpx.WrapHandler(apiH.RequestReallocation))
 
 	// Follows and feed.
 	authed.POST("/artisans/:id/follow", httpx.WrapHandler(apiH.FollowArtisan))
 	authed.DELETE("/artisans/:id/follow", httpx.WrapHandler(apiH.UnfollowArtisan))
 	authed.GET("/feed", httpx.WrapHandler(apiH.GetFeed))
+	authed.POST("/feed/:id/read", httpx.WrapHandler(apiH.MarkNotificationRead))
 
 	// Statements.
 	authed.POST("/statements", httpx.WrapHandler(withIdempotency(apiH.GenerateStatement, cfg.IdempStore)))
 	authed.GET("/statements/:id", httpx.WrapHandler(apiH.GetStatement))
+	authed.GET("/statements", httpx.WrapHandler(apiH.ListIncomeStatements))
 
 	// Insights (MINISTRY role only, enforced in handlers).
+	authed.GET("/insights/artisans-by-category", httpx.WrapHandler(apiH.GetArtisansByCategory))
+	authed.GET("/insights/listings-by-craft-month", httpx.WrapHandler(apiH.GetListingsByCraftMonth))
 	authed.GET("/insights/earnings-by-district", httpx.WrapHandler(apiH.GetEarningsByDistrict))
 	authed.GET("/insights/income-comparison", httpx.WrapHandler(apiH.GetIncomeComparison))
 	authed.GET("/insights/dying-crafts", httpx.WrapHandler(apiH.GetDyingCrafts))
+	authed.POST("/insights/refresh", httpx.WrapHandler(apiH.RefreshInsights))
+
+	// Cluster and self-help-group administration (CLUSTER_OFFICER/MINISTRY, enforced in handlers).
+	authed.POST("/clusters", httpx.WrapHandler(withIdempotency(apiH.CreateCluster, cfg.IdempStore)))
+	authed.GET("/clusters/:id", httpx.WrapHandler(apiH.GetCluster))
+	authed.GET("/clusters/:id/members", httpx.WrapHandler(apiH.ListClusterMembers))
+	authed.POST("/clusters/:id/members", httpx.WrapHandler(withIdempotency(apiH.AddClusterMember, cfg.IdempStore)))
+	authed.DELETE("/clusters/:id/members/:artisanId", httpx.WrapHandler(apiH.RemoveClusterMember))
+	authed.POST("/clusters/:id/onboard", httpx.WrapHandler(withIdempotency(apiH.OnboardClusterArtisan, cfg.IdempStore)))
+	authed.POST("/self-help-groups", httpx.WrapHandler(withIdempotency(apiH.CreateSelfHelpGroup, cfg.IdempStore)))
+	authed.GET("/self-help-groups/:id", httpx.WrapHandler(apiH.GetSelfHelpGroup))
+	authed.PUT("/self-help-groups/:id/members", httpx.WrapHandler(withIdempotency(apiH.SetSelfHelpGroupMembers, cfg.IdempStore)))
+
+	// Moderation (CLUSTER_OFFICER/MINISTRY, enforced in handlers).
+	authed.POST("/listings/:id/suspend", httpx.WrapHandler(withIdempotency(apiH.SuspendListing, cfg.IdempStore)))
+	authed.POST("/listings/:id/reinstate", httpx.WrapHandler(withIdempotency(apiH.ReinstateListing, cfg.IdempStore)))
+
+	// Craft ontology administration (MINISTRY only, enforced in handler).
+	authed.POST("/crafts/refresh-index", httpx.WrapHandler(apiH.RefreshCraftIndex))
 
 	// OpenAPI spec, embedded at build time so it serves regardless of the
 	// process's working directory.

@@ -12,16 +12,26 @@
 <script>
   import Charkha from './src/charkha-spinner.svg';
 
-  /** 0-1, or undefined for indeterminate. Must come from real state. */
-  export let progress = undefined;
-  export let title = 'Loading';
+  /**
+   * @typedef {object} Props
+   * @property {number} [progress] 0-1, or omitted for indeterminate. Must
+   *   come from real state -- a fake timer here lies about the backend.
+   * @property {string} [title]
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { progress, title = 'Loading', ...rest } = $props();
+
+  const determinate = $derived(progress !== undefined);
 </script>
 
 <Charkha
-  class="k-icon k-spinner {progress === undefined ? 'k-spinner--indeterminate' : 'k-spinner--determinate'}"
-  style={progress === undefined ? undefined : `--k-spin-progress:${Math.max(0, Math.min(1, progress))}`}
+  class="k-icon k-spinner {determinate ? 'k-spinner--determinate' : 'k-spinner--indeterminate'}"
+  style={determinate
+    ? `--k-spin-progress:${Math.max(0, Math.min(1, /** @type {number} */ (progress)))}`
+    : undefined}
   role="img"
   aria-label={title}
   focusable="false"
-  {...$$restProps}
+  {...rest}
 />

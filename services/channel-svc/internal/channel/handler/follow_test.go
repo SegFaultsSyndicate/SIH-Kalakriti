@@ -35,6 +35,10 @@ func (f *fakeFollowSvc) UnfollowArtisan(_ context.Context, followerID string, ar
 	return f.unfollowErr
 }
 
+func (f *fakeFollowSvc) CountFollowers(_ context.Context, _ uuid.UUID) (int, error) {
+	return 0, nil
+}
+
 type fakeFeedSvc struct {
 	items []notification.Notification
 	err   error
@@ -45,7 +49,7 @@ func (f *fakeFeedSvc) ListForUser(_ context.Context, _ string, _, _ int) ([]noti
 }
 
 func TestFollowArtisanRejectsInvalidArtisanID(t *testing.T) {
-	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{})
+	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{}, nil)
 	_, err := h.FollowArtisan(context.Background(), &socialv1.FollowArtisanRequest{
 		FollowerId: "buyer-1", ArtisanId: "not-a-uuid",
 	})
@@ -53,7 +57,7 @@ func TestFollowArtisanRejectsInvalidArtisanID(t *testing.T) {
 }
 
 func TestFollowArtisanRejectsMissingFollowerID(t *testing.T) {
-	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{})
+	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{}, nil)
 	_, err := h.FollowArtisan(context.Background(), &socialv1.FollowArtisanRequest{
 		ArtisanId: uuid.Must(uuid.NewV7()).String(),
 	})
@@ -63,7 +67,7 @@ func TestFollowArtisanRejectsMissingFollowerID(t *testing.T) {
 func TestFollowArtisanCallsTheService(t *testing.T) {
 	artisanID := uuid.Must(uuid.NewV7())
 	svc := &fakeFollowSvc{}
-	h := NewFollow(svc, &fakeFeedSvc{})
+	h := NewFollow(svc, &fakeFeedSvc{}, nil)
 
 	_, err := h.FollowArtisan(context.Background(), &socialv1.FollowArtisanRequest{
 		FollowerId: "buyer-1", ArtisanId: artisanID.String(),
@@ -76,7 +80,7 @@ func TestFollowArtisanCallsTheService(t *testing.T) {
 func TestUnfollowArtisanCallsTheService(t *testing.T) {
 	artisanID := uuid.Must(uuid.NewV7())
 	svc := &fakeFollowSvc{}
-	h := NewFollow(svc, &fakeFeedSvc{})
+	h := NewFollow(svc, &fakeFeedSvc{}, nil)
 
 	_, err := h.UnfollowArtisan(context.Background(), &socialv1.UnfollowArtisanRequest{
 		FollowerId: "buyer-1", ArtisanId: artisanID.String(),
@@ -87,7 +91,7 @@ func TestUnfollowArtisanCallsTheService(t *testing.T) {
 }
 
 func TestGetFeedRejectsMissingUserID(t *testing.T) {
-	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{})
+	h := NewFollow(&fakeFollowSvc{}, &fakeFeedSvc{}, nil)
 	_, err := h.GetFeed(context.Background(), &socialv1.GetFeedRequest{})
 	assert.Equal(t, codes.InvalidArgument, status.Code(err))
 }
@@ -104,7 +108,7 @@ func TestGetFeedConvertsNotificationsToFeedItems(t *testing.T) {
 			CreatedAt: createdAt,
 		},
 	}}
-	h := NewFollow(&fakeFollowSvc{}, feed)
+	h := NewFollow(&fakeFollowSvc{}, feed, nil)
 
 	resp, err := h.GetFeed(context.Background(), &socialv1.GetFeedRequest{UserId: "buyer-1"})
 	require.NoError(t, err)

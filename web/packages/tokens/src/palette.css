@@ -113,6 +113,14 @@
 
 :root,
 [data-theme="light"] {
+  /* Tells the browser which native-control rendering (a <select>'s own
+     background, the default scrollbar, form-control chrome CSS cannot
+     reach) to draw. Without this, a native control can keep light-mode
+     UA styling under a dark theme -- light text the theme correctly set
+     via `color`, on a background the theme never got a chance to set,
+     is how a --k-text-primary on white 1.13:1 pair got past a review
+     that only ever looked at *our* CSS and not the platform's default. */
+  color-scheme: light;
   --k-surface-base:        var(--k-khadi-50);
   --k-surface-raised:      var(--k-khadi-100);
   --k-surface-sunken:      var(--k-khadi-150);
@@ -134,9 +142,18 @@
   --k-accent-success:      var(--k-neem-700);         /* on surface-base: 9.26:1 */
 
   --k-focus-ring:          var(--k-terracotta-700);   /* on surface-base: 6.74:1 (≥3:1 required) */
+
+  /* A small chip (tooltip) or a scrim behind a modal/sheet stays dark in
+     every theme, including light -- there is no "light tooltip" in this
+     system, and a scrim that flipped pale in dark mode would stop reading
+     as an overlay. Same three values in every theme block on purpose. */
+  --k-surface-inverse:     var(--k-ink-950);
+  --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
+  --k-overlay-scrim:       var(--k-ink-950);   /* opacity applied by the component, not here */
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --k-surface-base:        var(--k-ink-950);
   --k-surface-raised:      var(--k-ink-900);
   --k-surface-sunken:      var(--k-ink-800);
@@ -153,14 +170,25 @@
   --k-accent-primary-text: var(--k-terracotta-300); /* on surface-base: 12.68:1 */
   --k-accent-secondary:    var(--k-indigo-300);      /* on surface-base: 12.45:1 */
   --k-accent-warning-bg:   var(--k-haldi-600);
-  --k-accent-warning-text: var(--k-haldi-400);        /* on surface-base: 11.03:1 */
+  /* Dark theme warning: DARK text on the haldi chip, the same way the light
+     theme does it, not a light haldi on a haldi ground. This was
+     var(--k-haldi-400) and the comment recorded 11.03:1 -- that ratio was
+     measured against surface-base, but this token is only ever painted on
+     accent-warning-bg, where haldi-400 on haldi-600 is 1.86:1 and illegible.
+     A warning nobody can read is worse than no warning. */
+  --k-accent-warning-text: var(--k-ink-950);          /* on accent-warning-bg: 5.94:1 */
   --k-accent-danger:       var(--k-madder-400);       /* on surface-base: 7.53:1 */
   --k-accent-success:      var(--k-neem-400);         /* on surface-base: 7.81:1 */
 
   --k-focus-ring:          var(--k-terracotta-300);   /* on surface-base: 12.68:1 */
+
+  --k-surface-inverse:     var(--k-ink-950);
+  --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
+  --k-overlay-scrim:       var(--k-ink-950);
 }
 
 [data-theme="high-contrast"] {
+  color-scheme: light;
   --k-surface-base:        var(--k-khadi-50);
   --k-surface-raised:      var(--k-khadi-50);   /* HC drops the tonal step; hairline carries the boundary instead */
   --k-surface-sunken:      var(--k-khadi-100);
@@ -182,6 +210,10 @@
   --k-accent-success:      var(--k-neem-700);         /* on surface-base: 9.26:1 */
 
   --k-focus-ring:          var(--k-terracotta-800);   /* on surface-base: 10.18:1, thicker ring drawn by component, not token */
+
+  --k-surface-inverse:     var(--k-ink-950);
+  --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
+  --k-overlay-scrim:       var(--k-ink-950);
 }
 
 /*

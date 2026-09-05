@@ -1,0 +1,120 @@
+/* apps/artisan/src/app.css */
+
+@import '@kalakriti/tokens';
+@import '@kalakriti/tokens/reset';
+@import '@kalakriti/tokens/base';
+
+/*
+ * The asset packs and the primitive layer built on them, in the `pattern`
+ * and `component` layers tokens.css already ordered. Import sequence here
+ * does not decide cascade order -- the @layer statement in tokens.css does,
+ * and it ran first -- this order just groups pattern-level packages before
+ * the component-level packages that assume them.
+ */
+@import '@kalakriti/icons/icons.css';
+@import '@kalakriti/illustrations/illustrations.css';
+@import '@kalakriti/ornament/ornament.css';
+@import '@kalakriti/motion/motion.css';
+@import '@kalakriti/patterns/patterns.css';
+@import '@kalakriti/ui/ui.css';
+
+/*
+ * Paper grain. Served from static/ rather than imported through the bundler so
+ * it is one small cacheable file the service worker precaches, instead of a
+ * base64 blob duplicated into the stylesheet on every build.
+ */
+:root {
+  --k-page-grain: url('/paper-grain.svg');
+}
+
+@layer app {
+  /*
+   * Shell layout. Header and the bottom action bar are fixed; the scrolling
+   * region is the middle. `svb`/`dvb` units rather than vh so the bar is not
+   * hidden under Chrome-on-Android's collapsing URL bar.
+   */
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    min-block-size: 100dvb;
+  }
+
+  .shell__header {
+    display: flex;
+    /* At 200% text scale on a 360px phone, the lockup and the connectivity
+       status no longer fit on one line -- wrap rather than force the whole
+       shell wider than the viewport. */
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--k-space-3);
+    padding: var(--k-space-3) var(--k-space-4);
+    /* Separation by line, not shadow. */
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface-base);
+  }
+
+  .shell__lockup {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    min-block-size: var(--k-touch-min);
+    min-inline-size: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .shell__emblem {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    flex: none;
+  }
+
+  .shell__wordmark {
+    font-family: var(--k-font-display);
+    font-size: var(--k-text-md);
+    font-weight: var(--k-weight-semibold);
+    letter-spacing: var(--k-tracking-tight);
+  }
+
+  .shell__status {
+    margin-inline-start: auto;
+    min-inline-size: 0;
+  }
+
+  .shell__main {
+    padding: var(--k-space-5) var(--k-space-4) var(--k-space-8);
+  }
+
+  /*
+   * Connectivity indicator. Colour is never the only carrier: the dot has a
+   * distinct shape per state and the state is always named in text.
+   */
+  .net {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+  }
+
+  .net__mark {
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    flex: none;
+    border: var(--k-rule) solid currentcolor;
+  }
+
+  .net--online .net__mark {
+    border-radius: var(--k-radius-pill);
+    background-color: currentcolor;
+    color: var(--k-accent-success);
+  }
+
+  .net--offline .net__mark {
+    /* A square outline, not a red dot: distinguishable without colour. */
+    border-radius: var(--k-radius-none);
+    background-color: transparent;
+    color: var(--k-accent-warning-text);
+  }
+}

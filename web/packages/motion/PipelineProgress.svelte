@@ -22,19 +22,48 @@
   import Describe from './src/pipeline-describe.svg';
   import Translate from './src/pipeline-translate.svg';
 
-  const ICONS = { enhance: Enhance, attributes: Attributes, describe: Describe, translate: Translate };
+  const ICONS = {
+    enhance: Enhance,
+    attributes: Attributes,
+    describe: Describe,
+    translate: Translate,
+  };
 
-  /** @type {{key: string, label?: string, state: 'pending'|'active'|'complete'|'failed'}[]} */
-  export let stages = [];
+  /**
+   * @typedef {object} Stage
+   * @property {string} key
+   * @property {string} [label]
+   * @property {'pending'|'active'|'complete'|'failed'} state
+   */
+
+  /**
+   * @typedef {object} Props
+   * @property {Stage[]} [stages] Real backend state. Never a timer.
+   * @property {string} label Accessible name for the list, from the i18n
+   *   layer -- this used to be a hardcoded English string.
+   */
+
+  /** @type {Props & Record<string, unknown>} */
+  let { stages = [], label, ...rest } = $props();
 </script>
 
-<div class="k-pipeline" role="list" aria-label="Processing pipeline" {...$$restProps}>
+<div class="k-pipeline" role="list" aria-label={label} {...rest}>
   {#each stages as stage, i (stage.key)}
-    <div class="k-pipeline-station" data-state={stage.state} role="listitem" aria-label="{stage.label || stage.key}: {stage.state}">
-      <svelte:component this={ICONS[stage.key]} aria-hidden="true" focusable="false" />
+    {@const Station = ICONS[stage.key]}
+    <div
+      class="k-pipeline-station"
+      data-state={stage.state}
+      role="listitem"
+      aria-label="{stage.label || stage.key}: {stage.state}"
+    >
+      <Station aria-hidden="true" focusable="false" />
     </div>
     {#if i < stages.length - 1}
-      <div class="k-pipeline-thread" data-crossed={stage.state === 'complete'} aria-hidden="true"></div>
+      <div
+        class="k-pipeline-thread"
+        data-crossed={stage.state === 'complete'}
+        aria-hidden="true"
+      ></div>
     {/if}
   {/each}
 </div>

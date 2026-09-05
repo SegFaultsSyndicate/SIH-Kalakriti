@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "$ui": ["./packages/ui/src/index.ts"],
+      "$ui/*": ["./packages/ui/src/*"],
+      "$api": ["./packages/api/src/index.ts"],
+      "$api/*": ["./packages/api/src/*"],
+      "$i18n": ["./packages/i18n/src/index.ts"],
+      "$i18n/*": ["./packages/i18n/src/*"],
+      "$offline": ["./packages/offline/src/index.ts"],
+      "$offline/*": ["./packages/offline/src/*"]
+    }
+  },
+  "include": [
+    "packages/ui/src/**/*",
+    "packages/api/src/**/*",
+    "packages/i18n/src/**/*",
+    "packages/offline/src/**/*"
+  ]
+}

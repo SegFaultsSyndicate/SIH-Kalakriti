@@ -1,0 +1,180 @@
+/*
+ * Kalakriti design tokens — scale.css
+ * ---------------------------------------------------------------
+ * Everything that is not colour: type, space, measure, radius, line
+ * weight, motion. Colour lives in palette.css and is imported ahead
+ * of this file by tokens.css.
+ *
+ * TYPE SIZES ARE NEVER PX. The artisan app must survive a 200% text
+ * scale and an OS font-size override without losing function, so
+ * every size below is rem-relative and the root font-size is left at
+ * the browser default (which is what the user's accessibility
+ * settings actually move). A px value here would silently opt the
+ * whole product out of the text-scale requirement.
+ * ---------------------------------------------------------------
+ */
+
+:root {
+  /* --- Type scale. Ratio 1.2 (minor third) below the display sizes,
+     widening to 1.25 above, so headings separate without the body
+     range getting gappy. --k-text-base is 1rem by definition. */
+  --k-text-2xs: 0.694rem;
+  --k-text-xs: 0.833rem;
+  --k-text-sm: 0.9rem;
+  --k-text-base: 1rem;
+  --k-text-md: 1.2rem;
+  --k-text-lg: 1.44rem;
+  /* Display sizes are fluid. EVERY TERM IS REM-BASED, the ceiling
+     included: a px or vw ceiling stops responding to the root font-size
+     and would silently opt the whole display range out of the
+     data-text-scale control at the bottom of this file. vw appears only
+     added to a rem, inside the middle term. Body sizes above are
+     deliberately NOT fluid -- body text gains nothing from it, and a
+     plain rem is one less thing between the user's own text-size
+     setting and the rendered size. */
+  --k-text-xl: clamp(1.6rem, 1.45rem + 0.75vw, 1.8rem);
+  --k-text-2xl: clamp(1.9rem, 1.6rem + 1.5vw, 2.25rem);
+  --k-text-3xl: clamp(2.2rem, 1.7rem + 2.5vw, 2.8125rem);
+  --k-text-4xl: clamp(2.6rem, 1.9rem + 3.5vw, 3.5rem);
+
+  /* Line heights are unitless so they multiply the scaled size. */
+  --k-leading-tight: 1.15;
+  --k-leading-snug: 1.3;
+  --k-leading-normal: 1.55;
+  --k-leading-loose: 1.75;
+
+  --k-tracking-tight: -0.015em;
+  --k-tracking-normal: 0;
+  --k-tracking-wide: 0.04em;
+  --k-tracking-kicker: 0.08em;
+
+  --k-weight-regular: 400;
+  --k-weight-medium: 500;
+  --k-weight-semibold: 600;
+  --k-weight-bold: 700;
+
+  /* Font families are NOT declared here. They live in fonts.css, next
+     to the @font-face rules that make them resolvable, so a stack can
+     never name a face this package does not load. */
+
+  /* Numerals. Prices and quantities must align down a column and must
+     not jitter as a value changes, so every money and quantity path
+     sets this. Applied by base.css to tables and to .k-tabular. */
+  --k-numeric-tabular: tabular-nums;
+
+  /* --- Space. 4px base step expressed in rem so it scales with text.
+     Named by step, not by t-shirt size, because the editorial layout
+     uses large asymmetric gaps that t-shirt names run out of. */
+  --k-space-0: 0;
+  --k-space-1: 0.25rem;
+  --k-space-2: 0.5rem;
+  --k-space-3: 0.75rem;
+  --k-space-4: 1rem;
+  --k-space-5: 1.5rem;
+  --k-space-6: 2rem;
+  --k-space-7: 3rem;
+  --k-space-8: 4rem;
+  --k-space-9: 6rem;
+  --k-space-10: 8rem;
+
+  /* --- Measure. Reading columns, not layout widths. */
+  --k-measure-narrow: 44ch;
+  --k-measure-base: 66ch;
+  --k-measure-wide: 78ch;
+
+  /* --- Layout. */
+  --k-container-artisan: 34rem;
+  --k-container-buyer: 78rem;
+  --k-container-admin: 96rem;
+  --k-gutter: var(--k-space-4);
+
+  /* --- Line weight. Separation in this design system is by rule, not
+     shadow, so the hairline is a token and not a magic 1px. */
+  --k-hairline: 1px;
+  --k-rule: 2px;
+  --k-rule-heavy: 4px;
+
+  /* --- Radius. Deliberately small. Large radii on cards are the
+     generic-AI look this system rejects; the only genuinely round
+     things are pills and the avatar. */
+  --k-radius-none: 0;
+  --k-radius-sm: 2px;
+  --k-radius-md: 4px;
+  --k-radius-lg: 8px;
+  --k-radius-pill: 999px;
+
+  /* --- Elevation. Only three, and only for things that genuinely
+     float: menu, sheet, modal. There is no "card shadow" token, on
+     purpose. */
+  --k-elevation-menu: 0 2px 8px rgb(36 30 26 / 0.14);
+  --k-elevation-sheet: 0 -4px 20px rgb(36 30 26 / 0.18);
+  --k-elevation-modal: 0 8px 40px rgb(36 30 26 / 0.24);
+
+  /* --- Focus. A visible ring is mandatory; components may thicken it
+     but must never remove it. */
+  --k-focus-width: 3px;
+  --k-focus-offset: 2px;
+
+  /* --- Touch. Artisan app minimum, per the accessibility contract. */
+  --k-touch-min: 44px;
+
+  /* --- Motion. Durations are custom properties so the
+     reduced-motion block below can zero all of them at once rather
+     than every component re-declaring the query. */
+  --k-duration-instant: 80ms;
+  --k-duration-fast: 140ms;
+  --k-duration-base: 220ms;
+  --k-duration-slow: 380ms;
+  --k-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --k-ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --k-ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+
+  /* --- Stacking. */
+  --k-z-base: 0;
+  --k-z-sticky: 10;
+  --k-z-menu: 100;
+  --k-z-sheet: 200;
+  --k-z-modal: 300;
+  --k-z-toast: 400;
+  --k-z-skiplink: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --k-duration-instant: 0ms;
+    --k-duration-fast: 0ms;
+    --k-duration-base: 0ms;
+    --k-duration-slow: 0ms;
+  }
+}
+
+/*
+ * Manual override for the OS-level query above. The accessibility toolbar
+ * sets this explicitly (on, in addition to a system that doesn't report
+ * reduced motion; or off, for a user who wants motion despite their OS
+ * default) via data-reduce-motion on <html>. Only the "true" value needs a
+ * rule: "false" means fall through to the media query, which is what
+ * happens when this attribute is simply absent or set to "false".
+ */
+:root[data-reduce-motion='true'] {
+  --k-duration-instant: 0ms;
+  --k-duration-fast: 0ms;
+  --k-duration-base: 0ms;
+  --k-duration-slow: 0ms;
+}
+
+/*
+ * Text-size control. The accessibility toolbar sets data-text-scale on
+ * <html>; it multiplies the root size rather than rewriting the type
+ * tokens, so every rem-based size moves together and nothing that was
+ * laid out in rem breaks.
+ */
+:root[data-text-scale='large'] {
+  font-size: 125%;
+}
+:root[data-text-scale='xlarge'] {
+  font-size: 150%;
+}
+:root[data-text-scale='xxlarge'] {
+  font-size: 200%;
+}
