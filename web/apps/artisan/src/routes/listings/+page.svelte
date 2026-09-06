@@ -286,6 +286,12 @@
                   <Button size="sm" variant="secondary" onclick={() => goto(primaryActionHref(listing))}>
                     {primaryActionLabel(listing)}
                   </Button>
+                  {#if group === 'published'}
+                    <Button size="sm" variant="ghost" onclick={() => goto(`/listings/${listing.id}`)}>
+                      <Icon name="external-link" />
+                      GeM
+                    </Button>
+                  {/if}
                 </Card>
               </li>
             {/each}

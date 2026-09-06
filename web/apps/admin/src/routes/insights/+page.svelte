@@ -264,6 +264,47 @@
       refreshing = false;
     }
   }
+
+  // ── KPI computations (derived from already-loaded data, no extra calls) ──
+
+  const kpiTotalArtisans = $derived(roster.reduce((sum, r) => sum + r.artisanCount, 0));
+
+  const kpiTotalGmv = $derived(
+    earningsRows.reduce((sum, r) => sum + (r.total_gmv?.amount_paise ?? 0), 0),
+  );
+
+  const kpiAvgUplift = $derived.by(() => {
+    let count = 0;
+    let totalPct = 0;
+    for (const row of incomeRows) {
+      const before = row.median_before?.amount_paise ?? 0;
+      const after = row.median_after?.amount_paise ?? 0;
+      if (before > 0) {
+        totalPct += ((after - before) / before) * 100;
+        count++;
+      }
+    }
+    return count > 0 ? Math.round(totalPct / count) : 0;
+  });
+
+  const kpiCraftsAtRisk = $derived(dyingRows.filter((r) => Math.abs(r.decline_rate ?? 0) >= 0.3).length);
+
+  // ── Dying-craft severity helpers ──
+
+  function dyingSeverity(rate: number): 'critical' | 'warning' | 'watch' {
+    const abs = Math.abs(rate);
+    if (abs >= 0.6) return 'critical';
+    if (abs >= 0.3) return 'warning';
+    return 'watch';
+  }
+
+  function severityLabel(sev: 'critical' | 'warning' | 'watch'): string {
+    return t(`insights.dyingCraft.${sev}`);
+  }
+
+  function printDashboard(): void {
+    window.print();
+  }
 </script>
 
 <svelte:head>
@@ -275,11 +316,20 @@
   <p role="alert">{t('insights.accessRestricted')}</p>
 {:else}
   <div class="insights-header">
-    <h1>{t('nav.insights')}</h1>
-    <Button variant="secondary" onclick={doRefresh} loading={refreshing}>
-      <Icon name="refresh" />
-      {t('insights.refresh')}
-    </Button>
+    <div>
+      <h1>{t('nav.insights')}</h1>
+      <p class="insights-subtitle">{t('insights.dashboardSubtitle')}</p>
+    </div>
+    <div class="insights-header__actions">
+      <Button variant="secondary" onclick={printDashboard}>
+        <Icon name="print" />
+        {t('insights.printDashboard')}
+      </Button>
+      <Button variant="secondary" onclick={doRefresh} loading={refreshing}>
+        <Icon name="refresh" />
+        {t('insights.refresh')}
+      </Button>
+    </div>
   </div>
 
   <form class="insights-filters" onsubmit={(e) => { e.preventDefault(); void load(); }}>
@@ -307,6 +357,29 @@
     </div>
   {/if}
 
+  <!-- KPI Hero Strip -->
+  {#if !loading}
+    <div class="insights-kpi-strip">
+      <div class="insights-kpi">
+        <span class="insights-kpi__value">{kpiTotalArtisans.toLocaleString('en-IN')}</span>
+        <span class="insights-kpi__label">{t('insights.kpi.totalArtisans')}</span>
+      </div>
+      <div class="insights-kpi">
+        <span class="insights-kpi__value">{formatPaise(kpiTotalGmv)}</span>
+        <span class="insights-kpi__label">{t('insights.kpi.totalGmvValue')}</span>
+      </div>
+      <div class="insights-kpi">
+        <span class="insights-kpi__value insights-kpi__value--uplift">+{kpiAvgUplift}%</span>
+        <span class="insights-kpi__label">{t('insights.kpi.avgUplift')}</span>
+      </div>
+      <div class="insights-kpi">
+        <span class="insights-kpi__value insights-kpi__value--risk">{kpiCraftsAtRisk}</span>
+        <span class="insights-kpi__label">{t('insights.kpi.craftsAtRisk')}</span>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Dying-craft watch -->
   <section class="insights-panel insights-panel--dying" aria-labelledby="dying-craft-heading">
     <div class="insights-panel__head">
       <h2 id="dying-craft-heading">
@@ -319,7 +392,31 @@
       </Button>
     </div>
     <p class="insights-panel__note">{t('insights.dyingCraftNote')}</p>
-    <BarChart caption={t('insights.declineRate')} rows={dyingCraftRows} formatValue={(v) => `${v}%`} />
+
+    <ul class="dying-craft-list">
+      {#each dyingRows as craft (craft.craft_id)}
+        {@const severity = dyingSeverity(craft.decline_rate ?? 0)}
+        <li class="dying-craft-item">
+          <div class="dying-craft-item__header">
+            <span class="dying-craft-item__name">{craft.craft_name}</span>
+            <span class="dying-craft-severity dying-craft-severity--{severity}">
+              {severityLabel(severity)}
+            </span>
+          </div>
+          <div class="dying-craft-item__stats">
+            <span class="dying-craft-item__rate">{Math.round(Math.abs(craft.decline_rate ?? 0) * 100)}% decline</span>
+            <span class="dying-craft-item__count">
+              {t('insights.dyingCraft.peakArtisans')}: {craft.peak_artisans ?? '—'}
+              →
+              {t('insights.dyingCraft.currentArtisans')}: {craft.current_artisans ?? '—'}
+            </span>
+          </div>
+          <div class="dying-craft-item__bar">
+            <span class="dying-craft-item__bar-fill dying-craft-item__bar-fill--{severity}" style:inline-size="{Math.round(Math.abs(craft.decline_rate ?? 0) * 100)}%"></span>
+          </div>
+        </li>
+      {/each}
+    </ul>
   </section>
 
   <section class="insights-panel">
@@ -356,6 +453,7 @@
     <BarChart caption={t('insights.averageEarnings')} rows={avgEarningsRows} formatValue={formatPaise} />
   </section>
 
+  <!-- Income uplift: grouped before/after bar chart -->
   <section class="insights-panel">
     <div class="insights-panel__head">
       <h2>{t('insights.incomeUplift')}</h2>
@@ -365,10 +463,13 @@
       </Button>
     </div>
     <p class="insights-panel__note">{t('insights.upliftNote')}</p>
-    <div class="insights-panel__grid">
-      <BarChart caption={t('insights.medianBefore')} rows={upliftBeforeRows} formatValue={formatPaise} />
-      <BarChart caption={t('insights.medianAfter')} rows={upliftAfterRows} formatValue={formatPaise} />
-    </div>
+    <BarChart
+      caption={t('insights.upliftComparison')}
+      rows={upliftBeforeRows}
+      secondaryRows={upliftAfterRows}
+      legend={[t('insights.legend.before'), t('insights.legend.after')]}
+      formatValue={formatPaise}
+    />
   </section>
 
   <section class="insights-panel">
@@ -386,9 +487,21 @@
 <style>
   .insights-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--k-space-3);
+    flex-wrap: wrap;
+  }
+
+  .insights-header__actions {
+    display: flex;
+    gap: var(--k-space-2);
+  }
+
+  .insights-subtitle {
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+    margin: var(--k-space-1) 0 0;
   }
 
   .insights-filters {
@@ -410,6 +523,142 @@
   .insights-error {
     color: var(--k-accent-danger);
   }
+
+  /* ── KPI hero strip ── */
+
+  .insights-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: var(--k-space-3);
+    margin-block-end: var(--k-space-6);
+  }
+
+  .insights-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+    padding: var(--k-space-4);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    background: var(--k-surface-raised);
+    text-align: center;
+  }
+
+  .insights-kpi__value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    font-variant-numeric: var(--k-numeric-tabular);
+    color: var(--k-text-primary);
+    line-height: 1.1;
+  }
+
+  .insights-kpi__value--uplift {
+    color: #2e7d32;
+  }
+
+  .insights-kpi__value--risk {
+    color: var(--k-accent-danger);
+  }
+
+  .insights-kpi__label {
+    font-size: var(--k-text-xs, 0.75rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-text-secondary);
+  }
+
+  /* ── Dying-craft list ── */
+
+  .dying-craft-list {
+    list-style: none;
+    margin: var(--k-space-3) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .dying-craft-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+  }
+
+  .dying-craft-item__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-2);
+  }
+
+  .dying-craft-item__name {
+    font-weight: 600;
+    font-size: var(--k-text-sm);
+  }
+
+  .dying-craft-severity {
+    font-size: var(--k-text-xs, 0.75rem);
+    font-weight: 700;
+    padding: 2px var(--k-space-2);
+    border-radius: var(--k-radius-pill);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .dying-craft-severity--critical {
+    background: #ffcdd2;
+    color: #b71c1c;
+  }
+
+  .dying-craft-severity--warning {
+    background: #fff9c4;
+    color: #f57f17;
+  }
+
+  .dying-craft-severity--watch {
+    background: #c8e6c9;
+    color: #2e7d32;
+  }
+
+  .dying-craft-item__stats {
+    display: flex;
+    gap: var(--k-space-4);
+    font-size: var(--k-text-xs, 0.75rem);
+    color: var(--k-text-secondary);
+  }
+
+  .dying-craft-item__rate {
+    font-weight: 600;
+  }
+
+  .dying-craft-item__bar {
+    block-size: 0.35rem;
+    border-radius: 2px;
+    background: var(--k-surface-sunken);
+    overflow: hidden;
+  }
+
+  .dying-craft-item__bar-fill {
+    display: block;
+    block-size: 100%;
+    border-radius: 2px;
+    transition: inline-size 0.3s ease;
+  }
+
+  .dying-craft-item__bar-fill--critical {
+    background: #c62828;
+  }
+
+  .dying-craft-item__bar-fill--warning {
+    background: #f9a825;
+  }
+
+  .dying-craft-item__bar-fill--watch {
+    background: #43a047;
+  }
+
+  /* ── Panels ── */
 
   .insights-panel {
     margin-block-end: var(--k-space-6);
@@ -448,5 +697,33 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     gap: var(--k-space-4);
+  }
+
+  /* ── Print ── */
+
+  @media print {
+    .insights-header__actions {
+      display: none;
+    }
+
+    .insights-filters {
+      display: none;
+    }
+
+    .insights-kpi-strip {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .insights-kpi {
+      border-color: #999;
+    }
+
+    .insights-panel--dying {
+      border-color: #999;
+    }
+
+    .insights-panel {
+      break-inside: avoid;
+    }
   }
 </style>

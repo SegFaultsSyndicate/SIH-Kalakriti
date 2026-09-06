@@ -1207,6 +1207,50 @@ export const en = {
   'home.concierge.dateLabel': 'Preferred Date & Time Window',
   'home.concierge.submit': 'Confirm Video Reservation',
   'home.concierge.success': 'Reservation Confirmed! A craft concierge will reach out on WhatsApp/Email.',
+
+  // GeM (Government e-Marketplace) export preview — artisan app
+  'gem.exportButton': 'Export to Govt e-Marketplace (GeM)',
+  'gem.dialogTitle': 'GeM Catalog Export Preview',
+  'gem.productName': 'Product Name',
+  'gem.hsnCode': 'HSN Code',
+  'gem.unitPrice': 'Unit Price (INR)',
+  'gem.listingType': 'Listing Type',
+  'gem.sellerName': 'Seller / Artisan Name',
+  'gem.sellerDistrict': 'Seller District',
+  'gem.sellerId': 'MSME / Pehchan ID',
+  'gem.category': 'GeM Category',
+  'gem.hsnPlaceholder': '9701.10.00 — Works of Art, Collectors\' Pieces',
+  'gem.categoryPlaceholder': 'Handicrafts & Handlooms',
+  'gem.sellerIdPlaceholder': 'Not registered — apply at gem.gov.in',
+  'gem.printButton': 'Print / Save as PDF',
+  'gem.copyButton': 'Copy as text',
+  'gem.copied': 'Copied to clipboard.',
+  'gem.readyStock': 'Ready Stock',
+  'gem.madeToOrder': 'Made to Order',
+  'gem.note':
+    'This is a formatted preview only. Actual GeM listing requires seller registration at gem.gov.in and a live API integration.',
+  'gem.specifications': 'Technical Specifications',
+  'gem.description': 'Product Description',
+  'gem.sellerDetails': 'Seller Details',
+  'gem.catalogId': 'Catalog ID',
+  'gem.catalogIdPlaceholder': 'KK-{id}',
+
+  // Ministry dashboard — admin app
+  'insights.kpi.totalArtisans': 'Artisans Onboarded',
+  'insights.kpi.totalGmvValue': 'Total GMV',
+  'insights.kpi.avgUplift': 'Avg. Income Uplift',
+  'insights.kpi.craftsAtRisk': 'Crafts at Risk',
+  'insights.printDashboard': 'Print dashboard',
+  'insights.dyingCraft.critical': 'Critical',
+  'insights.dyingCraft.warning': 'Warning',
+  'insights.dyingCraft.watch': 'Watch',
+  'insights.dyingCraft.peakArtisans': 'Peak artisans',
+  'insights.dyingCraft.currentArtisans': 'Current artisans',
+  'insights.upliftComparison': 'Before vs. after comparison',
+  'insights.legend.before': 'Before (median)',
+  'insights.legend.after': 'After (median)',
+  'insights.dashboardSubtitle':
+    'Real-time artisan welfare metrics and craft-sector health indicators for policy planning.',
 } as const;
 
 export type MessageKey = keyof typeof en;
