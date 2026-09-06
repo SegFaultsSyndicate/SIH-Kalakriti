@@ -363,6 +363,9 @@
   border: none;
   border-radius: var(--k-radius-lg);
   padding: 0;
+  /* reset.css's `* { margin: 0 }` removes the UA auto-margin that
+     centers a modal <dialog>; re-assert it here. */
+  margin: auto;
   color: var(--k-text-primary);
   background: var(--k-surface-raised);
   box-shadow: var(--k-elevation-modal);
