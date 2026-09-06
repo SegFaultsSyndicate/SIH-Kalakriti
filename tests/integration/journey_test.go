@@ -187,7 +187,7 @@ func TestJourney_IncomeStatementGeneration(t *testing.T) {
 
 // Real BFF HTTP Helper Functions
 
-func registerArtisan(ctx context.Context, id uuid.UUID, name, craft, state string) error {
+func registerArtisan(ctx context.Context, _ uuid.UUID, name, _, _ string) error {
 	payload, _ := json.Marshal(map[string]any{
 		"display_name": name,
 		"language":     "en",
@@ -212,7 +212,7 @@ func registerArtisan(ctx context.Context, id uuid.UUID, name, craft, state strin
 	return nil
 }
 
-func uploadImage(ctx context.Context, artisanID uuid.UUID, filename string) (string, error) {
+func uploadImage(ctx context.Context, _ uuid.UUID, filename string) (string, error) {
 	payload, _ := json.Marshal(map[string]any{
 		"content_type": "image/jpeg",
 		"size_bytes":   1024,
@@ -255,7 +255,7 @@ func uploadImage(ctx context.Context, artisanID uuid.UUID, filename string) (str
 	return "https://minio/images/" + filename, nil
 }
 
-func getLatestDraftListing(ctx context.Context, artisanID uuid.UUID) (uuid.UUID, error) {
+func getLatestDraftListing(_ context.Context, _ uuid.UUID) (uuid.UUID, error) {
 	return uuid.MustParse("00000000-0000-0000-0000-000000000001"), nil
 }
 
@@ -302,7 +302,7 @@ func getListing(ctx context.Context, listingID uuid.UUID) (*Listing, error) {
 	}, nil
 }
 
-func approveListing(ctx context.Context, artisanID, listingID uuid.UUID) error {
+func approveListing(ctx context.Context, _, listingID uuid.UUID) error {
 	payload, _ := json.Marshal(map[string]any{
 		"edited_translations": []any{},
 	})
@@ -359,11 +359,11 @@ func searchListings(ctx context.Context, query string) ([]*SearchResult, error) 
 	return out, nil
 }
 
-func setCapacity(ctx context.Context, artisanID uuid.UUID, qty int) error {
+func setCapacity(_ context.Context, _ uuid.UUID, _ int) error {
 	return nil
 }
 
-func placeBulkOrder(ctx context.Context, buyerID uuid.UUID, craft string, qty int) (uuid.UUID, error) {
+func placeBulkOrder(ctx context.Context, _ uuid.UUID, _ string, qty int) (uuid.UUID, error) {
 	payload, _ := json.Marshal(map[string]any{
 		"listing_id": "listing-1",
 		"quantity":   qty,
@@ -429,7 +429,7 @@ func getAllocations(ctx context.Context, orderID uuid.UUID) ([]*Allocation, erro
 	return allocations, nil
 }
 
-func artisanDropsOut(ctx context.Context, orderID, artisanID uuid.UUID) error {
+func artisanDropsOut(ctx context.Context, _, _ uuid.UUID) error {
 	payload, _ := json.Marshal(map[string]any{
 		"reason": "Artisan capacity unavailable",
 	})
@@ -453,7 +453,7 @@ func artisanDropsOut(ctx context.Context, orderID, artisanID uuid.UUID) error {
 	return nil
 }
 
-func markAllocationCompleted(ctx context.Context, orderID, artisanID uuid.UUID) error {
+func markAllocationCompleted(ctx context.Context, _, _ uuid.UUID) error {
 	payload, _ := json.Marshal(map[string]any{
 		"progress_pct": 100,
 	})
@@ -477,7 +477,7 @@ func markAllocationCompleted(ctx context.Context, orderID, artisanID uuid.UUID) 
 	return nil
 }
 
-func getPaymentSplits(ctx context.Context, orderID uuid.UUID) ([]*PaymentSplit, error) {
+func getPaymentSplits(_ context.Context, _ uuid.UUID) ([]*PaymentSplit, error) {
 	return []*PaymentSplit{
 		{ArtisanID: uuid.New(), AmountPaise: 100000},
 		{ArtisanID: uuid.New(), AmountPaise: 100000},
@@ -514,7 +514,7 @@ func getOrder(ctx context.Context, orderID uuid.UUID) (*Order, error) {
 	return &Order{TotalPaise: total}, nil
 }
 
-func createListing(ctx context.Context, artisanID, listingID uuid.UUID, title string) error {
+func createListing(ctx context.Context, _, _ uuid.UUID, title string) error {
 	payload, _ := json.Marshal(map[string]any{
 		"translations": []any{
 			map[string]any{
@@ -543,7 +543,7 @@ func createListing(ctx context.Context, artisanID, listingID uuid.UUID, title st
 	return nil
 }
 
-func uploadVideo(ctx context.Context, artisanID, listingID uuid.UUID, filename string) (string, error) {
+func uploadVideo(ctx context.Context, artisanID, _ uuid.UUID, filename string) (string, error) {
 	return uploadImage(ctx, artisanID, filename)
 }
 
@@ -587,7 +587,7 @@ func sealProvenance(ctx context.Context, listingID, artisanID uuid.UUID, videos 
 	return uuid.New(), qr, nil
 }
 
-func verifyProvenanceQR(ctx context.Context, qrCode string) (*ProvenanceVerification, error) {
+func verifyProvenanceQR(_ context.Context, qrCode string) (*ProvenanceVerification, error) {
 	artID := provenanceVerifications[qrCode]
 	if artID == uuid.Nil {
 		artID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
@@ -604,11 +604,11 @@ func verifyProvenanceQR(ctx context.Context, qrCode string) (*ProvenanceVerifica
 	}, nil
 }
 
-func recordCompletedOrder(ctx context.Context, artisanID, orderID uuid.UUID, amountPaise int64) error {
+func recordCompletedOrder(_ context.Context, _, _ uuid.UUID, _ int64) error {
 	return nil
 }
 
-func generateIncomeStatement(ctx context.Context, artisanID uuid.UUID, year, month int) (string, string, error) {
+func generateIncomeStatement(ctx context.Context, artisanID uuid.UUID, _, _ int) (string, string, error) {
 	payload, _ := json.Marshal(map[string]any{
 		"start": "2026-08-01",
 		"end":   "2026-08-31",
@@ -642,7 +642,7 @@ func generateIncomeStatement(ctx context.Context, artisanID uuid.UUID, year, mon
 	return dl, qr, nil
 }
 
-func verifyIncomeQR(ctx context.Context, qrCode string) (*IncomeVerification, error) {
+func verifyIncomeQR(_ context.Context, qrCode string) (*IncomeVerification, error) {
 	artID := incomeVerifications[qrCode]
 	if artID == uuid.Nil {
 		artID = uuid.MustParse("00000000-0000-0000-0000-000000000001")

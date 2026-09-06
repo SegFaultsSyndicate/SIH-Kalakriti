@@ -11,13 +11,16 @@
       "$i18n": ["./packages/i18n/src/index.ts"],
       "$i18n/*": ["./packages/i18n/src/*"],
       "$offline": ["./packages/offline/src/index.ts"],
-      "$offline/*": ["./packages/offline/src/*"]
+      "$offline/*": ["./packages/offline/src/*"],
+      "$observability": ["./packages/observability/src/index.ts"],
+      "$observability/*": ["./packages/observability/src/*"]
     }
   },
   "include": [
     "packages/ui/src/**/*",
     "packages/api/src/**/*",
     "packages/i18n/src/**/*",
-    "packages/offline/src/**/*"
+    "packages/offline/src/**/*",
+    "packages/observability/src/**/*"
   ]
 }

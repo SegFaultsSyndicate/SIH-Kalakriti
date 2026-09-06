@@ -66,6 +66,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <header class="k-mega-header" onmouseleave={handleMenuLeave}>
   <!-- 1. Government of India Top Ribbon -->
   <div class="k-gov-ribbon">
