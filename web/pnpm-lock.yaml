@@ -226,9 +226,6 @@ importers:
       '@kalakriti/patterns':
         specifier: workspace:*
         version: link:../../packages/patterns
-      '@kalakriti/print':
-        specifier: workspace:*
-        version: link:../../packages/print
       '@kalakriti/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
