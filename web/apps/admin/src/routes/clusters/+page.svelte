@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { Button, Input, FieldGroup, Select, showToast } from '@kalakriti/ui';
+  import { Button, Input, FieldGroup, Select, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import {
     session,
@@ -398,7 +398,11 @@
     </details>
   </section>
 
-  {#if cluster}
+  {#if loadingCluster}
+    <section class="clusters-section">
+      <Skeleton shape="card" height="12rem" />
+    </section>
+  {:else if cluster}
     <section class="clusters-section" aria-labelledby="cluster-roster-heading">
       <h2 id="cluster-roster-heading">
         {cluster.name} <span class="clusters-meta">({cluster.district ?? ''} {cluster.state_code}) · {t('clusters.capacity', { count: String(cluster.artisan_count ?? 0) })}</span>

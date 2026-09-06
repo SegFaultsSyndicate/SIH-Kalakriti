@@ -6,7 +6,7 @@
 import type { Messages } from './en';
 
 export const bn: Partial<Messages> = {
-  'app.name': 'कलाकृति (কলাকৃতি)',
+  'app.name': 'কলাকৃতি',
   'app.tagline': 'ঐতিহ্যবাহী হস্তশিল্প, সত্যতার সাথে সুরক্ষিত',
   'app.ministry': 'সামাজিক ন্যায়বিচার ও ক্ষমতায়ন মন্ত্রণালয়, ভারত সরকার',
 

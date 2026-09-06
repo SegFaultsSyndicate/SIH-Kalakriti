@@ -17,6 +17,7 @@
   import {
     Button,
     SpeakButton,
+    Skeleton,
     showToast,
     a11y,
   } from '@kalakriti/ui';
@@ -26,28 +27,43 @@
     setAccessToken,
     setRefreshToken,
     session,
-    type components,
   } from '@kalakriti/api';
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
   import { CRAFTS, DISTRICTS } from '$lib/ontology';
-
-  type ArtisanProfile = components['schemas']['ArtisanProfile'];
+  import ImageCropModal from '$lib/ImageCropModal.svelte';
 
   const t = $derived(locale.t);
 
   let name = $state('eshaan');
   let phone = $state('+91 8779279060');
-  let profile = $state<ArtisanProfile | undefined>(undefined);
   let avatarUrl = $state<string | undefined>(undefined);
+  let rawImageToCrop = $state<string>('');
+  let showCropModal = $state(false);
   let fileInput = $state<HTMLInputElement | null>(null);
+  let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
   let craftName = $state('Weaving & Handloom (बुनकरी)');
   let districtName = $state('Varanasi, Uttar Pradesh');
   let clusterName = $state('Varanasi Silk Weaver Common Facility Centre');
   let pehchanId = $state('UP-VNS-2024-0982');
   let shgName = $state('Pariwar Bunkar SHG (12 Members)');
+  let pageLoading = $state(true);
+
+  // Email and notification preferences
+  let email = $state('');
+  let emailOrderAlerts = $state(true);
+  let emailVideoAlerts = $state(true);
+  let savingEmail = $state(false);
+
+  // Phone number change state
+  let showPhoneModal = $state(false);
+  let newPhoneInput = $state('');
+  let phoneOtpInput = $state('');
+  let phoneStep = $state<'phone' | 'otp'>('phone');
+  let phoneLoading = $state(false);
+  let phoneError = $state('');
 
   $effect(() => {
     void (async () => {
@@ -81,12 +97,21 @@
         if (found) craftName = `${t(found.nameKey)} (${found.id})`;
       }
 
+      // Restore email & notification preferences
+      const storedEmail = await getPref<string>('profile.email');
+      if (storedEmail) email = storedEmail;
+      const storedOrderAlerts = await getPref<boolean>('profile.emailOrderAlerts');
+      if (storedOrderAlerts !== undefined) emailOrderAlerts = storedOrderAlerts;
+      const storedVideoAlerts = await getPref<boolean>('profile.emailVideoAlerts');
+      if (storedVideoAlerts !== undefined) emailVideoAlerts = storedVideoAlerts;
+
       if (draft.districtId) {
         const found = DISTRICTS.find((d) => d.id === draft.districtId);
         if (found) districtName = `${found.name}, ${found.state}`;
       } else if (draft.districtFreeText) {
         districtName = draft.districtFreeText;
       }
+      pageLoading = false;
     })();
   });
 
@@ -95,7 +120,6 @@
       if (!network.online) return;
       try {
         const p = await getArtisanProfile();
-        profile = p;
         if (p.display_name) name = p.display_name;
         if (p.phone_e164) phone = p.phone_e164;
       } catch {
@@ -111,7 +135,7 @@
       if (!artisanId || artisanId.startsWith('local:')) return;
       try {
         const res = await getFollowerCount(artisanId);
-        if (res.count > 0) followerCount = res.count;
+        if (typeof res?.count === 'number' && res.count > 0) followerCount = res.count;
       } catch {
         /* Keep initial recognition figure */
       }
@@ -193,24 +217,122 @@
     window.open(`https://wa.me/?text=${shareText}`, '_blank');
   }
 
-  async function handleAvatarChange(e: Event): Promise<void> {
+  function handleAvatarChange(e: Event): void {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      avatarUrl = dataUrl;
-      await setPref('profile.avatar_url', dataUrl);
-      try {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('kalakriti.artisan.avatar', dataUrl);
-        }
-      } catch {}
-      showToast({ message: 'Profile picture updated successfully!', variant: 'success' });
+    reader.onload = () => {
+      rawImageToCrop = reader.result as string;
+      showCropModal = true;
+      input.value = '';
     };
     reader.readAsDataURL(file);
+  }
+
+  async function handleCroppedAvatar(croppedDataUrl: string): Promise<void> {
+    showCropModal = false;
+    avatarUrl = croppedDataUrl;
+    await setPref('profile.avatar_url', croppedDataUrl);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('kalakriti.artisan.avatar', croppedDataUrl);
+        localStorage.setItem('kalakriti.artisan.avatar_updated_at', String(Date.now()));
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch {}
+    showToast({ message: 'Profile picture updated successfully!', variant: 'success' });
+  }
+
+  function handleCancelCrop(): void {
+    showCropModal = false;
+    rawImageToCrop = '';
+  }
+
+  async function handleRemoveAvatar(): Promise<void> {
+    avatarUrl = undefined;
+    await setPref('profile.avatar_url', '');
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('kalakriti.artisan.avatar');
+        localStorage.setItem('kalakriti.artisan.avatar_updated_at', String(Date.now()));
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch {}
+    showToast({ message: t('profile.photoRemoved'), variant: 'info' });
+  }
+
+  async function saveEmailPreferences(): Promise<void> {
+    savingEmail = true;
+    await setPref('profile.email', email);
+    await setPref('profile.emailOrderAlerts', emailOrderAlerts);
+    await setPref('profile.emailVideoAlerts', emailVideoAlerts);
+    savingEmail = false;
+    showToast({
+      message: 'Email and VIP video consultation preferences saved!',
+      variant: 'success',
+    });
+  }
+
+  async function requestPhoneChange(): Promise<void> {
+    const raw = newPhoneInput.trim().replace(/\s+/g, '');
+    if (raw.length < 10) {
+      phoneError = 'Please enter a valid 10-digit mobile number';
+      return;
+    }
+    phoneLoading = true;
+    phoneError = '';
+    try {
+      const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
+      const res = await fetch('/auth/phone/change/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_phone: formatted }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to request verification code');
+      phoneStep = 'otp';
+      showToast({ message: data.message || 'Verification code sent to new mobile number', variant: 'info' });
+    } catch (err: any) {
+      phoneError = err.message || 'Failed to request verification code';
+    } finally {
+      phoneLoading = false;
+    }
+  }
+
+  async function verifyPhoneChange(): Promise<void> {
+    if (phoneOtpInput.trim().length < 4) {
+      phoneError = 'Please enter the verification OTP';
+      return;
+    }
+    phoneLoading = true;
+    phoneError = '';
+    try {
+      const raw = newPhoneInput.trim().replace(/\s+/g, '');
+      const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
+      const res = await fetch('/auth/phone/change/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_phone: formatted, otp: phoneOtpInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Verification failed');
+      phone = formatted;
+      await setPref('login.phone', formatted);
+      showPhoneModal = false;
+      newPhoneInput = '';
+      phoneOtpInput = '';
+      phoneStep = 'phone';
+      showToast({
+        message: 'Mobile number updated! Other active sessions terminated for security.',
+        variant: 'success',
+      });
+    } catch (err: any) {
+      phoneError = err.message || 'Verification failed';
+    } finally {
+      phoneLoading = false;
+    }
   }
 
   async function handleLogout(): Promise<void> {
@@ -228,38 +350,74 @@
 </svelte:head>
 
 <div class="profile-page">
+  {#if pageLoading}
+    <Skeleton shape="card" height="14rem" />
+    <Skeleton shape="card" height="8rem" />
+  {/if}
   <!-- Top Identity & Hero Card -->
   <section class="profile-hero">
     <div class="profile-hero__badge-rule"></div>
 
     <div class="profile-hero__main">
-      <div
-        class="profile-avatar profile-avatar--clickable"
-        onclick={() => fileInput?.click()}
-        role="button"
-        tabindex="0"
-        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInput?.click()}
-        title="Tap to change profile picture"
-      >
-        <input
-          type="file"
-          accept="image/*"
-          capture="user"
-          class="sr-only"
-          bind:this={fileInput}
-          onchange={handleAvatarChange}
-        />
-        {#if avatarUrl}
-          <img class="profile-avatar__img" src={avatarUrl} alt={name} />
-        {:else}
-          <span class="profile-avatar__initial">{initial}</span>
-        {/if}
-        <span class="profile-avatar__camera-badge" title="Upload photo">
-          <Icon name="camera" size="0.85rem" />
-        </span>
-        <span class="profile-avatar__verified" title="Govt & AI Verified Artisan">
-          <Icon name="verified-artisan" size="1.25rem" />
-        </span>
+      <div class="profile-avatar-wrap">
+        <div
+          class="profile-avatar profile-avatar--clickable"
+          onclick={() => fileInput?.click()}
+          role="button"
+          tabindex="0"
+          onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInput?.click()}
+          title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}
+        >
+          <input
+            type="file"
+            accept="image/*"
+            class="sr-only"
+            bind:this={fileInput}
+            onchange={handleAvatarChange}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            capture="user"
+            class="sr-only"
+            bind:this={cameraInput}
+            onchange={handleAvatarChange}
+          />
+          {#if avatarUrl}
+            <img class="profile-avatar__img" src={avatarUrl} alt={name} />
+          {:else}
+            <span class="profile-avatar__initial">{initial}</span>
+          {/if}
+          <span class="profile-avatar__camera-badge" title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}>
+            <Icon name="camera" size="0.85rem" />
+          </span>
+          <span class="profile-avatar__verified" title="Govt & AI Verified Artisan">
+            <Icon name="verified-artisan" size="1.25rem" />
+          </span>
+        </div>
+
+        <div class="profile-avatar-btns">
+          <button
+            type="button"
+            class="avatar-ctrl-btn"
+            onclick={() => (cameraInput ?? fileInput)?.click()}
+            title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}
+          >
+            <Icon name="camera" size="0.8rem" />
+            <span>{avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}</span>
+          </button>
+          {#if avatarUrl}
+            <button
+              type="button"
+              class="avatar-ctrl-btn avatar-ctrl-btn--danger"
+              onclick={handleRemoveAvatar}
+              title={t('profile.removePhoto')}
+            >
+              <Icon name="trash" size="0.8rem" />
+              <span>{t('profile.removePhoto')}</span>
+            </button>
+          {/if}
+        </div>
       </div>
 
       <div class="profile-hero__info">
@@ -281,6 +439,19 @@
           <span class="profile-meta-item">
             <Icon name="phone" size="0.95rem" />
             {phone}
+            <button
+              type="button"
+              class="change-phone-btn"
+              onclick={() => {
+                showPhoneModal = true;
+                phoneStep = 'phone';
+                phoneError = '';
+                newPhoneInput = '';
+                phoneOtpInput = '';
+              }}
+            >
+              Change
+            </button>
           </span>
         </div>
 
@@ -498,7 +669,7 @@
     <div class="a11y-quick-bar">
       <button type="button" class="a11y-quick-btn" onclick={() => a11y.toggleContrast()}>
         <Icon name="contrast" size="1rem" />
-        {t('profile.contrast', { mode: t('a11y.contrast.' + a11y.contrast) })}
+        {t('profile.contrast', { mode: a11y.contrast === 'high' ? t('a11y.contrast.high') : t('a11y.contrast.normal') })}
       </button>
 
       <button type="button" class="a11y-quick-btn" onclick={() => a11y.stepTextScale()}>
@@ -509,6 +680,47 @@
       <a href="/accessibility" class="a11y-quick-link">
         {t('profile.fullA11yStatement')}
       </a>
+    </div>
+  </section>
+
+  <!-- Email & VIP Video Consultation Preferences -->
+  <section class="profile-card">
+    <div class="profile-card__header">
+      <h2 class="profile-card__title">
+        <Icon name="message" size="1.2rem" />
+        Official Email & Buyer Video Consultation Alerts
+      </h2>
+      <span class="profile-card__tag">Government Verified</span>
+    </div>
+
+    <p class="profile-card__desc">
+      Add your official email address to receive real-time updates for bulk order lot allocations, advance dispatch notices, and calendar invitations whenever buyers book VIP loom video consultations.
+    </p>
+
+    <div class="email-settings-box">
+      <div class="email-input-row">
+        <input
+          type="email"
+          class="email-text-input"
+          placeholder="artisan.master@kalakriti.org"
+          bind:value={email}
+          aria-label="Artisan email address"
+        />
+        <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail}>
+          Save Email
+        </Button>
+      </div>
+
+      <div class="email-pref-list">
+        <label class="email-pref-row">
+          <input type="checkbox" bind:checked={emailOrderAlerts} />
+          <span>Real-time SMS & email notifications when large buyer purchase orders are placed</span>
+        </label>
+        <label class="email-pref-row">
+          <input type="checkbox" bind:checked={emailVideoAlerts} />
+          <span>Video consultation alerts 30 minutes before booked loom sessions</span>
+        </label>
+      </div>
     </div>
   </section>
 
@@ -524,6 +736,116 @@
       {t('profile.session.signOut')}
     </Button>
   </section>
+
+  <!-- Phone Change Modal -->
+  {#if showPhoneModal}
+    <div
+      class="phone-modal-backdrop"
+      onclick={() => (showPhoneModal = false)}
+      role="presentation"
+    >
+      <div
+        class="phone-modal-card"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.key === 'Escape' && (showPhoneModal = false)}
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="phone-modal-heading"
+      >
+        <div class="phone-modal-header">
+          <h3 id="phone-modal-heading">Update Registered Mobile Number</h3>
+          <button
+            type="button"
+            class="phone-modal-close"
+            onclick={() => (showPhoneModal = false)}
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+
+        <p class="phone-modal-desc">
+          Changing your phone requires 2-factor OTP verification. In compliance with security standards, updating your number will automatically terminate all other active login sessions.
+        </p>
+
+        {#if phoneError}
+          <div class="phone-modal-error" role="alert">
+            <Icon name="warning" size="1rem" />
+            <span>{phoneError}</span>
+          </div>
+        {/if}
+
+        {#if phoneStep === 'phone'}
+          <div class="phone-modal-body">
+            <label class="phone-modal-label" for="new-phone-input">New 10-Digit Mobile Number</label>
+            <div class="phone-input-wrap">
+              <span class="prefix">+91</span>
+              <input
+                id="new-phone-input"
+                type="tel"
+                class="phone-text-field"
+                placeholder="9876543210"
+                bind:value={newPhoneInput}
+                maxlength="10"
+              />
+            </div>
+            <div class="phone-modal-actions">
+              <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onclick={requestPhoneChange}
+                loading={phoneLoading}
+                disabled={!newPhoneInput}
+              >
+                Send Verification OTP
+              </Button>
+            </div>
+          </div>
+        {:else}
+          <div class="phone-modal-body">
+            <label class="phone-modal-label" for="phone-otp-input">
+              Enter 6-Digit Verification OTP sent to {newPhoneInput}
+            </label>
+            <input
+              id="phone-otp-input"
+              type="text"
+              inputmode="numeric"
+              class="phone-otp-field"
+              placeholder="123456"
+              bind:value={phoneOtpInput}
+              maxlength="6"
+            />
+            <div class="phone-modal-actions">
+              <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')}>
+                Back
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onclick={verifyPhoneChange}
+                loading={phoneLoading}
+                disabled={!phoneOtpInput}
+              >
+                Verify & Update Mobile
+              </Button>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- Profile Image Crop & Resize Modal -->
+  <ImageCropModal
+    imageSrc={rawImageToCrop}
+    open={showCropModal}
+    oncrop={handleCroppedAvatar}
+    oncancel={handleCancelCrop}
+  />
 </div>
 
 <style>
@@ -567,6 +889,52 @@
       align-items: flex-start;
       gap: var(--k-space-5);
     }
+  }
+
+  .profile-avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--k-space-2);
+    flex-shrink: 0;
+  }
+
+  .profile-avatar-btns {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--k-space-1);
+    max-inline-size: 9rem;
+  }
+
+  .avatar-ctrl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
+    border: var(--k-hairline) solid var(--k-stone-300);
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-khadi-50);
+    color: var(--k-terracotta-800);
+    cursor: pointer;
+    transition: all var(--k-duration-fast) var(--k-ease-standard);
+  }
+
+  .avatar-ctrl-btn:hover {
+    background-color: var(--k-khadi-200);
+    border-color: var(--k-terracotta-700);
+  }
+
+  .avatar-ctrl-btn--danger {
+    color: var(--k-stone-600);
+  }
+
+  .avatar-ctrl-btn--danger:hover {
+    color: #b91c1c;
+    border-color: #fca5a5;
+    background-color: #fef2f2;
   }
 
   .profile-avatar {
@@ -1148,5 +1516,193 @@
   .session-info__badge {
     font-size: var(--k-text-xs);
     color: var(--k-neem-700);
+  }
+
+  /* Change Phone Button */
+  .change-phone-btn {
+    display: inline-block;
+    margin-inline-start: var(--k-space-2);
+    font-size: var(--k-text-xs);
+    color: var(--k-indigo-700, #364190);
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  /* Email & Notification Preferences */
+  .email-settings-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-4);
+    margin-block-start: var(--k-space-3);
+  }
+
+  .email-input-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--k-space-2);
+    align-items: center;
+  }
+
+  .email-text-input {
+    flex: 1;
+    min-inline-size: 16rem;
+    padding: var(--k-space-2) var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-radius: var(--k-radius-sm);
+    background-color: var(--k-surface-base, #ffffff);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-primary);
+  }
+
+  .email-text-input:focus {
+    outline: none;
+    border-color: var(--k-terracotta-600, #b24526);
+    box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
+  }
+
+  .email-pref-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+  }
+
+  .email-pref-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--k-space-2);
+    font-size: var(--k-text-xs);
+    color: var(--k-text-primary);
+    cursor: pointer;
+  }
+
+  .email-pref-row input[type='checkbox'] {
+    margin-block-start: 2px;
+    accent-color: var(--k-terracotta-700, #96381e);
+  }
+
+  /* Phone Change Modal */
+  .phone-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--k-space-4);
+  }
+
+  .phone-modal-card {
+    background-color: var(--k-surface-base, #ffffff);
+    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-radius: var(--k-radius-lg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    max-inline-size: 28rem;
+    inline-size: 100%;
+    padding: var(--k-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .phone-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .phone-modal-header h3 {
+    margin: 0;
+    font-size: var(--k-text-md);
+    color: var(--k-text-primary);
+  }
+
+  .phone-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--k-text-secondary);
+    line-height: 1;
+  }
+
+  .phone-modal-desc {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .phone-modal-error {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    padding: var(--k-space-2) var(--k-space-3);
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-radius: var(--k-radius-sm);
+    font-size: var(--k-text-xs);
+  }
+
+  .phone-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .phone-modal-label {
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
+    color: var(--k-text-primary);
+  }
+
+  .phone-input-wrap {
+    display: flex;
+    align-items: center;
+    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-radius: var(--k-radius-sm);
+    overflow: hidden;
+  }
+
+  .phone-input-wrap .prefix {
+    padding: var(--k-space-2) var(--k-space-3);
+    background-color: var(--k-stone-100, #f5f2ed);
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+    border-inline-end: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+  }
+
+  .phone-text-field {
+    flex: 1;
+    border: none;
+    padding: var(--k-space-2) var(--k-space-3);
+    font-size: var(--k-text-sm);
+    outline: none;
+  }
+
+  .phone-otp-field {
+    padding: var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-radius: var(--k-radius-sm);
+    font-size: var(--k-text-lg);
+    text-align: center;
+    letter-spacing: 0.5rem;
+    font-weight: var(--k-weight-bold);
+    outline: none;
+  }
+
+  .phone-otp-field:focus {
+    border-color: var(--k-terracotta-600, #b24526);
+    box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
+  }
+
+  .phone-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--k-space-2);
+    margin-block-start: var(--k-space-2);
   }
 </style>

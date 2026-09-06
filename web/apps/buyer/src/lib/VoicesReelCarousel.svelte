@@ -1,0 +1,440 @@
+<!--
+  apps/buyer/src/lib/VoicesReelCarousel.svelte
+
+  "Voices from the Looms" - Authentic artisan process clips.
+  Connects buyers directly to the hands, rhythmic soundscapes, and regional
+  languages of master weaving families. Adheres to the Kalakriti design law:
+  hairline boundaries, khadi surfaces, semantic tokens, and zero AI gloss.
+-->
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { locale } from '@kalakriti/i18n';
+  import { Dialog, Button } from '@kalakriti/ui';
+  import { Icon } from '@kalakriti/icons';
+  import { getProcessFeed, type components } from '@kalakriti/api';
+
+  type ProcessClip = components['schemas']['ProcessClip'];
+
+  const t = $derived(locale.t);
+
+  let clips = $state<ProcessClip[]>([]);
+  let activeIndex = $state<number | null>(null);
+  let isStoryOpen = $state(false);
+  let isAudioMuted = $state(true);
+  let videoEl = $state<HTMLVideoElement | null>(null);
+
+  interface StoryItem extends ProcessClip {
+    thumbnail_url?: string;
+    craft_discipline?: string;
+    cluster_origin?: string;
+  }
+
+  const FALLBACK_STORIES: StoryItem[] = [
+    {
+      listing_id: 'story-1',
+      listing_slug: 'ajrakh-indigo-stole',
+      title: '16-Stage Natural Indigo Vat Immersion',
+      artisan_name: 'Ismail Khatri',
+      thumbnail_url: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Ajrakh Print',
+      cluster_origin: 'Dhamadka, Kutch',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    },
+    {
+      listing_id: 'story-2',
+      listing_slug: 'banarasi-kadwa-silk',
+      title: 'Kadwa Pit-Loom Zari Interlocking',
+      artisan_name: 'Mohammad Kabir Ansari',
+      thumbnail_url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Kadwa Weave',
+      cluster_origin: 'Varanasi, UP',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    },
+    {
+      listing_id: 'story-3',
+      listing_slug: 'kashmir-pashmina-shawl',
+      title: 'Sozni Needle Stitching on Changthangi Wool',
+      artisan_name: 'Ghulam Nabi Mir',
+      thumbnail_url: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Sozni Needle',
+      cluster_origin: 'Srinagar, J&K',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+    },
+    {
+      listing_id: 'story-4',
+      listing_slug: 'dhokra-brass-figurine',
+      title: 'Lost-Wax Molten Bell Metal Curing',
+      artisan_name: 'Budheshwar Ghadwa',
+      thumbnail_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Lost-Wax',
+      cluster_origin: 'Bastar, CG',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
+    },
+    {
+      listing_id: 'story-5',
+      listing_slug: 'pochampally-double-ikat',
+      title: 'Tie-and-Dye Warp Tension Calculation',
+      artisan_name: 'Savitriamma Devadas',
+      thumbnail_url: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Double-Ikat',
+      cluster_origin: 'Pochampally, TG',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    },
+    {
+      listing_id: 'story-6',
+      listing_slug: 'nizamabad-black-pottery',
+      title: 'Smoke Kiln Clay Reduction Firing',
+      artisan_name: 'Ram Prakash Prajapati',
+      thumbnail_url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=300&q=80',
+      craft_discipline: 'Black Pottery',
+      cluster_origin: 'Nizamabad, UP',
+      video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+    },
+  ];
+
+  onMount(async () => {
+    try {
+      const res = await getProcessFeed();
+      if (res.clips && res.clips.length > 0) {
+        clips = res.clips;
+      } else {
+        clips = FALLBACK_STORIES;
+      }
+    } catch {
+      clips = FALLBACK_STORIES;
+    }
+  });
+
+  function openStory(index: number) {
+    activeIndex = index;
+    isStoryOpen = true;
+    isAudioMuted = true;
+    if (videoEl) {
+      videoEl.currentTime = 0;
+    }
+  }
+
+  function nextStory() {
+    if (activeIndex !== null && activeIndex < clips.length - 1) {
+      activeIndex += 1;
+    } else {
+      isStoryOpen = false;
+    }
+  }
+
+  function prevStory() {
+    if (activeIndex !== null && activeIndex > 0) {
+      activeIndex -= 1;
+    }
+  }
+
+  const activeClip = $derived(
+    activeIndex !== null && clips[activeIndex] ? clips[activeIndex] : null
+  );
+</script>
+
+<div class="voices-strip-container">
+  <div class="reels-scroller" role="region" aria-label={t('home.voices.heading')}>
+    <ul class="reels-list" role="list">
+      {#each clips as clip, i (clip.listing_id || i)}
+        {@const thumb = (clip as StoryItem).thumbnail_url}
+        {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : 'Craft')}
+        <li>
+          <button
+            type="button"
+            class="reel-card"
+            onclick={() => openStory(i)}
+            aria-label={`${t('home.voices.playStory')}: ${clip.artisan_name ?? clip.title}`}
+          >
+            <div class="reel-frame">
+              {#if thumb}
+                <img src={thumb} alt="" class="reel-thumb" loading="lazy" />
+              {:else}
+                <span class="reel-icon"><Icon name="process-video" size="1.25rem" /></span>
+                <span class="reel-initial">{(clip.artisan_name || clip.title || 'K').slice(0, 1).toUpperCase()}</span>
+              {/if}
+              <span class="reel-play-tag" aria-hidden="true">
+                <Icon name="play" size="0.65rem" />
+              </span>
+            </div>
+            <div class="reel-meta">
+              <span class="artisan-name">{clip.artisan_name || 'Master Artisan'}</span>
+              <span class="craft-discipline">{discipline}</span>
+            </div>
+          </button>
+        </li>
+      {/each}
+    </ul>
+  </div>
+</div>
+
+<!-- Accessible Dialog for Process Video -->
+{#if activeClip}
+  <Dialog bind:open={isStoryOpen} title={activeClip.title ?? 'Artisan Story'}>
+    <div class="story-dialog-body">
+      <div class="video-wrapper">
+        <video
+          bind:this={videoEl}
+          src={activeClip.video_url}
+          autoplay
+          loop
+          playsinline
+          muted={isAudioMuted}
+          controls
+          class="story-player"
+        ></video>
+      </div>
+
+      <div class="story-artisan-details">
+        <div class="artisan-headline">
+          <div>
+            <p class="artisan-title">{activeClip.artisan_name}</p>
+            <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> Verified Master Guild Loom</p>
+          </div>
+          <button
+            type="button"
+            class="audio-toggle-btn"
+            onclick={() => (isAudioMuted = !isAudioMuted)}
+          >
+            <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
+            <span>{isAudioMuted ? t('home.voices.listenAudio') : 'Mute Voice'}</span>
+          </button>
+        </div>
+
+        <div class="dialog-actions">
+          {#if activeIndex !== null && activeIndex > 0}
+            <Button variant="secondary" onclick={prevStory}>
+              <Icon name="chevron-left" />
+              <span>Previous</span>
+            </Button>
+          {/if}
+
+          {#if activeClip.listing_slug}
+            <a class="k-button k-button--primary" href={`/listing/${activeClip.listing_slug}`}>
+              <span>{t('home.voices.viewFullListing')}</span>
+              <Icon name="arrow-right" />
+            </a>
+          {/if}
+
+          {#if activeIndex !== null && activeIndex < clips.length - 1}
+            <Button variant="secondary" onclick={nextStory}>
+              <span>Next</span>
+              <Icon name="chevron-right" />
+            </Button>
+          {/if}
+        </div>
+      </div>
+    </div>
+  </Dialog>
+{/if}
+
+<style>
+  .voices-strip-container {
+    padding-block: var(--k-space-3);
+  }
+
+  .reels-scroller {
+    overflow-x: auto;
+    padding-block: var(--k-space-2);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .reels-list {
+    display: flex;
+    gap: var(--k-space-4);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    inline-size: max-content;
+  }
+
+  .reel-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--k-space-2);
+    background: none;
+    border: none;
+    padding: var(--k-space-2);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    border-radius: var(--k-radius-sm);
+    transition: background-color 0.15s ease;
+  }
+
+  .reel-card:hover {
+    background-color: var(--k-surface-raised);
+  }
+
+  .reel-card:focus-visible {
+    outline: 2px solid var(--k-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .reel-frame {
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    border-radius: var(--k-radius-full, 999px);
+    border: 2px solid var(--k-terracotta-700);
+    background-color: var(--k-surface-base);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--k-terracotta-700);
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 2px;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
+  }
+
+  .reel-card:hover .reel-frame {
+    transform: scale(1.05);
+    border-color: var(--k-terracotta-800);
+  }
+
+  .reel-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--k-radius-full, 999px);
+    display: block;
+  }
+
+  .reel-play-tag {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background-color: var(--k-terracotta-700);
+    color: var(--k-khadi-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--k-surface-base);
+    z-index: 1;
+  }
+
+  .reel-icon {
+    opacity: 0.8;
+  }
+
+  .reel-initial {
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-bold);
+  }
+
+  .reel-meta {
+    display: flex;
+    flex-direction: column;
+    max-inline-size: 6rem;
+  }
+
+  .artisan-name {
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-semibold);
+    color: var(--k-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .craft-discipline {
+    font-size: 0.7rem;
+    color: var(--k-text-secondary);
+  }
+
+  /* Story Modal Layout */
+  .story-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-4);
+  }
+
+  .video-wrapper {
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: var(--k-ink-950);
+    border-radius: var(--k-radius-sm);
+    overflow: hidden;
+  }
+
+  .story-player {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .story-artisan-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .artisan-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--k-space-2);
+  }
+
+  .artisan-title {
+    font-family: var(--k-font-display);
+    font-size: var(--k-text-lg);
+    color: var(--k-text-primary);
+    margin: 0;
+  }
+
+  .artisan-badge-tag {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-1);
+    font-size: var(--k-text-xs);
+    color: var(--k-accent-primary-text);
+    margin: var(--k-space-1) 0 0 0;
+  }
+
+  .audio-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-1);
+    padding: var(--k-space-1) var(--k-space-2);
+    border: var(--k-hairline) solid var(--k-border-interactive);
+    border-radius: var(--k-radius-sm);
+    background-color: var(--k-surface-base);
+    color: var(--k-text-primary);
+    font-size: var(--k-text-xs);
+    cursor: pointer;
+  }
+
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--k-space-2);
+    padding-block-start: var(--k-space-2);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .k-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    padding: var(--k-space-2) var(--k-space-4);
+    border-radius: var(--k-radius-sm);
+    font-size: var(--k-text-sm);
+    font-weight: var(--k-weight-semibold);
+    text-decoration: none;
+  }
+
+  .k-button--primary {
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+  }
+</style>

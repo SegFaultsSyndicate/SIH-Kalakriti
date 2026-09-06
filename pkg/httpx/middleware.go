@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -36,13 +37,15 @@ type Config struct {
 	// RequestTimeout bounds how long a handler may run before the request
 	// context is cancelled and 503 is returned. Zero disables the timeout.
 	RequestTimeout time.Duration
+	// DisableHSTS disables the Strict-Transport-Security header when true (e.g. local plaintext HTTP testing).
+	DisableHSTS bool
+	// DisableCSRF disables CSRF protection when true (e.g. testing).
+	DisableCSRF bool
 }
 
 // Mux builds a *gin.Engine with the standard middleware stack pre-mounted:
-// request id -> panic recovery -> request-scoped logger -> access log ->
-// CORS -> timeout. Routes are added by the caller. gin.New() (not
-// gin.Default()) so this stack is the only one running — gin's own built-in
-// logger/recovery middleware would just duplicate Recoverer/AccessLog below.
+// request id -> security headers (HSTS) -> panic recovery -> request-scoped logger -> access log ->
+// CORS -> CSRF -> timeout.
 func Mux(cfg Config) *gin.Engine {
 	base := cfg.Logger
 	if base == nil {
@@ -52,11 +55,15 @@ func Mux(cfg Config) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(Wrap(RequestID(base)))
+	r.Use(Wrap(SecurityHeaders(!cfg.DisableHSTS)))
 	r.Use(Wrap(Recoverer(base)))
 	r.Use(Wrap(logger.Middleware(base)))
 	r.Use(Wrap(AccessLog(base)))
 	if len(cfg.AllowedOrigins) > 0 {
 		r.Use(Wrap(CORS(cfg)))
+		if !cfg.DisableCSRF {
+			r.Use(Wrap(CSRFProtection(cfg, base)))
+		}
 	}
 	if cfg.RequestTimeout > 0 {
 		r.Use(Wrap(Timeout(cfg.RequestTimeout)))
@@ -268,3 +275,77 @@ func ContextWithAuthClaims(ctx context.Context, claims any) context.Context {
 func AuthClaims(ctx context.Context) any {
 	return ctx.Value(authClaimsKey)
 }
+
+// SecurityHeaders injects defense-in-depth HTTP security headers into every response.
+// HSTS enforces modern browser TLS, X-Content-Type-Options blocks MIME-sniffing attacks,
+// and X-Frame-Options blocks clickjacking.
+func SecurityHeaders(enableHSTS bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if enableHSTS {
+				w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+			}
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+			w.Header().Set("X-Frame-Options", "DENY")
+			w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+			w.Header().Set("Permissions-Policy", "camera=(self), microphone=(self), geolocation=()")
+			w.Header().Set("X-XSS-Protection", "0")
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// CSRFProtection guards mutating requests (POST, PUT, PATCH, DELETE) against Cross-Site Request Forgery.
+// It verifies that cross-site requests have an origin matching the configured allowlist or a valid
+// custom X-CSRF-Token header.
+func CSRFProtection(cfg Config, base *slog.Logger) func(http.Handler) http.Handler {
+	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))
+	for _, o := range cfg.AllowedOrigins {
+		allowed[o] = struct{}{}
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Safe methods don't mutate state
+			if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Check Origin or Referer for mutating requests
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				if _, ok := allowed[origin]; !ok && len(allowed) > 0 {
+					logger.FromContext(r.Context(), base).Warn("csrf validation failure: untrusted origin", "origin", origin, "path", r.URL.Path)
+					http.Error(w, `{"error":"forbidden: cross-site request forgery protection"}`, http.StatusForbidden)
+					return
+				}
+			} else if referer := r.Header.Get("Referer"); referer != "" {
+				if u, err := url.Parse(referer); err == nil && u.Host != "" {
+					refOrigin := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+					if _, ok := allowed[refOrigin]; !ok && len(allowed) > 0 {
+						logger.FromContext(r.Context(), base).Warn("csrf validation failure: untrusted referer", "referer", referer, "path", r.URL.Path)
+						http.Error(w, `{"error":"forbidden: cross-site request forgery protection"}`, http.StatusForbidden)
+						return
+					}
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// SetSecureCookie configures an HTTP cookie with strict security flags: HttpOnly, Secure, SameSite=Strict.
+func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int, isSecure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   isSecure,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+

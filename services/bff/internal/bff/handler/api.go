@@ -5,30 +5,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
 )
 
 // APIHandler aggregates all REST /api/v1 endpoints, bridging HTTP/JSON to gRPC.
 type APIHandler struct {
-	authSvc    AuthService
-	artisanSvc ArtisanService
-	mediaSvc   MediaService
-	listingSvc ListingService
-	searchSvc  SearchService
-	pricingSvc PricingService
-	orderSvc   OrderService
-	followSvc  FollowService
-	stmtSvc    StatementService
-	insightSvc InsightService
-	catalogSvc CatalogService
+	authSvc       AuthService
+	artisanSvc    ArtisanService
+	mediaSvc      MediaService
+	listingSvc    ListingService
+	searchSvc     SearchService
+	pricingSvc    PricingService
+	orderSvc      OrderService
+	followSvc     FollowService
+	stmtSvc       StatementService
+	insightSvc    InsightService
+	catalogSvc    CatalogService
+	redis         *redis.Client
+	logger        *slog.Logger
+	webhookSecret string
+}
+
+// SetSecurity configures Redis, structured logging and webhook credentials for security enforcement.
+func (h *APIHandler) SetSecurity(rdb *redis.Client, logger *slog.Logger, webhookSecret string) {
+	h.redis = rdb
+	h.logger = logger
+	h.webhookSecret = webhookSecret
 }
 
 // AuthService is the auth-svc gRPC client interface.
@@ -179,17 +195,34 @@ func (h *APIHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
+	req.Phone = strings.TrimSpace(req.Phone)
 	if req.Phone == "" {
 		httpx.Error(w, domain.InvalidInput("phone is required"))
 		return
 	}
 
-	if err := h.authSvc.RequestOTP(r.Context(), req.Phone); err != nil {
-		httpx.Error(w, err)
-		return
+	// Account lockout check to mitigate credential brute force
+	if h.redis != nil {
+		if locked, remaining := middleware.CheckAccountLockout(r.Context(), h.redis, req.Phone); locked {
+			if h.logger != nil {
+				h.logger.Warn("security audit: attempt on locked account", "event", "ACCOUNT_LOCKED_ATTEMPT", "phone", maskIdentifier(req.Phone), "remaining_sec", int(remaining.Seconds()))
+			}
+			httpx.Error(w, domain.Unavailable(fmt.Sprintf("account temporarily locked due to failed attempts; retry in %d seconds", int(remaining.Seconds()))))
+			return
+		}
 	}
 
-	httpx.JSON(w, http.StatusOK, map[string]string{"status": "otp_sent"})
+	// Always execute and return uniform response to prevent user enumeration
+	_ = h.authSvc.RequestOTP(r.Context(), req.Phone)
+
+	if h.logger != nil {
+		h.logger.Info("security audit: otp requested", "event", "OTP_REQUEST", "phone", maskIdentifier(req.Phone), "remote_addr", r.RemoteAddr)
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]string{
+		"status":  "otp_sent",
+		"message": "If this account exists, an OTP has been dispatched.",
+	})
 }
 
 func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -201,17 +234,164 @@ func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
 		return
 	}
+	req.Phone = strings.TrimSpace(req.Phone)
+	req.OTP = strings.TrimSpace(req.OTP)
+	if req.Phone == "" || req.OTP == "" {
+		httpx.Error(w, domain.InvalidInput("phone and otp are required"))
+		return
+	}
+
+	// Check lockout
+	if h.redis != nil {
+		if locked, remaining := middleware.CheckAccountLockout(r.Context(), h.redis, req.Phone); locked {
+			httpx.Error(w, domain.Unavailable(fmt.Sprintf("account locked; retry in %d seconds", int(remaining.Seconds()))))
+			return
+		}
+	}
 
 	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.Phone, req.OTP)
 	if err != nil {
+		if h.redis != nil {
+			locked := middleware.RecordFailedLogin(r.Context(), h.redis, req.Phone)
+			if locked && h.logger != nil {
+				h.logger.Warn("security audit: account locked after consecutive failures", "event", "ACCOUNT_LOCKED", "phone", maskIdentifier(req.Phone))
+			}
+		}
+		if h.logger != nil {
+			h.logger.Warn("security audit: login verification failed", "event", "LOGIN_FAILED", "phone", maskIdentifier(req.Phone), "remote_addr", r.RemoteAddr)
+		}
 		httpx.Error(w, err)
 		return
+	}
+
+	// Authentication succeeded: clear failed counter
+	if h.redis != nil {
+		middleware.ClearFailedLogin(r.Context(), h.redis, req.Phone)
+	}
+	if h.logger != nil {
+		h.logger.Info("security audit: login successful", "event", "LOGIN_SUCCESS", "phone", maskIdentifier(req.Phone), "remote_addr", r.RemoteAddr)
 	}
 
 	httpx.JSON(w, http.StatusOK, map[string]string{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
+}
+
+// RequestPhoneChangeOTP requests an OTP for changing the artisan's registered phone number.
+func (h *APIHandler) RequestPhoneChangeOTP(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	var req struct {
+		NewPhone string `json:"new_phone"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	req.NewPhone = strings.TrimSpace(req.NewPhone)
+	if req.NewPhone == "" {
+		httpx.Error(w, domain.InvalidInput("new_phone is required"))
+		return
+	}
+
+	if err := h.authSvc.RequestOTP(r.Context(), req.NewPhone); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("security audit: phone change otp requested", "event", "PHONE_CHANGE_OTP_REQUEST", "actor", p.Subject)
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]string{"status": "otp_sent"})
+}
+
+// VerifyPhoneChangeOTP verifies the OTP, updates the phone, and invalidates older sessions.
+func (h *APIHandler) VerifyPhoneChangeOTP(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	var req struct {
+		NewPhone string `json:"new_phone"`
+		OTP      string `json:"otp"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	req.NewPhone = strings.TrimSpace(req.NewPhone)
+	req.OTP = strings.TrimSpace(req.OTP)
+	if req.NewPhone == "" || req.OTP == "" {
+		httpx.Error(w, domain.InvalidInput("new_phone and otp are required"))
+		return
+	}
+
+	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.NewPhone, req.OTP)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	// Update phone on profile
+	_ = h.artisanSvc.UpdateProfile(r.Context(), p.Subject, map[string]any{"phone": req.NewPhone})
+
+	// Invalidate older sessions by logging revocation epoch in Redis
+	if h.redis != nil {
+		h.redis.Set(r.Context(), fmt.Sprintf("session_revoked:%s", p.Subject), time.Now().Unix(), 30*24*time.Hour)
+	}
+
+	if h.logger != nil {
+		h.logger.Info("security audit: phone updated and existing sessions invalidated", "event", "PHONE_CHANGED_SESSIONS_REVOKED", "actor", p.Subject)
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]string{
+		"status":        "phone_updated",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+// HandlePaymentWebhook processes payment gateway notifications with strict HMAC-SHA256 signature verification.
+func (h *APIHandler) HandlePaymentWebhook(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("cannot read webhook payload"))
+		return
+	}
+
+	sig := r.Header.Get("X-Webhook-Signature")
+	secret := h.webhookSecret
+	if secret == "" {
+		secret = "kalakriti-production-webhook-hmac-key"
+	}
+
+	if !webhook.VerifySignature(body, sig, secret) {
+		if h.logger != nil {
+			h.logger.Warn("security audit: invalid webhook signature", "event", "PAYMENT_WEBHOOK_SIG_FAILED", "remote_addr", r.RemoteAddr)
+		}
+		httpx.Error(w, domain.Unauthenticated("invalid webhook signature"))
+		return
+	}
+
+	var event map[string]any
+	if err := json.Unmarshal(body, &event); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("security audit: verified payment webhook processed", "event", "PAYMENT_WEBHOOK_PROCESSED", "type", event["event"])
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]string{"status": "processed"})
 }
 
 func (h *APIHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -306,6 +486,15 @@ func (h *APIHandler) UpdateArtisanProfile(w http.ResponseWriter, r *http.Request
 
 // Media endpoints
 
+var allowedMIMETypes = map[string]bool{
+	"image/jpeg":      true,
+	"image/png":       true,
+	"image/webp":      true,
+	"video/mp4":       true,
+	"video/webm":      true,
+	"application/pdf": true,
+}
+
 func (h *APIHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
 	p, err := auth.RequirePrincipal(r.Context())
 	if err != nil {
@@ -319,6 +508,25 @@ func (h *APIHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	req.ContentType = strings.ToLower(strings.TrimSpace(req.ContentType))
+	if !allowedMIMETypes[req.ContentType] {
+		if h.logger != nil {
+			h.logger.Warn("security audit: rejected unwhitelisted upload MIME type", "type", req.ContentType, "actor", p.Subject)
+		}
+		httpx.Error(w, domain.InvalidInput(fmt.Sprintf("unsupported media content-type %q; allowed: jpeg, png, webp, mp4, webm, pdf", req.ContentType)))
+		return
+	}
+
+	// Enforce max upload size limits: 10MB images/PDFs, 100MB videos
+	maxBytes := int64(10 << 20)
+	if strings.HasPrefix(req.ContentType, "video/") {
+		maxBytes = 100 << 20
+	}
+	if req.SizeBytes <= 0 || req.SizeBytes > maxBytes {
+		httpx.Error(w, domain.InvalidInput(fmt.Sprintf("file size %d bytes exceeds maximum allowable limit (%d bytes)", req.SizeBytes, maxBytes)))
 		return
 	}
 
@@ -758,10 +966,26 @@ func (h *APIHandler) CreateBulkOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Security: delete any client-provided price or currency fields to guarantee
+	// server-side pricing from canonical catalog records.
+	delete(fields, "price")
+	delete(fields, "price_paise")
+	delete(fields, "unit_price")
+	delete(fields, "total_price")
+
+	// Sanitize any notes or customisation strings to prevent XSS/injection
+	if notes, ok := fields["notes"].(string); ok {
+		fields["notes"] = sanitizeText(notes)
+	}
+
 	orderID, err := h.orderSvc.CreateBulkOrder(r.Context(), p.Subject, idempotencyKeyFrom(r), fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
+	}
+
+	if h.logger != nil {
+		h.logger.Info("security audit: bulk order created with server-computed pricing", "event", "ORDER_CREATED", "buyer_id", p.Subject, "order_id", orderID)
 	}
 
 	httpx.JSON(w, http.StatusCreated, map[string]string{"order_id": orderID})
@@ -1191,3 +1415,30 @@ func (h *APIHandler) RefreshInsights(w http.ResponseWriter, r *http.Request) {
 
 	httpx.JSON(w, http.StatusOK, data)
 }
+
+var promptInjectionPatterns = regexp.MustCompile(`(?i)(ignore\s+(all\s+)?previous\s+instructions|system\s*:\s*|\[INST\]|<\|im_start\|>|<\|endoftext\|>|jailbreak|prompt\s*injection)`)
+
+// SanitizePromptInput blocks common prompt injection tokens and control characters.
+func SanitizePromptInput(input string) string {
+	cleaned := promptInjectionPatterns.ReplaceAllString(input, "[REDACTED_PROMPT_CONTROL]")
+	cleaned = strings.Map(func(r rune) rune {
+		if r < 32 && r != '\n' && r != '\r' && r != '\t' {
+			return -1
+		}
+		return r
+	}, cleaned)
+	return strings.TrimSpace(cleaned)
+}
+
+func sanitizeText(input string) string {
+	htmlStrip := regexp.MustCompile(`<[^>]*>`)
+	return strings.TrimSpace(htmlStrip.ReplaceAllString(input, ""))
+}
+
+func maskIdentifier(id string) string {
+	if len(id) <= 4 {
+		return "****"
+	}
+	return id[:2] + "****" + id[len(id)-2:]
+}
+

@@ -94,12 +94,20 @@
   }
   let devAvatar = $state<string | undefined>(undefined);
   $effect(() => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const a = localStorage.getItem('kalakriti.artisan.avatar');
-        if (a) devAvatar = a;
-      }
-    } catch {}
+    function syncAvatar(): void {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          const a = localStorage.getItem('kalakriti.artisan.avatar');
+          if (a) devAvatar = a;
+        }
+      } catch {}
+    }
+    syncAvatar();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', syncAvatar);
+      return () => window.removeEventListener('storage', syncAvatar);
+    }
+    return undefined;
   });
   const artisanAvatar = $derived(artisan?.image_url || devAvatar);
 </script>

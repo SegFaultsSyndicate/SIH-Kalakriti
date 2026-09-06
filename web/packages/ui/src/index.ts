@@ -60,3 +60,5 @@ export { default as Stepper } from './Stepper.svelte';
 export { default as SpeakButton } from './SpeakButton.svelte';
 export { default as Keypad } from './Keypad.svelte';
 export { default as OtpInput } from './OtpInput.svelte';
+export { default as Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs.svelte';
+

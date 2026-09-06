@@ -44,15 +44,15 @@
   const t = $derived(locale.t);
   const terms = $derived(listing.made_to_order_terms);
   const minOrder = $derived(listing.min_order_quantity ?? 1);
-
-  let quantity = $state(minOrder);
+  let quantity = $state(1);
   let notes = $state('');
   let customisations = $state<Record<string, string>>({});
-  let neededBy = $state(defaultNeededBy(terms?.lead_time_days));
+  let neededBy = $state('');
   let submitting = $state(false);
 
   $effect(() => {
     quantity = minOrder;
+    neededBy = defaultNeededBy(terms?.lead_time_days);
   });
 
   function defaultNeededBy(leadDays: number | undefined): string {

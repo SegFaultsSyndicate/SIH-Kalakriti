@@ -33,7 +33,7 @@
 
   const t = $derived(locale.t);
 
-  let q = $state(page.url.searchParams.get('q') ?? '');
+  let q = $state(page.url.searchParams.get('q') ?? page.url.searchParams.get('category') ?? '');
   let giOnly = $state(page.url.searchParams.get('gi_tagged') === 'true');
   let madeToOrder = $state(page.url.searchParams.get('made_to_order') === 'true');
   let material = $state(page.url.searchParams.get('material') ?? '');
@@ -184,6 +184,16 @@
   }
 
   $effect(() => {
+    const urlQ = page.url.searchParams.get('q') ?? page.url.searchParams.get('category') ?? '';
+    const urlGi = page.url.searchParams.get('gi_tagged') === 'true';
+    const urlMto = page.url.searchParams.get('made_to_order') === 'true';
+    const urlMat = page.url.searchParams.get('material') ?? '';
+
+    q = urlQ;
+    giOnly = urlGi;
+    madeToOrder = urlMto;
+    material = urlMat;
+
     void runSearch();
   });
 </script>

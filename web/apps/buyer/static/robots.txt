@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /orders/
+Disallow: /assets/
+
+Sitemap: https://buyer.kalakriti.gov.in/sitemap.xml

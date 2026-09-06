@@ -37,6 +37,7 @@
     ToastRegion,
     RouteAnnouncer,
     AccessibilityControl,
+    LanguageSelector,
     a11y,
   } from '@kalakriti/ui';
   import { ReadScreen } from '@kalakriti/voice';
@@ -149,6 +150,7 @@
         <span>{network.online ? t('network.online') : t('network.offline')}</span>
       </p>
 
+      <LanguageSelector />
       <AccessibilityControl statementHref="/accessibility" />
     </header>
   {/if}

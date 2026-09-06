@@ -22,7 +22,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { Button, Textarea, showToast } from '@kalakriti/ui';
+  import { Button, Textarea, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { session, listListings, getListingSummary, suspendListing, reinstateListing, ApiError, messageKeyFor } from '@kalakriti/api';
 
@@ -184,7 +184,12 @@
   <p class="moderation-note">{t('moderation.humanDecisionNote')}</p>
 
   {#if loadError}<p role="alert" class="moderation-error">{loadError}</p>{/if}
-  {#if loading}<p role="status">{t('insights.loading')}</p>{/if}
+  {#if loading}
+    <div style="margin-block: var(--k-space-4); display: flex; flex-direction: column; gap: var(--k-space-3);">
+      <Skeleton shape="card" height="10rem" />
+      <Skeleton shape="card" height="10rem" />
+    </div>
+  {/if}
 
   <ul class="moderation-list">
     {#each items as item (item.id)}

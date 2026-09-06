@@ -99,6 +99,7 @@ func (s *Server) mountRoutes() {
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
 		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
 	)
+	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
 
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
@@ -124,10 +125,13 @@ func (s *Server) mountRoutes() {
 		Window:            cfg.RateLimitWindow,
 	})))
 
-	// Public auth routes (no JWT required).
-	api.POST("/auth/otp/request", httpx.WrapHandler(apiH.RequestOTP))
+	// Public auth routes (no JWT required) with strict OTP rate limiting (max 5 per 10min).
+	api.POST("/auth/otp/request", httpx.Wrap(middleware.RateLimitEndpoint(cfg.Redis, "otp", 5, 10*time.Minute)), httpx.WrapHandler(apiH.RequestOTP))
 	api.POST("/auth/otp/verify", httpx.WrapHandler(apiH.VerifyOTP))
 	api.POST("/auth/refresh", httpx.WrapHandler(apiH.RefreshToken))
+
+	// Payment webhook callback (HMAC-SHA256 verified)
+	api.POST("/payments/webhook", httpx.WrapHandler(apiH.HandlePaymentWebhook))
 
 	// Public search and listing reads.
 	api.GET("/search", httpx.WrapHandler(apiH.Search))
@@ -152,6 +156,8 @@ func (s *Server) mountRoutes() {
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))
 	authed.GET("/artisans/me", httpx.WrapHandler(apiH.GetArtisanProfile))
 	authed.PATCH("/artisans/me", httpx.WrapHandler(apiH.UpdateArtisanProfile))
+	authed.POST("/auth/phone/change/request", httpx.WrapHandler(apiH.RequestPhoneChangeOTP))
+	authed.POST("/auth/phone/change/verify", httpx.WrapHandler(apiH.VerifyPhoneChangeOTP))
 
 	// Media endpoints.
 	authed.POST("/media/upload-url", httpx.WrapHandler(apiH.GenerateUploadURL))

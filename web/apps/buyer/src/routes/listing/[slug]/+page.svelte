@@ -24,9 +24,8 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale } from '@kalakriti/i18n';
-  import type { DntTerm } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm } from '@kalakriti/ui';
+  import { locale, type DntTerm } from '@kalakriti/i18n';
+  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getListingSummary, type components } from '@kalakriti/api';
   import PurchaseForm from '$lib/PurchaseForm.svelte';
@@ -42,15 +41,23 @@
   let devAvatar = $state<string | undefined>(undefined);
 
   $effect(() => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const a = localStorage.getItem('kalakriti.artisan.avatar');
-        if (a) devAvatar = a;
-      }
-    } catch {}
+    function syncAvatar(): void {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          const a = localStorage.getItem('kalakriti.artisan.avatar');
+          if (a) devAvatar = a;
+        }
+      } catch {}
+    }
+    syncAvatar();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', syncAvatar);
+      return () => window.removeEventListener('storage', syncAvatar);
+    }
+    return undefined;
   });
 
-  const artisanAvatar = $derived(listing?.artisan_image_url || devAvatar);
+  const artisanAvatar = $derived((listing as Record<string, unknown> | undefined)?.artisan_image_url as string | undefined || devAvatar);
 
   $effect(() => {
     const id = listingId;
@@ -92,6 +99,35 @@
       : undefined,
   );
 
+  const breadcrumbItems = $derived<BreadcrumbItem[]>([
+    { label: t('nav.home') || 'Home', href: '/' },
+    {
+      label: listing?.craft_name ?? 'Craft Corridor',
+      href: listing?.craft_slug ? `/craft/${listing.craft_slug}` : '/catalog',
+    },
+    { label: title || 'Listing' },
+  ]);
+
+  let copied = $state(false);
+
+  function handleShare(): void {
+    const fullUrl = typeof window !== 'undefined' ? window.location.href : page.url.href;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard
+        .writeText(fullUrl)
+        .then(() => {
+          copied = true;
+          setTimeout(() => {
+            copied = false;
+          }, 2000);
+          showToast({ message: 'Artisan piece link copied to clipboard!', variant: 'success' });
+        })
+        .catch(() => {
+          showToast({ message: 'Failed to copy link', variant: 'error' });
+        });
+    }
+  }
+
   const jsonLd = $derived(
     listing
       ? JSON.stringify({
@@ -117,7 +153,17 @@
 </script>
 
 <svelte:head>
-  <title>{title ? `${title} — ${t('app.name')}` : t('app.name')}</title>
+  <title>{title ? `${title} — Handcrafted by ${listing?.artisan_name ?? 'Master Artisan'} | Kalakriti` : `Authentic Heritage Craft | ${t('app.name')}`}</title>
+  <meta name="description" content={description ? description.slice(0, 160) : `Discover ${title || 'handcrafted artisan works'} by ${listing?.artisan_name ?? 'certified artisans'} on Kalakriti.`} />
+  <meta property="og:title" content={title ? `${title} — Handcrafted by ${listing?.artisan_name ?? 'Master Artisan'}` : 'Authentic Handcrafted Heritage'} />
+  <meta property="og:description" content={description ? description.slice(0, 200) : 'Authentic GI-certified handcrafted piece direct from verified artisan looms.'} />
+  <meta property="og:image" content={listing?.image_url ?? 'https://kalakriti.gov.in/og-craft.jpg'} />
+  <meta property="og:type" content="product" />
+  <meta property="og:url" content={page.url.href} />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title ? `${title} — Handcrafted by ${listing?.artisan_name ?? 'Master Artisan'}` : 'Authentic Handcrafted Heritage'} />
+  <meta name="twitter:description" content={description ? description.slice(0, 200) : 'Authentic GI-certified handcrafted piece direct from verified artisan looms.'} />
+  <meta name="twitter:image" content={listing?.image_url ?? 'https://kalakriti.gov.in/og-craft.jpg'} />
   {#if listing}
     {@html `<script type="application/ld+json">${jsonLd}<\/script>`}
   {/if}
@@ -128,17 +174,22 @@
 {:else if !listing}
   <EmptyState illustration="empty-error" heading={t('listing.notFound')} />
 {:else}
-  <div class="listing">
-    <div class="listing__gallery">
-      <div class="listing__stage">
-        {#if activeMedia?.kind === 'VIDEO'}
-          <video src={activeMedia.url} controls playsinline class="listing__stage-media">
-            <track kind="captions" />
-          </video>
-        {:else if activeMedia?.url}
-          <img src={activeMedia.url} alt={title} class="listing__stage-media" />
-        {/if}
-      </div>
+  <div class="listing-page-wrap">
+    <div class="listing-breadcrumbs-bar">
+      <Breadcrumbs items={breadcrumbItems} />
+    </div>
+
+    <div class="listing">
+      <div class="listing__gallery">
+        <div class="listing__stage">
+          {#if activeMedia?.kind === 'VIDEO'}
+            <video src={activeMedia.url} controls playsinline class="listing__stage-media">
+              <track kind="captions" />
+            </video>
+          {:else if activeMedia?.url}
+            <img src={activeMedia.url} alt={title ? `${title} — Authentic craft photo` : 'Craft piece view'} class="listing__stage-media" />
+          {/if}
+        </div>
       {#if media.length > 1}
         <div class="listing__thumbs" role="tablist" aria-label={t('listing.gallery.processVideo')}>
           {#each media as item, index (index)}
@@ -153,7 +204,7 @@
               {#if item.kind === 'VIDEO'}
                 <span class="listing__thumb-video"><Icon name="process-video" title={t('listing.gallery.processVideo')} /></span>
               {:else if item.url}
-                <img src={item.url} alt="" />
+                <img src={item.url} alt={title ? `${title} photo ${index + 1}` : `Photo ${index + 1}`} />
               {/if}
             </button>
           {/each}
@@ -162,13 +213,36 @@
     </div>
 
     <div class="listing__info">
-      <p class="listing__craft">
-        {#if craftTerm}<CraftTerm term={craftTerm} />{:else}{listing.craft_name}{/if}
-        {#if listing.gi_certified}
-          <span class="listing__gi-badge"><Icon name="gi-tagged" />{t('listing.giBadge')}</span>
-        {/if}
-      </p>
+      <div class="listing__top-row">
+        <p class="listing__craft">
+          {#if craftTerm}<CraftTerm term={craftTerm} />{:else}{listing.craft_name}{/if}
+          {#if listing.gi_certified}
+            <span class="listing__gi-badge"><Icon name="gi-tagged" />{t('listing.giBadge')}</span>
+          {/if}
+        </p>
+
+        <button
+          type="button"
+          class="listing__share-btn"
+          onclick={handleShare}
+          title="Share this authentic craft piece"
+          aria-label="Share this listing"
+        >
+          <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
+          <span>{copied ? 'Copied!' : 'Share'}</span>
+        </button>
+      </div>
+
       <h1>{title}</h1>
+
+      <!-- 24-Hour Response Time Promise -->
+      <div class="listing__promise-card">
+        <Icon name="verified-artisan" size="1.25rem" />
+        <div class="listing__promise-copy">
+          <strong>24-Hour Artisan Response Guarantee</strong>
+          <span>Direct weaver communication • No middlemen • Verified GI Registry</span>
+        </div>
+      </div>
       {#if listing.artisan_name}
         <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title="View artisan profile">
           <div class="listing__artisan-avatar">
@@ -259,6 +333,26 @@
       </section>
     </div>
   </div>
+
+  <!-- Sticky Mobile CTA Dock -->
+  <aside class="sticky-mobile-dock" aria-label="Quick order dock">
+    <div class="sticky-mobile-dock__price">
+      <span class="dock-label">{madeToOrder ? 'Advance Split' : 'Direct Price'}</span>
+      <span class="dock-amount"><Money paise={listing.price?.amount_paise ?? 0} /></span>
+    </div>
+    <button
+      type="button"
+      class="sticky-mobile-dock__action"
+      onclick={() => {
+        const form = document.querySelector('.listing__info');
+        form?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <Icon name={madeToOrder ? 'made-to-order' : 'ready-stock'} size="1rem" />
+      <span>{madeToOrder ? 'Commission Piece' : 'Acquire Now'}</span>
+    </button>
+  </aside>
+</div>
 {/if}
 
 <style>
@@ -507,6 +601,133 @@
   @media (min-width: 60rem) {
     .listing {
       grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .listing-page-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .listing-breadcrumbs-bar {
+    margin-block-end: var(--k-space-2);
+  }
+
+  .listing__top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-2);
+  }
+
+  .listing__share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-1);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
+    padding: var(--k-space-1) var(--k-space-2);
+    border-radius: var(--k-radius-sm);
+    background-color: var(--k-surface-raised);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    color: var(--k-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .listing__share-btn:hover {
+    color: var(--k-terracotta-700, #96381e);
+    border-color: var(--k-terracotta-500, #c45b37);
+  }
+
+  .listing__promise-card {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-3);
+    padding: var(--k-space-3);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-khadi-100, #fcf9f5);
+    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    margin-block: var(--k-space-2) var(--k-space-3);
+    color: var(--k-text-primary);
+  }
+
+  .listing__promise-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: var(--k-text-xs);
+  }
+
+  .listing__promise-copy strong {
+    color: var(--k-terracotta-800, #7a2010);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  .listing__promise-copy span {
+    color: var(--k-text-secondary);
+  }
+
+  /* Sticky Mobile CTA Dock */
+  .sticky-mobile-dock {
+    display: none;
+  }
+
+  @media (max-width: 48rem) {
+    .sticky-mobile-dock {
+      position: fixed;
+      inset-block-end: 0;
+      inset-inline: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--k-space-3);
+      padding: var(--k-space-3) var(--k-space-4);
+      padding-block-end: calc(var(--k-space-3) + env(safe-area-inset-bottom, 0px));
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .sticky-mobile-dock__price {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dock-label {
+      font-size: var(--k-text-xs);
+      color: var(--k-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: var(--k-tracking-wide);
+    }
+
+    .dock-amount {
+      font-size: var(--k-text-lg);
+      font-weight: var(--k-weight-bold);
+      color: var(--k-text-primary);
+    }
+
+    .sticky-mobile-dock__action {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--k-space-2);
+      padding: var(--k-space-2) var(--k-space-4);
+      border-radius: var(--k-radius-md);
+      background-color: var(--k-terracotta-700, #96381e);
+      color: #ffffff;
+      font-weight: var(--k-weight-semibold);
+      font-size: var(--k-text-sm);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(150, 56, 30, 0.3);
+    }
+
+    .sticky-mobile-dock__action:active {
+      transform: scale(0.98);
     }
   }
 </style>

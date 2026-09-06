@@ -6,7 +6,7 @@
 import type { Messages } from './en';
 
 export const gu: Partial<Messages> = {
-  'app.name': 'કલાવૃંદ (કલાવૃત્તિ)',
+  'app.name': 'કલાકૃતિ',
   'app.tagline': 'હસ્તકળા, સત્યતા અને પારદર્શિતા સાથે',
   'app.ministry': 'સામાજિક ન્યાય અને અધિકારીતા મંત્રાલય, ભારત સરકાર',
 

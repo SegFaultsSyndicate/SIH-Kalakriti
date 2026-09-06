@@ -16,7 +16,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { Button, Input, FieldGroup, showToast } from '@kalakriti/ui';
+  import { Button, Input, FieldGroup, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import {
     session,
@@ -298,6 +298,13 @@
 
   {#if loadError}
     <p role="alert" class="insights-error">{loadError}</p>
+  {/if}
+
+  {#if loading}
+    <div style="margin-block: var(--k-space-4); display: flex; flex-direction: column; gap: var(--k-space-3);">
+      <Skeleton shape="card" height="14rem" />
+      <Skeleton shape="card" height="14rem" />
+    </div>
   {/if}
 
   <section class="insights-panel insights-panel--dying" aria-labelledby="dying-craft-heading">

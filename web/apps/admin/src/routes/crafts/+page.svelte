@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { Button, Input, FieldGroup, showToast } from '@kalakriti/ui';
+  import { Button, Input, FieldGroup, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { session, listCrafts, refreshCraftIndex, ApiError, messageKeyFor } from '@kalakriti/api';
 
@@ -204,7 +204,13 @@
 </FieldGroup>
 
 {#if loadError}<p role="alert" class="crafts-error">{loadError}</p>{/if}
-{#if loading}<p role="status">{t('insights.loading')}</p>{/if}
+{#if loading}
+  <div class="crafts-skeletons">
+    <Skeleton shape="card" height="5rem" />
+    <Skeleton shape="card" height="5rem" />
+    <Skeleton shape="card" height="5rem" />
+  </div>
+{/if}
 
 <ul class="crafts-list">
   {#each filtered as craft (craft.id)}

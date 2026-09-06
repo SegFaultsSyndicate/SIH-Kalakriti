@@ -16,7 +16,7 @@
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { Stepper, SpeakButton } from '@kalakriti/ui';
+  import { Stepper, SpeakButton, LanguageSelector } from '@kalakriti/ui';
 
   interface Props {
     /** 0-indexed. */
@@ -48,9 +48,15 @@
     current={index}
   />
 
-  <button type="button" class="register-step__back" onclick={() => goto(backHref)}>
-    {t('action.back')}
-  </button>
+  <div class="register-step__top-bar">
+    <button type="button" class="register-step__back" onclick={() => goto(backHref)}>
+      ← {t('action.back')}
+    </button>
+
+    <div class="register-step__lang-wrap" title="Change language / भाषा बदलें">
+      <LanguageSelector />
+    </div>
+  </div>
 
   <h1>{heading}</h1>
   <SpeakButton text={speakText ?? heading} label={t('action.speak')} />
@@ -74,8 +80,20 @@
     padding-block: var(--k-space-5);
   }
 
+  .register-step__top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-2);
+  }
+
+  .register-step__lang-wrap {
+    display: flex;
+    align-items: center;
+  }
+
   .register-step__back {
-    align-self: start;
+    align-self: center;
     min-block-size: var(--k-touch-min);
     padding-inline: var(--k-space-2);
     border: none;
@@ -83,6 +101,7 @@
     color: var(--k-accent-secondary);
     font-size: var(--k-text-sm);
     cursor: pointer;
+    font-weight: 600;
   }
 
   .register-step h1 {

@@ -21,6 +21,9 @@
     createLoginRedirectHandler,
   } from '@kalakriti/api';
   import { goto } from '$app/navigation';
+  import BuyerFooter from '$lib/BuyerFooter.svelte';
+  import AccountMenu from '$lib/AccountMenu.svelte';
+  import CategorySubnav from '$lib/CategorySubnav.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -64,7 +67,27 @@
 </script>
 
 <svelte:head>
-  <title>{t('app.name')}</title>
+  <title>{t('app.name')} - Ministry of Social Justice & Empowerment</title>
+  <meta name="description" content="Kalakriti is India's national AI cataloging, cryptographic GI provenance, and collective fulfillment marketplace for master artisans and heritage looms." />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "GovernmentOrganization",
+      "name": "Kalakriti - Ministry of Social Justice & Empowerment",
+      "url": "https://buyer.kalakriti.gov.in",
+      "logo": "https://buyer.kalakriti.gov.in/favicon.svg",
+      "description": "National AI cataloging and collective fulfillment platform for marginalized artisans in India."
+    }
+  </script>
+  {#if env.PUBLIC_GA_ID}
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${env.PUBLIC_GA_ID}`}></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{env.PUBLIC_GA_ID}');
+    </script>
+  {/if}
 </svelte:head>
 
 <SkipLink target="main-content" />
@@ -80,6 +103,12 @@
       </span>
     </a>
 
+    <nav class="shell__nav" aria-label="Main Navigation">
+      <a class="shell__nav-link" href="/catalog">Craft Directory</a>
+      <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
+      <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
+    </nav>
+
     <div class="shell__actions">
       <a class="shell__icon-link" href="/search" aria-label={t('nav.search')}>
         <Icon name="search" />
@@ -87,13 +116,15 @@
       <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
         <Icon name="collective-order" />
       </a>
-      <a class="shell__icon-link" href="/assets" aria-label={t('assets.title')}>
-        <Icon name="info" />
-      </a>
+      
+      <AccountMenu />
+
       <LanguageSelector />
       <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
+
+  <CategorySubnav />
 
   <main class="shell__main" id="main-content" tabindex="-1">
     <ErrorBoundary
@@ -107,8 +138,35 @@
     </ErrorBoundary>
   </main>
 
-  <footer class="shell__footer">
-    <p>{t('app.ministry')}</p>
-    <a href="/bulk-order">{t('bulkOrder.heading')}</a>
-  </footer>
+  <BuyerFooter />
 </div>
+
+<style>
+  .shell__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-5, 1.25rem);
+    margin-inline-start: var(--k-space-6, 1.5rem);
+  }
+
+  @media (max-width: 860px) {
+    .shell__nav {
+      display: none;
+    }
+  }
+
+  .shell__nav-link {
+    font-size: var(--k-text-sm, 0.875rem);
+    font-weight: 600;
+    color: var(--k-text-secondary, #6b635b);
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--k-radius-sm, 4px);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .shell__nav-link:hover {
+    color: var(--k-terracotta, #b84a39);
+    background-color: var(--k-surface-sunken, #f5f2eb);
+  }
+</style>
