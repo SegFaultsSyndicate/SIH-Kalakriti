@@ -6,6 +6,8 @@ Event-driven Go microservices, one Python ML service, single Postgres with pgvec
 ## Layout
 
 ```
+web/                   three SvelteKit apps (buyer, artisan PWA, admin) + design system
+Dockerfile.web         multi-stage Docker build for all 3 apps + Alpine NGINX server
 proto/                 protobuf contracts (source of truth for service APIs)
 pkg/                   shared Go packages + generated pb code (pkg/pb)
 services/core-svc/     identity, artisan profiles, catalog, provenance
@@ -15,7 +17,9 @@ services/channel-svc/  outbound channel sync and notifications
 services/bff/          the only REST/JSON surface
 services/ml-svc/       Python 3.11 gRPC server wrapping the models
 migrations/            goose migrations (single database, schema per service)
-deploy/                Kubernetes manifests
+deploy/
+  nginx/               production NGINX reverse proxy & SPA fallback configuration
+  k8s/                 Kubernetes manifests (deployments, ingress, configmap)
 scripts/               dev helpers, Postgres init SQL, ontology seed CSVs
 ```
 
@@ -107,6 +111,22 @@ absolutely, so run `ml-svc` with `PYTHONPATH=services/ml-svc/pb`.
 `make reset` destroys the named volumes. `make reset && make up` is the supported
 way back to a clean state; it re-runs `scripts/postgres-init/` and recreates the
 bucket.
+
+## Frontend & NGINX Web Gateway
+
+The web layer contains three independent SvelteKit applications in `web/apps/`:
+- `apps/buyer`: Public responsive artisan marketplace
+- `apps/artisan`: Offline-first mobile PWA for artisans
+- `apps/admin`: Desktop portal for cluster officers and administrators
+
+In production and full docker-compose mode, all three apps are built and served by NGINX (`Dockerfile.web` and `deploy/nginx/nginx.conf`) exposed on **Port 80**:
+- Buyer: `http://localhost/` (or `kalakriti.in`)
+- Artisan: `http://localhost/artisan/` (or `artisan.kalakriti.in`)
+- Admin: `http://localhost/admin/` (or `admin.kalakriti.in`)
+- API Gateway Proxy: `http://localhost/api/v1/*` (proxies to Go BFF at `:8000` with SSE support)
+- Direct BFF API: `http://localhost:8000/api/v1/*`
+
+Kubernetes deployment manifests are in `deploy/k8s/` (`bff-deployment.yaml`, `web-deployment.yaml`, `ingress.yaml`).
 
 ## Conventions
 

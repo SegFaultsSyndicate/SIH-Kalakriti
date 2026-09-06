@@ -15,3 +15,5 @@ data:
   order-svc-addr: "order-svc:8083"
   social-svc-addr: "social-svc:8084"
   ml-svc-addr: "ml-svc:50051"
+  bff-addr: "bff:8000"
+  web-addr: "web:80"

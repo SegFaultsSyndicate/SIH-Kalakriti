@@ -10,11 +10,11 @@ are marked **GAP** and are real, not hypothetical.
 
 ## The three apps
 
-| App | Audience | Device | Dev port | Preview port | Service worker |
-|---|---|---|---|---|---|
-| `apps/artisan` | Artisans | Low-end Android, 2G/3G | 5173 | 4173 | Full offline, `registerType: 'prompt'` |
-| `apps/buyer` | Buyers, bulk buyers | Any device, real connection | 5174 | 4174 | Shell only, `registerType: 'autoUpdate'` |
-| `apps/admin` | Ministry officials, cluster development officers | Desktop | 5175 | 4175 | None (deliberately) |
+| App | Audience | Device | Dev port | Preview port | Production / NGINX route (Port 80) | Service worker |
+|---|---|---|---|---|---|---|
+| `apps/artisan` | Artisans | Low-end Android, 2G/3G | 5173 | 4173 | `/artisan/` or `artisan.kalakriti.in` | Full offline, `registerType: 'prompt'` |
+| `apps/buyer` | Buyers, bulk buyers | Any device, real connection | 5174 | 4174 | `/` or `kalakriti.in` | Shell only, `registerType: 'autoUpdate'` |
+| `apps/admin` | Ministry officials, cluster development officers | Desktop | 5175 | 4175 | `/admin/` or `admin.kalakriti.in` | None (deliberately) |
 
 Three separate SvelteKit builds, not route groups — an admin dependency must
 never become bytes on an artisan's phone, and an admin deploy must never
@@ -22,14 +22,16 @@ invalidate the artisan's precache. Shared code lives in `packages/` and is
 imported as source, not published.
 
 Stack: SvelteKit 2 + Svelte 5 (runes only), TypeScript strict, `adapter-static`
-(no SSR, no Node runtime in production — the Go BFF serves the static build
-and rewrites unknown paths to `index.html`), Dexie for offline storage,
-vanilla CSS with custom properties (no Tailwind, no component library).
+(no SSR, no Node runtime in production — an Alpine NGINX container built via
+`Dockerfile.web` serves static assets on Port 80 and proxies `/api/` to the Go BFF
+at `:8000`), Dexie for offline storage, vanilla CSS with custom properties
+(no Tailwind, no component library).
 
 ---
 
 ## Running it locally
 
+### Option 1: Local Vite Dev Servers (Hot Reload)
 ```bash
 cd web
 pnpm install
@@ -37,6 +39,15 @@ pnpm dev:artisan     # :5173
 pnpm dev:buyer       # :5174
 pnpm dev:admin       # :5175
 ```
+
+### Option 2: Full Stack via Docker Compose (NGINX + BFF + Infra)
+```bash
+# From repository root
+make demo-up
+# Or directly:
+docker compose -f docker-compose.full.yml up -d
+```
+All 3 web apps are served at `http://localhost` (port 80), and the Go BFF is at `http://localhost:8000`.
 
 Each app needs the Go BFF reachable at whatever `@kalakriti/api`'s transport
 points at (`packages/api/src/transport.ts`) — without it, every screen still

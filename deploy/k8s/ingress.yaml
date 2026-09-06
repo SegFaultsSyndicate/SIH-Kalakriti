@@ -1,0 +1,143 @@
+# deploy/k8s/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kalakriti-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/client-max-body-size: "15m"
+spec:
+  tls:
+  - hosts:
+    - kalakriti.in
+    - buy.kalakriti.in
+    - artisan.kalakriti.in
+    - admin.kalakriti.in
+    - api.kalakriti.in
+    secretName: kalakriti-tls-cert
+  rules:
+  # ── 1. Buyer Marketplace ──
+  - host: kalakriti.in
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /listing
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /v
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /export
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /sitemap.xml
+        pathType: Exact
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /robots.txt
+        pathType: Exact
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+
+  - host: buy.kalakriti.in
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+
+  # ── 2. Artisan PWA ──
+  - host: artisan.kalakriti.in
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+
+  # ── 3. Ministry & Cluster Admin Portal ──
+  - host: admin.kalakriti.in
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+
+  # ── 4. Direct API Subdomain ──
+  - host: api.kalakriti.in
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bff
+            port:
+              number: 8000
