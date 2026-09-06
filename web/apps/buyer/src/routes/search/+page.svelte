@@ -368,7 +368,8 @@
 
   .facets {
     display: flex;
-    gap: var(--k-space-4);
+    flex-wrap: wrap;
+    gap: var(--k-space-2) var(--k-space-4);
     margin-block-end: var(--k-space-4);
   }
 
@@ -383,6 +384,18 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--k-space-5);
+  }
+
+  @media (max-width: 480px) {
+    .results-grid {
+      gap: var(--k-space-3);
+    }
+  }
+
+  @media (max-width: 22rem) {
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .result__matched {

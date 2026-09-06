@@ -260,6 +260,16 @@
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
     padding-block: var(--k-space-2);
   }
+  @media (max-width: 32rem) {
+    .verify__fields div {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+    .verify__fields dd {
+      text-align: start;
+    }
+  }
   .verify__fields dt {
     color: var(--k-text-secondary);
   }

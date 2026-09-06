@@ -99,4 +99,16 @@
     color: var(--k-accent-secondary);
     font-size: var(--k-text-sm);
   }
+
+  @media (max-width: 32rem) {
+    .orders-list__item a {
+      flex-wrap: wrap;
+      gap: var(--k-space-2);
+    }
+    .orders-list__link {
+      inline-size: 100%;
+      margin-inline-start: 0;
+      margin-block-start: var(--k-space-1);
+    }
+  }
 </style>

@@ -1238,6 +1238,29 @@
     gap: 0.75rem;
   }
 
+  @media (max-width: 580px) {
+    .profile-telemetry {
+      inline-size: 100%;
+      flex-wrap: wrap;
+    }
+    .telemetry-card {
+      flex: 1 1 5rem;
+      min-inline-size: 0;
+      padding: 0.5rem;
+    }
+    .detail-panel {
+      padding: 1.25rem 0.85rem;
+    }
+    .panel-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .profile-banner {
+      padding: 1.25rem 1rem;
+    }
+  }
+
   .telemetry-card {
     display: flex;
     flex-direction: column;

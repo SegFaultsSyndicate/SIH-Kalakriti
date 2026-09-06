@@ -345,6 +345,25 @@
     display: flex;
     gap: var(--k-space-2);
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-block: var(--k-space-1);
+    margin-inline: calc(-1 * var(--k-space-4));
+    padding-inline: var(--k-space-4);
+  }
+
+  .listings-page__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 32rem) {
+    .listings-page {
+      padding: var(--k-space-3);
+    }
+    .listings-page__filters {
+      margin-inline: calc(-1 * var(--k-space-3));
+      padding-inline: var(--k-space-3);
+    }
   }
 
   .listings-page__filter {

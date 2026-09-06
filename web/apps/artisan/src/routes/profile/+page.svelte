@@ -1130,6 +1130,47 @@
     color: var(--k-text-primary);
   }
 
+  @media (max-width: 32rem) {
+    .profile-hero {
+      padding: var(--k-space-3);
+    }
+
+    .profile-avatar {
+      inline-size: 4rem;
+      block-size: 4rem;
+    }
+
+    .profile-avatar__initial {
+      font-size: var(--k-text-xl);
+    }
+
+    .profile-hero__name {
+      font-size: var(--k-text-xl);
+    }
+
+    .profile-hero__actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--k-space-2);
+    }
+
+    .profile-btn-ghost {
+      justify-content: center;
+    }
+
+    .profile-card {
+      padding: var(--k-space-3);
+    }
+
+    .metric-item {
+      padding: var(--k-space-3) var(--k-space-2);
+    }
+
+    .metric-item__value {
+      font-size: var(--k-text-lg);
+    }
+  }
+
   /* --- Trust Badges Strip --- */
   .profile-trust-strip {
     display: grid;

@@ -14,7 +14,6 @@
 -->
 <script lang="ts">
   import { Icon } from '@kalakriti/icons';
-  import { goto } from '$app/navigation';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
 
   let activeMenu = $state<string | null>(null);
@@ -588,6 +587,20 @@
     text-decoration: underline;
   }
 
+  @media (max-width: 768px) {
+    .subnav-dropdown {
+      position: fixed;
+      inset-inline-start: 0.75rem;
+      inset-inline-end: 0.75rem;
+      inset-block-start: 5.25rem;
+      inline-size: auto !important;
+      max-inline-size: calc(100vw - 1.5rem) !important;
+      max-block-size: 75vh;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+  }
+
   .crafts-12-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -597,6 +610,12 @@
   @media (max-width: 800px) {
     .crafts-12-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .crafts-12-grid {
+      grid-template-columns: 1fr;
     }
   }
 

@@ -351,8 +351,21 @@
   /* Catalog Grid */
   .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
     gap: var(--k-space-5);
+  }
+
+  @media (max-width: 480px) {
+    .catalog-grid {
+      grid-template-columns: 1fr;
+      gap: var(--k-space-3);
+    }
+    .catalog-container {
+      padding-inline: var(--k-space-3);
+    }
+    .cluster-card {
+      padding: var(--k-space-4);
+    }
   }
 
   .cluster-card {

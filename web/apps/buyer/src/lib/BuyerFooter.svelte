@@ -488,12 +488,33 @@
   @media (max-width: 42rem) {
     .footer-trust-container {
       grid-template-columns: repeat(2, 1fr);
+      padding-inline: 1rem;
+      gap: 0.85rem;
+    }
+    .trust-pill {
+      gap: 0.5rem;
+    }
+    .trust-pill__title,
+    .trust-pill__sub {
+      white-space: normal;
+      word-break: break-word;
+    }
+    .footer-main-container,
+    .footer-seo-container,
+    .footer-bottom-container {
+      padding-inline: 1rem;
     }
   }
 
-  @media (max-width: 26rem) {
+  @media (max-width: 28rem) {
     .footer-trust-container {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+    .footer-bottom-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
     }
   }
 

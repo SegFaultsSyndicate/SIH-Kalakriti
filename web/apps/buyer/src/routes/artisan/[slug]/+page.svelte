@@ -191,6 +191,26 @@
     margin-block-end: var(--k-space-6);
   }
 
+  @media (max-width: 36rem) {
+    .storefront-header {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+      gap: var(--k-space-3);
+    }
+
+    .storefront-header__portrait,
+    .storefront-header__initial-avatar {
+      inline-size: 6rem;
+      block-size: 6rem;
+    }
+
+    .storefront-header__location,
+    .storefront-header__verified {
+      justify-content: center;
+    }
+  }
+
   .storefront-header__portrait {
     inline-size: 100%;
     aspect-ratio: 1;

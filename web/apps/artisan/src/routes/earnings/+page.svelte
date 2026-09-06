@@ -246,6 +246,12 @@
     gap: var(--k-space-3);
   }
 
+  @media (max-width: 30rem) {
+    .earnings-page__range {
+      flex-direction: column;
+    }
+  }
+
   .earnings-page__offline-note {
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);

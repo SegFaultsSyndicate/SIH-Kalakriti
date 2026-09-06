@@ -106,4 +106,30 @@
     font-size: var(--k-text-sm);
     color: var(--k-text-secondary);
   }
+
+  @media (max-width: 32rem) {
+    .shell__header {
+      padding: var(--k-space-2) var(--k-space-3);
+      gap: var(--k-space-2);
+    }
+
+    .shell__ministry {
+      display: none;
+    }
+
+    .shell__actions {
+      gap: var(--k-space-1);
+    }
+
+    .shell__icon-link {
+      inline-size: 2.25rem;
+      block-size: 2.25rem;
+    }
+
+    .shell__main {
+      inline-size: 100%;
+      padding-inline: var(--k-space-3);
+      padding-block: var(--k-space-4) var(--k-space-6);
+    }
+  }
 }
