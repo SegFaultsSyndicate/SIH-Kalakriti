@@ -40,6 +40,13 @@
   let reasonDrafts = $state<Record<string, string>>({});
   let acting = $state<Record<string, boolean>>({});
 
+  function handleReasonInput(id: string, e: Event): void {
+    const target = e.currentTarget as HTMLTextAreaElement | null;
+    if (target) {
+      reasonDrafts = { ...reasonDrafts, [id]: target.value };
+    }
+  }
+
   function isFlagged(item: Summary): boolean {
     const verdict = item.provenance?.technique_verdict;
     const loom = item.provenance?.loom_verdict;
@@ -252,9 +259,7 @@
           {#if item.state === 'PUBLISHED'}
             <Textarea
               value={reasonDrafts[item.id ?? ''] ?? ''}
-              oninput={(e) => {
-                reasonDrafts = { ...reasonDrafts, [item.id ?? '']: (e.currentTarget as HTMLTextAreaElement).value };
-              }}
+              oninput={(e: Event) => handleReasonInput(item.id ?? '', e)}
               placeholder={t('moderation.reasonPlaceholder')}
               rows={2}
               aria-label={t('moderation.reasonPlaceholder')}

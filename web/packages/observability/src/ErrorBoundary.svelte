@@ -23,18 +23,22 @@
   }
 
   let { source, dsn, title, body, retryLabel, children }: Props = $props();
+
+  const isDev = Boolean((import.meta as unknown as { env?: { DEV?: boolean } })?.env?.DEV);
+
+  function handleError(error: unknown): void {
+    reportError(error, { source }, dsn);
+  }
 </script>
 
-<svelte:boundary
-  onerror={(error) => reportError(error, { source }, dsn)}
->
+<svelte:boundary onerror={handleError}>
   {@render children()}
 
-  {#snippet failed(error, reset)}
+  {#snippet failed(error: unknown, reset: () => void)}
     <div class="k-error-boundary" role="alert">
       <h1>{title}</h1>
       <p>{body}</p>
-      {#if import.meta.env.DEV && error}
+      {#if isDev && error}
         <details class="k-error-boundary__details">
           <summary>Development Error Details</summary>
           <pre>{error instanceof Error ? (error.stack || error.message) : String(error)}</pre>

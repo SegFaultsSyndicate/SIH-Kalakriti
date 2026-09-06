@@ -10,6 +10,7 @@
     invalid?: boolean;
     id?: string;
     class?: string;
+    oninput?: (event: Event) => void;
     [key: string]: unknown;
   }
 
