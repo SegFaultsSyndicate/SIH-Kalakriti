@@ -15,6 +15,7 @@ import type { MessageKey } from '@kalakriti/i18n';
 
 export type ListingWizardStep =
   | 'capture'
+  | 'studio'
   | 'video'
   | 'story'
   | 'processing'
@@ -22,6 +23,13 @@ export type ListingWizardStep =
   | 'pricing'
   | 'terms'
   | 'done';
+
+export interface StudioConfig {
+  backgroundMode?: 'white' | 'transparent' | 'natural';
+  autoLightingApplied?: boolean;
+  brightnessOffset?: number;
+  contrastOffset?: number;
+}
 
 export interface Dimensions {
   length_mm?: number;
@@ -58,6 +66,7 @@ export interface ListingDraftFields {
   madeToOrderTerms?: MadeToOrderTerms;
   packaging?: { fragile?: boolean; oversized?: boolean; requires_custom_crating?: boolean };
   translations?: ListingTranslation[];
+  studioConfig?: StudioConfig;
   /** MOCK, from ml-mock.ts's pipeline result -- local-only, never sent. See ml_wiring.md. */
   attributes?: {
     key: string;

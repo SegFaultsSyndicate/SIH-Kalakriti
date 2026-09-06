@@ -106,6 +106,7 @@
     <nav class="shell__nav" aria-label="Main Navigation">
       <a class="shell__nav-link" href="/catalog">Craft Directory</a>
       <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
+      <a class="shell__nav-link" href="/fairs">Exhibitions & Melas</a>
       <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
     </nav>
 

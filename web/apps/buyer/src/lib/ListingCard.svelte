@@ -50,9 +50,10 @@
       window.addEventListener('storage', syncAvatar);
       return () => window.removeEventListener('storage', syncAvatar);
     }
+    return undefined;
   });
 
-  const artisanAvatar = $derived(listing.artisan_image_url || devAvatar);
+  const artisanAvatar = $derived((listing as any).artisan_image_url || devAvatar);
 
   let copied = $state(false);
 

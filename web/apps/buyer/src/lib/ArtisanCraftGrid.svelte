@@ -11,9 +11,7 @@
 -->
 <script lang="ts">
   import { Icon } from '@kalakriti/icons';
-  import { ARTISAN_CRAFT_CATEGORIES, type CraftCategory } from './craft-categories';
-
-  let hoveredCraft = $state<string | null>(null);
+  import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
 </script>
 
 <section class="craft-categories-section" aria-labelledby="craft-categories-heading">
@@ -39,8 +37,6 @@
       <a
         href={`/search?category=${encodeURIComponent(craft.name)}`}
         class="craft-card"
-        onmouseenter={() => (hoveredCraft = craft.id)}
-        onmouseleave={() => (hoveredCraft = null)}
       >
         <div class="craft-card__header">
           <div class="craft-card__icon-badge">
@@ -277,6 +273,7 @@
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }

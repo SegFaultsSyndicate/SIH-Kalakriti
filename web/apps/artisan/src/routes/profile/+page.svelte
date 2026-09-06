@@ -33,6 +33,8 @@
   import { network } from '$lib/orders';
   import { CRAFTS, DISTRICTS } from '$lib/ontology';
   import ImageCropModal from '$lib/ImageCropModal.svelte';
+  import BusinessCardModal from '$lib/BusinessCardModal.svelte';
+  import StallCardModal from '$lib/StallCardModal.svelte';
 
   const t = $derived(locale.t);
 
@@ -41,6 +43,8 @@
   let avatarUrl = $state<string | undefined>(undefined);
   let rawImageToCrop = $state<string>('');
   let showCropModal = $state(false);
+  let showBusinessCardModal = $state(false);
+  let showStallModal = $state(false);
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
@@ -211,10 +215,11 @@
   }
 
   function shareVisitingCard(): void {
-    const shareText = encodeURIComponent(
-      `Discover authentic handmade ${craftName} by ${name} from ${districtName} on Kalakriti Platform: http://localhost:5174/artisan/${encodeURIComponent(name.toLowerCase())}`,
-    );
-    window.open(`https://wa.me/?text=${shareText}`, '_blank');
+    showBusinessCardModal = true;
+  }
+
+  function openStallCard(): void {
+    showStallModal = true;
   }
 
   function handleAvatarChange(e: Event): void {
@@ -596,6 +601,20 @@
 
       <div class="tool-tile">
         <div class="tool-tile__icon-wrap">
+          <Icon name="verified-artisan" size="1.5rem" />
+        </div>
+        <div class="tool-tile__content">
+          <h3 class="tool-tile__heading">Exhibition Stall Placard</h3>
+          <p class="tool-tile__desc">Generate & print an official QR placard for your exhibition stand at Dilli Haat, Surajkund, or Shilp Samagam.</p>
+          <Button variant="secondary" size="md" onclick={openStallCard}>
+            <Icon name="print" size="1rem" />
+            Generate Stall Card
+          </Button>
+        </div>
+      </div>
+
+      <div class="tool-tile">
+        <div class="tool-tile__icon-wrap">
           <Icon name="external-link" size="1.5rem" />
         </div>
         <div class="tool-tile__content">
@@ -845,6 +864,28 @@
     open={showCropModal}
     oncrop={handleCroppedAvatar}
     oncancel={handleCancelCrop}
+  />
+
+  <BusinessCardModal
+    open={showBusinessCardModal}
+    onclose={() => (showBusinessCardModal = false)}
+    artisanName={name}
+    craftName={craftName}
+    districtName={districtName}
+    clusterName={clusterName}
+    pehchanId={pehchanId}
+    avatarUrl={avatarUrl}
+  />
+
+  <StallCardModal
+    open={showStallModal}
+    onclose={() => (showStallModal = false)}
+    artisanName={name}
+    craftName={craftName}
+    districtName={districtName}
+    clusterName={clusterName}
+    pehchanId={pehchanId}
+    avatarUrl={avatarUrl}
   />
 </div>
 

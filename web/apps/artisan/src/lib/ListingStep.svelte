@@ -33,6 +33,7 @@
   const t = $derived(locale.t);
   const stepLabels = $derived([
     t('listing.step.capture'),
+    t('listing.step.studio'),
     t('listing.step.video'),
     t('listing.step.story'),
     t('listing.step.processing'),

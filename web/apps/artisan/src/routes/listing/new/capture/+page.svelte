@@ -17,6 +17,7 @@
   import { Button } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
   import ListingStep from '$lib/ListingStep.svelte';
+  import SahayakTooltip from '$lib/SahayakTooltip.svelte';
   import { addCapturedMedia, removeCapturedMedia } from '$lib/listing-draft';
   import { assessPhotoQuality, type QualityIssue } from '$lib/ml-mock';
 
@@ -103,7 +104,7 @@
   }
 
   async function next(): Promise<void> {
-    await goto(`/listing/new/video?d=${draftId}`);
+    await goto(`/listing/new/studio?d=${draftId}`);
   }
 </script>
 
@@ -165,6 +166,7 @@
       </button>
 
       <p class="capture-hint">{t('listing.capture.hint')}</p>
+      <SahayakTooltip text={t('literacy.sahayak.tooltip.camera')} />
     {/if}
   {/snippet}
   {#snippet actions()}

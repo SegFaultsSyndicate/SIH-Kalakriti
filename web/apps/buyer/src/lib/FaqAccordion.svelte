@@ -9,10 +9,7 @@
   - Live Loom Video Consultations
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-
-  const t = $derived(locale.t);
 
   interface FaqItem {
     id: string;

@@ -79,7 +79,7 @@
   <title>{t('listing.terms.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={6} heading={t('listing.terms.heading')} backHref="/listing/new/pricing?d={draftId}">
+<ListingStep index={7} heading={t('listing.terms.heading')} backHref="/listing/new/pricing?d={draftId}">
   {#snippet children()}
     {#if type === 'MADE_TO_ORDER'}
       <FieldGroup label={t('listing.terms.leadTimeLabel')}>

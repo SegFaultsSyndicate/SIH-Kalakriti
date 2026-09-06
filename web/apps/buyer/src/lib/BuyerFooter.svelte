@@ -12,11 +12,8 @@
   - Official Copyright & Attribution to Ministry of Social Justice & Empowerment & Digital India Corporation (DIC)
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
   import { LanguageSelector, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
-
-  const t = $derived(locale.t);
 
   function copyAppShareLink(type: 'buyer' | 'artisan') {
     const url = type === 'buyer'
@@ -26,8 +23,7 @@
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       showToast({
-        title: type === 'buyer' ? 'Buyer App Link Copied' : 'Artisan Voice App Link Copied',
-        message: 'Download link copied to clipboard. Share with craft patrons and weavers.',
+        message: `${type === 'buyer' ? 'Buyer App' : 'Artisan Voice App'} link copied to clipboard. Share with craft patrons and weavers.`,
         variant: 'success'
       });
     }

@@ -110,6 +110,8 @@
     return undefined;
   });
   const artisanAvatar = $derived(artisan?.image_url || devAvatar);
+  const fairParam = $derived(page.url.searchParams.get('fair'));
+  const stallParam = $derived(page.url.searchParams.get('stall'));
 </script>
 
 <svelte:head>
@@ -121,6 +123,26 @@
 {:else if !artisan}
   <EmptyState illustration="empty-error" heading={t('artisan.notFound')} />
 {:else}
+  {#if fairParam || stallParam}
+    <aside class="fair-welcome-banner">
+      <div class="fair-welcome-banner__icon">🎪</div>
+      <div class="fair-welcome-banner__content">
+        <strong>
+          {#if stallParam}
+            Visiting Stall #{stallParam} at {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+          {:else}
+            Visiting from {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+          {/if}
+          Welcome!
+        </strong>
+        <p>Reorder authentic handcrafted pieces directly from this master artisan year-round with cluster-direct delivery and GI certification.</p>
+      </div>
+      <a href="/card/{slug}" class="fair-welcome-banner__card-btn">
+        <Icon name="verified-artisan" size="0.85rem" /> Visiting Card
+      </a>
+    </aside>
+  {/if}
+
   <header class="storefront-header">
     {#if artisanAvatar}
       <img class="storefront-header__portrait" src={artisanAvatar} alt="" />
@@ -283,5 +305,53 @@
     object-fit: cover;
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-sunken);
+  }
+
+  .fair-welcome-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-3);
+    padding: var(--k-space-3) var(--k-space-4);
+    background: linear-gradient(135deg, rgba(120, 53, 15, 0.1), rgba(180, 83, 9, 0.05));
+    border: 1px solid #d97706;
+    border-radius: var(--k-radius-md);
+    margin-block-end: var(--k-space-4);
+  }
+
+  .fair-welcome-banner__icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+  }
+
+  .fair-welcome-banner__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .fair-welcome-banner__content strong {
+    font-size: var(--k-text-sm);
+    color: #92400e;
+  }
+
+  .fair-welcome-banner__content p {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
+    margin: 0;
+  }
+
+  .fair-welcome-banner__card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #78350f;
+    color: #ffffff;
+    font-size: var(--k-text-xs);
+    font-weight: 700;
+    padding: var(--k-space-2) var(--k-space-3);
+    border-radius: var(--k-radius-pill);
+    text-decoration: none;
+    white-space: nowrap;
   }
 </style>

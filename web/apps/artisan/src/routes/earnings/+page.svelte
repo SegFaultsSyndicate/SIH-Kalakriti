@@ -30,6 +30,7 @@
   import { generateStatement, listIncomeStatements, type components } from '@kalakriti/api';
   import { cachedOrders, network, type BulkOrder } from '$lib/orders';
   import { getArtisanId } from '$lib/registration';
+  import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
 
   type IncomeStatementSummary = components['schemas']['IncomeStatementSummary'];
 
@@ -103,6 +104,8 @@
 
 <main class="earnings-page">
   <h1>{t('earnings.heading')}</h1>
+
+  <IncomeGrowthChart />
 
   <section class="earnings-page__generate">
     <h2>{t('earnings.statement.heading')}</h2>

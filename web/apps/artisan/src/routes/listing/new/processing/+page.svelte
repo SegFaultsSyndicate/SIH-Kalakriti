@@ -102,7 +102,7 @@
   <title>{t('listing.processing.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={3} heading={t('listing.processing.heading')} backHref="/listing/new/story?d={draftId}">
+<ListingStep index={4} heading={t('listing.processing.heading')} backHref="/listing/new/story?d={draftId}">
   {#snippet children()}
     {#if uploading}
       <p class="processing-status" role="status">

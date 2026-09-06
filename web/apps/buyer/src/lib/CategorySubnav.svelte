@@ -68,6 +68,7 @@
 >
   <div class="subnav-container">
     <!-- 0. All Crafts Mega-Menu featuring all 12 Artisan Crafts -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('all-crafts')}>
       <div class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}">
         <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu}>
@@ -156,6 +157,7 @@
     </a>
 
     <!-- 1. Home & Living (Image 1 reference) -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('home')}>
       <div class="subnav-split-pill {activeMenu === 'home' ? 'is-active' : ''}">
         <a
@@ -257,6 +259,7 @@
     </div>
 
     <!-- 2. Furniture (Image 5 reference) -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('furniture')}>
       <div class="subnav-split-pill {activeMenu === 'furniture' ? 'is-active' : ''}">
         <a
@@ -315,6 +318,7 @@
     </div>
 
     <!-- 3. Paintings (Image 2 reference) -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('paintings')}>
       <div class="subnav-split-pill {activeMenu === 'paintings' ? 'is-active' : ''}">
         <a
@@ -426,8 +430,7 @@
     display: none;
   }
 
-  .subnav-item,
-  .subnav-btn {
+  .subnav-item {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -445,9 +448,7 @@
     transition: color 0.12s ease, background-color 0.12s ease;
   }
 
-  .subnav-item:hover,
-  .subnav-btn:hover,
-  .subnav-btn.is-active {
+  .subnav-item:hover {
     color: #b84a39;
     background-color: #f0eae1;
   }

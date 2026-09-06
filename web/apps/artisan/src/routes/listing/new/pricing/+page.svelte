@@ -17,6 +17,7 @@
   import { advisePricing, ApiError, type components } from '@kalakriti/api';
   import ListingStep from '$lib/ListingStep.svelte';
   import PriceAdvisory from '$lib/PriceAdvisory.svelte';
+  import SahayakTooltip from '$lib/SahayakTooltip.svelte';
   import { getDraft, patchFields, queueListingUpdate, type ListingDraftFields } from '$lib/listing-draft';
 
   const t = $derived(locale.t);
@@ -100,7 +101,7 @@
   <title>{t('listing.pricing.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={5} heading={t('listing.pricing.heading')} backHref="/listing/new/review?d={draftId}">
+<ListingStep index={6} heading={t('listing.pricing.heading')} backHref="/listing/new/review?d={draftId}">
   {#snippet children()}
     <div class="type-toggle" role="radiogroup" aria-label={t('listing.pricing.typeLabel')}>
       <button
@@ -149,6 +150,8 @@
         <NumberStepper {id} bind:value={minOrderQuantity} min={1} />
       {/snippet}
     </FieldGroup>
+
+    <SahayakTooltip text={t('literacy.sahayak.tooltip.pricing')} />
 
     <div class="advisory">
       <h3>{t('listing.pricing.adviceHeading')}</h3>
