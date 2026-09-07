@@ -20,17 +20,19 @@
    * @property {'tl'|'tr'|'bl'|'br'} [corner]
    * @property {string} [title] Accessible name. Omit for decorative use,
    *   which is what a corner ornament almost always is.
+   * @property {string} [class] Additional classes to merge with k-kolam-corner
    */
 
   /** @type {Props & Record<string, unknown>} */
-  let { corner = 'tl', title, ...rest } = $props();
+  let { corner = 'tl', title, class: className = '', ...rest } = $props();
 </script>
 
 <Kolam
-  class={corner === 'tl' ? 'k-kolam-corner' : `k-kolam-corner k-kolam-corner--${corner}`}
+  class={`k-kolam-corner k-kolam-corner--${corner} ${className}`.trim()}
   role={title ? 'img' : undefined}
   aria-label={title}
   aria-hidden={title ? undefined : 'true'}
   focusable="false"
   {...rest}
 />
+

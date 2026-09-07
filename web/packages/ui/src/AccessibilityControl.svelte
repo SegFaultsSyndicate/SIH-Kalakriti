@@ -113,6 +113,7 @@
           {t('a11y.textSize')}
         </span>
         <div class="k-a11y-panel__stepper">
+          <span class="k-a11y-panel__step-val" aria-live="polite">{t(`a11y.textSize.${a11y.textScale}`)}</span>
           <Button
             icon="chevron-down"
             label={t('ui.numberStepper.decrease')}
@@ -121,7 +122,6 @@
             disabled={!canDecrease}
             onclick={decrease}
           />
-          <span class="k-a11y-panel__step-val" aria-live="polite">{t(`a11y.textSize.${a11y.textScale}`)}</span>
           <Button
             icon="chevron-up"
             label={t('ui.numberStepper.increase')}
@@ -248,9 +248,11 @@
 
   .k-a11y-panel__step-val {
     font-size: var(--k-text-xs);
-    min-inline-size: 4rem;
-    text-align: center;
+    min-inline-size: 3.25rem;
+    text-align: end;
     font-weight: var(--k-weight-medium, 500);
+    margin-inline-end: var(--k-space-1);
+    color: var(--k-text-primary);
   }
 
   .k-a11y-panel__speech-btn {

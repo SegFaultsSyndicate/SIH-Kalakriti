@@ -340,9 +340,8 @@
   :global(.visiting-card) {
     position: relative;
     background: #ffffff;
-    border-radius: var(--k-radius-lg);
     box-shadow: 0 8px 32px rgba(120, 53, 15, 0.08);
-    padding: var(--k-space-6);
+    padding: 2.5rem 2rem;
     color: #1c1917;
   }
 
@@ -350,6 +349,7 @@
     color: #b45309;
     inline-size: 2.75rem;
     block-size: 2.75rem;
+    opacity: 0.75;
   }
 
   .card-inner {

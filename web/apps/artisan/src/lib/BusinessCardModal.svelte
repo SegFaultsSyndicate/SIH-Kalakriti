@@ -146,17 +146,17 @@
 
       <!-- Action Buttons Strip -->
       <footer class="modal-actions">
-        <Button variant="secondary" onclick={copyLink}>
-          <Icon name="link" />
-          Copy Link
+        <Button variant="secondary" size="sm" onclick={copyLink}>
+          <Icon name="link" size="0.85rem" />
+          <span>Copy Link</span>
         </Button>
-        <Button variant="secondary" onclick={shareWhatsApp}>
-          <Icon name="whatsapp" />
-          WhatsApp
+        <Button variant="secondary" size="sm" onclick={shareWhatsApp}>
+          <Icon name="whatsapp" size="0.85rem" />
+          <span>WhatsApp</span>
         </Button>
-        <Button variant="primary" onclick={handlePrint}>
-          <Icon name="print" />
-          {t('card.printCard')}
+        <Button variant="primary" size="sm" onclick={handlePrint}>
+          <Icon name="print" size="0.85rem" />
+          <span>{t('card.printCard')}</span>
         </Button>
       </footer>
     </div>
@@ -229,16 +229,16 @@
   :global(.preview-card) {
     position: relative;
     background: #ffffff;
-    border-radius: 8px;
-    padding: var(--k-space-5);
+    padding: 2rem 1.75rem;
     color: #1c1917;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   }
 
   :global(.preview-card .k-kolam-corner) {
     color: #b45309;
     inline-size: 2.2rem;
     block-size: 2.2rem;
+    opacity: 0.75;
   }
 
   .preview-content {
@@ -383,6 +383,32 @@
     gap: var(--k-space-2);
     border-block-start: 1px solid var(--k-border-hairline);
     padding-block-start: var(--k-space-3);
+  }
+
+  :global(.modal-actions .k-button) {
+    min-block-size: 2.2rem !important;
+    padding: 0.35rem 0.85rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: var(--k-radius-sm, 6px);
+  }
+
+  :global(.modal-actions .k-button .k-button__content) {
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 560px) {
+    .modal-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--k-space-1.5);
+    }
+    :global(.modal-actions .k-button) {
+      min-block-size: 2.1rem !important;
+      padding: 0.3rem 0.4rem !important;
+      font-size: 0.72rem !important;
+    }
   }
 
   @media print {

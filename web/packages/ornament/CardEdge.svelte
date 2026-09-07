@@ -24,13 +24,15 @@
    * @typedef {object} Props
    * @property {string} [element] Tag to render. Use 'article'/'li' where the
    *   card is semantic.
+   * @property {string} [class] Additional classes to merge with k-card--printed
    * @property {import('svelte').Snippet} [children]
    */
 
   /** @type {Props & Record<string, unknown>} */
-  let { element = 'div', children, ...rest } = $props();
+  let { element = 'div', class: className = '', children, ...rest } = $props();
 </script>
 
-<svelte:element this={element} class="k-card--printed" {...rest}>
+<svelte:element this={element} class={`k-card--printed ${className}`.trim()} {...rest}>
   {@render children?.()}
 </svelte:element>
+

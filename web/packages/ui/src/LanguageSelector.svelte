@@ -14,13 +14,15 @@
   import Button from './Button.svelte';
 
   const t = $derived(locale.t);
+  let open = $state(false);
 
   function select(code: LocaleCode): void {
+    open = false;
     void locale.set(code, { persist: true });
   }
 </script>
 
-<Popover align="end">
+<Popover align="end" bind:open>
   {#snippet trigger(props)}
     <Button icon="language" label={t('language.selector.label')} variant="ghost" {...props} />
   {/snippet}

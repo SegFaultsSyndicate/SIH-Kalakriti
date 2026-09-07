@@ -288,11 +288,15 @@
   width: 3rem;
   height: 3rem;
   color: var(--k-accent-primary-text);
-  opacity: 0.5;
+  opacity: 0.55;
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
 }
-.k-kolam-corner--tr { transform: scaleX(-1); }
-.k-kolam-corner--br { transform: rotate(180deg); }
-.k-kolam-corner--bl { transform: scaleY(-1); }
+.k-kolam-corner--tl { top: 8px; left: 8px; }
+.k-kolam-corner--tr { top: 8px; right: 8px; transform: scaleX(-1); }
+.k-kolam-corner--bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+.k-kolam-corner--br { bottom: 8px; right: 8px; transform: rotate(180deg); }
 
 /* ---- printed card edge ----------------------------------------------- */
 
@@ -308,20 +312,32 @@
  * keeping the border-image below as the Firefox fallback.
  *
  * border-image-slice must be a percentage: a viewBox-only SVG has no intrinsic
- * pixel size, so a px slice is undefined.
+ * pixel size, so a px slice is undefined. The 48x48 tile has 12px (25%) slices,
+ * so setting a 12px border-image-width renders corner stamps and diamonds at
+ * true 1:1 scale with crisp geometric fidelity.
  */
 .k-card--printed {
-  border: 6px solid var(--k-border-hairline);   /* fallback if the image fails */
+  position: relative;
+  border: 12px solid var(--k-border-hairline);   /* fallback if the image fails */
   border-radius: var(--k-radius-none, 0);
-  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23241E1A' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+  border-image-source: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23241E1A' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E");
+  border-image-slice: 25%;
+  border-image-width: 12px;
+  border-image-repeat: round;
   background: var(--k-surface-raised);
-  padding: 1rem;
+  padding: 1.25rem;
 }
 [data-theme="dark"] .k-card--printed {
-  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23F5F0E8' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+  border-image-source: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%23F5F0E8' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E");
+  border-image-slice: 25%;
+  border-image-width: 12px;
+  border-image-repeat: round;
 }
 [data-theme="high-contrast"] .k-card--printed {
-  border-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%230F0A07' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E") 25% round;
+  border-image-source: url("data:image/svg+xml,%3Csvg viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true' focusable='false'%3E %3Cpath fill='%230F0A07' fill-rule='evenodd' d='M2 2 H10 V10 H2 Z M4.5 4.5 H7.5 V7.5 H4.5 Z M38 2 H46 V10 H38 Z M40.5 4.5 H43.5 V7.5 H40.5 Z M2 38 H10 V46 H2 Z M4.5 40.5 H7.5 V43.5 H4.5 Z M38 38 H46 V46 H38 Z M40.5 40.5 H43.5 V43.5 H40.5 Z M12 5.5 H36 V6.5 H12 Z M12 41.5 H36 V42.5 H12 Z M5.5 12 H6.5 V36 H5.5 Z M41.5 12 H42.5 V36 H41.5 Z M18 2.5 L 21.5 6 L 18 9.5 L 14.5 6 Z M18 4.6 L 19.4 6 L 18 7.4 L 16.6 6 Z M18 38.5 L 21.5 42 L 18 45.5 L 14.5 42 Z M18 40.6 L 19.4 42 L 18 43.4 L 16.6 42 Z M6 14.5 L 9.5 18 L 6 21.5 L 2.5 18 Z M6 16.6 L 7.4 18 L 6 19.4 L 4.6 18 Z M42 14.5 L 45.5 18 L 42 21.5 L 38.5 18 Z M42 16.6 L 43.4 18 L 42 19.4 L 40.6 18 Z M30 2.5 L 33.5 6 L 30 9.5 L 26.5 6 Z M30 4.6 L 31.4 6 L 30 7.4 L 28.6 6 Z M30 38.5 L 33.5 42 L 30 45.5 L 26.5 42 Z M30 40.6 L 31.4 42 L 30 43.4 L 28.6 42 Z M6 26.5 L 9.5 30 L 6 33.5 L 2.5 30 Z M6 28.6 L 7.4 30 L 6 31.4 L 4.6 30 Z M42 26.5 L 45.5 30 L 42 33.5 L 38.5 30 Z M42 28.6 L 43.4 30 L 42 31.4 L 40.6 30 Z'/%3E %3C/svg%3E");
+  border-image-slice: 25%;
+  border-image-width: 12px;
+  border-image-repeat: round;
 }
 
 }
