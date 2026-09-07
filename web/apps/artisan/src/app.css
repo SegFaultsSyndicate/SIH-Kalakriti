@@ -27,6 +27,11 @@
   --k-page-grain: url('/paper-grain.svg');
 }
 
+/* Apply Heritage Artisan premium theme */
+body {
+  background-color: var(--k-premium-canvas, var(--k-surface-base));
+}
+
 @layer app {
   /*
    * Shell layout. Header and the bottom action bar are fixed; the scrolling
@@ -51,7 +56,8 @@
     padding: var(--k-space-3) var(--k-space-4);
     /* Separation by line, not shadow. */
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
-    background-color: var(--k-surface-base);
+    background-color: var(--k-premium-header-bg);
+    color: var(--k-premium-header-text);
   }
 
   .shell__lockup {
@@ -95,7 +101,7 @@
     align-items: center;
     gap: var(--k-space-2);
     font-size: var(--k-text-sm);
-    color: var(--k-text-secondary);
+    color: var(--k-premium-header-text, #F4F0EA);
   }
 
   .net__mark {

@@ -22,11 +22,42 @@
   --k-page-grain: url('/paper-grain.svg');
 }
 
+/* Apply Heritage Artisan premium theme */
+body {
+  background-color: var(--k-premium-canvas, var(--k-surface-base));
+}
+
+/* Hide scrollbars while maintaining scroll functionality */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  width: 100%;
+  max-width: 100vw;
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 @layer app {
   .shell {
     display: grid;
     grid-template-rows: auto 1fr auto;
     min-block-size: 100dvb;
+    inline-size: 100%;
+    max-inline-size: 100vw;
+    overflow-x: hidden;
   }
 
   /*
@@ -39,6 +70,8 @@
     gap: var(--k-space-4);
     padding: var(--k-space-4) var(--k-gutter);
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-premium-header-bg);
+    color: var(--k-premium-header-text);
   }
 
   .shell__lockup {
@@ -70,7 +103,8 @@
     font-weight: var(--k-weight-regular);
     letter-spacing: var(--k-tracking-wide);
     text-transform: uppercase;
-    color: var(--k-text-secondary);
+    color: var(--k-premium-header-text);
+    opacity: 0.9;
   }
 
   .shell__actions {
@@ -87,11 +121,11 @@
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: var(--k-radius-md);
-    color: inherit;
+    color: var(--k-premium-header-text);
   }
 
   .shell__icon-link:hover {
-    background-color: var(--k-surface-sunken);
+    background-color: rgba(244, 240, 234, 0.15);
   }
 
   .shell__main {

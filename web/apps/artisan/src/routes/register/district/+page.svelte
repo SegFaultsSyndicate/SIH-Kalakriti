@@ -21,6 +21,14 @@
       selected = draft.districtId ?? '';
       freeText = draft.districtFreeText ?? '';
       notListed = freeText !== '';
+
+      // If a district was previously selected, show it in the search box
+      if (selected && !notListed) {
+        const selectedDistrict = DISTRICTS.find((d) => d.id === selected);
+        if (selectedDistrict) {
+          query = `${selectedDistrict.name}, ${selectedDistrict.state}`;
+        }
+      }
     });
   });
 
@@ -28,11 +36,13 @@
     DISTRICTS.filter((d) => matchesQuery(`${d.name} ${d.state}`, query)),
   );
 
-  function choose(id: string): void {
+  async function choose(id: string): Promise<void> {
     selected = id;
     notListed = false;
     freeText = '';
-    void patchDraft({ districtId: id, districtFreeText: undefined });
+    await patchDraft({ districtId: id, districtFreeText: undefined });
+    // Automatically proceed to next page after selection
+    await goto('/register/pehchan');
   }
 
   function toggleNotListed(): void {
@@ -197,10 +207,13 @@
   .text-link {
     align-self: start;
     min-block-size: var(--k-touch-min);
-    padding-inline: var(--k-space-2);
+    padding-inline: var(--k-space-4);
+    padding-block: var(--k-space-2);
     border: none;
-    background: none;
-    color: var(--k-accent-secondary);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-premium-button-bg, #7A3E26);
+    color: var(--k-premium-button-text, #F4F0EA);
     cursor: pointer;
+    font-weight: 600;
   }
 </style>

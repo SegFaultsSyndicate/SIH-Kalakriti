@@ -246,7 +246,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-text-primary, #1e1915);
+    color: var(--k-premium-header-text, #F4F0EA);
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -255,8 +255,8 @@
 
   .account-trigger:hover,
   .account-trigger[aria-expanded='true'] {
-    background-color: var(--k-surface-sunken, #f5f2eb);
-    border-color: var(--k-border-hairline, #e2dcd2);
+    background-color: rgba(244, 240, 234, 0.15);
+    border-color: rgba(244, 240, 234, 0.2);
   }
 
   .account-avatar {
@@ -266,9 +266,9 @@
     inline-size: 2rem;
     block-size: 2rem;
     border-radius: 50%;
-    background-color: var(--k-surface-paper, #efebe3);
-    color: var(--k-terracotta, #b84a39);
-    border: 1px solid var(--k-border-subtle, #ded7cc);
+    background-color: var(--k-premium-warm-cream, #F4F0EA);
+    color: var(--k-premium-header-bg, #873032);
+    border: 1px solid rgba(244, 240, 234, 0.3);
     font-size: 0.75rem;
     font-weight: 700;
   }
@@ -287,8 +287,9 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-premium-header-text, #F4F0EA);
     font-weight: 500;
+    opacity: 0.9;
   }
 
   .account-title {
@@ -297,7 +298,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-text-primary, #1e1915);
+    color: var(--k-premium-header-text, #F4F0EA);
   }
 
   /* Popover */
