@@ -1398,9 +1398,16 @@
   /* Artisan of the Month */
   .artisan-of-month {
     display: grid;
-    grid-template-columns: 10rem 1fr;
-    gap: var(--k-space-5);
+    grid-template-columns: 1fr;
+    gap: var(--k-space-4);
     margin-block-start: var(--k-space-5);
+  }
+
+  @media (min-width: 36rem) {
+    .artisan-of-month {
+      grid-template-columns: 10rem 1fr;
+      gap: var(--k-space-5);
+    }
   }
 
   .artisan-of-month__portrait {
@@ -1455,6 +1462,20 @@
 
   .trust-strip li:last-child {
     border-inline-end: none;
+  }
+
+  /* On a phone the strip is a vertical tower of pills; drop the
+     dangling right rules and the extra padding they required. */
+  @media (max-width: 36rem) {
+    .trust-strip {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .trust-strip li {
+      border-inline-end: none;
+      padding-inline-end: 0;
+    }
   }
 
   /* Materials */

@@ -88,6 +88,18 @@
   --k-container-admin: 96rem;
   --k-gutter: var(--k-space-4);
 
+  /* --- Breakpoints. Rem-based (so they respect the user's own root
+     font-size; CSS custom properties cannot be read by @media, so these
+     are documentation+convention for components written in rem).
+       --k-bp-sm 36rem : 576px  -- phones landscape / small tablets
+       --k-bp-md 48rem : 768px  -- tablets / nav collapse
+       --k-bp-lg 64rem : 1024px -- laptops / dense shafts
+       --k-bp-xl 80rem : 1280px -- desktops */
+  --k-bp-sm: 36rem;
+  --k-bp-md: 48rem;
+  --k-bp-lg: 64rem;
+  --k-bp-xl: 80rem;
+
   /* --- Line weight. Separation in this design system is by rule, not
      shadow, so the hairline is a token and not a magic 1px. */
   --k-hairline: 1px;

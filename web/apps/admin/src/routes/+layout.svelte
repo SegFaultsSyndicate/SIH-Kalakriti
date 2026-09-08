@@ -186,7 +186,7 @@
 
   .shell__body {
     display: grid;
-    grid-template-columns: 15rem 1fr;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
     align-items: start;
   }
 
@@ -228,8 +228,13 @@
   }
 
   @media (max-width: 900px) {
+    .shell__header {
+      flex-wrap: wrap;
+      row-gap: var(--k-space-2);
+    }
+
     .shell__body {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .shell__sidebar {

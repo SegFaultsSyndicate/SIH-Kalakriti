@@ -564,4 +564,17 @@
   .signout-btn:hover {
     background-color: #fee2e2;
   }
+
+  /* On a very narrow phone the header action row is already saturated:
+     collapse the account trigger to avatar-only rather than letting it
+     push the row past the viewport edge. */
+  @media (max-width: 30rem) {
+    .account-label {
+      display: none;
+    }
+
+    .account-trigger {
+      padding: 0.35rem;
+    }
+  }
 </style>

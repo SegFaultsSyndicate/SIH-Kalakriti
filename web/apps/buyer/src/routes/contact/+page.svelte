@@ -268,14 +268,14 @@
   /* 3 Help Cards */
   .help-cards-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.5rem;
     margin-block-end: 2.5rem;
   }
 
   @media (max-width: 56rem) {
     .help-cards-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -363,13 +363,13 @@
   /* Main Form + Info Grid */
   .contact-main-grid {
     display: grid;
-    grid-template-columns: 1.8fr 1fr;
+    grid-template-columns: 1.8fr minmax(0, 1fr);
     gap: 2rem;
   }
 
   @media (max-width: 54rem) {
     .contact-main-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -403,13 +403,13 @@
 
   .form-row-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
 
   @media (max-width: 36rem) {
     .form-row-2 {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -572,6 +572,8 @@
   .timings-list li {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
   }
 
   .whatsapp-desc {

@@ -687,6 +687,19 @@
     gap: var(--k-space-2);
   }
 
+  /* On a narrow phone: artisan id fills the first line, the percentage
+     input, unit and remove button wrap to a second line. */
+  @media (max-width: 36rem) {
+    .clusters-share-row {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .clusters-share-row > :first-child {
+      flex-basis: 100%;
+    }
+  }
+
   .clusters-share-input {
     font: inherit;
     padding: var(--k-space-2);

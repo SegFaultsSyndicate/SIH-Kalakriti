@@ -208,28 +208,15 @@
 <style>
   .storefront-header {
     display: grid;
-    grid-template-columns: 8rem 1fr;
-    gap: var(--k-space-5);
+    grid-template-columns: 1fr;
+    gap: var(--k-space-4);
     margin-block-end: var(--k-space-6);
   }
 
-  @media (max-width: 36rem) {
+  @media (min-width: 36rem) {
     .storefront-header {
-      grid-template-columns: 1fr;
-      justify-items: center;
-      text-align: center;
-      gap: var(--k-space-3);
-    }
-
-    .storefront-header__portrait,
-    .storefront-header__initial-avatar {
-      inline-size: 6rem;
-      block-size: 6rem;
-    }
-
-    .storefront-header__location,
-    .storefront-header__verified {
-      justify-content: center;
+      grid-template-columns: 8rem 1fr;
+      gap: var(--k-space-5);
     }
   }
 

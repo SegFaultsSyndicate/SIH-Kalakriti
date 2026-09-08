@@ -454,6 +454,22 @@
     font-family: inherit;
   }
 
+  /* Keep the three portal tabs usable on a 320px screen: tighten padding
+     and drop the secondary descriptor so labels never truncate. */
+  @media (max-width: 28rem) {
+    .portal-tabs {
+      gap: 0.2rem;
+    }
+
+    .portal-tab {
+      padding: 0.5rem 0.1rem;
+    }
+
+    .portal-label small {
+      display: none;
+    }
+  }
+
   .portal-tab.is-active {
     background-color: #ffffff;
     border-color: #ded7cc;

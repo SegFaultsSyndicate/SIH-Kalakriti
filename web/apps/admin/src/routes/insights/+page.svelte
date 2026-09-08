@@ -695,7 +695,9 @@
 
   .insights-panel__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    /* min() caps the track floor at 100% so narrow phones get one full-
+       width panel instead of a 20rem overflow. */
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
     gap: var(--k-space-4);
   }
 

@@ -1164,6 +1164,7 @@
 
   .profile-meta {
     flex: 1;
+    min-inline-size: 0;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -1209,6 +1210,7 @@
   .profile-contact-strip {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.825rem;
     color: #6b635b;
@@ -1235,6 +1237,7 @@
 
   .profile-telemetry {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
   }
 
@@ -1296,19 +1299,19 @@
 
   .hub-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.25rem;
   }
 
   @media (max-width: 900px) {
     .hub-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 580px) {
     .hub-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -1477,13 +1480,13 @@
 
   .form-grid-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
   }
 
   @media (max-width: 650px) {
     .form-grid-2 {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
