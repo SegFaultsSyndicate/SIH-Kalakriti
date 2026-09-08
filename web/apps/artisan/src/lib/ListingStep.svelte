@@ -33,6 +33,7 @@
   const t = $derived(locale.t);
   const stepLabels = $derived([
     t('listing.step.capture'),
+    t('listing.step.studio'),
     t('listing.step.video'),
     t('listing.step.story'),
     t('listing.step.processing'),
@@ -78,12 +79,15 @@
   .listing-step__back {
     align-self: start;
     min-block-size: var(--k-touch-min);
-    padding-inline: var(--k-space-2);
+    padding-inline: var(--k-space-4);
+    padding-block: var(--k-space-2);
     border: none;
-    background: none;
-    color: var(--k-accent-secondary);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-premium-button-bg, #7A3E26);
+    color: var(--k-premium-button-text, #F4F0EA);
     font-size: var(--k-text-sm);
     cursor: pointer;
+    font-weight: 600;
   }
 
   .listing-step h1 {

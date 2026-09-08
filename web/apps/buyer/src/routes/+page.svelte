@@ -854,11 +854,21 @@
     </div>
     <div class="banner-divider" aria-hidden="true"></div>
     <div class="banner-col">
-      <p class="banner-kicker">Guild Provenance & Economics</p>
-      <h3 class="banner-title">Empirical Field Case Studies</h3>
-      <p class="banner-desc">Review in-depth field research on how cryptographic provenance seals, zero-middlemen direct payouts, and collective B2B export lots transform rural artisan earnings.</p>
+      <p class="banner-kicker">Exhibition-to-Digital Bridge</p>
+      <h3 class="banner-title">National Craft Fairs Calendar</h3>
+      <p class="banner-desc">Connect directly with authentic GI master artisans exhibiting at Surajkund Mela, Shilp Samagam, and Dilli Haat. Scan stall QR cards to reorder handcrafted treasures year-round.</p>
+      <a href="/fairs" class="banner-action-link">
+        <span>View Exhibition Calendar</span>
+        <Icon name="arrow-right" size="0.9rem" />
+      </a>
+    </div>
+    <div class="banner-divider" aria-hidden="true"></div>
+    <div class="banner-col">
+      <p class="banner-kicker">Guild Economics & Provenance</p>
+      <h3 class="banner-title">Empirical Field Case Studies (+337% Uplift)</h3>
+      <p class="banner-desc">Concrete Before vs. After field research showing how zero-broker direct DBT payouts and cryptographic provenance seals transformed incomes across Kutch, Varanasi, and Bastar.</p>
       <a href="/case-studies" class="banner-action-link">
-        <span>Read Guild Case Studies</span>
+        <span>Read Impact Case Studies</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
     </div>
@@ -1501,7 +1511,7 @@
 
   @media (min-width: 48rem) {
     .directory-case-studies-banner {
-      grid-template-columns: 1fr 1px 1fr;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
       align-items: stretch;
       padding: var(--k-space-8);
     }

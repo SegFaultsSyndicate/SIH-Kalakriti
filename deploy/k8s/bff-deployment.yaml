@@ -1,0 +1,99 @@
+# deploy/k8s/bff-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff
+  labels:
+    app: bff
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bff
+  template:
+    metadata:
+      labels:
+        app: bff
+    spec:
+      containers:
+      - name: bff
+        image: kalakriti/bff:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9095
+          name: metrics
+        env:
+        - name: CORE_SVC_ADDR
+          value: "core-svc:50051"
+        - name: SEARCH_SVC_ADDR
+          value: "search-svc:50052"
+        - name: COLLAB_SVC_ADDR
+          value: "collab-svc:50053"
+        - name: CHANNEL_SVC_GRPC_ADDR
+          value: "channel-svc:9096"
+        - name: INSIGHT_SVC_ADDR
+          value: "insight-svc:8085"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: database-url
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: redis-addr
+        - name: BASE_URL
+          value: "https://kalakriti.in"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: jwt-secret
+        - name: OTLP_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: otlp-endpoint
+        livenessProbe:
+          httpGet:
+            path: /api/v1/openapi.json
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /api/v1/openapi.json
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff
+  labels:
+    app: bff
+spec:
+  selector:
+    app: bff
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  - name: metrics
+    port: 9095
+    targetPort: 9095
+  type: ClusterIP

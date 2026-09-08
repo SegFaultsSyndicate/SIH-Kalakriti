@@ -2,8 +2,12 @@ package bfftest
 
 import (
 	"context"
+	"io"
+	"log/slog"
+	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -14,17 +18,21 @@ import (
 )
 
 type TestServer struct {
-	Server       *httptest.Server
-	URL          string
-	Issuer       *auth.Issuer
-	ArtisanToken string
-	BuyerToken   string
-	AdminToken   string
+	Server        *httptest.Server
+	ChannelServer *httptest.Server
+	URL           string
+	Issuer        *auth.Issuer
+	ArtisanToken  string
+	BuyerToken    string
+	AdminToken    string
 }
 
 func (ts *TestServer) Close() {
 	if ts.Server != nil {
 		ts.Server.Close()
+	}
+	if ts.ChannelServer != nil {
+		ts.ChannelServer.Close()
 	}
 }
 
@@ -52,19 +60,34 @@ func Start() (*TestServer, error) {
 		return nil, err
 	}
 
-	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	mockChannelSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:         "localhost:6379",
+		DialTimeout:  time.Millisecond,
+		ReadTimeout:  time.Millisecond,
+		WriteTimeout: time.Millisecond,
+		MaxRetries:   -1,
+	})
 	idempStore := &MockIdempStore{Responses: make(map[string][]byte)}
 
 	srv, err := bff.NewServer(bff.Config{
 		Addr:                  ":0",
 		BaseURL:               "http://localhost",
 		WebDist:               os.TempDir(),
+		ChannelSvcAddr:        mockChannelSrv.URL,
+		Logger:                slog.New(slog.NewTextHandler(io.Discard, nil)),
 		Issuer:                issuer,
 		Redis:                 rdb,
 		IdempStore:            idempStore,
 		RateLimitPerIP:        100000,
 		RateLimitPerPrincipal: 100000,
 		RateLimitWindow:       time.Minute,
+		AuthSvc:               &StubAuthSvc{},
 		ArtisanSvc:            &StubArtisanSvc{},
 		MediaSvc:              &StubMediaSvc{},
 		ListingSvc:            &StubListingSvc{},
@@ -77,25 +100,30 @@ func Start() (*TestServer, error) {
 		CatalogSvc:            &StubCatalogSvc{},
 	})
 	if err != nil {
+		mockChannelSrv.Close()
 		return nil, err
 	}
 
 	ts := httptest.NewServer(srv)
 	return &TestServer{
-		Server:       ts,
-		URL:          ts.URL,
-		Issuer:       issuer,
-		ArtisanToken: artisanPair.AccessToken,
-		BuyerToken:   buyerPair.AccessToken,
-		AdminToken:   adminPair.AccessToken,
+		Server:        ts,
+		ChannelServer: mockChannelSrv,
+		URL:           ts.URL,
+		Issuer:        issuer,
+		ArtisanToken:  artisanPair.AccessToken,
+		BuyerToken:    buyerPair.AccessToken,
+		AdminToken:    adminPair.AccessToken,
 	}, nil
 }
 
 type MockIdempStore struct {
+	mu        sync.RWMutex
 	Responses map[string][]byte
 }
 
 func (m *MockIdempStore) GetOrInsert(ctx context.Context, scope, key, requestHash string, expiresAt time.Time) (rec middleware.IdempotencyRecord, inserted bool, err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	stored, ok := m.Responses[scope+":"+key]
 	if !ok {
 		return middleware.IdempotencyRecord{RequestHash: requestHash}, true, nil
@@ -104,6 +132,8 @@ func (m *MockIdempStore) GetOrInsert(ctx context.Context, scope, key, requestHas
 }
 
 func (m *MockIdempStore) SaveResponse(ctx context.Context, scope, key string, response []byte) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Responses[scope+":"+key] = response
 	return nil
 }
@@ -308,10 +338,10 @@ func (s *StubCatalogSvc) ListCrafts(ctx context.Context) ([]handler.Craft, error
 	return nil, nil
 }
 func (s *StubCatalogSvc) GetCraft(ctx context.Context, craftID string) (handler.Craft, error) {
-	return handler.Craft{}, nil
+	return handler.Craft{ID: craftID, Slug: "madhubani", DisplayName: "Madhubani"}, nil
 }
 func (s *StubCatalogSvc) GetCraftBySlug(ctx context.Context, slug string) (*handler.Craft, error) {
-	return nil, nil
+	return &handler.Craft{ID: "craft-1", Slug: slug, DisplayName: "Madhubani"}, nil
 }
 func (s *StubCatalogSvc) GetArtisanStorefront(ctx context.Context, artisanID string) (map[string]any, error) {
 	return nil, nil
@@ -321,4 +351,67 @@ func (s *StubCatalogSvc) ListProcessClips(ctx context.Context, limit int32) ([]h
 }
 func (s *StubCatalogSvc) RefreshCraftIndex(ctx context.Context, idempotencyKey string) (map[string]any, error) {
 	return nil, nil
+}
+func (s *StubCatalogSvc) CreateCluster(ctx context.Context, name, stateCode string, district, coordinatorPhone *string, idempotencyKey string) (map[string]any, error) {
+	return map[string]any{"cluster_id": "cluster-1", "name": name, "state_code": stateCode}, nil
+}
+func (s *StubCatalogSvc) GetCluster(ctx context.Context, clusterID string) (map[string]any, error) {
+	return map[string]any{"id": clusterID, "name": "Test Cluster"}, nil
+}
+func (s *StubCatalogSvc) ListClusterMembers(ctx context.Context, clusterID string) ([]map[string]any, error) {
+	return []map[string]any{{"artisan_id": "artisan-1", "role": "MEMBER"}}, nil
+}
+func (s *StubCatalogSvc) AddClusterMember(ctx context.Context, clusterID, artisanID, role, idempotencyKey string) (map[string]any, error) {
+	return map[string]any{"cluster_id": clusterID, "artisan_id": artisanID, "role": role}, nil
+}
+func (s *StubCatalogSvc) RemoveClusterMember(ctx context.Context, clusterID, artisanID, idempotencyKey string) (bool, error) {
+	return true, nil
+}
+func (s *StubCatalogSvc) CreateSelfHelpGroup(ctx context.Context, name, registrationNo string, clusterID *string, members []map[string]any, idempotencyKey string) (map[string]any, error) {
+	return map[string]any{"shg_id": "shg-1", "name": name}, nil
+}
+func (s *StubCatalogSvc) GetSelfHelpGroup(ctx context.Context, shgID string) (map[string]any, error) {
+	return map[string]any{"id": shgID, "name": "Test SHG"}, nil
+}
+func (s *StubCatalogSvc) SetSelfHelpGroupMembers(ctx context.Context, shgID string, members []map[string]any, idempotencyKey string) (map[string]any, error) {
+	return map[string]any{"shg_id": shgID, "members": members}, nil
+}
+func (s *StubCatalogSvc) SuspendListing(ctx context.Context, listingID, reason, idempotencyKey string) (handler.Listing, error) {
+	return handler.Listing{ID: listingID, Title: "Suspended Item"}, nil
+}
+func (s *StubCatalogSvc) ReinstateListing(ctx context.Context, listingID, idempotencyKey string) (handler.Listing, error) {
+	return handler.Listing{ID: listingID, Title: "Reinstated Item"}, nil
+}
+func (s *StubCatalogSvc) GetListingBySlug(ctx context.Context, slug string) (*handler.ListingDetail, error) {
+	return &handler.ListingDetail{ID: "listing-1", Title: "Madhubani Painting"}, nil
+}
+func (s *StubCatalogSvc) GetArtisanBySlug(ctx context.Context, slug string) (*handler.ArtisanProfile, error) {
+	return &handler.ArtisanProfile{ID: "artisan-1", DisplayName: "Lakshmi Devi"}, nil
+}
+func (s *StubCatalogSvc) ListPublishedListings(ctx context.Context, limit, offset int32) ([]handler.ListingDetail, error) {
+	return []handler.ListingDetail{{ID: "listing-1"}}, nil
+}
+func (s *StubCatalogSvc) GetProvenanceByShortCode(ctx context.Context, code string) (handler.ProvenanceRecord, error) {
+	return handler.ProvenanceRecord{ID: "prov-1", ShortCode: code}, nil
+}
+func (s *StubCatalogSvc) GetListing(ctx context.Context, listingID string) (handler.Listing, error) {
+	return handler.Listing{ID: listingID, Title: "Madhubani Painting"}, nil
+}
+func (s *StubCatalogSvc) GetArtisan(ctx context.Context, artisanID string) (handler.Artisan, error) {
+	return handler.Artisan{ID: artisanID, DisplayName: "Lakshmi Devi"}, nil
+}
+func (s *StubCatalogSvc) ListArtisansByCraft(ctx context.Context, craftID string, limit int32) ([]handler.Artisan, error) {
+	return []handler.Artisan{{ID: "artisan-1"}}, nil
+}
+
+type StubAuthSvc struct{}
+
+func (s *StubAuthSvc) RequestOTP(ctx context.Context, phone string) error {
+	return nil
+}
+func (s *StubAuthSvc) VerifyOTP(ctx context.Context, phone, otp string) (string, string, error) {
+	return "mock-access-token", "mock-refresh-token", nil
+}
+func (s *StubAuthSvc) RefreshToken(ctx context.Context, refreshToken string) (string, error) {
+	return "mock-access-token", nil
 }

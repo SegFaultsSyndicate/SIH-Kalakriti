@@ -180,7 +180,9 @@
 <InstallPrompt />
 <ToastRegion />
 {#if showChrome}
-  <ReadScreen />
+  <div class:has-bottom-nav={showBottomNav}>
+    <ReadScreen />
+  </div>
 {/if}
 
 <style>
@@ -246,5 +248,28 @@
     padding-block: var(--k-space-6);
     text-align: center;
     color: var(--k-text-secondary);
+  }
+
+  :global(.has-bottom-nav .k-read-screen) {
+    inset-block-end: calc(var(--k-space-4) + 4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  :global(.has-bottom-nav .k-read-screen__unavailable) {
+    inset-block-end: calc(var(--k-space-4) + 4.5rem + var(--k-touch-min) + var(--k-space-2) + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (max-width: 32rem) {
+    .shell__header {
+      padding: var(--k-space-2) var(--k-space-3);
+      gap: var(--k-space-2);
+    }
+
+    .shell__status span:not(.net__mark) {
+      display: none;
+    }
+
+    .shell__main {
+      padding-inline: var(--k-space-3);
+    }
   }
 </style>

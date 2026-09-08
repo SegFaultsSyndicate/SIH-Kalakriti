@@ -351,10 +351,21 @@
   /* Catalog Grid */
   .catalog-grid {
     display: grid;
-    /* min() caps the track floor at 100% so a 320px phone gets one
-       full-width column instead of a 22rem overflow. */
-    grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
     gap: var(--k-space-5);
+  }
+
+  @media (max-width: 480px) {
+    .catalog-grid {
+      grid-template-columns: 1fr;
+      gap: var(--k-space-3);
+    }
+    .catalog-container {
+      padding-inline: var(--k-space-3);
+    }
+    .cluster-card {
+      padding: var(--k-space-4);
+    }
   }
 
   .cluster-card {

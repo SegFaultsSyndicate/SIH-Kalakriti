@@ -142,6 +142,7 @@
     <nav class="shell__nav" aria-label="Main Navigation">
       <a class="shell__nav-link" href="/catalog">Craft Directory</a>
       <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
+      <a class="shell__nav-link" href="/fairs">Exhibitions & Melas</a>
       <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
     </nav>
 
@@ -150,7 +151,7 @@
         <Icon name="search" />
       </a>
       <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
-        <Icon name="collective-order" />
+        <Icon name="package" />
       </a>
 
       <AccountMenu />
@@ -258,7 +259,7 @@
   .shell__nav-link {
     font-size: var(--k-text-sm, 0.875rem);
     font-weight: 600;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-premium-header-text, #F4F0EA);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-radius: var(--k-radius-sm, 4px);
@@ -266,7 +267,7 @@
   }
 
   .shell__nav-link:hover {
-    color: var(--k-terracotta, #b84a39);
-    background-color: var(--k-surface-sunken, #f5f2eb);
+    color: var(--k-premium-header-text, #F4F0EA);
+    background-color: rgba(244, 240, 234, 0.15);
   }
 </style>

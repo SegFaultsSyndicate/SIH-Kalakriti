@@ -7,14 +7,18 @@
 
 ## What This Is
 
-Kalakriti backend: 7 microservices (6 Go + 1 Python) for AI-powered artisan marketplace.
-- REST API at http://localhost:8000 (BFF service)
+Kalakriti platform: 7 backend microservices (6 Go + 1 Python) + 3 SvelteKit web frontends served via NGINX.
+- Web frontends at http://localhost (NGINX gateway on port 80)
+  - Buyer Marketplace: http://localhost/ (or `kalakriti.in`)
+  - Artisan PWA: http://localhost/artisan/ (or `artisan.kalakriti.in`)
+  - Admin Dashboard: http://localhost/admin/ (or `admin.kalakriti.in`)
+- REST API at http://localhost:8000 (BFF service, also proxied through NGINX at http://localhost/api/v1/*)
 - gRPC between services
 - Single PostgreSQL database with vector search
 - Event-driven (Kafka + transactional outbox)
 - Observability: OpenTelemetry tracing, Prometheus metrics
 
-**Frontend team:** BFF exposes REST API at `/api/v1/*` — see API section below.
+**Frontend team:** BFF exposes REST API at `/api/v1/*` — see API section below. The NGINX reverse proxy (`deploy/nginx/nginx.conf`) handles production routing and SPA fallbacks.
 
 ---
 
@@ -101,10 +105,18 @@ make demo-up
 - `core-svc` → Identity, catalog, media, provenance (gRPC :50051)
 - `search-svc` → Vector search (gRPC :50052)
 - `collab-svc` → Bulk orders, allocations (gRPC :50053)
-- `bff` → REST API (:8000) — **this is what frontend calls**
+- `bff` → REST API (:8000) — **direct backend API**
 - `ml-svc` → ML inference in MOCK_MODE (:50055)
 - `insight-svc` → Income statements (gRPC :50056)
 - `channel-svc` → Notifications, follows, exports (gRPC :9096)
+- `web` → NGINX gateway (:80) — **serves all 3 frontend apps + proxies `/api/`**
+
+**Frontend & App URLs:**
+- **Buyer Marketplace**: http://localhost/ (or with local DNS / hosts entry `kalakriti.in`)
+- **Artisan PWA**: http://localhost/artisan/ (or `artisan.kalakriti.in`)
+- **Admin Dashboard**: http://localhost/admin/ (or `admin.kalakriti.in`)
+- **API (via NGINX)**: http://localhost/api/v1/*
+- **API (Direct to BFF)**: http://localhost:8000/api/v1/*
 
 **Check if running:**
 ```bash
@@ -390,14 +402,29 @@ Share this in your repo README or Slack:
 ```markdown
 ## For Frontend Team
 
-**Backend API:** http://localhost:8000/api/v1
+**Web Apps & Gateway:** http://localhost (NGINX on Port 80)
+- Buyer Marketplace: http://localhost/ (or `kalakriti.in`)
+- Artisan PWA: http://localhost/artisan/ (or `artisan.kalakriti.in`)
+- Admin Dashboard: http://localhost/admin/ (or `admin.kalakriti.in`)
+- Proxied API: http://localhost/api/v1/*
 
-**Setup (5 minutes):**
+**Direct Backend API:** http://localhost:8000/api/v1
+
+**Setup (Production Container Mode — 5 minutes):**
 1. Install Docker Desktop + Go 1.23
 2. `git clone <repo>` && `cd kalakriti`
 3. `cp .env.example .env`
 4. `make demo-up` (wait 5 min first time)
-5. API ready at http://localhost:8000
+5. Web apps ready at http://localhost and API at http://localhost:8000
+
+**Local Frontend Dev (Hot Reload Mode):**
+```bash
+cd web
+pnpm install
+pnpm dev:artisan   # :5173
+pnpm dev:buyer     # :5174
+pnpm dev:admin     # :5175
+```
 
 **API Docs:** See QUICKSTART.md Section "API Overview"
 
@@ -455,10 +482,16 @@ ports:
 - Auth: POST /auth/otp → POST /auth/verify → Bearer token
 - Real S3 presigned URLs for media upload (no backend proxy)
 
-**For deployment (later):**
-- K8s manifests in `deploy/k8s/`
+**For deployment (production & k8s):**
+- Web NGINX reverse proxy config in `deploy/nginx/nginx.conf`
+- Multi-stage frontend Dockerfile in `Dockerfile.web` (builds Buyer, Artisan, Admin)
+- K8s manifests in `deploy/k8s/`:
+  - `bff-deployment.yaml`: Go BFF REST deployment + ClusterIP service (:8000)
+  - `web-deployment.yaml`: NGINX web static serving + proxy service (:80)
+  - `ingress.yaml`: Ingress routing subdomains (`kalakriti.in`, `artisan.*`, `admin.*`) and `/api/`
+  - `configmap.yaml`: Cluster configuration and service hostnames
 - Prometheus config in `deploy/prometheus.yml`
-- Multi-stage Dockerfiles already optimized (<30MB per service)
+- Multi-stage Dockerfiles already optimized (<30MB per backend service, Alpine NGINX for frontend)
 
 ---
 

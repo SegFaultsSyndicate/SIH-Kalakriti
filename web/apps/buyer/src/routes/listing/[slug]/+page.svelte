@@ -675,6 +675,10 @@
   }
 
   @media (max-width: 48rem) {
+    .listing-page-wrap {
+      padding-block-end: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+
     .sticky-mobile-dock {
       position: fixed;
       inset-block-end: 0;
@@ -728,6 +732,20 @@
 
     .sticky-mobile-dock__action:active {
       transform: scale(0.98);
+    }
+  }
+
+  @media (max-width: 360px) {
+    .sticky-mobile-dock {
+      padding: var(--k-space-2) var(--k-space-3);
+      padding-block-end: calc(var(--k-space-2) + env(safe-area-inset-bottom, 0px));
+    }
+    .sticky-mobile-dock__action {
+      padding: var(--k-space-2) var(--k-space-3);
+      font-size: var(--k-text-xs);
+    }
+    .dock-amount {
+      font-size: var(--k-text-base);
     }
   }
 </style>

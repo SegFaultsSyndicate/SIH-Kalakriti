@@ -90,7 +90,7 @@
   <title>{t('listing.review.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={4} heading={t('listing.review.heading')} backHref="/listing/new/processing?d={draftId}">
+<ListingStep index={5} heading={t('listing.review.heading')} backHref="/listing/new/processing?d={draftId}">
   {#snippet children()}
     {#if !loaded}
       <p class="review-status" role="status">{t('state.loading')}</p>

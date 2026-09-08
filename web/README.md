@@ -1,8 +1,8 @@
 # Kalakriti — web
 
 Three SvelteKit applications, one shared design system, no Node runtime in
-production. The Go BFF serves the built static assets and is the only backend
-this code talks to.
+production. In production, a hardened NGINX reverse proxy (`deploy/nginx/nginx.conf`,
+`Dockerfile.web`) serves the static assets on port 80 and proxies `/api/` to the Go BFF.
 
 ---
 
@@ -159,12 +159,24 @@ NO_MANUAL_CHUNKS=1 pnpm build
 
 ---
 
-## Static output and the SPA fallback
+## Static output, NGINX routing, and SPA fallback
 
 Every app uses `adapter-static` with `fallback: 'index.html'`,
-`ssr = false` and `prerender = false` in the root `+layout.ts`. The BFF serves
-`apps/<app>/build` and rewrites unknown paths to the fallback. Builds are
-precompressed (`.br` and `.gz` next to each asset).
+`ssr = false` and `prerender = false` in the root `+layout.ts`. In production,
+all three builds are containerized via `Dockerfile.web` and served by an Alpine
+NGINX reverse proxy (`deploy/nginx/nginx.conf`) exposed on **Port 80**:
+
+- **Subdomain Routing**:
+  - `kalakriti.in` (default): Buyer Marketplace (`/var/www/buyer`)
+  - `artisan.kalakriti.in`: Artisan PWA (`/var/www/artisan`)
+  - `admin.kalakriti.in`: Admin Dashboard (`/var/www/admin`)
+- **Path Fallbacks** (for single-host / localhost testing):
+  - `http://localhost/` → Buyer
+  - `http://localhost/artisan/` → Artisan PWA
+  - `http://localhost/admin/` → Admin Dashboard
+- **API Proxy**: `/api/` requests are reverse-proxied to `bff:8000` with SSE streaming buffers disabled (`proxy_buffering off;`).
+- **PWA Service Worker**: Served with `Cache-Control: no-cache, no-store, must-revalidate` so updates deploy cleanly without worker trapping.
+- **Static Assets**: Precompressed `.br` and `.gz` static assets served with 1-year immutable caching (`_app/immutable/`).
 
 Two settings that are load-bearing and easy to lose:
 
@@ -179,16 +191,6 @@ Two settings that are load-bearing and easy to lose:
   navigation at all, while still appearing to register a worker. It is keyed on
   `/` rather than `/index.html` because that is the URL a static file server
   actually serves the shell at.
-
-**Each build assumes it is served from the origin root.** `paths.relative:
-false` hardcodes `/_app/...`, so an app mounted under a prefix (`/admin/`,
-say) needs `kit.paths.base` set and a rebuild. Worth settling before the BFF
-routing is fixed.
-
-Public, crawlable listing and artisan pages are rendered server-side by the Go
-BFF from the same data (Batch 11). That is why enabling SSR here would add a
-runtime dependency this deployment does not have without adding a crawlable
-page.
 
 ---
 

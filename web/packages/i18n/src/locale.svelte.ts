@@ -72,15 +72,19 @@ const CATALOGUE_LOADERS: Record<LocaleCode, () => Promise<Partial<Messages>>> = 
   ur: async () => (await import('./messages/ur')).ur,
   pa: async () => (await import('./messages/pa')).pa,
   or: async () => (await import('./messages/or')).or,
-  ...Object.fromEntries(
-    Object.keys(FALLBACK_CATALOGUES)
-      .filter(
-        (code) =>
-          !['en', 'hi', 'bn', 'ta', 'te', 'gu', 'mr', 'sd', 'ur', 'pa', 'or'].includes(code),
-      )
-      .map((code) => [code, async () => FALLBACK_CATALOGUES[code as LocaleCode]]),
-  ),
-} as Record<LocaleCode, () => Promise<Partial<Messages>>>;
+  kn: async () => (await import('./messages/kn')).kn,
+  ml: async () => (await import('./messages/ml')).ml,
+  as: async () => (await import('./messages/as')).as,
+  mai: async () => (await import('./messages/mai')).mai,
+  kok: async () => (await import('./messages/kok')).kok,
+  doi: async () => (await import('./messages/doi')).doi,
+  ks: async () => (await import('./messages/ks')).ks,
+  ne: async () => (await import('./messages/ne')).ne,
+  sa: async () => (await import('./messages/sa')).sa,
+  brx: async () => (await import('./messages/brx')).brx,
+  sat: async () => (await import('./messages/sat')).sat,
+  mni: async () => (await import('./messages/mni')).mni,
+};
 
 /**
  * Whether the artisan has ever explicitly chosen a language (as opposed to
@@ -109,6 +113,7 @@ class LocaleState {
   #hiCatalogue = $state<Partial<Messages> | null>(null);
   #hiCataloguePromise: Promise<Partial<Messages>> | null = null;
   #loading = $state(false);
+  #version = $state(0);
 
   get code(): LocaleCode {
     return this.#code;
@@ -138,10 +143,11 @@ class LocaleState {
    * to remember to tear down.
    */
   get t(): Translate {
-    // Referenced so the getter re-derives when code or either catalogue changes.
+    // Referenced so the getter re-derives when code, version, or either catalogue changes.
     void this.#code;
     void this.#catalogue;
     void this.#hiCatalogue;
+    void this.#version;
     return (key, values) => interpolate(this.#lookup(key), values);
   }
 
@@ -177,7 +183,8 @@ class LocaleState {
     const { persist = true } = options;
     this.#loading = true;
     try {
-      this.#catalogue = await CATALOGUE_LOADERS[code]();
+      const loader = CATALOGUE_LOADERS[code] ?? (async () => FALLBACK_CATALOGUES[code] ?? {});
+      this.#catalogue = await loader();
       this.#code = code;
 
       if (code !== 'en' && code !== 'hi') {
@@ -189,6 +196,8 @@ class LocaleState {
         });
         await this.#hiCataloguePromise;
       }
+
+      this.#version++;
 
       if (typeof document !== 'undefined') {
         // <html lang> and dir are what a screen reader switches voice on, and

@@ -231,6 +231,16 @@ services:
       - insight-svc
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./kalakriti
+      dockerfile: ../Dockerfile.web
+    ports:
+      - "80:80"
+    depends_on:
+      - bff
+    restart: unless-stopped
+
   ml-svc:
     build:
       context: ./kalakriti

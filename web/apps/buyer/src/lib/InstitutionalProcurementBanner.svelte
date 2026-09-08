@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { SectionHeader, Button } from '@kalakriti/ui';
+  import { SectionHeader } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);

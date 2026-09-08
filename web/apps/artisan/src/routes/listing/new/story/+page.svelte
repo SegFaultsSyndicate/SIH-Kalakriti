@@ -75,7 +75,7 @@
   <title>{t('listing.story.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={2} heading={t('listing.story.heading')} backHref="/listing/new/video?d={draftId}">
+<ListingStep index={3} heading={t('listing.story.heading')} backHref="/listing/new/video?d={draftId}">
   {#snippet children()}
     <FieldGroup label={t('listing.story.craftLabel')}>
       {#snippet children({ id })}

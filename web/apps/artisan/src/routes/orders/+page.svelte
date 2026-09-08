@@ -163,6 +163,17 @@
     padding: var(--k-space-3);
   }
 
+  @media (max-width: 30rem) {
+    .orders-page {
+      padding: var(--k-space-3);
+    }
+    :global(.orders-page__row) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--k-space-2);
+    }
+  }
+
   .orders-page__row-body {
     display: flex;
     flex-direction: column;

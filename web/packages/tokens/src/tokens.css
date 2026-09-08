@@ -13,5 +13,6 @@
 @layer reset, tokens, base, pattern, component, utility, app;
 
 @import './palette.css' layer(tokens);
+@import './premium-palette.css' layer(tokens);
 @import './scale.css' layer(tokens);
 @import './fonts.css' layer(tokens);

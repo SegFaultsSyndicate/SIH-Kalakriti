@@ -39,13 +39,12 @@ class WishlistStore {
     }
 
     showToast({
-      title: nextState ? 'Added to Wishlist' : 'Removed from Wishlist',
       message: title
         ? `"${title}" has been ${nextState ? 'saved to your craft wishlist' : 'removed from your wishlist'}.`
         : nextState
           ? 'Item saved to your craft wishlist.'
           : 'Item removed from your craft wishlist.',
-      variant: nextState ? 'success' : 'neutral',
+      variant: nextState ? 'success' : 'info',
     });
 
     return nextState;

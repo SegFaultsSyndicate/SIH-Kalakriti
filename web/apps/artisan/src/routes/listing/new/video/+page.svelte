@@ -89,7 +89,7 @@
   <title>{t('listing.video.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<ListingStep index={1} heading={t('listing.video.heading')} backHref="/listing/new/capture?d={draftId}">
+<ListingStep index={2} heading={t('listing.video.heading')} backHref="/listing/new/studio?d={draftId}">
   {#snippet children()}
     <input
       bind:this={fileInput}

@@ -1,0 +1,48 @@
+# Dockerfile.web
+# Multi-stage build for Kalakriti's 3 frontends + NGINX reverse proxy
+
+# ── Stage 1: Build the 3 SvelteKit static apps ──
+FROM node:20-alpine AS builder
+
+RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
+
+WORKDIR /app
+
+# Copy root workspace and package manifests
+COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./web/
+COPY web/packages/ ./web/packages/
+COPY web/apps/ ./web/apps/
+COPY web/scripts/ ./web/scripts/
+COPY web/tsconfig.json web/tsconfig.base.json ./web/
+
+WORKDIR /app/web
+
+# Install all workspace dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build all 3 apps to apps/*/build
+RUN pnpm build
+
+# ── Stage 2: Production NGINX runtime ──
+FROM nginx:1.25-alpine
+
+# Remove default nginx static assets
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/*
+
+# Create web root directories
+RUN mkdir -p /var/www/buyer /var/www/artisan /var/www/admin
+
+# Copy static build outputs
+COPY --from=builder /app/web/apps/buyer/build/ /var/www/buyer/
+COPY --from=builder /app/web/apps/artisan/build/ /var/www/artisan/
+COPY --from=builder /app/web/apps/admin/build/ /var/www/admin/
+
+# Copy custom NGINX configuration
+COPY deploy/nginx/nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
+  CMD wget -q -O - http://localhost/healthz || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

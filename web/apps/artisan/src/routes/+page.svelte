@@ -13,13 +13,18 @@
   without a real device in this environment, but the ordering is deliberate.
 -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { liveQuery } from 'dexie';
   import { formatRelativeTime, locale } from '@kalakriti/i18n';
-  import { OutboxView, network, db, type DraftRecord } from '@kalakriti/offline';
+  import { OutboxView, network, db, getPref, type DraftRecord } from '@kalakriti/offline';
   import { Icon } from '@kalakriti/icons';
   import { syncEngine } from '$lib/sync';
-  import { getArtisanId } from '$lib/registration';
+  import { getArtisanId, getDraft as getRegistrationDraft } from '$lib/registration';
   import { cachedOrders, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
+  import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
+  import DigitalLiteracyTutorial from '$lib/DigitalLiteracyTutorial.svelte';
+  import StallCardModal from '$lib/StallCardModal.svelte';
+  import { launchDemoListing } from '$lib/demo-listing';
 
   const t = $derived(locale.t);
 
@@ -28,13 +33,41 @@
 
   let artisanId = $state<string | undefined>(undefined);
   let orders = $state<BulkOrder[]>([]);
+  let showTutorial = $state(false);
+  let showStallModal = $state(false);
+
+  let artisanName = $state('Eshaan');
+  let craftName = $state('Weaving & Handloom');
+  let districtName = $state('Varanasi, Uttar Pradesh');
+  let clusterName = $state('Varanasi Silk Weaver Facility Centre');
+  let pehchanId = $state('UP-VNS-2024-0982');
+  let avatarUrl = $state<string | undefined>(undefined);
 
   $effect(() => {
     void (async () => {
       artisanId = await getArtisanId();
       orders = await cachedOrders();
+
+      const reg = await getRegistrationDraft();
+      if (reg.name) artisanName = reg.name;
+      if (reg.pehchanId) pehchanId = reg.pehchanId;
+      if (reg.clusterName) clusterName = reg.clusterName;
+      if (reg.districtFreeText) districtName = reg.districtFreeText;
+
+      const storedAvatar = await getPref<string>('profile.avatar_url');
+      if (storedAvatar) avatarUrl = storedAvatar;
+
+      const seen = await getPref<boolean>('literacy.tutorial_completed');
+      if (!seen) {
+        showTutorial = true;
+      }
     })();
   });
+
+  async function handleStartDemo(): Promise<void> {
+    const demoDraftId = await launchDemoListing();
+    await goto(`/listing/new/studio?d=${demoDraftId}`);
+  }
 
   interface HomeLotRow {
     order: BulkOrder;
@@ -126,6 +159,25 @@
   </button>
 </section>
 
+<!-- Digital Sahayak & Demo Walkthrough Hero Banner -->
+<aside class="sahayak-banner">
+  <div class="sahayak-banner__info">
+    <div class="sahayak-banner__badge">
+      <Icon name="verified-artisan" size="0.85rem" />
+      <span>{t('literacy.sahayak.mode')}</span>
+    </div>
+    <h2 class="sahayak-banner__title">{t('literacy.tutorial.subtitle')}</h2>
+  </div>
+  <div class="sahayak-banner__actions">
+    <button type="button" class="sahayak-btn" onclick={() => (showTutorial = true)}>
+      📖 {t('literacy.tutorial.open')}
+    </button>
+    <button type="button" class="sahayak-btn sahayak-btn--primary" onclick={handleStartDemo}>
+      ⚡ {t('literacy.demo.start')}
+    </button>
+  </div>
+</aside>
+
 <a class="add-product" href="/listing/new/capture">
   <Icon name="plus" class="add-product__icon" />
   {t('home.addProduct')}
@@ -141,11 +193,38 @@
     <Icon name="income-statement" />
     {t('home.earnings')}
   </a>
+  <button type="button" class="home-links-row__link home-links-row__btn" onclick={() => (showStallModal = true)}>
+    <Icon name="verified-artisan" />
+    <span>Stall Placard</span>
+  </button>
   <a class="home-links-row__link" href="/notifications">
     <Icon name="bell" />
     {t('home.notifications')}
   </a>
 </div>
+
+<!-- Economic Growth & Income Uplift Section -->
+<div class="home-growth-section">
+  <IncomeGrowthChart compact />
+</div>
+
+<!-- Modals -->
+<DigitalLiteracyTutorial
+  open={showTutorial}
+  onclose={() => (showTutorial = false)}
+  onstartDemo={handleStartDemo}
+/>
+
+<StallCardModal
+  open={showStallModal}
+  onclose={() => (showStallModal = false)}
+  {artisanName}
+  {craftName}
+  {districtName}
+  {clusterName}
+  {pehchanId}
+  {avatarUrl}
+/>
 
 {#if inProgressDrafts.length > 0}
   <section class="drafts" aria-labelledby="drafts-heading">
@@ -290,6 +369,76 @@
     color: var(--k-text-primary);
     text-decoration: none;
     font-size: var(--k-text-sm);
+    background: var(--k-surface-base);
+  }
+
+  .home-links-row__btn {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .sahayak-banner {
+    margin: var(--k-space-4) var(--k-space-4) 0;
+    padding: var(--k-space-3) var(--k-space-4);
+    background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.04));
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    border-radius: var(--k-radius-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--k-space-3);
+    flex-wrap: wrap;
+  }
+
+  .sahayak-banner__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sahayak-banner__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #b45309;
+  }
+
+  .sahayak-banner__title {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-primary);
+    font-weight: var(--k-weight-medium);
+    margin: 0;
+  }
+
+  .sahayak-banner__actions {
+    display: flex;
+    gap: var(--k-space-2);
+    flex-wrap: wrap;
+  }
+
+  .sahayak-btn {
+    border: 1px solid var(--k-border-interactive);
+    background: var(--k-surface-raised);
+    color: var(--k-text-primary);
+    padding: var(--k-space-2) var(--k-space-3);
+    border-radius: var(--k-radius-pill);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-semibold);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .sahayak-btn--primary {
+    background: #b45309;
+    color: #ffffff;
+    border-color: #b45309;
+  }
+
+  .home-growth-section {
+    margin: 0 var(--k-space-4) var(--k-space-4);
   }
 
   .drafts,

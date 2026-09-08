@@ -136,7 +136,31 @@ export DATABASE_URL="postgres://..."
 ./bin/webhook-worker
 ```
 
-### 5. Verify Deployment
+### 5. Web Tier (NGINX) & Kubernetes Deployment
+
+**Option A: Full Docker Compose**
+The `web` service in `docker-compose.full.yml` builds all 3 frontend apps (`web/apps/buyer`, `web/apps/artisan`, `web/apps/admin`) and runs NGINX on port 80:
+```bash
+docker compose -f docker-compose.full.yml up -d --build web bff
+```
+
+**Option B: Kubernetes Deployment**
+Apply the manifests in `deploy/k8s/`:
+```bash
+# 1. ConfigMap and Secrets
+kubectl apply -f deploy/k8s/configmap.yaml
+# (ensure secret.yaml is populated from secret.yaml.template)
+kubectl apply -f deploy/k8s/secret.yaml
+
+# 2. Deploy BFF API and NGINX Web Gateway
+kubectl apply -f deploy/k8s/bff-deployment.yaml
+kubectl apply -f deploy/k8s/web-deployment.yaml
+
+# 3. Deploy Ingress Controller Routing
+kubectl apply -f deploy/k8s/ingress.yaml
+```
+
+### 6. Verify Deployment
 
 ```bash
 # Run verification script

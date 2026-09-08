@@ -28,8 +28,10 @@
   import { ApiError, advisePricing, updateListing, type components } from '@kalakriti/api';
   import StateBadge from '$lib/StateBadge.svelte';
   import PriceAdvisory from '$lib/PriceAdvisory.svelte';
+  import GemExportPreview from '$lib/GemExportPreview.svelte';
   import { fetchListing, groupFor, network, type Listing } from '$lib/listings';
   import { patchFields, type ListingDraftFields } from '$lib/listing-draft';
+  import { getDraft as getRegistrationDraft } from '$lib/registration';
   import { buildMockResult, type MockAttribute } from '$lib/ml-mock';
 
   const t = $derived(locale.t);
@@ -53,6 +55,11 @@
   let advising = $state(false);
   let savingPrice = $state(false);
 
+  let gemOpen = $state(false);
+  let gemSellerName = $state('');
+  let gemSellerDistrict = $state('');
+  let gemSellerId = $state('');
+
   async function load(): Promise<void> {
     if (!listingId) return;
     loading = true;
@@ -72,6 +79,12 @@
       localDraftId = draft.id;
       attributes = ((draft.fields as ListingDraftFields).attributes ?? []) as MockAttribute[];
     }
+
+    // Load registration details for the GeM export card (seller info).
+    const regDraft = await getRegistrationDraft();
+    gemSellerName = regDraft.name ?? '';
+    gemSellerDistrict = regDraft.districtFreeText ?? regDraft.districtId ?? '';
+    gemSellerId = regDraft.pehchanId ?? '';
   }
 
   $effect(() => {
@@ -180,6 +193,10 @@
       {/if}
       {#if listing.state === 'PUBLISHED'}
         <a href="/listings/{listing.id}/provenance">{t('listings.detail.provenanceLink')}</a>
+        <Button size="sm" variant="secondary" onclick={() => (gemOpen = true)}>
+          <Icon name="external-link" />
+          {t('gem.exportButton')}
+        </Button>
       {/if}
     </header>
 
@@ -295,6 +312,16 @@
         {/if}
       {/if}
     </section>
+
+    {#if listing.state === 'PUBLISHED'}
+      <GemExportPreview
+        bind:open={gemOpen}
+        {listing}
+        sellerName={gemSellerName}
+        sellerDistrict={gemSellerDistrict}
+        sellerId={gemSellerId}
+      />
+    {/if}
   {/if}
 </main>
 

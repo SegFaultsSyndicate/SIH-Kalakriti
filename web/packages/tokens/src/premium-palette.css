@@ -1,0 +1,127 @@
+/*
+ * Kalakriti Premium Palette — Heritage Artisan Theme
+ * ---------------------------------------------------------------
+ * Premium color overrides that layer on top of the base palette.css
+ * to create a luxurious, heritage-focused visual identity.
+ *
+ * Philosophy: Warm earth tones evoke handcrafted authenticity,
+ * natural materials, and artisan heritage. Champagne gold suggests
+ * legacy value without flashiness.
+ * ---------------------------------------------------------------
+ */
+
+:root {
+  /* Premium Heritage Artisan Palette */
+  --k-premium-parchment:       #F7F4ED;   /* Warm heritage paper - canvas */
+  --k-premium-ivory:           #FFFFFF;   /* Pure white - surfaces */
+  --k-premium-deep-terracotta: #2A0D08;   /* Deep terracotta black - authority */
+  --k-premium-warm-charcoal:   #1B1614;   /* Readable warm black */
+  --k-premium-soft-taupe:      #6B5E54;   /* Supporting text */
+  --k-premium-saddle-brown:    #8B4513;   /* Rich artisan leather */
+  --k-premium-champagne:       #C4A47C;   /* Brushed heritage metal */
+  --k-premium-warm-cream:      #F4F0EA;   /* Soft bone/cream */
+
+  /* Premium Sovereign Navy & Gold */
+  --k-premium-midnight-navy:   #0B1320;   /* Institutional trust */
+  --k-premium-royal-blue:      #1E40AF;   /* Government prestige */
+  --k-premium-antique-brass:   #C29B38;   /* Traditional distinction */
+  --k-premium-alabaster:       #F8F7F4;   /* Premium paper */
+
+  /* Premium Obsidian & Gold (Dark Luxury) */
+  --k-premium-obsidian:        #0D0D0E;   /* Museum darkness */
+  --k-premium-graphite:        #18181B;   /* Layered depth */
+  --k-premium-pale-gold:       #D4AF6E;   /* Liquid precious metal */
+  --k-premium-chalk:           #F4F4F5;   /* High contrast text */
+
+  /* Premium Forest & Stone */
+  --k-premium-forest-emerald:  #0E231C;   /* Deep serenity */
+  --k-premium-sandstone:       #EFECE6;   /* Organic base */
+  --k-premium-sage:            #687C6C;   /* Botanical harmony */
+  --k-premium-raw-gold:        #D1B47A;   /* Elevated finish */
+
+  /* Premium Oxblood & Silk */
+  --k-premium-oxblood:         #2A0810;   /* Dramatic depth */
+  --k-premium-burgundy:        #771F2E;   /* Passion & exclusivity */
+  --k-premium-rose-copper:     #C89680;   /* Sensual modern */
+  --k-premium-cashmere:        #FAF7F2;   /* Tactile elegance */
+}
+
+/*
+ * Heritage Artisan Theme (Default Premium)
+ * ---------------------------------------------------------------
+ * Applied to both buyer and artisan apps for a cohesive luxury
+ * heritage experience.
+ * ---------------------------------------------------------------
+ */
+
+:root[data-premium="heritage"],
+:root {
+  /* Override key semantic tokens with premium heritage palette */
+  --k-premium-header-bg:       #873032;
+  --k-premium-header-text:     var(--k-premium-warm-cream);
+  --k-premium-canvas:          var(--k-premium-parchment);
+  --k-premium-accent-primary:  #873032;
+  --k-premium-accent-gold:     var(--k-premium-champagne);
+  --k-premium-button-bg:       #873032;
+  --k-premium-button-text:     var(--k-premium-warm-cream);
+}
+
+/*
+ * Sovereign Navy Theme
+ * ---------------------------------------------------------------
+ */
+
+:root[data-premium="sovereign"] {
+  --k-premium-header-bg:       var(--k-premium-midnight-navy);
+  --k-premium-header-text:     var(--k-premium-warm-cream);
+  --k-premium-canvas:          var(--k-premium-alabaster);
+  --k-premium-accent-primary:  var(--k-premium-royal-blue);
+  --k-premium-accent-gold:     var(--k-premium-antique-brass);
+  --k-premium-button-bg:       var(--k-premium-royal-blue);
+  --k-premium-button-text:     var(--k-premium-warm-cream);
+}
+
+/*
+ * Obsidian Dark Luxury Theme
+ * ---------------------------------------------------------------
+ */
+
+:root[data-premium="obsidian"] {
+  --k-premium-header-bg:       #000000;
+  --k-premium-header-text:     var(--k-premium-chalk);
+  --k-premium-canvas:          var(--k-premium-obsidian);
+  --k-premium-accent-primary:  var(--k-premium-pale-gold);
+  --k-premium-accent-gold:     var(--k-premium-pale-gold);
+  --k-premium-button-bg:       var(--k-premium-pale-gold);
+  --k-premium-button-text:     var(--k-premium-obsidian);
+}
+
+/*
+ * Forest Emerald Theme
+ * ---------------------------------------------------------------
+ */
+
+:root[data-premium="forest"] {
+  --k-premium-header-bg:       var(--k-premium-forest-emerald);
+  --k-premium-header-text:     var(--k-premium-warm-cream);
+  --k-premium-canvas:          var(--k-premium-sandstone);
+  --k-premium-accent-primary:  #2F5233; /* Deep moss */
+  --k-premium-accent-gold:     var(--k-premium-raw-gold);
+  --k-premium-button-bg:       #2F5233;
+  --k-premium-button-text:     var(--k-premium-warm-cream);
+}
+
+/*
+ * Oxblood Velvet Theme
+ * ---------------------------------------------------------------
+ */
+
+:root[data-premium="oxblood"] {
+  --k-premium-header-bg:       var(--k-premium-oxblood);
+  --k-premium-header-text:     var(--k-premium-warm-cream);
+  --k-premium-canvas:          var(--k-premium-cashmere);
+  --k-premium-accent-primary:  var(--k-premium-burgundy);
+  --k-premium-accent-gold:     var(--k-premium-rose-copper);
+  --k-premium-button-bg:       var(--k-premium-burgundy);
+  --k-premium-button-text:     var(--k-premium-warm-cream);
+}
