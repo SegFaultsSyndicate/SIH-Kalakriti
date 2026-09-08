@@ -386,6 +386,29 @@
     gap: var(--k-space-2);
   }
 
+  /* On a narrow phone the 8rem label + bar + amount stack into two rows:
+     label and amount on top, the progress bar spanning full width. */
+  @media (max-width: 30rem) {
+    .alloc-payment__bars li {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'name amount'
+        'bar bar';
+    }
+
+    .alloc-payment__bars li > :nth-child(1) {
+      grid-area: name;
+    }
+
+    .alloc-payment__bars li > :nth-child(2) {
+      grid-area: bar;
+    }
+
+    .alloc-payment__bars li > :nth-child(3) {
+      grid-area: amount;
+    }
+  }
+
   .alloc-payment__bar {
     display: block;
     block-size: var(--k-space-3);

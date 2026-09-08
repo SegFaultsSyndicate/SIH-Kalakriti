@@ -1130,6 +1130,14 @@
     align-items: stretch;
   }
 
+  /* Stack the media frame above the copy below 720px so the info panel
+     does not get squeezed into a sliver on a phone. */
+  @media (max-width: 45rem) {
+    .gi-products-list .gi-product-card {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* CARD STYLING */
   .gi-product-card {
     background-color: #ffffff;

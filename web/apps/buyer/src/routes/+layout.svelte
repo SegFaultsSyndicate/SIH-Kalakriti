@@ -33,6 +33,30 @@
 
   const t = $derived(locale.t);
 
+  let mobileNavOpen = $state(false);
+
+  function toggleMobileNav(): void {
+    mobileNavOpen = !mobileNavOpen;
+  }
+
+  function closeMobileNav(): void {
+    mobileNavOpen = false;
+  }
+
+  function onKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Escape') mobileNavOpen = false;
+  }
+
+  $effect(() => {
+    if (!mobileNavOpen) return;
+    const mq = window.matchMedia('(min-width: 861px)');
+    const onChange = () => {
+      if (mq.matches) mobileNavOpen = false;
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  });
+
   $effect(() => {
     void locale.init();
   });
@@ -92,9 +116,21 @@
 
 <SkipLink target="main-content" />
 <RouteAnnouncer />
+<svelte:window onkeydown={onKeydown} />
 
 <div class="shell">
   <header class="shell__header">
+    <button
+      type="button"
+      class="shell__menu-toggle"
+      onclick={toggleMobileNav}
+      aria-expanded={mobileNavOpen}
+      aria-controls="shell-mobile-nav"
+      aria-label={mobileNavOpen ? 'Close main navigation' : 'Open main navigation'}
+    >
+      <Icon name="menu" size="1.25rem" />
+    </button>
+
     <a class="shell__lockup" href="/">
       <img class="shell__emblem" src="/favicon.svg" alt="" width="32" height="32" />
       <span class="shell__wordmark">
@@ -116,13 +152,21 @@
       <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
         <Icon name="collective-order" />
       </a>
-      
+
       <AccountMenu />
 
       <LanguageSelector />
       <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
+
+  {#if mobileNavOpen}
+    <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label="Main Navigation (mobile)">
+      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>Craft Directory</a>
+      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>GI Heritage</a>
+      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>Impact Studies</a>
+    </nav>
+  {/if}
 
   <CategorySubnav />
 
@@ -142,6 +186,62 @@
 </div>
 
 <style>
+  /* Hamburger: mobile only. */
+  .shell__menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    flex: none;
+    border: none;
+    border-radius: var(--k-radius-md);
+    background: transparent;
+    color: var(--k-text-primary);
+    cursor: pointer;
+  }
+
+  .shell__menu-toggle:hover,
+  .shell__menu-toggle[aria-expanded='true'] {
+    background-color: var(--k-surface-sunken);
+  }
+
+  /* Mobile nav panel: hidden on desktop, rendered below the header. */
+  .shell__mobile-nav {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .shell__menu-toggle {
+      display: flex;
+    }
+
+    .shell__mobile-nav {
+      display: flex;
+      flex-direction: column;
+      border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+      background: var(--k-surface-raised);
+      padding: var(--k-space-2) var(--k-gutter) var(--k-space-3);
+    }
+
+    .shell__mobile-link {
+      display: flex;
+      align-items: center;
+      min-block-size: var(--k-touch-min);
+      font-size: var(--k-text-base);
+      font-weight: 600;
+      color: var(--k-text-primary);
+      text-decoration: none;
+      padding-inline: var(--k-space-2);
+      border-radius: var(--k-radius-sm);
+    }
+
+    .shell__mobile-link:hover {
+      color: var(--k-terracotta);
+      background-color: var(--k-surface-sunken);
+    }
+  }
+
   .shell__nav {
     display: flex;
     align-items: center;

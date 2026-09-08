@@ -132,6 +132,37 @@
     font-size: var(--k-text-xs);
   }
 
+  /* On a narrow phone the fixed label/value columns leave no room for the
+     track; stack label+value, then the bar on its own full-width row. */
+  @media (max-width: 34rem) {
+    .barchart__row {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'label value'
+        'track track';
+    }
+
+    .barchart__label {
+      grid-area: label;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    .barchart__track,
+    .barchart__suppressed-bar {
+      grid-area: track;
+    }
+
+    .barchart__value {
+      grid-area: value;
+    }
+
+    .barchart__value--suppressed {
+      text-align: end;
+    }
+  }
+
   .barchart__label {
     overflow: hidden;
     text-overflow: ellipsis;

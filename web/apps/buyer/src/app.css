@@ -24,8 +24,15 @@
 
 @layer app {
   .shell {
+    /*
+     * minmax(0, 1fr) is load-bearing: with no explicit columns the implicit
+     * auto track grows to its children's min-content (the header's wrapped
+     * flex row on a 320px screen pushes it past the viewport), ballooning
+     * every row and making the whole page horizontally scrollable.
+     */
     display: grid;
     grid-template-rows: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
     min-block-size: 100dvb;
   }
 
@@ -39,6 +46,25 @@
     gap: var(--k-space-4);
     padding: var(--k-space-4) var(--k-gutter);
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  /* Below 860px the inline nav is hidden, so the header holds just the
+     hamburger + lockup + actions; let the actions wrap onto their own row
+     rather than overflowing a 320px screen. */
+  @media (max-width: 860px) {
+    .shell__header {
+      flex-wrap: wrap;
+      row-gap: var(--k-space-2);
+      padding-block: var(--k-space-3);
+    }
+
+    .shell__wordmark {
+      font-size: var(--k-text-md);
+    }
+
+    .shell__ministry {
+      font-size: var(--k-text-2xs);
+    }
   }
 
   .shell__lockup {

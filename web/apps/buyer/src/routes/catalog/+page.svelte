@@ -351,7 +351,9 @@
   /* Catalog Grid */
   .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+    /* min() caps the track floor at 100% so a 320px phone gets one
+       full-width column instead of a 22rem overflow. */
+    grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
     gap: var(--k-space-5);
   }
 

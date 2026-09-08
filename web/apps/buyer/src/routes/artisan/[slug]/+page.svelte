@@ -186,9 +186,16 @@
 <style>
   .storefront-header {
     display: grid;
-    grid-template-columns: 8rem 1fr;
-    gap: var(--k-space-5);
+    grid-template-columns: 1fr;
+    gap: var(--k-space-4);
     margin-block-end: var(--k-space-6);
+  }
+
+  @media (min-width: 36rem) {
+    .storefront-header {
+      grid-template-columns: 8rem 1fr;
+      gap: var(--k-space-5);
+    }
   }
 
   .storefront-header__portrait {
