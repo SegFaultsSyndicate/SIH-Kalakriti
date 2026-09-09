@@ -58,7 +58,6 @@
 :root {
   /* Override key semantic tokens with premium heritage palette */
   --k-premium-header-bg:       #873032;
-  --k-premium-header-text:     var(--k-premium-warm-cream);
   --k-premium-canvas:          var(--k-premium-parchment);
   --k-premium-accent-primary:  #873032;
   --k-premium-accent-gold:     var(--k-premium-champagne);
