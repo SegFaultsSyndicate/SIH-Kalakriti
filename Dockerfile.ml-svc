@@ -1,18 +1,35 @@
 # Dockerfile.ml-svc
+# Built from the repo root (see the Makefile's `docker-build` target, which
+# runs `make proto` first) so this can COPY both services/ml-svc/ and its
+# generated pb/ — pb/ is gitignored and must exist on disk before this runs;
+# `make proto` (or `make proto-py` alone) generates it.
+#
+# Mirrors services/ml-svc/Dockerfile, which builds the same image from
+# services/ml-svc/ as its own context; this one exists so `make docker-build`
+# can build every service — Go and Python — from one root context, same as
+# every other Dockerfile.<svc> in this repo.
+#
+# Mock mode by default: no weights, no torch, starts in about a second.
+# Build with --build-arg EXTRAS=real for the image that actually runs models.
 FROM python:3.11-slim
+ARG EXTRAS=
 
-WORKDIR /app
+COPY --from=ghcr.io/astral-sh/uv:0.4.9 /uv /bin/uv
 
-COPY services/ml-svc/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /srv
+ENV UV_SYSTEM_PYTHON=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-COPY services/ml-svc/ .
+COPY services/ml-svc/pyproject.toml ./
+COPY services/ml-svc/app ./app
+COPY services/ml-svc/pb ./pb
+COPY scripts/data ./scripts/data
 
-RUN adduser --disabled-password --uid 10001 appuser && \
-    chown -R appuser:appuser /app
+RUN uv pip install --system ".${EXTRAS:+[$EXTRAS]}"
 
-USER appuser
+# Set explicitly: this image's flattened layout (config.py's file four levels
+# under the repo root, elsewhere) doesn't match the checkout depth Config's
+# own default search assumes, so it wouldn't find this file on its own.
+ENV ML_SVC_CRAFT_ALLOWLIST=/srv/scripts/data/crafts.csv
 
-EXPOSE 50051
-
-CMD ["python", "-u", "server.py"]
+EXPOSE 50055 9095
+CMD ["python", "-m", "app.server"]

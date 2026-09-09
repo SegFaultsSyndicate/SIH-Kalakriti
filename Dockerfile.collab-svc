@@ -1,13 +1,11 @@
 # Dockerfile.collab-svc
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /build
 
-COPY go.work go.work.sum ./
 COPY pkg/go.mod pkg/go.sum ./pkg/
 COPY services/collab-svc/go.mod services/collab-svc/go.sum ./services/collab-svc/
 
-RUN go work sync
 RUN cd services/collab-svc && go mod download
 
 COPY pkg/ ./pkg/
@@ -26,6 +24,6 @@ COPY --from=builder /build/collab-svc .
 
 USER appuser
 
-EXPOSE 8083 9093
+EXPOSE 8083 50053
 
 CMD ["./collab-svc"]

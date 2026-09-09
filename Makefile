@@ -24,7 +24,7 @@ GOOSE ?= $(shell command -v goose 2>/dev/null || echo "go run github.com/pressly
 SQLC  ?= $(shell command -v sqlc  2>/dev/null || echo "go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.27.0")
 LINT  ?= $(shell command -v golangci-lint 2>/dev/null || echo "go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1")
 
-.PHONY: help up down logs ps reset proto proto-lint migrate-up migrate-down seed sqlc test test-ml lint tidy build clean check psql
+.PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed sqlc test test-ml lint tidy build clean check psql
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-14s %s\n", $$1, $$2}'
@@ -54,8 +54,13 @@ psql: ## Open a psql shell on the dev database
 
 # --- codegen -----------------------------------------------------------------
 
-proto: ## Generate Go and Python code from proto/
+proto: proto-go proto-py ## Generate Go and Python code from proto/
+
+proto-go: ## Generate Go code from proto/ (buf.gen.yaml only wires Go plugins)
 	$(BUF) generate proto --template buf.gen.yaml
+
+proto-py: ## Generate ml-svc's Python protobuf/grpc stubs into services/ml-svc/pb/
+	cd services/ml-svc && uv run --extra dev ./scripts/gen_proto.sh
 
 proto-lint: ## Lint and breaking-change-check the protos
 	$(BUF) lint proto
@@ -149,7 +154,7 @@ seed-data: ## Run seed script (idempotent)
 tags: ## Generate QR code sheet PDF
 	go run scripts/generate-qr-sheet/main.go
 
-docker-build: ## Build all Docker images
+docker-build: proto ## Build all Docker images
 	@echo "Building Docker images..."
 	docker build -f Dockerfile.core-svc -t kalakriti/core-svc:latest .
 	docker build -f Dockerfile.search-svc -t kalakriti/search-svc:latest .

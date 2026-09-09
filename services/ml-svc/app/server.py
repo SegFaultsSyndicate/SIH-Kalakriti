@@ -341,7 +341,7 @@ async def serve(cfg: Config) -> None:
     server = grpc.aio.server(interceptors=[ObservabilityInterceptor()])
     inference_pb2_grpc.add_InferenceServiceServicer_to_server(servicer, server)
 
-    health_servicer = health.HealthServicer()
+    health_servicer = health.aio.HealthServicer()
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
     # NOT_SERVING until the weights are in memory: an orchestrator that routes to
     # a half-loaded process turns a slow start into a wave of failed RPCs.

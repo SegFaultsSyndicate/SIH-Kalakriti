@@ -6,13 +6,39 @@ here; this module is import-safe with no weights on disk.
 
 from __future__ import annotations
 
+import csv
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
+def _find_default_allowlist() -> Path:
+    """Walk up from this file looking for the repo's scripts/data/crafts.csv,
+    so ml-svc constrains the VLM to exactly the craft codes core-svc seeded
+    from the same CSV.
+
+    A full checkout has this file four levels under the repo root
+    (services/ml-svc/app/config.py), so the walk finds it immediately. A
+    container image that flattens that layout (e.g. Dockerfile.ml-svc's
+    `WORKDIR /srv`, which puts this file at /srv/app/config.py with only
+    three real parents) has no such ancestor to find — a fixed `.parents[3]`
+    index used to raise IndexError there instead of degrading gracefully.
+    Both Dockerfiles set ML_SVC_CRAFT_ALLOWLIST explicitly, so this fallback
+    is only ever reached by a container that skipped that, or by a
+    from-scratch invocation with no seed CSV at all — in which case a
+    missing file is not fatal (see load_craft_allowlist below), just an
+    empty allowlist.
+    """
+    here = Path(__file__).resolve()
+    for ancestor in here.parents:
+        candidate = ancestor / "scripts" / "data" / "crafts.csv"
+        if candidate.is_file():
+            return candidate
+    return Path("scripts/data/crafts.csv")
+
+
 # Where the seeded ontology lives relative to this file, so ml-svc constrains the
 # VLM to exactly the craft codes core-svc seeded from the same CSV.
-_DEFAULT_ALLOWLIST = Path(__file__).resolve().parents[3] / "scripts" / "data" / "crafts.csv"
+_DEFAULT_ALLOWLIST = _find_default_allowlist()
 
 
 def _flag(name: str, default: bool) -> bool:
@@ -89,3 +115,34 @@ def load_craft_allowlist(path: Path) -> list[str]:
             continue
         codes.append(code)
     return codes
+
+
+def load_craft_vocab(path: Path) -> dict[str, dict[str, list[str]]]:
+    """Per-craft material/technique vocabularies from the same seed CSV.
+
+    crafts.csv carries pipe-separated `techniques` and `materials` columns
+    per craft code. Once a craft is known (declared or resolved), the
+    extractor should never accept a material/technique for it that isn't in
+    this list — the closed-vocabulary discipline `kalakriti-ml-svc` proved
+    out, applied to this service's flat AttributeSet instead of a per-subtype
+    schema. A CSV in the plain-newline-list shape `load_craft_allowlist` also
+    accepts has no such columns; that's not an error, it just means no craft
+    has a vocabulary here, so the extractor falls back to trusting the model's
+    raw answer for material/technique (unchanged prior behaviour) rather than
+    rejecting everything.
+    """
+    try:
+        rows = csv.DictReader(path.read_text(encoding="utf-8").splitlines())
+    except OSError:
+        return {}
+
+    vocab: dict[str, dict[str, list[str]]] = {}
+    for row in rows:
+        code = (row.get("code") or "").strip()
+        if not code:
+            continue
+        vocab[code] = {
+            "techniques": [t.strip() for t in (row.get("techniques") or "").split("|") if t.strip()],
+            "materials": [m.strip() for m in (row.get("materials") or "").split("|") if m.strip()],
+        }
+    return vocab

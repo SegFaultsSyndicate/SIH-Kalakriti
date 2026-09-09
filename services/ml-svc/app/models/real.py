@@ -16,7 +16,7 @@ import json
 import logging
 import re
 
-from app.config import Config, load_craft_allowlist
+from app.config import Config, load_craft_allowlist, load_craft_vocab
 
 log = logging.getLogger(__name__)
 
@@ -32,24 +32,18 @@ craft_id MUST be one of these exact codes, or "" if none of them fit:
 {allowlist}
 
 The artisan says this is: {declared}
-The artisan adds: {hint}
+The artisan adds: {hint}{vocab_hint}
 Do not guess beyond what you can see. Use "" or [] where you are unsure."""
 
-_DESCRIBE_PROMPT = """Write marketplace copy for an Indian handicraft.
+_POLISH_PROMPT = """Rewrite this marketplace product description with a warmer,
+more persuasive tone. State only the facts already in it — do not add any
+material, technique, colour, motif, region, age, award or other claim that is
+not already present in the text below.
 
-You may only state facts present in this JSON. Do not add materials, techniques,
-regions, ages, awards or claims that are not here. If a field is empty, say
-nothing about it.
+{template}
 
-Attributes: {attributes}
-Craft: {craft_id}
-The artisan's own words (preserve their voice, do not invent): {note}
-
-Answer with JSON only:
-{{"title": str, "description": str, "highlights": [str], "keywords": [str],
-  "attribute_keys_used": [str]}}
-attribute_keys_used lists exactly the attribute keys your text draws on.
-Keep the description under {max_chars} characters. Write in {language}."""
+Write in {language}, under {max_chars} characters. Reply with the rewritten
+description only: no JSON, no preamble, no quotation marks."""
 
 
 class RealModels:
@@ -59,6 +53,7 @@ class RealModels:
         self._cfg = cfg
         self.version = cfg.model_version
         self._crafts = load_craft_allowlist(cfg.craft_allowlist_path)
+        self._craft_vocab = load_craft_vocab(cfg.craft_allowlist_path)
         self._embedder = None
         self._reranker = None
         self._vlm = None
@@ -76,13 +71,25 @@ class RealModels:
         from sentence_transformers import CrossEncoder, SentenceTransformer
         from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 
+        from app.model_loading import local_files_only_kwargs, resolve_device
+
         cfg = self._cfg
-        self._embedder = SentenceTransformer(cfg.embed_model)
-        self._reranker = CrossEncoder(cfg.rerank_model)
-        self._vlm = Qwen2VLForConditionalGeneration.from_pretrained(
-            cfg.vlm_model, torch_dtype="auto", device_map="auto"
+        device, dtype = resolve_device()
+        # local_files_only_kwargs avoids a Hub network round-trip on every
+        # restart once a model is actually cached: these three repo ids are
+        # pinned, not floating, so there is never a newer revision to check for.
+        self._embedder = SentenceTransformer(
+            cfg.embed_model, device=device, **local_files_only_kwargs(cfg.embed_model)
         )
-        self._vlm_processor = AutoProcessor.from_pretrained(cfg.vlm_model)
+        self._reranker = CrossEncoder(
+            cfg.rerank_model, device=device, **local_files_only_kwargs(cfg.rerank_model)
+        )
+        self._vlm = Qwen2VLForConditionalGeneration.from_pretrained(
+            cfg.vlm_model, torch_dtype=dtype, device_map="auto", **local_files_only_kwargs(cfg.vlm_model)
+        )
+        self._vlm_processor = AutoProcessor.from_pretrained(
+            cfg.vlm_model, **local_files_only_kwargs(cfg.vlm_model)
+        )
         self._s3 = Minio(
             cfg.s3_endpoint.replace("http://", "").replace("https://", ""),
             access_key=cfg.s3_access_key,
@@ -180,6 +187,7 @@ class RealModels:
                 allowlist="\n".join(self._crafts),
                 declared=declared_craft_id or "(not stated)",
                 hint=hint or "(nothing)",
+                vocab_hint=_vocab_hint(self._craft_vocab.get(declared_craft_id, {})),
             ),
         )
         parsed = _parse_json(raw)
@@ -194,10 +202,19 @@ class RealModels:
                 log.warning("vlm proposed a craft outside the ontology", extra={"craft_id": craft})
             craft = declared_craft_id if declared_craft_id in self._crafts else ""
 
+        # Once the craft is known, material/technique are constrained to *that
+        # craft's own* seeded vocabulary — the same closed-vocabulary discipline
+        # the craft_id check above already applies, just one level down. A model
+        # asked nicely to stay on-list still occasionally invents ("silk" for a
+        # terracotta piece); this is the structural guard, not a prompting hope.
+        craft_vocab = self._craft_vocab.get(craft, {})
+        material = _closed_vocab(str(parsed.get("material") or ""), craft_vocab.get("materials", []), craft, "material")
+        technique = _closed_vocab(str(parsed.get("technique") or ""), craft_vocab.get("techniques", []), craft, "technique")
+
         return {
             "craft_id": (craft, _confidence(confidence, "craft_id") if craft else 0.0),
-            "material": (str(parsed.get("material") or ""), _confidence(confidence, "material")),
-            "technique": (str(parsed.get("technique") or ""), _confidence(confidence, "technique")),
+            "material": (material, _confidence(confidence, "material") if material else 0.0),
+            "technique": (technique, _confidence(confidence, "technique") if technique else 0.0),
             "colours": (_strings(parsed.get("colours")), _confidence(confidence, "colours")),
             "motifs": (_strings(parsed.get("motifs")), _confidence(confidence, "motifs")),
             # Physical size is not readable from a photograph without a reference
@@ -249,29 +266,48 @@ class RealModels:
         self, attributes: dict, craft_id: str, language: str, artisan_note: str, max_chars: int
     ) -> dict:
         facts = {k: v[0] for k, v in attributes.items() if isinstance(v, tuple) and v[0]}
-        raw = self._ask_vlm(
-            [],
-            _DESCRIBE_PROMPT.format(
-                attributes=json.dumps(facts, ensure_ascii=False),
-                craft_id=craft_id,
-                note=artisan_note or "(nothing)",
-                max_chars=max_chars or 900,
-                language=language or "ENGLISH",
-            ),
-        )
-        parsed = _parse_json(raw)
-        # A key the model claims to have used but that carried no value is a
-        # fabricated citation; drop it rather than pass it on to the artisan.
-        used = [k for k in _strings(parsed.get("attribute_keys_used")) if k in facts]
-        description = str(parsed.get("description") or "")
+        # Template-first, LLM-polish-second (ported from kalakriti-ml-svc's
+        # GenerateDescription): a deterministic sentence built only from
+        # `facts` is the structural grounding guarantee — attribute_keys_used
+        # is exactly the set of keys the template drew from, not the model's
+        # say-so about what it used. The VLM only gets to polish tone from
+        # there, and only keeps its rewrite if `_is_grounded` confirms every
+        # cited value survived.
+        used = [k for k in ("material", "technique", "colours", "motifs") if facts.get(k)]
+        template = _template_sentence(facts, craft_id)
+        description = self._polish(template, facts, language, max_chars)
+        if artisan_note:
+            description = f"{description} In the maker's words: {artisan_note.strip()}"
+        if max_chars > 0:
+            description = description[:max_chars]
+
         return {
-            "title": str(parsed.get("title") or "")[:120],
-            "description": description[:max_chars] if max_chars > 0 else description,
-            "highlights": _strings(parsed.get("highlights")),
-            "keywords": _strings(parsed.get("keywords")),
+            "title": _template_title(facts, craft_id)[:120],
+            "description": description,
+            "highlights": _template_highlights(facts),
+            "keywords": _template_keywords(facts, craft_id),
             "attribute_keys_used": used,
             "language": language,
         }
+
+    def _polish(self, template: str, facts: dict, language: str, max_chars: int) -> str:
+        try:
+            raw = self._ask_vlm(
+                [],
+                _POLISH_PROMPT.format(
+                    template=template, language=language or "ENGLISH", max_chars=max_chars or 900
+                ),
+                max_new_tokens=256,
+            )
+        except Exception:
+            log.exception("polish pass failed, falling back to the template sentence")
+            return template
+
+        rewrite = raw.strip()
+        if not _is_grounded(rewrite, facts):
+            log.warning("polish rewrite dropped or altered a cited attribute value; using the template")
+            return template
+        return rewrite
 
     # --- vectors ------------------------------------------------------------
 
@@ -416,6 +452,117 @@ def _strings(value) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(v) for v in value if str(v).strip()]
+
+
+def _template_sentence(facts: dict, craft_id: str) -> str:
+    """A deterministic, factual sentence — the description's grounded core.
+
+    One clause per present attribute, same discipline as
+    kalakriti-ml-svc's `_template_sentence`: nothing here is asserted unless
+    `facts` actually carries it.
+    """
+    craft_name = craft_id.replace("-", " ").title() if craft_id else "handcrafted piece"
+    clause = f"A {craft_name}"
+    if facts.get("material"):
+        clause += f" made of {facts['material']}"
+    if facts.get("technique"):
+        clause += f" using {facts['technique'].replace('-', ' ')}"
+    sentences = [clause + "."]
+
+    colours = facts.get("colours") or []
+    if colours:
+        sentences.append(f"Finished in {' and '.join(colours)}.")
+    motifs = facts.get("motifs") or []
+    if motifs:
+        sentences.append(f"Carries {' and '.join(motifs)} motifs.")
+    sentences.append("Each piece is finished by hand, so no two are identical.")
+    return " ".join(sentences)
+
+
+def _template_title(facts: dict, craft_id: str) -> str:
+    craft_name = craft_id.replace("-", " ").title() if craft_id else "Handcrafted Piece"
+    colour = next(iter(facts.get("colours") or []), None)
+    parts = [p.title() for p in (colour, facts.get("material")) if p]
+    parts.append(craft_name)
+    return " ".join(parts)
+
+
+def _template_highlights(facts: dict) -> list[str]:
+    highlights = ["Hand-finished by a single artisan"]
+    if facts.get("material"):
+        highlights.append(f"Made from {facts['material']}")
+    if facts.get("technique"):
+        highlights.append(f"Crafted using {facts['technique'].replace('-', ' ')}")
+    return highlights
+
+
+def _template_keywords(facts: dict, craft_id: str) -> list[str]:
+    keywords = [craft_id] if craft_id else []
+    keywords += [facts[k] for k in ("material", "technique") if facts.get(k)]
+    keywords += facts.get("colours") or []
+    keywords += facts.get("motifs") or []
+    return keywords
+
+
+def _is_grounded(rewrite: str, facts: dict) -> bool:
+    """True when every cited fact value still appears in `rewrite`,
+    case-insensitively — the same substring check kalakriti-ml-svc used, with
+    the same known blind spot: it confirms values aren't dropped or swapped,
+    not that no *other*, unrelated claim was invented around them. Good
+    enough to catch a rewrite that drops or substitutes a material/colour;
+    §5.B's artisan-review-before-publish step is the actual safety net for
+    anything this substring check can't see.
+    """
+    if len(rewrite) < 10:
+        return False
+    lowered = rewrite.lower()
+    for value in facts.values():
+        for v in (value if isinstance(value, list) else [value]):
+            if isinstance(v, str) and v and v.lower() not in lowered:
+                return False
+    return True
+
+
+def _vocab_hint(vocab: dict) -> str:
+    """A prompt fragment naming a known craft's material/technique vocabulary.
+
+    Only ever a hint, never the enforcement — `_closed_vocab` below is what
+    actually guarantees the answer stays on-list. Empty when the craft isn't
+    declared yet or the seed CSV has no vocabulary columns for it.
+    """
+    materials = vocab.get("materials") or []
+    techniques = vocab.get("techniques") or []
+    if not materials and not techniques:
+        return ""
+    lines = []
+    if materials:
+        lines.append(f"materials known for this craft: {', '.join(materials)}")
+    if techniques:
+        lines.append(f"techniques known for this craft: {', '.join(techniques)}")
+    return "\n" + "\n".join(lines)
+
+
+def _closed_vocab(value: str, vocab: list[str], craft: str, field: str) -> str:
+    """Keeps `value` only if it matches an entry of `vocab`, case-insensitively.
+
+    A craft with no recorded vocabulary (`vocab == []`) means the seed CSV had
+    no techniques/materials columns for it, not that anything goes — absent
+    vocabulary data isn't a constraint, the same rule `load_craft_allowlist`
+    already follows for a plain-code-list CSV. So an empty vocab passes
+    `value` through unchanged rather than rejecting it.
+    """
+    if not value or not vocab:
+        return value
+    by_lower = {v.lower(): v for v in vocab}
+    match = by_lower.get(value.lower())
+    if match is None:
+        log.warning(
+            "vlm proposed a %s outside the craft's vocabulary",
+            field,
+            extra={"craft_id": craft, field: value},
+        )
+        return ""
+    return match
 
 
 def _same_technique(observed: str, claimed: str) -> bool:
