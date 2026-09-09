@@ -29,6 +29,7 @@ import (
 
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
+	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
@@ -285,20 +286,28 @@ func TestRepoOutboxRelayRoundTrip(t *testing.T) {
 		return tx.InsertOutbox(ctx, rowID, artisanID.String(), "artisan.registered", "idem-relay", []byte(`{"a":1}`))
 	}))
 
-	// The relay claims it...
-	batch, err := store.FetchUnpublished(ctx, 10)
+	// The relay claims it, publishes it and marks it published, all inside
+	// RunClaimed's one held-open transaction...
+	var claimed []outbox.Message
+	err := store.RunClaimed(ctx, 10, func(_ context.Context, rows []outbox.Message) ([]string, error) {
+		claimed = rows
+		publishedIDs := make([]string, len(rows))
+		for i, row := range rows {
+			publishedIDs[i] = row.ID
+		}
+		return publishedIDs, nil
+	})
 	require.NoError(t, err)
-	require.Len(t, batch, 1)
-	require.Equal(t, "artisan.registered", batch[0].Topic)
-	require.Equal(t, artisanID.String(), batch[0].AggregateID)
-
-	// ...marks it published...
-	require.NoError(t, store.MarkPublished(ctx, []string{batch[0].ID}))
+	require.Len(t, claimed, 1)
+	require.Equal(t, "artisan.registered", claimed[0].Topic)
+	require.Equal(t, artisanID.String(), claimed[0].AggregateID)
 
 	// ...and it is no longer claimable.
-	batch, err = store.FetchUnpublished(ctx, 10)
+	err = store.RunClaimed(ctx, 10, func(_ context.Context, rows []outbox.Message) ([]string, error) {
+		require.Empty(t, rows, "a published row must not be claimed again")
+		return nil, nil
+	})
 	require.NoError(t, err)
-	require.Empty(t, batch, "a published row must not be claimed again")
 }
 
 func TestRepoOutboxInsertIsIdempotentPerTopicAndKey(t *testing.T) {

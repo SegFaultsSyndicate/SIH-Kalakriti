@@ -9,14 +9,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { locale } from '@kalakriti/i18n';
-  import {
-    completeOtpVerification,
-    setAccessToken,
-    setRefreshToken,
-    session,
-    ApiError,
-    messageKeyFor,
-  } from '@kalakriti/api';
+  import { completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
   import { Button, Input, FieldGroup } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
@@ -38,15 +31,6 @@
         error = t('verify.invalid');
       }
     } catch (cause) {
-      if (import.meta.env.DEV && (otp === '000000' || otp === '123456')) {
-        const adminPayload = btoa(JSON.stringify({ sub: 'admin-officer', role: 'MINISTRY' }));
-        const devToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${adminPayload}.devsignature`;
-        setAccessToken(devToken);
-        setRefreshToken(devToken);
-        session.establish(devToken);
-        await goto(redirect);
-        return;
-      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
     } finally {
       verifying = false;

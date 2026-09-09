@@ -28,8 +28,16 @@
   let message = $state('');
   let submitted = $state(false);
 
+  // No inquiry-submission endpoint exists in this codebase yet (see
+  // AUDIT_FINDINGS.md #23 addendum) -- gated the same way as the account
+  // page's placeholder actions, so a production build never shows a
+  // fabricated ticket number for a message that was never recorded.
   function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
+    if (!import.meta.env.DEV) {
+      showToast({ message: 'This feature is not available yet.', variant: 'error' });
+      return;
+    }
     submitted = true;
     showToast({
       message: `Inquiry Docket Registered: Your ticket #KLK-${Math.floor(100000 + Math.random() * 900000)} has been created. Our cluster officer will respond within 24 hours.`,

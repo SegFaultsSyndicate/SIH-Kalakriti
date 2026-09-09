@@ -56,40 +56,57 @@ func NewOutboxStore(r *Repo) *OutboxStore { return &OutboxStore{repo: r} }
 // OutboxStore satisfies the relay side of pkg/outbox.
 var _ outbox.Store = (*OutboxStore)(nil)
 
-// FetchUnpublished claims a batch of unpublished rows with FOR UPDATE SKIP
-// LOCKED, so several relay instances can share the table without blocking.
-func (s *OutboxStore) FetchUnpublished(ctx context.Context, limit int) ([]outbox.Message, error) {
-	rows, err := s.repo.q.FetchUnpublishedOutbox(ctx, int32(limit))
+// RunClaimed claims a batch of unpublished rows with FOR UPDATE SKIP LOCKED
+// and holds that claim inside one DB transaction for the lifetime of fn, so
+// the claim survives past the SELECT instead of releasing the instant it
+// returns — see pkg/outbox.Store.RunClaimed's doc comment for why a bare
+// fetch-then-mark round trip across two calls lets two relay instances
+// double-publish the same row.
+func (s *OutboxStore) RunClaimed(ctx context.Context, batchSize int, fn func(ctx context.Context, rows []outbox.Message) ([]string, error)) error {
+	pgtx, err := s.repo.Pool().Begin(ctx)
 	if err != nil {
-		return nil, translate(err, "unpublished outbox rows")
+		return fmt.Errorf("beginning outbox claim transaction: %w", err)
 	}
-	out := make([]outbox.Message, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, outbox.Message{
+	committed := false
+	defer func() {
+		if !committed {
+			_ = pgtx.Rollback(ctx)
+		}
+	}()
+
+	q := s.repo.q.WithTx(pgtx)
+	claimed, err := q.FetchUnpublishedOutbox(ctx, int32(batchSize))
+	if err != nil {
+		return translate(err, "unpublished outbox rows")
+	}
+	rows := make([]outbox.Message, 0, len(claimed))
+	for _, row := range claimed {
+		rows = append(rows, outbox.Message{
 			ID:          row.ID.String(),
 			AggregateID: row.AggregateID.String(),
 			Topic:       row.Topic,
 			Payload:     row.Payload,
 		})
 	}
-	return out, nil
-}
 
-// MarkPublished stamps published_at on the given rows.
-func (s *OutboxStore) MarkPublished(ctx context.Context, ids []string) error {
-	if len(ids) == 0 {
-		return nil
-	}
-	parsed := make([]uuid.UUID, 0, len(ids))
-	for _, id := range ids {
-		u, err := uuid.Parse(id)
-		if err != nil {
-			return fmt.Errorf("outbox row id %q is not a uuid: %w", id, err)
+	published, fnErr := fn(ctx, rows)
+	if len(published) > 0 {
+		parsed := make([]uuid.UUID, 0, len(published))
+		for _, id := range published {
+			u, perr := uuid.Parse(id)
+			if perr != nil {
+				return fmt.Errorf("outbox row id %q is not a uuid: %w", id, perr)
+			}
+			parsed = append(parsed, u)
 		}
-		parsed = append(parsed, u)
+		if _, err := q.MarkOutboxPublished(ctx, parsed); err != nil {
+			return translate(err, "marking outbox rows published")
+		}
 	}
-	if _, err := s.repo.q.MarkOutboxPublished(ctx, parsed); err != nil {
-		return translate(err, "marking outbox rows published")
+
+	if err := pgtx.Commit(ctx); err != nil {
+		return fmt.Errorf("committing outbox claim: %w", err)
 	}
-	return nil
+	committed = true
+	return fnErr
 }

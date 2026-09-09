@@ -143,6 +143,33 @@
         }
       }
     },
+    "/auth/sessions/revoke": {
+      "post": {
+        "summary": "Sign out of every other session (revoke all refresh tokens issued before now)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sessions revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/artisans": {
       "post": {
         "summary": "Register artisan",
@@ -158,13 +185,65 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "display_name"
+                  "display_name",
+                  "craft_ids",
+                  "region"
                 ],
                 "properties": {
                   "display_name": {
                     "type": "string"
                   },
-                  "language": {
+                  "craft_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Craft UUIDs from GET /crafts, at least one"
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "e.g. ['HINDI', 'ENGLISH']"
+                  },
+                  "region": {
+                    "type": "object",
+                    "required": [
+                      "state_code"
+                    ],
+                    "properties": {
+                      "state_code": {
+                        "type": "string",
+                        "description": "e.g. 'IN-GJ'"
+                      },
+                      "district": {
+                        "type": "string"
+                      },
+                      "block": {
+                        "type": "string"
+                      },
+                      "village": {
+                        "type": "string"
+                      },
+                      "pincode": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cluster_id": {
+                    "type": "string"
+                  },
+                  "pehchan_id": {
+                    "type": "string"
+                  },
+                  "pm_vishwakarma_id": {
+                    "type": "string"
+                  },
+                  "years_of_experience": {
+                    "type": "integer"
+                  },
+                  "bio": {
                     "type": "string"
                   }
                 }
@@ -2921,6 +3000,139 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions": {
+      "post": {
+        "summary": "Subscribe to event webhooks for the caller's own account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "https-only delivery endpoint"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "e.g. ['order.created', 'order.updated']"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created — secret is returned only this once",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "secret": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the caller's own webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscriptions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscriptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "events": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "consecutive_failures": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions/{id}": {
+      "delete": {
+        "summary": "Remove one of the caller's own webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
           }
         }
       }

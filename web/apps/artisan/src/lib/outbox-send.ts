@@ -58,7 +58,7 @@ async function remoteListingId(draftId: string): Promise<string | undefined> {
 }
 
 async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
-  const body = entry.payload as { display_name: string; language?: string };
+  const body = entry.payload as Parameters<typeof registerArtisan>[0];
   try {
     const response = await registerArtisan(body, { idempotencyKey: entry.idempotencyKey });
     if (response.artisan_id) await setArtisanId(response.artisan_id);

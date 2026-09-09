@@ -140,6 +140,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/sessions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign out of every other session (revoke all refresh tokens issued before now) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessions revoked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artisans": {
         parameters: {
             query?: never;
@@ -161,7 +199,23 @@ export interface paths {
                 content: {
                     "application/json": {
                         display_name: string;
-                        language?: string;
+                        /** @description Craft UUIDs from GET /crafts, at least one */
+                        craft_ids: string[];
+                        /** @description e.g. ['HINDI', 'ENGLISH'] */
+                        languages?: string[];
+                        region: {
+                            /** @description e.g. 'IN-GJ' */
+                            state_code: string;
+                            district?: string;
+                            block?: string;
+                            village?: string;
+                            pincode?: string;
+                        };
+                        cluster_id?: string;
+                        pehchan_id?: string;
+                        pm_vishwakarma_id?: string;
+                        years_of_experience?: number;
+                        bio?: string;
                     };
                 };
             };
@@ -2590,6 +2644,119 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's own webhook subscriptions */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Subscriptions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            subscriptions?: {
+                                id?: string;
+                                url?: string;
+                                events?: string[];
+                                active?: boolean;
+                                created_at?: string;
+                                consecutive_failures?: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Subscribe to event webhooks for the caller's own account */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description https-only delivery endpoint */
+                        url: string;
+                        /** @description e.g. ['order.created', 'order.updated'] */
+                        events: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Created — secret is returned only this once */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id?: string;
+                            secret?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one of the caller's own webhook subscriptions */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;

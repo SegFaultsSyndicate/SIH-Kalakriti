@@ -60,3 +60,16 @@ func (s *IdempotencyStore) SaveResponse(ctx context.Context, scope, key string, 
 	}
 	return nil
 }
+
+// Delete releases a claimed-but-unresolved key (response still NULL) so a
+// retry can re-claim it instead of waiting out the full TTL after a failed
+// first attempt.
+func (s *IdempotencyStore) Delete(ctx context.Context, scope, key string) error {
+	if _, err := s.repo.q.DeleteIdempotencyKey(ctx, db.DeleteIdempotencyKeyParams{
+		Scope: scope,
+		Key:   key,
+	}); err != nil {
+		return translate(err, "idempotency key")
+	}
+	return nil
+}

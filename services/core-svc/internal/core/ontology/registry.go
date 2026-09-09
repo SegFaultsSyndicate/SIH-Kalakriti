@@ -177,6 +177,15 @@ func (r *Registry) Watch(ctx context.Context) {
 	if r.bus == nil {
 		return
 	}
+	for ctx.Err() == nil {
+		r.watchOnce(ctx)
+	}
+}
+
+// watchOnce runs one subscription until it ends (ctx cancelled, or Redis
+// drops the channel for good) — split out so Watch can resubscribe instead
+// of a dropped subscription silently ending all future invalidation.
+func (r *Registry) watchOnce(ctx context.Context) {
 	sub := r.bus.Subscribe(ctx, r.cfg.Channel)
 	defer func() {
 		if err := sub.Close(); err != nil {
@@ -192,7 +201,8 @@ func (r *Registry) Watch(ctx context.Context) {
 		case msg, ok := <-messages:
 			if !ok {
 				// go-redis closes the channel only when the subscription is
-				// gone for good; wait a beat rather than spinning.
+				// gone for good; wait a beat, then let Watch's outer loop
+				// resubscribe rather than ending invalidation for good.
 				select {
 				case <-ctx.Done():
 				case <-time.After(subscribeRetryDelay):

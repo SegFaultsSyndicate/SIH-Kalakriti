@@ -101,6 +101,17 @@ func (f *FollowFanout) Handle(ctx context.Context, eventBytes []byte) error {
 			continue
 		}
 		f.recent[dedupeKey] = time.Now()
+		if len(f.recent) > 10_000 {
+			// ponytail: opportunistic sweep, not a ticker — cheap enough at
+			// this call frequency, and keeps the map bounded without a
+			// second goroutine. Move to Redis (per the field's own note)
+			// if cross-instance dedupe is ever needed anyway.
+			for k, t := range f.recent {
+				if time.Since(t) >= f.dedupeWindow {
+					delete(f.recent, k)
+				}
+			}
+		}
 
 		_, err := f.notificationSvc.Create(ctx, notification.CreateInput{
 			RecipientID: followerID,

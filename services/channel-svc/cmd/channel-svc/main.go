@@ -21,6 +21,7 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
@@ -50,6 +51,7 @@ func main() {
 }
 
 type cfg struct {
+	auth      config.Auth
 	server    config.Server
 	postgres  config.Postgres
 	redis     config.Redis
@@ -86,6 +88,9 @@ func loadConfig() (cfg, error) {
 	var c cfg
 	var err error
 
+	if c.auth, err = config.Load[config.Auth](); err != nil {
+		return c, err
+	}
 	if c.server, err = config.Load[config.Server](); err != nil {
 		return c, err
 	}
@@ -142,6 +147,16 @@ func run() error {
 
 	log := logger.New(cfg.server.LogLevel).With("service", serviceName, "env", cfg.server.Env)
 	log.Info("starting", "grpc_addr", cfg.grpcAddr, "http_addr", cfg.httpAddr)
+
+	issuer, err := auth.NewIssuer(auth.Config{
+		Secret:     cfg.auth.JWTSecret,
+		Issuer:     cfg.auth.Issuer,
+		AccessTTL:  cfg.auth.AccessTTL,
+		RefreshTTL: cfg.auth.RefreshTTL,
+	})
+	if err != nil {
+		return fmt.Errorf("configuring token issuer: %w", err)
+	}
 
 	// Database
 	db, err := pkgpostgres.New(ctx, pkgpostgres.Config{
@@ -221,7 +236,10 @@ func run() error {
 	followSvc := service.NewFollow(r)
 	followHandler := handler.NewFollow(followSvc, notifSvc, notifSvc)
 
-	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recoveryInterceptor(log)))
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		recoveryInterceptor(log),
+		auth.UnaryServerInterceptor(issuer, auth.NewPublicMethods()),
+	))
 	socialv1.RegisterFollowServiceServer(grpcServer, followHandler)
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)
@@ -235,15 +253,16 @@ func run() error {
 		return fmt.Errorf("listening on %s: %w", cfg.grpcAddr, err)
 	}
 
-	// Kafka consumer for catalog.listing.published
-	kafkaReader := pkgkafka.NewReader(pkgkafka.ReaderConfig{
-		Brokers:  cfg.kafka.Brokers,
-		Topic:    topics.CatalogListingPublished,
-		GroupID:  serviceName + "-fanout",
-		MinBytes: 1,
-		MaxBytes: 10e6,
-	})
-	defer kafkaReader.Close()
+	// Kafka consumer for catalog.listing.published. Goes through the shared
+	// pkg/kafka.ConsumerGroup (fetch, retry with backoff, commit only after
+	// success or dead-letter) rather than a hand-rolled ReadMessage loop —
+	// ReadMessage auto-commits before the handler runs, which silently drops
+	// messages on a transient failure.
+	fanoutConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.CatalogListingPublished,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + "-fanout",
+	}, log)
 
 	// Outbox relay - skipped for now as channel-svc doesn't have outbox tables yet
 	// relay := outbox.NewRelay(
@@ -300,23 +319,24 @@ func run() error {
 	// 1. Fanout consumer
 	go func() {
 		defer wg.Done()
-		fanout.Run(ctx, kafkaReader)
+		if err := fanoutConsumer.Run(ctx, fanout.HandlerFunc()); err != nil {
+			log.Error("fanout consumer stopped", "error", err)
+		}
 	}()
 
 	// 1b. ONDC publisher, its own consumer group on the same topic so it
 	// gets every event independently of the fanout consumer's position.
 	if ondcPublisher != nil {
-		ondcReader := pkgkafka.NewReader(pkgkafka.ReaderConfig{
-			Brokers:  cfg.kafka.Brokers,
-			Topic:    topics.CatalogListingPublished,
-			GroupID:  serviceName + "-ondc",
-			MinBytes: 1,
-			MaxBytes: 10e6,
-		})
+		ondcConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+			Brokers: cfg.kafka.Brokers,
+			Topic:   topics.CatalogListingPublished,
+			GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + "-ondc",
+		}, log)
 		go func() {
 			defer wg.Done()
-			defer ondcReader.Close()
-			ondcPublisher.Run(ctx, ondcReader)
+			if err := ondcConsumer.Run(ctx, ondcPublisher.HandlerFunc()); err != nil {
+				log.Error("ondc publisher consumer stopped", "error", err)
+			}
 		}()
 	}
 

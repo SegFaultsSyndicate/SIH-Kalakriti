@@ -1,4 +1,4 @@
-name: Web
+name: CI
 
 on:
   push:
@@ -9,6 +9,46 @@ permissions:
   contents: read
 
 jobs:
+  go:
+    runs-on: ubuntu-latest
+    # core-svc's OTP tests and tests/integration's bfftest server both dial a
+    # real Redis on localhost:6379 with no mock/skip -- shared here rather
+    # than duplicated per module since it's a no-op for modules that don't
+    # need it.
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    strategy:
+      matrix:
+        module:
+          - cmd/webhook-worker
+          - pkg
+          - services/bff
+          - services/channel-svc
+          - services/collab-svc
+          - services/core-svc
+          - services/insight-svc
+          - services/search-svc
+          - tests/integration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+      - run: go build ./...
+        working-directory: ${{ matrix.module }}
+      - run: go vet ./...
+        working-directory: ${{ matrix.module }}
+      - run: go test ./...
+        working-directory: ${{ matrix.module }}
+
   web:
     runs-on: ubuntu-latest
     defaults:

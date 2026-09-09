@@ -3,6 +3,8 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"time"
 
 	"google.golang.org/grpc"
@@ -194,6 +196,11 @@ func (o *Order) WatchOrder(ctx context.Context, orderID string, since *time.Time
 	events := make(chan map[string]any)
 	go func() {
 		defer close(events)
+		defer func() {
+			if rec := recover(); rec != nil {
+				slog.Error("order watch stream panicked", "panic", fmt.Sprintf("%v", rec))
+			}
+		}()
 		for {
 			resp, err := stream.Recv()
 			if err != nil {

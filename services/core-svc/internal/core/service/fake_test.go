@@ -361,6 +361,46 @@ func (f *fakeTokens) Verify(token string, want auth.TokenKind) (*auth.Claims, er
 	return c, nil
 }
 
+// fakeRevocations is an in-memory Revocations for exercising RefreshToken's
+// reuse-detection and session-revocation branches without Redis.
+type fakeRevocations struct {
+	burned       map[string]bool
+	revokedSince map[string]time.Time
+	burnErr      error
+	revokedErr   error
+}
+
+func newFakeRevocations() *fakeRevocations {
+	return &fakeRevocations{burned: map[string]bool{}, revokedSince: map[string]time.Time{}}
+}
+
+func (f *fakeRevocations) TryBurnJTI(_ context.Context, jti string, _ time.Duration) (bool, error) {
+	if f.burnErr != nil {
+		return false, f.burnErr
+	}
+	if f.burned[jti] {
+		return false, nil
+	}
+	f.burned[jti] = true
+	return true, nil
+}
+
+func (f *fakeRevocations) RevokeSubject(_ context.Context, subject string, _ time.Duration) error {
+	f.revokedSince[subject] = time.Now().UTC()
+	return nil
+}
+
+func (f *fakeRevocations) RevokedBefore(_ context.Context, subject string, issuedAt time.Time) (bool, error) {
+	if f.revokedErr != nil {
+		return false, f.revokedErr
+	}
+	since, ok := f.revokedSince[subject]
+	if !ok {
+		return false, nil
+	}
+	return issuedAt.Before(since), nil
+}
+
 // fakeOTP records requests and accepts one configured code.
 type fakeOTP struct {
 	requested  []string
@@ -399,7 +439,7 @@ func discardLogger() *slog.Logger {
 // newTestIdentity assembles a service over fakes, with a fixed clock so event
 // timestamps are deterministic.
 func newTestIdentity(store *fakeStore, tokens *fakeTokens, otp *fakeOTP) *Identity {
-	svc := NewIdentity(store, tokens, otp, discardLogger())
+	svc := NewIdentity(store, tokens, otp, nil, discardLogger())
 	svc.now = func() time.Time { return time.Date(2026, 8, 26, 12, 0, 0, 0, time.UTC) }
 	return svc
 }

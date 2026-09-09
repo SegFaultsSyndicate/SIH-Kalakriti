@@ -6,6 +6,8 @@
 
 import { liveQuery } from 'dexie';
 import { db, getPref, setPref, enqueue, applyOptimistic } from '@kalakriti/offline';
+import { LOCALES, isLocaleCode } from '@kalakriti/i18n';
+import { DISTRICTS } from './ontology';
 
 const DRAFT_PREF_KEY = 'registration.draft';
 const ARTISAN_ID_PREF_KEY = 'registration.artisanId';
@@ -15,6 +17,8 @@ export interface RegistrationDraft {
   craftId?: string;
   districtId?: string;
   districtFreeText?: string;
+  /** State picked alongside a free-text district -- region.state_code has no other source when districtId is unset. */
+  districtStateCode?: string;
   pehchanId?: string;
   clusterName?: string;
 }
@@ -61,19 +65,51 @@ export function watchArtisanId(onChange: (id: string | undefined) => void): () =
 }
 
 /**
- * Only display_name and language reach POST /artisans -- craft, district,
- * the PM Vishwakarma/Pehchan ID and cluster/SHG membership stay in the local
- * draft only. services/bff/openapi.json's requestBody for this endpoint has
- * no field for any of the four, and there is no PATCH /artisans/me to send
- * them to later. Per the ABSOLUTE RULE they are not invented; this is the
- * one place that fact is enforced, so every caller goes through it rather
- * than building its own request body.
+ * languageToProto (services/bff/internal/bff/client/search.go) matches
+ * against LANGUAGE_<NAME>, so the wire form is the locale's English name
+ * uppercased ('HINDI', not 'hi'). Every code in @kalakriti/i18n's LOCALES
+ * has an englishName that matches one of proto's 23 named Language values
+ * exactly (checked against common.proto), so this never actually drops a
+ * language for any locale the app offers -- the undefined fallback only
+ * guards a code isLocaleCode would already have rejected. core-svc requires
+ * at least one language, so `language` here must always be a real locale
+ * code (see submitRegistration's caller, which passes locale.code).
+ */
+function languageWireName(localeCode: string): string | undefined {
+  return isLocaleCode(localeCode) ? LOCALES[localeCode].englishName.toUpperCase() : undefined;
+}
+
+/**
+ * Builds the POST /artisans body. The PM Vishwakarma/Pehchan ID and
+ * cluster/SHG membership still stay local only -- there is no field for
+ * them on this endpoint and no PATCH /artisans/me to send them to later --
+ * but craft and region now travel with the request: core-svc's
+ * Artisan.Register requires at least one craft_id and a region.state_code,
+ * so a registration that omitted them was never actually going to persist
+ * server-side. Per the ABSOLUTE RULE nothing here is invented beyond what
+ * services/bff/internal/bff/client/artisan.go actually reads.
  */
 export function buildRegisterBody(
   draft: RegistrationDraft,
   language: string,
-): { display_name: string; language: string } {
-  return { display_name: draft.name?.trim() || '', language };
+): {
+  display_name: string;
+  craft_ids: string[];
+  languages: string[];
+  region: { state_code: string; district?: string };
+} {
+  const knownDistrict = draft.districtId ? DISTRICTS.find((d) => d.id === draft.districtId) : undefined;
+  const wireLanguage = languageWireName(language);
+  const districtName = knownDistrict?.name ?? draft.districtFreeText;
+  return {
+    display_name: draft.name?.trim() || '',
+    craft_ids: draft.craftId ? [draft.craftId] : [],
+    languages: wireLanguage ? [wireLanguage] : [],
+    region: {
+      state_code: knownDistrict?.stateCode ?? draft.districtStateCode ?? '',
+      ...(districtName ? { district: districtName } : {}),
+    },
+  };
 }
 
 /**

@@ -52,6 +52,11 @@ spec:
             secretKeyRef:
               name: kalakriti-secrets
               key: jwt-secret
+        - name: PAYMENT_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: payment-webhook-secret
         - name: OTLP_ENDPOINT
           valueFrom:
             configMapKeyRef:

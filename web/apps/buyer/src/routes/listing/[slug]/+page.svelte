@@ -147,7 +147,7 @@
                 : 'https://schema.org/InStock',
             url: page.url.href,
           },
-        })
+        }).replace(/</g, '\\u003c')
       : '',
   );
 </script>

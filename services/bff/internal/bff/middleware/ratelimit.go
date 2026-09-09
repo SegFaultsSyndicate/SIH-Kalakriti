@@ -22,6 +22,11 @@ type RateLimitConfig struct {
 	PerPrincipalLimit int
 	// Window is the sliding window duration.
 	Window time.Duration
+	// TrustProxyHeaders, when true, trusts X-Forwarded-For for the client
+	// IP. Only enable this when bff sits behind a proxy that overwrites
+	// (not appends to) the header — verify deploy/nginx/nginx.conf and
+	// deploy/k8s/ingress.yaml before enabling.
+	TrustProxyHeaders bool
 }
 
 // RateLimit enforces Redis-backed sliding window rate limiting per IP and per
@@ -33,7 +38,7 @@ func RateLimit(rdb *redis.Client, cfg RateLimitConfig) func(http.Handler) http.H
 			now := time.Now()
 
 			// Per-IP limit.
-			ip := extractIP(r)
+			ip := extractIP(r, cfg.TrustProxyHeaders)
 			if ip != "" {
 				key := fmt.Sprintf("rl:ip:%s", ip)
 				if !allow(ctx, rdb, key, cfg.PerIPLimit, cfg.Window, now) {
@@ -77,19 +82,24 @@ func allow(ctx context.Context, rdb *redis.Client, key string, limit int, window
 	return count.Val() <= int64(limit)
 }
 
-// extractIP returns the client IP from X-Forwarded-For (first entry), falling
-// back to RemoteAddr. Returns empty string if unparseable.
-func extractIP(r *http.Request) string {
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		for idx := 0; idx < len(xff); idx++ {
-			if xff[idx] == ',' {
-				xff = xff[:idx]
-				break
+// extractIP returns the client IP from X-Forwarded-For (first entry) when
+// trustProxy is set, falling back to RemoteAddr. Returns empty string if
+// unparseable. trustProxy must only be true when bff sits behind a proxy
+// that overwrites, not appends, the header — verify deploy/nginx/nginx.conf
+// and deploy/k8s/ingress.yaml before enabling.
+func extractIP(r *http.Request, trustProxy bool) string {
+	if trustProxy {
+		xff := r.Header.Get("X-Forwarded-For")
+		if xff != "" {
+			for idx := 0; idx < len(xff); idx++ {
+				if xff[idx] == ',' {
+					xff = xff[:idx]
+					break
+				}
 			}
-		}
-		if ip := net.ParseIP(xff); ip != nil {
-			return ip.String()
+			if ip := net.ParseIP(xff); ip != nil {
+				return ip.String()
+			}
 		}
 	}
 
@@ -101,14 +111,14 @@ func extractIP(r *http.Request) string {
 }
 
 // RateLimitEndpoint applies a dedicated rate limit on specific sensitive routes (e.g. OTP request, order spam).
-func RateLimitEndpoint(rdb *redis.Client, prefix string, limit int, window time.Duration) func(http.Handler) http.Handler {
+func RateLimitEndpoint(rdb *redis.Client, prefix string, limit int, window time.Duration, trustProxy bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if rdb == nil {
 				next.ServeHTTP(w, r)
 				return
 			}
-			ip := extractIP(r)
+			ip := extractIP(r, trustProxy)
 			if ip == "" {
 				ip = "unknown"
 			}

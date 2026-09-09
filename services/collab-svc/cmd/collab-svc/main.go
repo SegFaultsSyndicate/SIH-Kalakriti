@@ -22,13 +22,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/stdlib"
 	segmentio "github.com/segmentio/kafka-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/fraud"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
@@ -69,6 +72,16 @@ func run() error {
 	log := logger.New(cfg.server.LogLevel).With("service", serviceName, "env", cfg.server.Env)
 	log.Info("starting", "grpc_addr", cfg.grpcAddr, "http_addr", cfg.httpAddr)
 
+	issuer, err := auth.NewIssuer(auth.Config{
+		Secret:     cfg.auth.JWTSecret,
+		Issuer:     cfg.auth.Issuer,
+		AccessTTL:  cfg.auth.AccessTTL,
+		RefreshTTL: cfg.auth.RefreshTTL,
+	})
+	if err != nil {
+		return fmt.Errorf("configuring token issuer: %w", err)
+	}
+
 	// --- dependencies --------------------------------------------------------
 
 	pool, err := pkgpostgres.New(ctx, pkgpostgres.Config{
@@ -90,8 +103,12 @@ func run() error {
 
 	// --- wiring ------------------------------------------------------------------
 
+	// fraud.Detector talks database/sql; OpenDBFromPool wraps the existing
+	// pgxpool connections rather than opening a second pool.
+	fraudDetector := fraud.New(stdlib.OpenDBFromPool(pool))
+
 	repository := repo.New(pool)
-	fulfilmentSvc := service.NewFulfilment(wiring.NewStore(repository), cfg.fulfilment.ReservationTTL, log)
+	fulfilmentSvc := service.NewFulfilment(wiring.NewStore(repository), fraudDetector, cfg.fulfilment.ReservationTTL, log)
 
 	broker := handler.NewBroker()
 	history := handler.NewHistoryStore(repository)
@@ -99,7 +116,15 @@ func run() error {
 
 	// --- gRPC server ---------------------------------------------------------------
 
-	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recoveryInterceptor(log)))
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recoveryInterceptor(log),
+			auth.UnaryServerInterceptor(issuer, auth.NewPublicMethods()),
+		),
+		grpc.ChainStreamInterceptor(
+			auth.StreamServerInterceptor(issuer, auth.NewPublicMethods()),
+		),
+	)
 	fulfilmentv1.RegisterFulfilmentServiceServer(grpcServer, fulfilmentHandler)
 
 	healthSrv := health.NewServer()
@@ -332,6 +357,7 @@ func recoveryInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 
 // appConfig is the assembled configuration for this binary.
 type appConfig struct {
+	auth       config.Auth
 	server     config.Server
 	postgres   config.Postgres
 	kafka      config.Kafka
@@ -360,6 +386,9 @@ func loadConfig() (appConfig, error) {
 	var cfg appConfig
 	var err error
 
+	if cfg.auth, err = config.Load[config.Auth](); err != nil {
+		return cfg, err
+	}
 	if cfg.server, err = config.Load[config.Server](); err != nil {
 		return cfg, err
 	}

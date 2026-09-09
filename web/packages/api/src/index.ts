@@ -51,6 +51,7 @@ export {
   requestOtp,
   verifyOtp,
   refreshToken,
+  revokeOtherSessions,
   registerArtisan,
   getArtisanProfile,
   updateArtisanProfile,

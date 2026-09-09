@@ -705,6 +705,7 @@ export const en = {
   'register.district.empty': 'No district matches that.',
   'register.district.notListed': 'My district is not listed',
   'register.district.notListed.label': 'Type your district',
+  'register.district.state.label': 'Select your state',
 
   'register.pehchan.heading': 'PM Vishwakarma or Pehchan ID',
   'register.pehchan.body':

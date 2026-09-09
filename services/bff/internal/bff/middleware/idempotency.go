@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -45,6 +46,11 @@ func Idempotency(store IdempotencyStore, scope string) func(http.Handler) http.H
 			rec := &responseRecorder{ResponseWriter: w, body: &bytes.Buffer{}}
 			result, err := idempotency.Do(r.Context(), store, scope, key, requestHash, func(ctx context.Context) (capturedResponse, error) {
 				next.ServeHTTP(rec, r.WithContext(ctx))
+				if rec.status >= 500 {
+					// rec already streamed this response straight through to
+					// the real client (it wraps w) — nothing more to write.
+					return capturedResponse{}, fmt.Errorf("upstream status %d", rec.status)
+				}
 				return capturedResponse{
 					Status: rec.status,
 					Header: rec.Header(),
@@ -53,7 +59,13 @@ func Idempotency(store IdempotencyStore, scope string) func(http.Handler) http.H
 			})
 
 			if err != nil {
-				httpx.Error(w, err)
+				// rec.status is only set once next.ServeHTTP actually ran and
+				// wrote through to the real client; every other error path
+				// (key conflict, still-processing, store failure) never
+				// reached the handler, so the client still needs a response.
+				if rec.status == 0 {
+					httpx.Error(w, err)
+				}
 				return
 			}
 

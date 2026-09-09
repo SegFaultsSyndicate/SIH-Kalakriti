@@ -20,6 +20,7 @@ type Breaker struct {
 	timeout      time.Duration
 	openedAt     time.Time
 	halfOpenSuccesses int
+	probing      bool
 }
 
 // New creates a circuit breaker.
@@ -40,9 +41,16 @@ func (b *Breaker) Call(fn func() error) error {
 
 	// Half-open: try one request.
 	if b.failures >= b.threshold && time.Since(b.openedAt) >= b.timeout {
+		if b.probing {
+			// Another goroutine's trial is already in flight; don't pile on.
+			b.mu.Unlock()
+			return ErrCircuitOpen
+		}
+		b.probing = true
 		b.mu.Unlock()
 		err := fn()
 		b.mu.Lock()
+		b.probing = false
 		if err == nil {
 			b.halfOpenSuccesses++
 			if b.halfOpenSuccesses >= 2 {

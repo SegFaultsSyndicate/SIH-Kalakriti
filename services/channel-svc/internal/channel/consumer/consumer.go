@@ -5,33 +5,16 @@ package consumer
 import (
 	"context"
 
+	segmentio "github.com/segmentio/kafka-go"
+
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
-	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 )
 
-// Run starts the fanout consumer loop.
-func (f *FollowFanout) Run(ctx context.Context, reader *pkgkafka.Reader) {
-	f.log.Info("fanout consumer started", "topic", topics.CatalogListingPublished)
-
-	for {
-		select {
-		case <-ctx.Done():
-			f.log.Info("fanout consumer stopping")
-			return
-		default:
-			msg, err := reader.ReadMessage(ctx)
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				f.log.Error("fanout read error", "error", err)
-				continue
-			}
-
-			if err := f.Handle(ctx, msg.Value); err != nil {
-				f.log.Error("fanout handle error", "error", err)
-				continue
-			}
-		}
+// HandlerFunc adapts Handle to pkg/kafka.HandlerFunc, so retries, backoff
+// and the dead-letter hop are pkg/kafka.ConsumerGroup's job, not this
+// package's — the same division of labour core-svc's consumers already use.
+func (f *FollowFanout) HandlerFunc() pkgkafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		return f.Handle(ctx, msg.Value)
 	}
 }

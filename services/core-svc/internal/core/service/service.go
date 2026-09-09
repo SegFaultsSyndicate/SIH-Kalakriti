@@ -70,20 +70,33 @@ type Challenger interface {
 	DevMode() bool
 }
 
+// Revocations is the refresh-token-replay and session-revocation surface the
+// identity service checks on every refresh — satisfied by
+// *pkg/auth.RevocationStore. A nil Revocations (the interface's zero value)
+// skips both checks entirely, so existing tests need not construct one.
+type Revocations interface {
+	TryBurnJTI(ctx context.Context, jti string, ttl time.Duration) (fresh bool, err error)
+	RevokeSubject(ctx context.Context, subject string, ttl time.Duration) error
+	RevokedBefore(ctx context.Context, subject string, issuedAt time.Time) (bool, error)
+}
+
 // Identity is core-svc's identity and collective-management service.
 type Identity struct {
-	store  Store
-	tokens TokenIssuer
-	otp    Challenger
-	log    *slog.Logger
+	store       Store
+	tokens      TokenIssuer
+	otp         Challenger
+	revocations Revocations
+	log         *slog.Logger
 	// now is injected so tests can assert on timestamps deterministically.
 	now func() time.Time
 }
 
 // NewIdentity builds the identity service. Every dependency is injected; the
 // service holds no global state and does no work until a method is called.
-func NewIdentity(store Store, tokens TokenIssuer, otp Challenger, log *slog.Logger) *Identity {
-	return &Identity{store: store, tokens: tokens, otp: otp, log: log, now: time.Now}
+// revocations may be nil to skip refresh-token replay and session-revocation
+// checks entirely.
+func NewIdentity(store Store, tokens TokenIssuer, otp Challenger, revocations Revocations, log *slog.Logger) *Identity {
+	return &Identity{store: store, tokens: tokens, otp: otp, revocations: revocations, log: log, now: time.Now}
 }
 
 // event is the envelope written to the outbox. It mirrors events.v1.EventHeader

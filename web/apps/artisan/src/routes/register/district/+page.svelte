@@ -2,16 +2,22 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { Input, Button } from '@kalakriti/ui';
+  import { Input, Button, Select } from '@kalakriti/ui';
   import { listen, listenSupported } from '@kalakriti/voice';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft } from '$lib/registration';
-  import { DISTRICTS, matchesQuery } from '$lib/ontology';
+  import { DISTRICTS, STATES, matchesQuery } from '$lib/ontology';
 
   const t = $derived(locale.t);
 
+  // Full state/UT coverage, not just the ones DISTRICTS happens to seed --
+  // an artisan outside those 12 states still needs a real region.state_code
+  // (core-svc rejects an empty one) via the free-text escape hatch.
+  const states = STATES.map((s) => ({ value: s.code, label: s.name }));
+
   let selected = $state('');
   let freeText = $state('');
+  let stateCode = $state('');
   let notListed = $state(false);
   let query = $state('');
   let listening = $state(false);
@@ -20,6 +26,7 @@
     void getDraft().then((draft) => {
       selected = draft.districtId ?? '';
       freeText = draft.districtFreeText ?? '';
+      stateCode = draft.districtStateCode ?? '';
       notListed = freeText !== '';
 
       // If a district was previously selected, show it in the search box
@@ -55,6 +62,10 @@
     void patchDraft({ districtFreeText: freeText });
   }
 
+  function onStateChange(): void {
+    void patchDraft({ districtStateCode: stateCode });
+  }
+
   async function useVoice(): Promise<void> {
     listening = true;
     try {
@@ -73,7 +84,9 @@
     }
   }
 
-  const canProceed = $derived(selected !== '' || freeText.trim() !== '');
+  const canProceed = $derived(
+    notListed ? freeText.trim() !== '' && stateCode !== '' : selected !== '',
+  );
 
   async function next(): Promise<void> {
     if (!canProceed) return;
@@ -93,6 +106,12 @@
         onchange={onFreeTextChange}
         placeholder={t('register.district.notListed.label')}
         aria-label={t('register.district.notListed.label')}
+      />
+      <Select
+        bind:value={stateCode}
+        onchange={onStateChange}
+        options={[{ value: '', label: t('register.district.state.label') }, ...states]}
+        aria-label={t('register.district.state.label')}
       />
       {#if listenSupported()}
         <button type="button" class="voice-alt" onclick={useVoice} disabled={listening}>

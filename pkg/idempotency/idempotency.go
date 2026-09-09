@@ -49,6 +49,12 @@ type Store interface {
 //   - Replay while the first call is still in flight (inserted response not yet
 //     saved): returns domain.ErrUnavailable so the caller retries rather than
 //     racing the in-flight side effects.
+// releaser is implemented by a Store that can undo a claimed-but-unresolved
+// key, so a failed first call doesn't permanently block retries for TTL.
+type releaser interface {
+	Delete(ctx context.Context, scope, key string) error
+}
+
 func Do[T any](ctx context.Context, store Store, scope, key, requestHash string, fn func(ctx context.Context) (T, error)) (T, error) {
 	var zero T
 
@@ -72,6 +78,9 @@ func Do[T any](ctx context.Context, store Store, scope, key, requestHash string,
 
 	result, err := fn(ctx)
 	if err != nil {
+		if r, ok := store.(releaser); ok {
+			_ = r.Delete(ctx, scope, key) // best-effort: let a retry re-claim
+		}
 		return zero, err
 	}
 

@@ -43,6 +43,13 @@ CREATE INDEX idx_webhook_deliveries_subscription ON webhook_deliveries(subscript
 CREATE INDEX idx_webhook_deliveries_event ON webhook_deliveries(event);
 
 -- Function to enqueue webhook delivery when order is created
+--
+-- ponytail: bulk_order.buyer_id is free text from the external identity
+-- provider (see migrations/007), not guaranteed UUID-shaped, while
+-- webhook_subscriptions.subscriber_id is uuid. A non-UUID buyer_id would
+-- abort the insert (invalid_text_representation) on a bare comparison, so
+-- guard with a regex before casting rather than comparing text to uuid
+-- directly (Postgres has no implicit cast either way).
 CREATE OR REPLACE FUNCTION webhook_enqueue_order_created()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -57,21 +64,22 @@ BEGIN
             'data', jsonb_build_object(
                 'id', NEW.id,
                 'buyer_id', NEW.buyer_id,
-                'status', NEW.status,
+                'status', NEW.state,
                 'created_at', NEW.created_at
             )
         )
     FROM webhook_subscriptions ws
     WHERE ws.active = true
       AND 'order.created' = ANY(ws.events)
-      AND ws.subscriber_id = NEW.buyer_id;
+      AND NEW.buyer_id ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+      AND ws.subscriber_id = NEW.buyer_id::uuid;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_webhook_order_created
-    AFTER INSERT ON bulk_orders
+    AFTER INSERT ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION webhook_enqueue_order_created();
 
@@ -79,7 +87,7 @@ CREATE TRIGGER trigger_webhook_order_created
 CREATE OR REPLACE FUNCTION webhook_enqueue_order_updated()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.status IS DISTINCT FROM NEW.status THEN
+    IF OLD.state IS DISTINCT FROM NEW.state THEN
         -- Find all active subscriptions for 'order.updated' event
         INSERT INTO webhook_deliveries (subscription_id, event, payload)
         SELECT
@@ -91,15 +99,16 @@ BEGIN
                 'data', jsonb_build_object(
                     'id', NEW.id,
                     'buyer_id', NEW.buyer_id,
-                    'old_status', OLD.status,
-                    'new_status', NEW.status,
+                    'old_status', OLD.state,
+                    'new_status', NEW.state,
                     'updated_at', NOW()
                 )
             )
         FROM webhook_subscriptions ws
         WHERE ws.active = true
           AND 'order.updated' = ANY(ws.events)
-          AND ws.subscriber_id = NEW.buyer_id;
+          AND NEW.buyer_id ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+          AND ws.subscriber_id = NEW.buyer_id::uuid;
     END IF;
 
     RETURN NEW;
@@ -107,7 +116,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_webhook_order_updated
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION webhook_enqueue_order_updated();
 
@@ -116,8 +125,8 @@ CREATE TRIGGER trigger_webhook_order_updated
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TRIGGER IF EXISTS trigger_webhook_order_updated ON bulk_orders;
-DROP TRIGGER IF EXISTS trigger_webhook_order_created ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_webhook_order_updated ON bulk_order;
+DROP TRIGGER IF EXISTS trigger_webhook_order_created ON bulk_order;
 
 DROP FUNCTION IF EXISTS webhook_enqueue_order_updated();
 DROP FUNCTION IF EXISTS webhook_enqueue_order_created();

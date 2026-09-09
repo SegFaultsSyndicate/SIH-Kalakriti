@@ -11,6 +11,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
@@ -34,10 +35,19 @@ type Config struct {
 	// signature check fail closed.
 	ProvenancePublicKeyHex string
 
-	Logger     *slog.Logger
-	Issuer     *auth.Issuer
-	Redis      *redis.Client
-	IdempStore middleware.IdempotencyStore
+	// WebhookSecret is the HMAC-SHA256 key payment-gateway callbacks are
+	// signed with. Required — HandlePaymentWebhook fails closed when unset.
+	WebhookSecret string
+	// WebhookMgr is the outbound webhook subscription store (buyers/artisans
+	// subscribing to their own events, distinct from WebhookSecret's inbound
+	// payment callbacks). Nil disables the /webhooks routes.
+	WebhookMgr *webhook.Manager
+
+	Logger      *slog.Logger
+	Issuer      *auth.Issuer
+	Redis       *redis.Client
+	IdempStore  middleware.IdempotencyStore
+	AuditLogger middleware.AuditLogger
 
 	// Service clients (gRPC).
 	AuthSvc    handler.AuthService
@@ -56,6 +66,10 @@ type Config struct {
 	RateLimitPerIP        int
 	RateLimitPerPrincipal int
 	RateLimitWindow       time.Duration
+	// TrustProxyHeaders enables X-Forwarded-For-based client IP extraction
+	// for rate limiting. Only set true behind a proxy that overwrites the
+	// header. Default false (spoofable header ignored, RemoteAddr used).
+	TrustProxyHeaders bool
 }
 
 // Server is the BFF HTTP server.
@@ -99,7 +113,7 @@ func (s *Server) mountRoutes() {
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
 		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
 	)
-	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
+	apiH.SetSecurity(cfg.Redis, cfg.Logger, cfg.WebhookSecret, cfg.WebhookMgr)
 
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
@@ -123,10 +137,11 @@ func (s *Server) mountRoutes() {
 		PerIPLimit:        cfg.RateLimitPerIP,
 		PerPrincipalLimit: cfg.RateLimitPerPrincipal,
 		Window:            cfg.RateLimitWindow,
+		TrustProxyHeaders: cfg.TrustProxyHeaders,
 	})))
 
 	// Public auth routes (no JWT required) with strict OTP rate limiting (max 5 per 10min).
-	api.POST("/auth/otp/request", httpx.Wrap(middleware.RateLimitEndpoint(cfg.Redis, "otp", 5, 10*time.Minute)), httpx.WrapHandler(apiH.RequestOTP))
+	api.POST("/auth/otp/request", httpx.Wrap(middleware.RateLimitEndpoint(cfg.Redis, "otp", 5, 10*time.Minute, cfg.TrustProxyHeaders)), httpx.WrapHandler(apiH.RequestOTP))
 	api.POST("/auth/otp/verify", httpx.WrapHandler(apiH.VerifyOTP))
 	api.POST("/auth/refresh", httpx.WrapHandler(apiH.RefreshToken))
 
@@ -151,6 +166,7 @@ func (s *Server) mountRoutes() {
 	// Protected routes group (JWT required).
 	authed := api.Group("")
 	authed.Use(httpx.Wrap(middleware.Auth(cfg.Issuer)))
+	authed.Use(httpx.Wrap(middleware.AuditLog(cfg.AuditLogger, cfg.Logger)))
 
 	// Artisan endpoints.
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))
@@ -158,6 +174,10 @@ func (s *Server) mountRoutes() {
 	authed.PATCH("/artisans/me", httpx.WrapHandler(apiH.UpdateArtisanProfile))
 	authed.POST("/auth/phone/change/request", httpx.WrapHandler(apiH.RequestPhoneChangeOTP))
 	authed.POST("/auth/phone/change/verify", httpx.WrapHandler(apiH.VerifyPhoneChangeOTP))
+	authed.POST("/auth/sessions/revoke", httpx.WrapHandler(apiH.RevokeOtherSessions))
+	authed.POST("/webhooks/subscriptions", httpx.WrapHandler(withIdempotency(apiH.CreateWebhookSubscription, cfg.IdempStore)))
+	authed.GET("/webhooks/subscriptions", httpx.WrapHandler(apiH.ListWebhookSubscriptions))
+	authed.DELETE("/webhooks/subscriptions/:id", httpx.WrapHandler(apiH.DeleteWebhookSubscription))
 
 	// Media endpoints.
 	authed.POST("/media/upload-url", httpx.WrapHandler(apiH.GenerateUploadURL))
@@ -246,10 +266,4 @@ func (s *Server) HTTPServer() *http.Server {
 		Handler:           s.router,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-}
-
-// ListenAndServe starts the HTTP server.
-func (s *Server) ListenAndServe() error {
-	s.cfg.Logger.Info("bff starting", "addr", s.cfg.Addr)
-	return http.ListenAndServe(s.cfg.Addr, s.router)
 }

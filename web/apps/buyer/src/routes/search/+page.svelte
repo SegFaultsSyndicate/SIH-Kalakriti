@@ -171,16 +171,27 @@
     }
   }
 
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function highlight(text: string | undefined, terms: string[] | undefined): string {
     if (!text) return '';
-    if (!terms || terms.length === 0) return text;
+    const safe = escapeHtml(text);
+    if (!terms || terms.length === 0) return safe;
     const pattern = terms
       .filter(Boolean)
+      .map(escapeHtml)
       .sort((a, b) => b.length - a.length)
       .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('|');
-    if (!pattern) return text;
-    return text.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
+    if (!pattern) return safe;
+    return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
   }
 
   $effect(() => {

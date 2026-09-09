@@ -60,6 +60,17 @@ export function refreshToken(
   return call('/auth/refresh', { ...options, method: 'POST', body }) as Promise<RefreshTokenResponse>;
 }
 
+type RevokeOtherSessionsResponse = Json<paths['/auth/sessions/revoke']['post']['responses'][200]>;
+
+/**
+ * Signs out every session, this device included -- see bff's
+ * RevokeOtherSessions doc comment. The caller must clear its own tokens and
+ * redirect to login on success rather than trusting this device stays signed in.
+ */
+export function revokeOtherSessions(options?: CallOptions): Promise<RevokeOtherSessionsResponse> {
+  return call('/auth/sessions/revoke', { ...options, method: 'POST' }) as Promise<RevokeOtherSessionsResponse>;
+}
+
 type RegisterArtisanBody = Json<paths['/artisans']['post']['requestBody']>;
 type RegisterArtisanResponse = Json<paths['/artisans']['post']['responses'][201]>;
 

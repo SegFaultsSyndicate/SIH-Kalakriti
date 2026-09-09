@@ -52,12 +52,25 @@ type Publisher interface {
 
 // Store is what the Relay needs from persistence.
 type Store interface {
-	// FetchUnpublished claims up to limit unpublished rows (a FOR UPDATE SKIP
-	// LOCKED select) so several Relay instances can run against the same table
-	// without duplicating work.
-	FetchUnpublished(ctx context.Context, limit int) ([]Message, error)
-	// MarkPublished stamps published_at for the given row ids.
-	MarkPublished(ctx context.Context, ids []string) error
+	// RunClaimed claims up to batchSize unpublished rows (a FOR UPDATE SKIP
+	// LOCKED select) and holds that claim for the lifetime of one DB
+	// transaction: fn runs the actual publish while the claimed rows' locks
+	// are still held, and MarkPublished for whatever ids fn returns commits
+	// in the same transaction before the claim is released.
+	//
+	// This matters across replicas: a bare SELECT ... FOR UPDATE SKIP LOCKED
+	// releases its lock the instant that SELECT's own (implicit, one-
+	// statement) transaction ends — long before a separate publish-then-
+	// mark-published round trip gets to the row. A second Relay instance's
+	// SELECT can then claim and publish the same row before the first
+	// instance marks it, duplicating the publish. Holding one transaction
+	// open across fetch, publish and mark closes that window.
+	//
+	// fn returns the ids it successfully published even when it also
+	// returns an error (a mid-batch publish failure) — RunClaimed marks and
+	// commits that partial progress before propagating fn's error, so a
+	// retry never re-publishes a row that already went out.
+	RunClaimed(ctx context.Context, batchSize int, fn func(ctx context.Context, rows []Message) (publishedIDs []string, err error)) error
 }
 
 const (
@@ -135,33 +148,24 @@ func (r *Relay) Run(ctx context.Context) {
 
 // tick publishes one batch and reports how many rows it published.
 func (r *Relay) tick(ctx context.Context) (int, error) {
-	rows, err := r.store.FetchUnpublished(ctx, r.cfg.BatchSize)
-	if err != nil {
-		return 0, fmt.Errorf("fetching unpublished outbox rows: %w", err)
-	}
-	if len(rows) == 0 {
-		return 0, nil
-	}
-
-	published := make([]string, 0, len(rows))
-	for _, row := range rows {
-		if err := r.publisher.Publish(ctx, row.Topic, row.AggregateID, row.Payload); err != nil {
-			// Stop at the first failure: rows are claimed FOR UPDATE SKIP LOCKED, so
-			// leaving the rest unpublished just means the next tick retries them
-			// (possibly from a different Relay instance) rather than reordering
-			// publishes within one aggregate's partition.
-			if len(published) > 0 {
-				if markErr := r.store.MarkPublished(ctx, published); markErr != nil {
-					return 0, fmt.Errorf("marking published after a mid-batch failure: %w", markErr)
-				}
+	var n int
+	err := r.store.RunClaimed(ctx, r.cfg.BatchSize, func(ctx context.Context, rows []Message) ([]string, error) {
+		published := make([]string, 0, len(rows))
+		for _, row := range rows {
+			if err := r.publisher.Publish(ctx, row.Topic, row.AggregateID, row.Payload); err != nil {
+				// Stop at the first failure: leaving the rest unpublished
+				// just means the next tick retries them (possibly from a
+				// different Relay instance) rather than reordering
+				// publishes within one aggregate's partition.
+				return published, fmt.Errorf("publishing outbox row %s to %s: %w", row.ID, row.Topic, err)
 			}
-			return 0, fmt.Errorf("publishing outbox row %s to %s: %w", row.ID, row.Topic, err)
+			published = append(published, row.ID)
 		}
-		published = append(published, row.ID)
+		n = len(published)
+		return published, nil
+	})
+	if err != nil {
+		return 0, err
 	}
-
-	if err := r.store.MarkPublished(ctx, published); err != nil {
-		return 0, fmt.Errorf("marking %d rows published: %w", len(published), err)
-	}
-	return len(published), nil
+	return n, nil
 }

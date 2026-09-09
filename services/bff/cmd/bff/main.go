@@ -12,12 +12,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/audit"
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/client"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/repo"
@@ -68,6 +71,10 @@ func run() error {
 	}
 	defer pgPool.Close()
 	idempStore := repo.NewIdempotencyStore(repo.New(pgPool))
+	// audit.Logger talks database/sql; OpenDBFromPool wraps the existing
+	// pgxpool connections rather than opening a second pool.
+	auditLogger := audit.New(stdlib.OpenDBFromPool(pgPool))
+	webhookMgr := webhook.NewManager(stdlib.OpenDBFromPool(pgPool))
 
 	// Dial backend services. Each is a single shared connection per backend;
 	// grpc.NewClient doesn't connect until first use, so a backend that's down
@@ -122,9 +129,13 @@ func run() error {
 		Issuer:                 issuer,
 		Redis:                  rdb,
 		IdempStore:             idempStore,
+		AuditLogger:            auditLogger,
+		WebhookSecret:          mustEnv("PAYMENT_WEBHOOK_SECRET"),
+		WebhookMgr:             webhookMgr,
 		RateLimitPerIP:         100,
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
+		TrustProxyHeaders:      getEnv("TRUST_PROXY_HEADERS", "false") == "true",
 		// Service clients wired to real backends where the RPC shapes line up
 		// 1:1 with these interfaces.
 		AuthSvc:    client.NewAuth(coreConn, rdb),

@@ -7,13 +7,14 @@
   import { listen, listenSupported } from '@kalakriti/voice';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft } from '$lib/registration';
-  import { CRAFTS, matchesQuery } from '$lib/ontology';
+  import { loadCrafts, craftLabel, matchesQuery, type Craft } from '$lib/ontology';
 
   const t = $derived(locale.t);
 
   let selected = $state('');
   let query = $state('');
   let listening = $state(false);
+  let crafts = $state<Craft[]>([]);
 
   $effect(() => {
     void getDraft().then((draft) => {
@@ -21,7 +22,13 @@
     });
   });
 
-  const filtered = $derived(CRAFTS.filter((craft) => matchesQuery(t(craft.nameKey), query)));
+  $effect(() => {
+    void loadCrafts()
+      .catch(() => [])
+      .then((c) => (crafts = c));
+  });
+
+  const filtered = $derived(crafts.filter((craft) => matchesQuery(craftLabel(craft, t), query)));
 
   function choose(id: string): void {
     selected = id;
@@ -80,7 +87,7 @@
             onclick={() => choose(craft.id)}
           >
             <Icon name={craft.icon} class="craft-tile__icon" />
-            <span>{t(craft.nameKey)}</span>
+            <span>{craftLabel(craft, t)}</span>
           </button>
         {/each}
       </div>

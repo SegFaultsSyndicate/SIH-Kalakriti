@@ -22,7 +22,7 @@ func testLogger() *slog.Logger {
 }
 
 func newTestFulfilment(store *fakeStore) *Fulfilment {
-	f := NewFulfilment(store, time.Hour, testLogger())
+	f := NewFulfilment(store, nil, time.Hour, testLogger())
 	f.now = func() time.Time { return time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC) }
 	return f
 }
@@ -82,6 +82,54 @@ func TestCreateBulkOrderAcceptsFeasibleDeadline(t *testing.T) {
 	}
 	if len(store.outbox) != 1 || store.outbox[0].topic != "order.bulk.requested" {
 		t.Errorf("expected one order.bulk.requested outbox row, got %+v", store.outbox)
+	}
+}
+
+// fakeFraudChecker reports resourceID as flagged when it matches flaggedID.
+type fakeFraudChecker struct {
+	flaggedID uuid.UUID
+}
+
+func (c fakeFraudChecker) HasActiveFraudFlags(_ context.Context, _ string, resourceID uuid.UUID) (bool, error) {
+	return resourceID == c.flaggedID, nil
+}
+
+func TestCreateBulkOrderRejectsFlaggedBuyer(t *testing.T) {
+	t.Parallel()
+	store := newFakeStore()
+	buyerID := uuid.New()
+	f := newTestFulfilment(store)
+	f.fraud = fakeFraudChecker{flaggedID: buyerID}
+
+	listingID, craftID := uuid.New(), uuid.New()
+	seedListing(t, store, listingID, craftID, 14, 10000)
+
+	_, err := f.CreateBulkOrder(context.Background(), CreateBulkOrderInput{
+		BuyerID: buyerID.String(), ListingID: listingID, Quantity: 10,
+		RequiredBy:     f.now().AddDate(0, 0, 30),
+		IdempotencyKey: "key-1",
+	})
+	if !errors.Is(err, pkgdomain.ErrForbidden) {
+		t.Fatalf("expected ErrForbidden for a flagged buyer, got %v", err)
+	}
+}
+
+func TestCreateBulkOrderAllowsUnflaggedBuyer(t *testing.T) {
+	t.Parallel()
+	store := newFakeStore()
+	f := newTestFulfilment(store)
+	f.fraud = fakeFraudChecker{flaggedID: uuid.New()} // flags someone else
+
+	listingID, craftID := uuid.New(), uuid.New()
+	seedListing(t, store, listingID, craftID, 14, 10000)
+
+	_, err := f.CreateBulkOrder(context.Background(), CreateBulkOrderInput{
+		BuyerID: uuid.New().String(), ListingID: listingID, Quantity: 10,
+		RequiredBy:     f.now().AddDate(0, 0, 30),
+		IdempotencyKey: "key-1",
+	})
+	if err != nil {
+		t.Fatalf("CreateBulkOrder returned error for an unflagged buyer: %v", err)
 	}
 }
 

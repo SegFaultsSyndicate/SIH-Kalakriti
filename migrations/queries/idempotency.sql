@@ -24,3 +24,6 @@ WHERE scope = @scope AND key = @key AND response IS NULL;
 
 -- name: DeleteExpiredIdempotencyKeys :execrows
 DELETE FROM idempotency_key WHERE expires_at <= now();
+
+-- name: DeleteIdempotencyKey :execrows
+DELETE FROM idempotency_key WHERE scope = @scope AND key = @key AND response IS NULL;

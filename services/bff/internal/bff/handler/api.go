@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +24,12 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
 )
 
+// sessionRevocationTTL bounds how long a "sign out everywhere" epoch is kept:
+// long enough to outlive any refresh token issued under the default 720h
+// (30-day) RefreshTTL, so a token minted just before the revocation can never
+// outlive the epoch that invalidated it.
+const sessionRevocationTTL = 30 * 24 * time.Hour
+
 // APIHandler aggregates all REST /api/v1 endpoints, bridging HTTP/JSON to gRPC.
 type APIHandler struct {
 	authSvc       AuthService
@@ -36,15 +44,21 @@ type APIHandler struct {
 	insightSvc    InsightService
 	catalogSvc    CatalogService
 	redis         *redis.Client
+	revocations   *auth.RevocationStore
 	logger        *slog.Logger
 	webhookSecret string
+	webhooks      *webhook.Manager
 }
 
 // SetSecurity configures Redis, structured logging and webhook credentials for security enforcement.
-func (h *APIHandler) SetSecurity(rdb *redis.Client, logger *slog.Logger, webhookSecret string) {
+func (h *APIHandler) SetSecurity(rdb *redis.Client, logger *slog.Logger, webhookSecret string, webhooks *webhook.Manager) {
 	h.redis = rdb
+	if rdb != nil {
+		h.revocations = auth.NewRevocationStore(rdb)
+	}
 	h.logger = logger
 	h.webhookSecret = webhookSecret
+	h.webhooks = webhooks
 }
 
 // AuthService is the auth-svc gRPC client interface.
@@ -343,9 +357,14 @@ func (h *APIHandler) VerifyPhoneChangeOTP(w http.ResponseWriter, r *http.Request
 	// Update phone on profile
 	_ = h.artisanSvc.UpdateProfile(r.Context(), p.Subject, map[string]any{"phone": req.NewPhone})
 
-	// Invalidate older sessions by logging revocation epoch in Redis
-	if h.redis != nil {
-		h.redis.Set(r.Context(), fmt.Sprintf("session_revoked:%s", p.Subject), time.Now().Unix(), 30*24*time.Hour)
+	// Invalidate every session issued before this moment — a leaked phone
+	// (and any refresh token already issued against it) must not survive a
+	// phone change. The pair just minted above carries an IssuedAt after
+	// this call, so it is unaffected.
+	if h.revocations != nil {
+		if err := h.revocations.RevokeSubject(r.Context(), p.Subject, sessionRevocationTTL); err != nil && h.logger != nil {
+			h.logger.Error("revoking sessions after phone change", "error", err, "actor", p.Subject)
+		}
 	}
 
 	if h.logger != nil {
@@ -359,6 +378,196 @@ func (h *APIHandler) VerifyPhoneChangeOTP(w http.ResponseWriter, r *http.Request
 	})
 }
 
+// RevokeOtherSessions invalidates every refresh token issued to the caller
+// before this call, including the one behind the request making this call —
+// "sign out everywhere, this device included". The caller's own current
+// access token stays valid for its own short remaining TTL (see
+// pkg/auth.RevocationStore's doc comment), then this device is signed out
+// too on its next refresh. Minting this device a fresh pair here instead
+// would need a second token-minting path in bff (its issuer's RefreshTTL
+// differs from core-svc's) or a new core-svc RPC — not worth it for a
+// button whose whole point is "get me signed out". The frontend must clear
+// local tokens and redirect to login on success.
+func (h *APIHandler) RevokeOtherSessions(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if h.revocations == nil {
+		httpx.Error(w, domain.Unavailable("session revocation is not configured"))
+		return
+	}
+	if err := h.revocations.RevokeSubject(r.Context(), p.Subject, sessionRevocationTTL); err != nil {
+		httpx.Error(w, fmt.Errorf("revoking sessions: %w", err))
+		return
+	}
+	if h.logger != nil {
+		h.logger.Info("security audit: sessions revoked by request", "event", "SESSIONS_REVOKED", "actor", p.Subject)
+	}
+	httpx.JSON(w, http.StatusOK, map[string]string{"status": "sessions_revoked"})
+}
+
+// webhookSubscriberType maps a principal's role to the subscriber_type the
+// webhook_subscriptions table expects. Ministry and cluster-officer accounts
+// are internal oversight roles, not sellers or buyers, so both land on
+// "admin" — the only bucket that fits.
+func webhookSubscriberType(role auth.Role) string {
+	switch role {
+	case auth.RoleBuyer:
+		return "buyer"
+	case auth.RoleArtisan:
+		return "seller"
+	default:
+		return "admin"
+	}
+}
+
+type createWebhookSubscriptionRequest struct {
+	URL    string   `json:"url"`
+	Events []string `json:"events"`
+}
+
+// CreateWebhookSubscription registers a webhook the caller wants event
+// deliveries for. The secret is generated server-side and returned exactly
+// once — it is never readable again, matching how other secret-bearing
+// creates in this codebase behave.
+func (h *APIHandler) CreateWebhookSubscription(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if h.webhooks == nil {
+		httpx.Error(w, domain.Unavailable("webhook subscriptions are not configured"))
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("this account cannot own webhook subscriptions"))
+		return
+	}
+
+	var req createWebhookSubscriptionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid request body"))
+		return
+	}
+	if len(req.Events) == 0 {
+		httpx.Error(w, domain.InvalidInput("events is required"))
+		return
+	}
+
+	secretBytes := make([]byte, 32)
+	if _, err := rand.Read(secretBytes); err != nil {
+		httpx.Error(w, fmt.Errorf("generating webhook secret: %w", err))
+		return
+	}
+	secret := hex.EncodeToString(secretBytes)
+
+	id, err := h.webhooks.CreateSubscription(r.Context(), webhook.Subscription{
+		SubscriberID:   subscriberID,
+		SubscriberType: webhookSubscriberType(p.Role),
+		URL:            req.URL,
+		Secret:         secret,
+		Events:         req.Events,
+	})
+	if err != nil {
+		httpx.Error(w, fmt.Errorf("creating webhook subscription: %w", err))
+		return
+	}
+
+	httpx.JSON(w, http.StatusCreated, map[string]any{
+		"id":     id,
+		"secret": secret,
+	})
+}
+
+// ListWebhookSubscriptions returns the caller's own webhook subscriptions.
+// Secrets are omitted — a subscription's secret is readable only at creation.
+func (h *APIHandler) ListWebhookSubscriptions(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if h.webhooks == nil {
+		httpx.Error(w, domain.Unavailable("webhook subscriptions are not configured"))
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("this account cannot own webhook subscriptions"))
+		return
+	}
+
+	subs, err := h.webhooks.ListSubscriptions(r.Context(), subscriberID)
+	if err != nil {
+		httpx.Error(w, fmt.Errorf("listing webhook subscriptions: %w", err))
+		return
+	}
+
+	out := make([]map[string]any, len(subs))
+	for i, s := range subs {
+		out[i] = map[string]any{
+			"id":                   s.ID,
+			"url":                  s.URL,
+			"events":               s.Events,
+			"active":               s.Active,
+			"created_at":           s.CreatedAt,
+			"consecutive_failures": s.ConsecutiveFailures,
+		}
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": out})
+}
+
+// DeleteWebhookSubscription removes one of the caller's own subscriptions.
+func (h *APIHandler) DeleteWebhookSubscription(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if h.webhooks == nil {
+		httpx.Error(w, domain.Unavailable("webhook subscriptions are not configured"))
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("this account cannot own webhook subscriptions"))
+		return
+	}
+	subID, err := uuid.Parse(httpx.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid subscription id"))
+		return
+	}
+
+	// Ownership check: only the subscriber who created it may delete it.
+	subs, err := h.webhooks.ListSubscriptions(r.Context(), subscriberID)
+	if err != nil {
+		httpx.Error(w, fmt.Errorf("looking up webhook subscription: %w", err))
+		return
+	}
+	owned := false
+	for _, s := range subs {
+		if s.ID == subID {
+			owned = true
+			break
+		}
+	}
+	if !owned {
+		httpx.Error(w, domain.NotFound("webhook subscription not found"))
+		return
+	}
+
+	if err := h.webhooks.DeleteSubscription(r.Context(), subID); err != nil {
+		httpx.Error(w, fmt.Errorf("deleting webhook subscription: %w", err))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // HandlePaymentWebhook processes payment gateway notifications with strict HMAC-SHA256 signature verification.
 func (h *APIHandler) HandlePaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -370,7 +579,8 @@ func (h *APIHandler) HandlePaymentWebhook(w http.ResponseWriter, r *http.Request
 	sig := r.Header.Get("X-Webhook-Signature")
 	secret := h.webhookSecret
 	if secret == "" {
-		secret = "kalakriti-production-webhook-hmac-key"
+		httpx.Error(w, domain.Unavailable("webhook verification not configured"))
+		return
 	}
 
 	if !webhook.VerifySignature(body, sig, secret) {
@@ -1441,4 +1651,3 @@ func maskIdentifier(id string) string {
 	}
 	return id[:2] + "****" + id[len(id)-2:]
 }
-

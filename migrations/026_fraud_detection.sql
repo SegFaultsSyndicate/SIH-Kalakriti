@@ -24,28 +24,32 @@ CREATE INDEX idx_fraud_flags_resource ON fraud_flags(resource_type, resource_id)
 CREATE INDEX idx_fraud_flags_created_at ON fraud_flags(created_at DESC);
 CREATE INDEX idx_fraud_flags_severity ON fraud_flags(severity) WHERE severity IN ('high', 'critical');
 
--- Function to check for new buyer large order (>Rs. 50k order from buyer with <7 days account age)
+-- Function to check for a large first order from a buyer (>Rs. 50k).
+--
+-- ponytail: the original design also gated this on buyer account age
+-- (<7 days), but buyer_id here is free text from the external identity
+-- provider (bulk_order.buyer_id has no local FK — see migrations/007) and
+-- this schema has no local users/buyer table to read a creation date from.
+-- A DB trigger cannot reach across services for it, so this flags on
+-- "first bulk order over the threshold" instead. Upgrade by having core-svc
+-- pass account age into the order-create call and checking it there instead
+-- of in a trigger, if the false-positive rate on repeat buyers matters.
+-- ponytail: also note order_lot rows for NEW.id don't exist yet at INSERT
+-- time on bulk_order (lots are created later, during allocation) — the
+-- original design's join to order_lot would always sum to zero. bulk_order
+-- already carries its own total_value_paise at insert time, so use that
+-- directly instead.
 CREATE OR REPLACE FUNCTION fraud_check_new_buyer_large_order()
 RETURNS TRIGGER AS $$
 DECLARE
-    buyer_created_at TIMESTAMPTZ;
-    account_age_days INT;
-    order_value_paise BIGINT;
+    prior_order_count INT;
 BEGIN
-    -- Get buyer account creation date
-    SELECT created_at INTO buyer_created_at
-    FROM users
-    WHERE id = NEW.buyer_id;
+    SELECT COUNT(*) INTO prior_order_count
+    FROM bulk_order
+    WHERE buyer_id = NEW.buyer_id AND id != NEW.id;
 
-    account_age_days := EXTRACT(EPOCH FROM (NOW() - buyer_created_at)) / 86400;
-
-    -- Calculate order value (sum of lot quantities x prices)
-    SELECT COALESCE(SUM(ol.quantity * ol.unit_price_paise), 0) INTO order_value_paise
-    FROM order_lots ol
-    WHERE ol.bulk_order_id = NEW.id;
-
-    -- Flag if: buyer account <7 days old AND order >Rs. 50,000
-    IF account_age_days < 7 AND order_value_paise > 5000000 THEN
+    -- Flag if: this is the buyer's first order AND it's >Rs. 50,000
+    IF prior_order_count = 0 AND NEW.total_value_paise > 5000000 THEN
         INSERT INTO fraud_flags (
             resource_type,
             resource_id,
@@ -58,13 +62,11 @@ BEGIN
             NEW.id,
             'new_buyer_large_order',
             'high',
-            format('New buyer (account age: %s days) placed large order (Rs. %s)',
-                   account_age_days,
-                   order_value_paise / 100.0),
+            format('New buyer placed large first order (Rs. %s)',
+                   NEW.total_value_paise / 100.0),
             jsonb_build_object(
                 'buyer_id', NEW.buyer_id,
-                'account_age_days', account_age_days,
-                'order_value_paise', order_value_paise
+                'order_value_paise', NEW.total_value_paise
             )
         );
     END IF;
@@ -74,7 +76,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_fraud_check_new_buyer_large_order
-    AFTER INSERT ON bulk_orders
+    AFTER INSERT ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION fraud_check_new_buyer_large_order();
 
@@ -172,14 +174,20 @@ DECLARE
     quick_cancellation_count INT;
 BEGIN
     -- Only check if order was cancelled
-    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
+    -- buyer_id is free text from the external identity provider (see
+    -- migrations/007), not guaranteed UUID-shaped; resource_id below is
+    -- uuid NOT NULL, so a non-UUID buyer_id would abort this transaction
+    -- with invalid_text_representation. Skip the flag rather than break
+    -- the cancellation for exactly the buyers this is meant to catch.
+    IF NEW.state = 'CANCELLED' AND OLD.state != 'CANCELLED'
+       AND NEW.buyer_id ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
         -- Check if cancelled within 1 hour of placement
         IF NEW.created_at > NOW() - INTERVAL '1 hour' THEN
             -- Count quick cancellations by this buyer
             SELECT COUNT(*) INTO quick_cancellation_count
-            FROM bulk_orders
+            FROM bulk_order
             WHERE buyer_id = NEW.buyer_id
-              AND status = 'cancelled'
+              AND state = 'CANCELLED'
               AND created_at > NOW() - INTERVAL '1 hour';
 
             -- Flag if >3 quick cancellations
@@ -193,7 +201,7 @@ BEGIN
                     metadata
                 ) VALUES (
                     'user',
-                    NEW.buyer_id,
+                    NEW.buyer_id::uuid,
                     'rapid_cancellation',
                     'high',
                     format('Buyer cancelled %s orders within 1 hour of placement', quick_cancellation_count),
@@ -211,7 +219,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_fraud_check_rapid_cancellation
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION fraud_check_rapid_cancellation();
 
@@ -220,10 +228,10 @@ CREATE TRIGGER trigger_fraud_check_rapid_cancellation
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_cancellation ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_cancellation ON bulk_order;
 DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_listing_creation ON listing;
 DROP TRIGGER IF EXISTS trigger_fraud_check_phone_reuse ON artisan;
-DROP TRIGGER IF EXISTS trigger_fraud_check_new_buyer_large_order ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_fraud_check_new_buyer_large_order ON bulk_order;
 
 DROP FUNCTION IF EXISTS fraud_check_rapid_cancellation();
 DROP FUNCTION IF EXISTS fraud_check_rapid_listing_creation();

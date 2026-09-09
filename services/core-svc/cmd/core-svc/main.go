@@ -163,7 +163,8 @@ func run() error {
 		service.OTPConfig{DevMode: cfg.devOTP},
 		log)
 
-	identitySvc := service.NewIdentity(wiring.NewStore(repository), issuer, otpSvc, log)
+	revocations := auth.NewRevocationStore(rdb)
+	identitySvc := service.NewIdentity(wiring.NewStore(repository), issuer, otpSvc, revocations, log)
 
 	// The ontology is loaded once at startup — from the Redis snapshot when a
 	// sibling replica has already built it — and thereafter only changes through

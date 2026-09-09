@@ -6,6 +6,9 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
@@ -192,6 +195,90 @@ func TestRefreshTokenRejectsAnUnknownOrExpiredToken(t *testing.T) {
 	// expired or forged token.
 	if _, err := svc.RefreshToken(context.Background(), "expired"); !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
+	}
+}
+
+func TestRefreshTokenRejectsAReplayedToken(t *testing.T) {
+	tokens := newFakeTokens()
+	tokens.verify["good-refresh"] = &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "jti-1",
+			Subject:   "artisan-1",
+			IssuedAt:  jwt.NewNumericDate(time.Date(2026, 8, 26, 0, 0, 0, 0, time.UTC)),
+			ExpiresAt: jwt.NewNumericDate(time.Date(2026, 9, 26, 0, 0, 0, 0, time.UTC)),
+		},
+		Role: string(auth.RoleArtisan),
+		Kind: string(auth.KindRefresh),
+	}
+	revocations := newFakeRevocations()
+	svc := NewIdentity(newFakeStore(), tokens, &fakeOTP{}, revocations, discardLogger())
+
+	if _, err := svc.RefreshToken(context.Background(), "good-refresh"); err != nil {
+		t.Fatalf("first refresh should succeed: %v", err)
+	}
+	if _, err := svc.RefreshToken(context.Background(), "good-refresh"); !errors.Is(err, pkgdomain.ErrUnauthenticated) {
+		t.Fatalf("replaying the same refresh token should be rejected, got %v", err)
+	}
+}
+
+func TestRefreshTokenReuseRevokesTheWholeSessionFamily(t *testing.T) {
+	tokens := newFakeTokens()
+	tokens.verify["good-refresh"] = &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "jti-1",
+			Subject:   "artisan-1",
+			IssuedAt:  jwt.NewNumericDate(time.Date(2026, 8, 26, 0, 0, 0, 0, time.UTC)),
+			ExpiresAt: jwt.NewNumericDate(time.Date(2026, 9, 26, 0, 0, 0, 0, time.UTC)),
+		},
+		Role: string(auth.RoleArtisan),
+		Kind: string(auth.KindRefresh),
+	}
+	// A second, still-unburned token from the same session family — stands
+	// in for a pair minted earlier and not yet redeemed.
+	tokens.verify["other-refresh"] = &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "jti-2",
+			Subject:   "artisan-1",
+			IssuedAt:  jwt.NewNumericDate(time.Date(2026, 8, 27, 0, 0, 0, 0, time.UTC)),
+			ExpiresAt: jwt.NewNumericDate(time.Date(2026, 9, 27, 0, 0, 0, 0, time.UTC)),
+		},
+		Role: string(auth.RoleArtisan),
+		Kind: string(auth.KindRefresh),
+	}
+	revocations := newFakeRevocations()
+	svc := NewIdentity(newFakeStore(), tokens, &fakeOTP{}, revocations, discardLogger())
+
+	if _, err := svc.RefreshToken(context.Background(), "good-refresh"); err != nil {
+		t.Fatalf("first refresh should succeed: %v", err)
+	}
+	// Replay: rejected, and must burn down the rest of the family.
+	if _, err := svc.RefreshToken(context.Background(), "good-refresh"); !errors.Is(err, pkgdomain.ErrUnauthenticated) {
+		t.Fatalf("replay should be rejected, got %v", err)
+	}
+	if _, err := svc.RefreshToken(context.Background(), "other-refresh"); !errors.Is(err, pkgdomain.ErrUnauthenticated) {
+		t.Fatalf("a sibling token from the same family should be revoked too, got %v", err)
+	}
+}
+
+func TestRefreshTokenRejectsARevokedSession(t *testing.T) {
+	tokens := newFakeTokens()
+	tokens.verify["good-refresh"] = &auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "jti-1",
+			Subject:   "artisan-1",
+			IssuedAt:  jwt.NewNumericDate(time.Date(2026, 8, 26, 0, 0, 0, 0, time.UTC)),
+			ExpiresAt: jwt.NewNumericDate(time.Date(2026, 9, 26, 0, 0, 0, 0, time.UTC)),
+		},
+		Role: string(auth.RoleArtisan),
+		Kind: string(auth.KindRefresh),
+	}
+	revocations := newFakeRevocations()
+	revocations.revokedSince["artisan-1"] = time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC) // after the token's IssuedAt
+	svc := NewIdentity(newFakeStore(), tokens, &fakeOTP{}, revocations, discardLogger())
+
+	_, err := svc.RefreshToken(context.Background(), "good-refresh")
+	if !errors.Is(err, pkgdomain.ErrUnauthenticated) {
+		t.Fatalf("a token issued before the revocation epoch should be rejected, got %v", err)
 	}
 }
 

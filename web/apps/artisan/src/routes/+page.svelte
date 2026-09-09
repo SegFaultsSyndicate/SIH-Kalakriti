@@ -20,6 +20,7 @@
   import { Icon } from '@kalakriti/icons';
   import { syncEngine } from '$lib/sync';
   import { getArtisanId, getDraft as getRegistrationDraft } from '$lib/registration';
+  import { getCraftById, craftLabel } from '$lib/ontology';
   import { cachedOrders, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
   import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
   import DigitalLiteracyTutorial from '$lib/DigitalLiteracyTutorial.svelte';
@@ -53,6 +54,10 @@
       if (reg.pehchanId) pehchanId = reg.pehchanId;
       if (reg.clusterName) clusterName = reg.clusterName;
       if (reg.districtFreeText) districtName = reg.districtFreeText;
+      if (reg.craftId) {
+        const found = await getCraftById(reg.craftId);
+        if (found) craftName = craftLabel(found, t);
+      }
 
       const storedAvatar = await getPref<string>('profile.avatar_url');
       if (storedAvatar) avatarUrl = storedAvatar;

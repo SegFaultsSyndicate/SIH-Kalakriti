@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"log/slog"
 
+	segmentio "github.com/segmentio/kafka-go"
+
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
-	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
 	"github.com/ZoroNewbie00/kalakriti/services/channel-svc/internal/channel/ondc"
 )
@@ -70,31 +71,11 @@ func (p *ONDCPublisher) Handle(ctx context.Context, eventBytes []byte) error {
 	return nil
 }
 
-// Run starts the consumer loop, mirroring FollowFanout.Run — a second,
-// independent consumer group on the same topic, so each subscriber gets
-// every event regardless of the other's read position.
-func (p *ONDCPublisher) Run(ctx context.Context, reader *pkgkafka.Reader) {
-	p.log.Info("ondc publisher consumer started", "topic", topics.CatalogListingPublished)
-
-	for {
-		select {
-		case <-ctx.Done():
-			p.log.Info("ondc publisher consumer stopping")
-			return
-		default:
-			msg, err := reader.ReadMessage(ctx)
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				p.log.Error("ondc publisher read error", "error", err)
-				continue
-			}
-
-			if err := p.Handle(ctx, msg.Value); err != nil {
-				p.log.Error("ondc publisher handle error", "error", err)
-				continue
-			}
-		}
+// HandlerFunc adapts Handle to pkg/kafka.HandlerFunc — see FollowFanout's
+// identical note; a fetch/publish failure now actually gets retried and,
+// on exhaustion, dead-lettered instead of silently vanishing.
+func (p *ONDCPublisher) HandlerFunc() pkgkafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		return p.Handle(ctx, msg.Value)
 	}
 }

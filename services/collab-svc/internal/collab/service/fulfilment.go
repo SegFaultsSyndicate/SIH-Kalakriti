@@ -135,21 +135,30 @@ type Store interface {
 	ListPendingMilestonesForLot(ctx context.Context, lotID uuid.UUID) ([]domain.EscrowMilestone, error)
 }
 
+// FraudChecker is the fraud-flag read surface CreateBulkOrder gates new
+// orders on — satisfied by *pkg/fraud.Detector. A nil FraudChecker (the
+// zero value of the interface) skips the gate entirely, so existing tests
+// need not construct a detector.
+type FraudChecker interface {
+	HasActiveFraudFlags(ctx context.Context, resourceType string, resourceID uuid.UUID) (bool, error)
+}
+
 // Fulfilment is the collective-fulfilment saga coordinator.
 type Fulfilment struct {
 	store          Store
+	fraud          FraudChecker
 	reservationTTL time.Duration
 	log            *slog.Logger
 	now            func() time.Time
 }
 
 // NewFulfilment builds the saga coordinator. reservationTTL of zero uses
-// defaultReservationTTL.
-func NewFulfilment(store Store, reservationTTL time.Duration, log *slog.Logger) *Fulfilment {
+// defaultReservationTTL. fraud may be nil to skip the fraud gate entirely.
+func NewFulfilment(store Store, fraud FraudChecker, reservationTTL time.Duration, log *slog.Logger) *Fulfilment {
 	if reservationTTL <= 0 {
 		reservationTTL = defaultReservationTTL
 	}
-	return &Fulfilment{store: store, reservationTTL: reservationTTL, log: log, now: func() time.Time { return time.Now().UTC() }}
+	return &Fulfilment{store: store, fraud: fraud, reservationTTL: reservationTTL, log: log, now: func() time.Time { return time.Now().UTC() }}
 }
 
 // --- CreateBulkOrder ---------------------------------------------------------
@@ -185,6 +194,23 @@ func (f *Fulfilment) CreateBulkOrder(ctx context.Context, in CreateBulkOrderInpu
 	}
 	if in.IdempotencyKey == "" {
 		return domain.BulkOrder{}, pkgdomain.InvalidInput("idempotency_key is required")
+	}
+
+	// A buyer with an unresolved fraud flag (e.g. the rapid_cancellation
+	// trigger from migrations/026) cannot place further orders until an
+	// admin resolves it. buyer_id is opaque external-identity text; a
+	// non-UUID value never has flags recorded against it (fraud_flags.
+	// resource_id is uuid), so it just skips the gate rather than erroring.
+	if f.fraud != nil {
+		if buyerID, err := uuid.Parse(in.BuyerID); err == nil {
+			flagged, err := f.fraud.HasActiveFraudFlags(ctx, "user", buyerID)
+			if err != nil {
+				return domain.BulkOrder{}, fmt.Errorf("checking fraud flags for buyer %s: %w", in.BuyerID, err)
+			}
+			if flagged {
+				return domain.BulkOrder{}, pkgdomain.Forbidden("account under review")
+			}
+		}
 	}
 
 	listing, err := f.store.ListingFeasibility(ctx, in.ListingID)

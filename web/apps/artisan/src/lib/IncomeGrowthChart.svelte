@@ -81,6 +81,7 @@
       </div>
       <h2 class="growth-title">{t('growth.title')}</h2>
       <p class="growth-subhead">{t('growth.subtitle')}</p>
+      <p class="growth-illustrative-note">Illustrative example, not this artisan's own figures.</p>
     </div>
 
     <!-- Main Uplift Hero Pill -->
@@ -265,6 +266,13 @@
     font-size: var(--k-text-xs);
     color: var(--k-text-secondary);
     margin: 2px 0 0;
+  }
+
+  .growth-illustrative-note {
+    font-size: 0.65rem;
+    font-style: italic;
+    color: var(--k-text-secondary);
+    margin: 4px 0 0;
   }
 
   .uplift-hero {

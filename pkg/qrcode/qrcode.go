@@ -38,18 +38,6 @@ func (g *Generator) GeneratePNG(shortCode string, size int) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// GenerateSVG creates an SVG QR code encoding the verification URL for the given short code.
-func (g *Generator) GenerateSVG(shortCode string, size int) ([]byte, error) {
-	url := fmt.Sprintf("%s/v/%s", g.baseURL, shortCode)
-	qr, err := qrcode.New(url, qrcode.Medium)
-	if err != nil {
-		return nil, fmt.Errorf("creating QR code: %w", err)
-	}
-	qr.DisableBorder = false
-	svg := qr.ToSmallString(false)
-	return []byte(svg), nil
-}
-
 // VerificationURL returns the full verification URL for a short code.
 func (g *Generator) VerificationURL(shortCode string) string {
 	return fmt.Sprintf("%s/v/%s", g.baseURL, shortCode)

@@ -56,7 +56,7 @@
   load; the fastest way out of that is to let them keep working.
 -->
 <div class="actions">
-  <a class="action action--primary" href="/listings/new">{t('offline.newListing')}</a>
+  <a class="action action--primary" href="/listing/new/capture">{t('offline.newListing')}</a>
   <a class="action" href="/">{t('offline.continue')}</a>
 </div>
 

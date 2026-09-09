@@ -23,6 +23,7 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
@@ -53,6 +54,10 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	authCfg, err := config.Load[config.Auth]()
+	if err != nil {
+		return err
+	}
 	server, err := config.Load[config.Server]()
 	if err != nil {
 		return err
@@ -124,7 +129,19 @@ func run() error {
 		client.NewTransliterator(ontology, rdb), service.NewRuleUnderstander(), cache, log)
 	indexer := service.NewIndexer(repository, inference, cache, log)
 
-	grpcServer := grpc.NewServer()
+	issuer, err := auth.NewIssuer(auth.Config{
+		Secret:     authCfg.JWTSecret,
+		Issuer:     authCfg.Issuer,
+		AccessTTL:  authCfg.AccessTTL,
+		RefreshTTL: authCfg.RefreshTTL,
+	})
+	if err != nil {
+		return fmt.Errorf("configuring token issuer: %w", err)
+	}
+
+	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		auth.UnaryServerInterceptor(issuer, auth.NewPublicMethods()),
+	))
 	searchv1.RegisterSearchServiceServer(grpcServer, handler.NewSearch(searchSvc))
 
 	healthSrv := health.NewServer()

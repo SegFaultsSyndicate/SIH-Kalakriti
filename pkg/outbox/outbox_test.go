@@ -75,41 +75,48 @@ func TestEnqueueRejectsUnmarshallablePayload(t *testing.T) {
 }
 
 // fakeStore is an in-memory Store + Publisher used to exercise Relay.tick
-// without a real database or Kafka broker.
+// without a real database or Kafka broker. Its RunClaimed holds f.mu for the
+// whole call, standing in for a real held-open DB transaction: no other
+// claim can observe the rows mid-fn, matching the guarantee the real
+// pgx-transaction-backed implementations provide.
 type fakeStore struct {
 	mu        sync.Mutex
 	rows      []Message
 	published []string
 }
 
-func (f *fakeStore) FetchUnpublished(_ context.Context, limit int) ([]Message, error) {
+func (f *fakeStore) RunClaimed(ctx context.Context, limit int, fn func(ctx context.Context, rows []Message) ([]string, error)) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if len(f.rows) > limit {
-		return append([]Message(nil), f.rows[:limit]...), nil
-	}
-	return append([]Message(nil), f.rows...), nil
-}
 
-func (f *fakeStore) MarkPublished(_ context.Context, ids []string) error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.published = append(f.published, ids...)
-	remaining := f.rows[:0]
-	for _, r := range f.rows {
-		keep := true
-		for _, id := range ids {
-			if r.ID == id {
-				keep = false
-				break
+	var claimed []Message
+	if len(f.rows) > limit {
+		claimed = append([]Message(nil), f.rows[:limit]...)
+	} else {
+		claimed = append([]Message(nil), f.rows...)
+	}
+
+	ids, fnErr := fn(ctx, claimed)
+
+	if len(ids) > 0 {
+		f.published = append(f.published, ids...)
+		remaining := f.rows[:0]
+		for _, r := range f.rows {
+			keep := true
+			for _, id := range ids {
+				if r.ID == id {
+					keep = false
+					break
+				}
+			}
+			if keep {
+				remaining = append(remaining, r)
 			}
 		}
-		if keep {
-			remaining = append(remaining, r)
-		}
+		f.rows = remaining
 	}
-	f.rows = remaining
-	return nil
+
+	return fnErr
 }
 
 type fakePublisher struct {

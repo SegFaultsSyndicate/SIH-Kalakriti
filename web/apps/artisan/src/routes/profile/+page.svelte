@@ -27,11 +27,13 @@
     setAccessToken,
     setRefreshToken,
     session,
+    call,
+    ApiError,
   } from '@kalakriti/api';
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
-  import { CRAFTS, DISTRICTS } from '$lib/ontology';
+  import { getCraftById, craftLabel, DISTRICTS } from '$lib/ontology';
   import ImageCropModal from '$lib/ImageCropModal.svelte';
   import BusinessCardModal from '$lib/BusinessCardModal.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
@@ -97,8 +99,8 @@
       if (draft.clusterName) clusterName = draft.clusterName;
 
       if (draft.craftId) {
-        const found = CRAFTS.find((c) => c.id === draft.craftId);
-        if (found) craftName = `${t(found.nameKey)} (${found.id})`;
+        const found = await getCraftById(draft.craftId);
+        if (found) craftName = `${craftLabel(found, t)} (${found.slug})`;
       }
 
       // Restore email & notification preferences
@@ -290,17 +292,14 @@
     phoneError = '';
     try {
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/request', {
+      await call('/auth/phone/change/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted }),
+        body: { new_phone: formatted },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to request verification code');
       phoneStep = 'otp';
-      showToast({ message: data.message || 'Verification code sent to new mobile number', variant: 'info' });
-    } catch (err: any) {
-      phoneError = err.message || 'Failed to request verification code';
+      showToast({ message: 'Verification code sent to new mobile number', variant: 'info' });
+    } catch (err) {
+      phoneError = err instanceof ApiError ? err.message : 'Failed to request verification code';
     } finally {
       phoneLoading = false;
     }
@@ -316,13 +315,12 @@
     try {
       const raw = newPhoneInput.trim().replace(/\s+/g, '');
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/verify', {
+      const data = (await call('/auth/phone/change/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted, otp: phoneOtpInput.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Verification failed');
+        body: { new_phone: formatted, otp: phoneOtpInput.trim() },
+      })) as { access_token?: string; refresh_token?: string };
+      if (data.access_token) setAccessToken(data.access_token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
       phone = formatted;
       await setPref('login.phone', formatted);
       showPhoneModal = false;
@@ -333,8 +331,8 @@
         message: 'Mobile number updated! Other active sessions terminated for security.',
         variant: 'success',
       });
-    } catch (err: any) {
-      phoneError = err.message || 'Verification failed';
+    } catch (err) {
+      phoneError = err instanceof ApiError ? err.message : 'Verification failed';
     } finally {
       phoneLoading = false;
     }

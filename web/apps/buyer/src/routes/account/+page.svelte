@@ -18,7 +18,7 @@
   import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
-  import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
+  import { session, setAccessToken, setRefreshToken, revokeOtherSessions, ApiError } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
 
@@ -87,6 +87,9 @@
 
   // Security states
   let twoFactorEnabled = $state(true);
+  // Decorative only -- there is no GET /auth/sessions to list real devices
+  // from, just POST /auth/sessions/revoke (see handleRevokeOtherSessions,
+  // which is wired to the real endpoint).
   let activeSessions = $state([
     {
       id: 'sess-1',
@@ -114,14 +117,33 @@
     }
   });
 
+  // None of this tab's actions call a real backend yet -- there is no
+  // address book, 2FA, session-revocation, DPDP export, or video-consult
+  // API anywhere in this codebase (see AUDIT_FINDINGS.md #23). Routing every
+  // handler through this gate means a production build shows an honest
+  // "not available" message instead of a false success toast; the DEV-only
+  // branch keeps the mock UI usable for local design/QA work, same as the
+  // rest of the codebase's import.meta.env.DEV-gated placeholders.
+  function mockAction(devMessage: string, devVariant: 'success' | 'info' = 'success'): void {
+    if (import.meta.env.DEV) {
+      showToast({ message: devMessage, variant: devVariant });
+    } else {
+      showToast({ message: 'This feature is not available yet.', variant: 'error' });
+    }
+  }
+
   function handleSaveProfile(e: Event): void {
     e.preventDefault();
-    showToast({ message: 'Personal details updated successfully', variant: 'success' });
+    mockAction('Personal details updated successfully');
   }
 
   function handleRequestPhoneOtp(): void {
     if (!newPhone.trim()) {
       showToast({ message: 'Please enter a valid 10-digit mobile number', variant: 'error' });
+      return;
+    }
+    if (!import.meta.env.DEV) {
+      mockAction(`Verification code sent to ${newPhone}`, 'info');
       return;
     }
     phoneOtpSent = true;
@@ -131,6 +153,10 @@
   function handleVerifyPhone(): void {
     if (!phoneOtp.trim()) {
       showToast({ message: 'Please enter the 6-digit OTP', variant: 'error' });
+      return;
+    }
+    if (!import.meta.env.DEV) {
+      mockAction('Mobile number updated and verified!');
       return;
     }
     isVerifyingPhone = true;
@@ -149,6 +175,10 @@
     e.preventDefault();
     if (!newAddressLine.trim() || !newAddressCity.trim() || !newAddressPin.trim()) {
       showToast({ message: 'Please fill in all mandatory address fields', variant: 'error' });
+      return;
+    }
+    if (!import.meta.env.DEV) {
+      mockAction('Address saved to your address book');
       return;
     }
 
@@ -181,6 +211,10 @@
   }
 
   function handleSetDefaultAddress(id: string): void {
+    if (!import.meta.env.DEV) {
+      mockAction('Default shipping address updated');
+      return;
+    }
     savedAddresses = savedAddresses.map((a) => ({
       ...a,
       isDefault: a.id === id,
@@ -189,13 +223,34 @@
   }
 
   function handleDeleteAddress(id: string): void {
+    if (!import.meta.env.DEV) {
+      mockAction('Address removed from address book', 'info');
+      return;
+    }
     savedAddresses = savedAddresses.filter((a) => a.id !== id);
     showToast({ message: 'Address removed from address book', variant: 'info' });
   }
 
-  function handleRevokeOtherSessions(): void {
-    activeSessions = activeSessions.filter((s) => s.isCurrent);
-    showToast({ message: 'All other device sessions have been revoked.', variant: 'success' });
+  let isRevokingSessions = $state(false);
+
+  // Revoking signs this device out too (see bff's RevokeOtherSessions doc
+  // comment): the call succeeds, then the local session is cleared and the
+  // user is sent to login, same as handleSignOut.
+  async function handleRevokeOtherSessions(): Promise<void> {
+    isRevokingSessions = true;
+    try {
+      await revokeOtherSessions();
+      setAccessToken(undefined);
+      setRefreshToken(undefined);
+      session.clear();
+      showToast({ message: 'Signed out of every device. Please sign in again.', variant: 'success' });
+      void goto('/login');
+    } catch (cause) {
+      const message = cause instanceof ApiError ? cause.message : 'Could not revoke other sessions. Try again.';
+      showToast({ message, variant: 'error' });
+    } finally {
+      isRevokingSessions = false;
+    }
   }
 
   function handleSignOut(): void {
@@ -625,7 +680,7 @@
               <button
                 type="button"
                 class="sec-edit-btn"
-                onclick={() => showToast({ message: 'Password reset link sent to your verified email', variant: 'info' })}
+                onclick={() => mockAction('Password reset link sent to your verified email', 'info')}
               >
                 Change
               </button>
@@ -641,6 +696,10 @@
                 type="button"
                 class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
                 onclick={() => {
+                  if (!import.meta.env.DEV) {
+                    mockAction(twoFactorEnabled ? '2FA disabled' : '2FA enabled', 'info');
+                    return;
+                  }
                   twoFactorEnabled = !twoFactorEnabled;
                   showToast({
                     message: twoFactorEnabled ? '2FA enabled' : '2FA disabled',
@@ -663,10 +722,11 @@
               <button
                 type="button"
                 class="revoke-all-btn"
+                disabled={isRevokingSessions}
                 onclick={handleRevokeOtherSessions}
               >
                 <Icon name="lock" size="0.85rem" />
-                Sign Out of All Other Devices
+                {isRevokingSessions ? 'Signing out everywhere…' : 'Sign Out of All Other Devices'}
               </button>
             </div>
 
@@ -699,7 +759,7 @@
               <button
                 type="button"
                 class="dpdp-btn"
-                onclick={() => showToast({ message: 'Personal data archive download started (JSON)', variant: 'success' })}
+                onclick={() => mockAction('Personal data archive download started (JSON)')}
               >
                 <Icon name="download" size="0.9rem" />
                 Download Personal Data Archive
@@ -707,7 +767,7 @@
               <button
                 type="button"
                 class="dpdp-btn danger"
-                onclick={() => showToast({ message: 'Consent withdrawal request logged. An officer will confirm via SMS.', variant: 'info' })}
+                onclick={() => mockAction('Consent withdrawal request logged. An officer will confirm via SMS.', 'info')}
               >
                 Manage Privacy Consent
               </button>
@@ -772,7 +832,7 @@
                 <button
                   type="button"
                   class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                  onclick={() => mockAction('GST Tax Invoice downloaded')}
                 >
                   Download Tax Invoice
                 </button>
@@ -820,7 +880,7 @@
                 <button
                   type="button"
                   class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                  onclick={() => mockAction('GST Tax Invoice downloaded')}
                 >
                   Download Tax Invoice
                 </button>
@@ -863,7 +923,7 @@
               <button
                 type="button"
                 class="join-room-btn"
-                onclick={() => showToast({ message: 'Loom Video Room will activate 10 minutes prior to session', variant: 'info' })}
+                onclick={() => mockAction('Loom Video Room will activate 10 minutes prior to session', 'info')}
               >
                 <Icon name="video" size="1.1rem" />
                 Join Video Consultation Room
@@ -871,7 +931,7 @@
               <button
                 type="button"
                 class="reschedule-btn"
-                onclick={() => showToast({ message: 'Reschedule request sent to artisan guild coordinator', variant: 'info' })}
+                onclick={() => mockAction('Reschedule request sent to artisan guild coordinator', 'info')}
               >
                 Reschedule Session
               </button>

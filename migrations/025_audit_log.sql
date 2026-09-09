@@ -27,7 +27,11 @@ CREATE INDEX idx_audit_log_action ON audit_log(action);
 CREATE RULE audit_log_no_update AS ON UPDATE TO audit_log DO INSTEAD NOTHING;
 CREATE RULE audit_log_no_delete AS ON DELETE TO audit_log DO INSTEAD NOTHING;
 
--- Function to log payment split creation
+-- Function to log payment split creation.
+--
+-- ponytail: original referenced a total_paise/status pair that payment_split
+-- doesn't have (it splits gross/commission/net, and tracks settlement via
+-- nullable settled_at, not a status column) — logging the actual columns.
 CREATE OR REPLACE FUNCTION audit_payment_split_created()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -44,8 +48,8 @@ BEGIN
         NEW.id,
         jsonb_build_object(
             'bulk_order_id', NEW.bulk_order_id,
-            'total_paise', NEW.total_paise,
-            'status', NEW.status
+            'gross_total_paise', NEW.gross_total_paise,
+            'net_total_paise', NEW.net_total_paise
         )
     );
     RETURN NEW;
@@ -53,15 +57,15 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_payment_split_created
-    AFTER INSERT ON payment_splits
+    AFTER INSERT ON payment_split
     FOR EACH ROW
     EXECUTE FUNCTION audit_payment_split_created();
 
--- Function to log order amendments
+-- Function to log order amendments.
 CREATE OR REPLACE FUNCTION audit_order_status_changed()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.status IS DISTINCT FROM NEW.status THEN
+    IF OLD.state IS DISTINCT FROM NEW.state THEN
         INSERT INTO audit_log (
             actor_type,
             action,
@@ -74,8 +78,8 @@ BEGIN
             'bulk_order',
             NEW.id,
             jsonb_build_object(
-                'old_status', OLD.status,
-                'new_status', NEW.status,
+                'old_status', OLD.state,
+                'new_status', NEW.state,
                 'changed_at', NOW()
             )
         );
@@ -85,11 +89,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_order_status_changed
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION audit_order_status_changed();
 
--- Function to log QC results
+-- Function to log QC results.
+--
+-- ponytail: original referenced allocation_id/defect_category/
+-- inspector_notes, none of which exist on qc_result (it's lot_id/notes;
+-- defect detail lives in the child qc_defect table) — logging what's
+-- actually on the row this trigger fires from.
 CREATE OR REPLACE FUNCTION audit_qc_result_recorded()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -105,10 +114,9 @@ BEGIN
         'qc_result',
         NEW.id,
         jsonb_build_object(
-            'allocation_id', NEW.allocation_id,
+            'lot_id', NEW.lot_id,
             'passed', NEW.passed,
-            'defect_category', NEW.defect_category,
-            'inspector_notes', NEW.inspector_notes
+            'notes', NEW.notes
         )
     );
     RETURN NEW;
@@ -116,7 +124,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_qc_result_recorded
-    AFTER INSERT ON qc_results
+    AFTER INSERT ON qc_result
     FOR EACH ROW
     EXECUTE FUNCTION audit_qc_result_recorded();
 
@@ -157,9 +165,9 @@ CREATE TRIGGER trigger_audit_artisan_verified
 -- +goose StatementBegin
 
 DROP TRIGGER IF EXISTS trigger_audit_artisan_verified ON artisan;
-DROP TRIGGER IF EXISTS trigger_audit_qc_result_recorded ON qc_results;
-DROP TRIGGER IF EXISTS trigger_audit_order_status_changed ON bulk_orders;
-DROP TRIGGER IF EXISTS trigger_audit_payment_split_created ON payment_splits;
+DROP TRIGGER IF EXISTS trigger_audit_qc_result_recorded ON qc_result;
+DROP TRIGGER IF EXISTS trigger_audit_order_status_changed ON bulk_order;
+DROP TRIGGER IF EXISTS trigger_audit_payment_split_created ON payment_split;
 
 DROP FUNCTION IF EXISTS audit_artisan_verified();
 DROP FUNCTION IF EXISTS audit_qc_result_recorded();
