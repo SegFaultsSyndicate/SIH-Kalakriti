@@ -246,7 +246,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-premium-header-text, #F4F0EA);
+    color: var(--k-ink-900, #F4F0EA);
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -266,7 +266,7 @@
     inline-size: 2rem;
     block-size: 2rem;
     border-radius: 50%;
-    background-color: var(--k-premium-warm-cream, #F4F0EA);
+    background-color: var(--k-premium-warm-cream);
     color: var(--k-premium-header-bg, #873032);
     border: 1px solid rgba(244, 240, 234, 0.3);
     font-size: 0.75rem;
@@ -287,7 +287,7 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-premium-header-text, #F4F0EA);
+    color: var(--k-ink-900, #F4F0EA);
     font-weight: 500;
     opacity: 0.9;
   }
@@ -298,7 +298,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-premium-header-text, #F4F0EA);
+    color: var(--k-ink-900, #F4F0EA);
   }
 
   /* Popover */
