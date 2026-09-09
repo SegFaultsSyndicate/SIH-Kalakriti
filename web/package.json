@@ -44,14 +44,19 @@
     "vitest": "^2.1.0"
   },
   "pnpm": {
-    "overrides": {
-      "svelte": "^5.1.0"
-    },
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp",
       "msw",
       "core-js"
     ]
-  }
+  },
+  "overrides": {
+    "svelte": "^5.1.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "e2e"
+  ]
 }
