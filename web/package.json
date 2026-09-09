@@ -51,9 +51,6 @@
       "core-js"
     ]
   },
-  "overrides": {
-    "svelte": "^5.1.0"
-  },
   "workspaces": [
     "apps/*",
     "packages/*",

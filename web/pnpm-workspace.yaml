@@ -2,3 +2,14 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'e2e'
+
+# pnpm 9+ reads workspace-level settings from here, not from package.json's
+# top-level or "pnpm" fields (see https://pnpm.io/settings) — a top-level
+# "overrides" in package.json is npm/yarn's convention and pnpm 10.26.1
+# (this repo's pinned version) silently ignores it, which is why the
+# committed lockfile had ^5.1.0 baked into every importer's own svelte
+# specifier instead of recording the override separately: some earlier,
+# different pnpm invocation picked package.json's override up, but a
+# straight `pnpm install` under the pinned version does not.
+overrides:
+  svelte: ^5.1.0
