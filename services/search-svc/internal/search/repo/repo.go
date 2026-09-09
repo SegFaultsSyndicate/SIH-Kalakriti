@@ -305,12 +305,11 @@ func orEmpty(values []string) []string {
 	return values
 }
 
-func listingType(value *string) *db.ListingType {
+func listingType(value *string) db.NullListingType {
 	if value == nil {
-		return nil
+		return db.NullListingType{}
 	}
-	converted := db.ListingType(*value)
-	return &converted
+	return db.NullListingType{ListingType: db.ListingType(*value), Valid: true}
 }
 
 func derefString(value *string) string {

@@ -44,8 +44,8 @@ BEGIN
         NEW.id,
         jsonb_build_object(
             'bulk_order_id', NEW.bulk_order_id,
-            'total_paise', NEW.total_paise,
-            'status', NEW.status
+            'gross_total_paise', NEW.gross_total_paise,
+            'net_total_paise', NEW.net_total_paise
         )
     );
     RETURN NEW;
@@ -53,7 +53,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_payment_split_created
-    AFTER INSERT ON payment_splits
+    AFTER INSERT ON payment_split
     FOR EACH ROW
     EXECUTE FUNCTION audit_payment_split_created();
 
@@ -61,7 +61,7 @@ CREATE TRIGGER trigger_audit_payment_split_created
 CREATE OR REPLACE FUNCTION audit_order_status_changed()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.status IS DISTINCT FROM NEW.status THEN
+    IF OLD.state IS DISTINCT FROM NEW.state THEN
         INSERT INTO audit_log (
             actor_type,
             action,
@@ -74,8 +74,8 @@ BEGIN
             'bulk_order',
             NEW.id,
             jsonb_build_object(
-                'old_status', OLD.status,
-                'new_status', NEW.status,
+                'old_status', OLD.state,
+                'new_status', NEW.state,
                 'changed_at', NOW()
             )
         );
@@ -85,7 +85,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_order_status_changed
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION audit_order_status_changed();
 
@@ -105,10 +105,10 @@ BEGIN
         'qc_result',
         NEW.id,
         jsonb_build_object(
-            'allocation_id', NEW.allocation_id,
+            'lot_id', NEW.lot_id,
+            'inspector_id', NEW.inspector_id,
             'passed', NEW.passed,
-            'defect_category', NEW.defect_category,
-            'inspector_notes', NEW.inspector_notes
+            'notes', NEW.notes
         )
     );
     RETURN NEW;
@@ -116,7 +116,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_audit_qc_result_recorded
-    AFTER INSERT ON qc_results
+    AFTER INSERT ON qc_result
     FOR EACH ROW
     EXECUTE FUNCTION audit_qc_result_recorded();
 
@@ -157,9 +157,9 @@ CREATE TRIGGER trigger_audit_artisan_verified
 -- +goose StatementBegin
 
 DROP TRIGGER IF EXISTS trigger_audit_artisan_verified ON artisan;
-DROP TRIGGER IF EXISTS trigger_audit_qc_result_recorded ON qc_results;
-DROP TRIGGER IF EXISTS trigger_audit_order_status_changed ON bulk_orders;
-DROP TRIGGER IF EXISTS trigger_audit_payment_split_created ON payment_splits;
+DROP TRIGGER IF EXISTS trigger_audit_qc_result_recorded ON qc_result;
+DROP TRIGGER IF EXISTS trigger_audit_order_status_changed ON bulk_order;
+DROP TRIGGER IF EXISTS trigger_audit_payment_split_created ON payment_split;
 
 DROP FUNCTION IF EXISTS audit_artisan_verified();
 DROP FUNCTION IF EXISTS audit_qc_result_recorded();

@@ -263,12 +263,10 @@ func (r *Repo) ListListings(ctx context.Context, filter domain.ListingFilter, pa
 		PageSize:  page.Size,
 	}
 	if filter.State != nil {
-		state := db.ListingState(*filter.State)
-		params.State = &state
+		params.State = db.NullListingState{ListingState: db.ListingState(*filter.State), Valid: true}
 	}
 	if filter.Type != nil {
-		listingType := db.ListingType(*filter.Type)
-		params.Type = &listingType
+		params.Type = db.NullListingType{ListingType: db.ListingType(*filter.Type), Valid: true}
 	}
 
 	rows, err := r.q.ListListings(ctx, params)

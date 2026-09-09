@@ -57,21 +57,21 @@ BEGIN
             'data', jsonb_build_object(
                 'id', NEW.id,
                 'buyer_id', NEW.buyer_id,
-                'status', NEW.status,
+                'status', NEW.state,
                 'created_at', NEW.created_at
             )
         )
     FROM webhook_subscriptions ws
     WHERE ws.active = true
       AND 'order.created' = ANY(ws.events)
-      AND ws.subscriber_id = NEW.buyer_id;
+      AND ws.subscriber_id::text = NEW.buyer_id;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_webhook_order_created
-    AFTER INSERT ON bulk_orders
+    AFTER INSERT ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION webhook_enqueue_order_created();
 
@@ -79,7 +79,7 @@ CREATE TRIGGER trigger_webhook_order_created
 CREATE OR REPLACE FUNCTION webhook_enqueue_order_updated()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.status IS DISTINCT FROM NEW.status THEN
+    IF OLD.state IS DISTINCT FROM NEW.state THEN
         -- Find all active subscriptions for 'order.updated' event
         INSERT INTO webhook_deliveries (subscription_id, event, payload)
         SELECT
@@ -91,15 +91,15 @@ BEGIN
                 'data', jsonb_build_object(
                     'id', NEW.id,
                     'buyer_id', NEW.buyer_id,
-                    'old_status', OLD.status,
-                    'new_status', NEW.status,
+                    'old_status', OLD.state,
+                    'new_status', NEW.state,
                     'updated_at', NOW()
                 )
             )
         FROM webhook_subscriptions ws
         WHERE ws.active = true
           AND 'order.updated' = ANY(ws.events)
-          AND ws.subscriber_id = NEW.buyer_id;
+          AND ws.subscriber_id::text = NEW.buyer_id;
     END IF;
 
     RETURN NEW;
@@ -107,7 +107,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_webhook_order_updated
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION webhook_enqueue_order_updated();
 
@@ -116,8 +116,8 @@ CREATE TRIGGER trigger_webhook_order_updated
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TRIGGER IF EXISTS trigger_webhook_order_updated ON bulk_orders;
-DROP TRIGGER IF EXISTS trigger_webhook_order_created ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_webhook_order_updated ON bulk_order;
+DROP TRIGGER IF EXISTS trigger_webhook_order_created ON bulk_order;
 
 DROP FUNCTION IF EXISTS webhook_enqueue_order_updated();
 DROP FUNCTION IF EXISTS webhook_enqueue_order_created();

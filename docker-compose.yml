@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kalakriti"]
       interval: 5s
@@ -42,7 +42,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      CLUSTER_ID: kalakriti-cluster-123
+      CLUSTER_ID: ja3_hAH_QZy-U4RiCUtuQQ
     ports:
       - "9092:9092"
     healthcheck:
@@ -68,20 +68,32 @@ services:
       timeout: 5s
       retries: 5
 
+  # One-shot: creates the bucket the services expect (S3_BUCKET) before they start.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "mc alias set local http://minio:9000 minioadmin minioadmin &&
+             mc mb -p local/kalakriti"
+    restart: "no"
+
   # Application Services
   core-svc:
     build:
       context: .
       dockerfile: Dockerfile.core-svc
     environment:
-      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:9092
-      JWT_SECRET: dev-secret-change-in-prod
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_USE_SSL: "false"
+      JWT_SECRET: dev-secret-change-in-prod-32bytes-minimum
+      S3_ENDPOINT: minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_USE_SSL: "false"
+      S3_BUCKET: kalakriti
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
     ports:
@@ -97,8 +109,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-      minio:
-        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
       ml-svc:
         condition: service_started
     restart: unless-stopped
@@ -108,7 +120,7 @@ services:
       context: .
       dockerfile: Dockerfile.search-svc
     environment:
-      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:9092
       # core-svc's gRPC port (main.go default CORE_SVC_GRPC_ADDR :50051) —
@@ -116,6 +128,11 @@ services:
       CORE_SVC_ADDR: core-svc:50051
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
+      S3_ENDPOINT: minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_USE_SSL: "false"
+      S3_BUCKET: kalakriti
     ports:
       - "8082:8082"
       # search-svc's own gRPC port (main.go default SEARCH_SVC_GRPC_ADDR
@@ -129,6 +146,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
       core-svc:
         condition: service_started
     restart: unless-stopped
@@ -138,7 +157,7 @@ services:
       context: .
       dockerfile: Dockerfile.collab-svc
     environment:
-      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:9092
       CORE_SVC_ADDR: core-svc:50051
@@ -164,7 +183,7 @@ services:
       context: .
       dockerfile: Dockerfile.channel-svc
     environment:
-      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:9092
       CORE_SVC_ADDR: core-svc:50051
@@ -190,17 +209,20 @@ services:
       context: .
       dockerfile: Dockerfile.insight-svc
     environment:
-      DATABASE_URL: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_USE_SSL: "false"
+      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      S3_ENDPOINT: minio:9000
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_USE_SSL: "false"
+      S3_BUCKET: kalakriti
       OTLP_ENDPOINT: jaeger:4317
     ports:
       # insight-svc's only listener (main.go default GRPC_ADDR :8085) — the
       # old second entry, 9094, didn't correspond to anything it listens on.
       - "8085:8085"
     depends_on:
+      minio-init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       minio:
@@ -232,7 +254,7 @@ services:
       POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       BASE_URL: http://localhost:8000
-      JWT_SECRET: dev-secret-change-in-prod
+      JWT_SECRET: dev-secret-change-in-prod-32bytes-minimum
       OTLP_ENDPOINT: jaeger:4317
     ports:
       - "8000:8000"

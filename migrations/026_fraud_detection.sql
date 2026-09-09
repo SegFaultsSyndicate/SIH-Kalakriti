@@ -24,28 +24,22 @@ CREATE INDEX idx_fraud_flags_resource ON fraud_flags(resource_type, resource_id)
 CREATE INDEX idx_fraud_flags_created_at ON fraud_flags(created_at DESC);
 CREATE INDEX idx_fraud_flags_severity ON fraud_flags(severity) WHERE severity IN ('high', 'critical');
 
--- Function to check for new buyer large order (>Rs. 50k order from buyer with <7 days account age)
+-- Function to check for a large order (>Rs. 50k).
+-- Note: buyer identity is external (bulk_order.buyer_id is an opaque text
+-- id — there is no local `users` table), so this cannot also weigh account
+-- age; it flags purely on order value.
 CREATE OR REPLACE FUNCTION fraud_check_new_buyer_large_order()
 RETURNS TRIGGER AS $$
 DECLARE
-    buyer_created_at TIMESTAMPTZ;
-    account_age_days INT;
     order_value_paise BIGINT;
 BEGIN
-    -- Get buyer account creation date
-    SELECT created_at INTO buyer_created_at
-    FROM users
-    WHERE id = NEW.buyer_id;
-
-    account_age_days := EXTRACT(EPOCH FROM (NOW() - buyer_created_at)) / 86400;
-
     -- Calculate order value (sum of lot quantities x prices)
     SELECT COALESCE(SUM(ol.quantity * ol.unit_price_paise), 0) INTO order_value_paise
-    FROM order_lots ol
+    FROM order_lot ol
     WHERE ol.bulk_order_id = NEW.id;
 
-    -- Flag if: buyer account <7 days old AND order >Rs. 50,000
-    IF account_age_days < 7 AND order_value_paise > 5000000 THEN
+    -- Flag if order >Rs. 50,000
+    IF order_value_paise > 5000000 THEN
         INSERT INTO fraud_flags (
             resource_type,
             resource_id,
@@ -56,14 +50,11 @@ BEGIN
         ) VALUES (
             'bulk_order',
             NEW.id,
-            'new_buyer_large_order',
+            'large_order',
             'high',
-            format('New buyer (account age: %s days) placed large order (Rs. %s)',
-                   account_age_days,
-                   order_value_paise / 100.0),
+            format('Large order placed (Rs. %s)', order_value_paise / 100.0),
             jsonb_build_object(
                 'buyer_id', NEW.buyer_id,
-                'account_age_days', account_age_days,
                 'order_value_paise', order_value_paise
             )
         );
@@ -74,7 +65,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_fraud_check_new_buyer_large_order
-    AFTER INSERT ON bulk_orders
+    AFTER INSERT ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION fraud_check_new_buyer_large_order();
 
@@ -172,14 +163,14 @@ DECLARE
     quick_cancellation_count INT;
 BEGIN
     -- Only check if order was cancelled
-    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
+    IF NEW.state = 'CANCELLED' AND OLD.state != 'CANCELLED' THEN
         -- Check if cancelled within 1 hour of placement
         IF NEW.created_at > NOW() - INTERVAL '1 hour' THEN
             -- Count quick cancellations by this buyer
             SELECT COUNT(*) INTO quick_cancellation_count
-            FROM bulk_orders
+            FROM bulk_order
             WHERE buyer_id = NEW.buyer_id
-              AND status = 'cancelled'
+              AND state = 'CANCELLED'
               AND created_at > NOW() - INTERVAL '1 hour';
 
             -- Flag if >3 quick cancellations
@@ -211,7 +202,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_fraud_check_rapid_cancellation
-    AFTER UPDATE ON bulk_orders
+    AFTER UPDATE ON bulk_order
     FOR EACH ROW
     EXECUTE FUNCTION fraud_check_rapid_cancellation();
 
@@ -220,10 +211,10 @@ CREATE TRIGGER trigger_fraud_check_rapid_cancellation
 -- +goose Down
 -- +goose StatementBegin
 
-DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_cancellation ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_cancellation ON bulk_order;
 DROP TRIGGER IF EXISTS trigger_fraud_check_rapid_listing_creation ON listing;
 DROP TRIGGER IF EXISTS trigger_fraud_check_phone_reuse ON artisan;
-DROP TRIGGER IF EXISTS trigger_fraud_check_new_buyer_large_order ON bulk_orders;
+DROP TRIGGER IF EXISTS trigger_fraud_check_new_buyer_large_order ON bulk_order;
 
 DROP FUNCTION IF EXISTS fraud_check_rapid_cancellation();
 DROP FUNCTION IF EXISTS fraud_check_rapid_listing_creation();
