@@ -168,6 +168,11 @@ export const ICONS = [
     "file": "src/message.svg"
   },
   {
+    "name": "package",
+    "category": "core",
+    "file": "src/package.svg"
+  },
+  {
     "name": "whatsapp",
     "category": "core",
     "file": "src/whatsapp.svg"

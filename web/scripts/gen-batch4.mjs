@@ -90,6 +90,8 @@ const CORE = {
   users: () => [S(circ(9, 8, 3.2)), S('M3.5 20 A5.6 5 0 0 1 14.5 20'), S(circ(17, 9, 2.6)), S('M15 15.2 A5 4.4 0 0 1 20.8 19.6')],
   bell: () => [S('M6 16 L6 10 A6 6 0 0 1 18 10 L18 16 L20 19 L4 19 Z'), S('M10 19 A2 2 0 0 0 14 19')],
   message: () => [S(poly([[4, 5], [20, 5], [20, 16], [10, 16], [6, 20], [6, 16], [4, 16]], true))],
+  // Delivery box for orders, shipping and delivery tracking.
+  package: () => [S(poly([[3.5, 7.27], [12, 2.5], [20.5, 7.27], [20.5, 16.73], [12, 21.5], [3.5, 16.73]], true)), S(poly([[20.5, 7.27], [12, 12], [3.5, 7.27]])), S(line(12, 12, 12, 21.5)), S(line(7.5, 4.5, 16.5, 9.5))],
   // Deliberately not the WhatsApp brand mark (trademarked) — a generic
   // handset-in-bubble glyph standing in for the WhatsApp channel.
   whatsapp: () => [S(poly([[4, 5], [20, 5], [20, 16], [10, 16], [6, 20], [6, 16], [4, 16]], true)), S('M9.5 9 A0.4 0.4 0 0 0 10.3 9 A2.5 3 0 0 0 13 11.7 A0.4 0.4 0 0 0 13 10.9 L11.8 10.3 L9.5 9')],

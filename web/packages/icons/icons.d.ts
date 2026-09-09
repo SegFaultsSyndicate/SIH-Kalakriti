@@ -34,6 +34,7 @@ export type IconName =
   | 'users'
   | 'bell'
   | 'message'
+  | 'package'
   | 'whatsapp'
   | 'calendar'
   | 'clock'

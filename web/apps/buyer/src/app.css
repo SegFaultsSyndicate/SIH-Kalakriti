@@ -148,7 +148,7 @@ body::-webkit-scrollbar {
   }
 
   .shell__icon-link:hover {
-    background-color: rgba(244, 240, 234, 0.15);
+    background-color: rgba(244, 240, 234, 0.9);
   }
 
   .shell__main {

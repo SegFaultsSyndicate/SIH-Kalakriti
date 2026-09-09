@@ -36,6 +36,7 @@ import Icon_user from './src/user.svg';
 import Icon_users from './src/users.svg';
 import Icon_bell from './src/bell.svg';
 import Icon_message from './src/message.svg';
+import Icon_package from './src/package.svg';
 import Icon_whatsapp from './src/whatsapp.svg';
 import Icon_calendar from './src/calendar.svg';
 import Icon_clock from './src/clock.svg';
@@ -127,6 +128,7 @@ export const ICON_COMPONENTS = {
   'users': Icon_users,
   'bell': Icon_bell,
   'message': Icon_message,
+  'package': Icon_package,
   'whatsapp': Icon_whatsapp,
   'calendar': Icon_calendar,
   'clock': Icon_clock,
