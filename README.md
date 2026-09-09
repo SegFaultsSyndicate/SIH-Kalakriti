@@ -33,11 +33,24 @@ built and deployed independently.
 | Go | 1.23+ | workspace mode |
 | Docker + Compose v2 | 24+ | `docker compose`, not `docker-compose` |
 | Python | 3.11 | `ml-svc` only |
+| uv | latest | runs `ml-svc`'s proto codegen; `make up` needs it on `PATH` |
 | make | GNU 4+ | |
 | psql | 18 | optional, for manual poking |
 
 `buf`, `goose`, `sqlc` and `golangci-lint` are optional: the Makefile falls back to
 a pinned `go run` if the binary is not on `PATH`.
+
+`make up` runs `make proto` first, which invokes `buf generate` — this needs the
+`protoc-gen-go` and `protoc-gen-go-grpc` plugins as local binaries on `PATH` (buf
+does not fetch these itself, unlike `buf`/`sqlc`/`goose` above). Install them once:
+
+```sh
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
+
+Make sure `$(go env GOPATH)/bin` is on `PATH` afterwards, or `buf generate` will
+fail with `exec: "protoc-gen-go": executable file not found in $PATH`.
 
 ## Getting started
 

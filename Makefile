@@ -31,7 +31,7 @@ help: ## Show this help
 
 # --- infrastructure ----------------------------------------------------------
 
-up: ## Start infrastructure and wait for it to be healthy
+up: proto sqlc ## Generate code, then start infrastructure and wait for it to be healthy
 	$(COMPOSE) up -d --wait
 
 down: ## Stop infrastructure, keep volumes
