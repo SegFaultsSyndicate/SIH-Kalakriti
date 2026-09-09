@@ -78,7 +78,6 @@ body::-webkit-scrollbar {
     padding: var(--k-space-4) var(--k-gutter);
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
     background-color: var(--k-premium-header-bg);
-    color: var(--k-premium-header-text);
   }
 
   /* Below 860px the inline nav is hidden, so the header holds just the
@@ -93,6 +92,7 @@ body::-webkit-scrollbar {
 
     .shell__wordmark {
       font-size: var(--k-text-md);
+      color: var(--k-premium-warm-cream);
     }
 
     .shell__ministry {
@@ -120,6 +120,7 @@ body::-webkit-scrollbar {
     font-weight: var(--k-weight-semibold);
     letter-spacing: var(--k-tracking-tight);
     line-height: var(--k-leading-tight);
+    color: var(--k-premium-warm-cream);
   }
 
   .shell__ministry {
@@ -129,7 +130,7 @@ body::-webkit-scrollbar {
     font-weight: var(--k-weight-regular);
     letter-spacing: var(--k-tracking-wide);
     text-transform: uppercase;
-    color: var(--k-premium-header-text);
+    color: var(--k-premium-warm-cream);
     opacity: 0.9;
   }
 
@@ -147,7 +148,7 @@ body::-webkit-scrollbar {
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: var(--k-radius-md);
-    color: var(--k-premium-header-text);
+    color: var(--k-premium-warm-cream);
   }
 
   .shell__icon-link:hover {
