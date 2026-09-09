@@ -294,8 +294,11 @@ aws cloudwatch put-metric-alarm \
 ### Monthly Restore Drill (first Monday, 10am)
 
 ```bash
-# 1. Create test environment
-docker compose -f docker-compose.test.yml up -d
+# 1. Create test environment (docker-compose.test.yml does not exist in the
+#    repo -- run this against a disposable copy of docker-compose.yml, or a
+#    second project via `docker compose -p kalakriti-drill up -d`, not a
+#    dedicated test compose file)
+docker compose -f docker-compose.yml -p kalakriti-drill up -d
 
 # 2. Restore latest backup
 ./scripts/restore.sh --force $(ls -t /var/backups/kalakriti/*.sql.gz | head -1)
@@ -304,8 +307,8 @@ docker compose -f docker-compose.test.yml up -d
 docker compose exec postgres psql -U kalakriti -d kalakriti -c "SELECT COUNT(*) FROM artisan;"
 docker compose exec postgres psql -U kalakriti -d kalakriti -c "SELECT COUNT(*) FROM listing;"
 
-# 4. Smoke test API
-curl http://localhost:8000/api/v1/listings | jq '.items | length'
+# 4. Smoke test API (bff's GET /listings responds {"listings": [...]}, not {"items": [...]})
+curl http://localhost:8000/api/v1/listings | jq '.listings | length'
 
 # 5. Document results
 echo "$(date -Iseconds): Restore drill successful" >> /var/log/kalakriti/restore-drills.log

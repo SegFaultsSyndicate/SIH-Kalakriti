@@ -240,26 +240,17 @@ func TestCircuitBreaker(t *testing.T) {
 
 ### Integration Test
 
-```bash
-# Simulate ONDC gateway down
-docker compose stop ondc-gateway
-
-# Trigger 5 failures
-for i in {1..5}; do
-    curl -X POST http://localhost:8000/api/v1/ondc/publish
-done
-
-# 6th request should fail immediately with "circuit open"
-curl -v http://localhost:8000/api/v1/ondc/publish
-# Expect instant 503 response (no waiting for timeout)
-
-# Wait 60s, restart gateway
-sleep 60
-docker compose start ondc-gateway
-
-# Next request should succeed (circuit half-open → closed)
-curl http://localhost:8000/api/v1/ondc/publish
-```
+There is no `/api/v1/ondc/publish` bff route -- ONDC publishing
+(`channel.ondc.Client.PublishOnSearch`, wrapped by the circuit breaker shown
+above) is driven from `services/channel-svc/internal/channel/consumer/ondc_publisher.go`,
+a Kafka consumer reacting to catalog events, not an inbound HTTP call. To
+exercise the breaker end-to-end, trigger the events that feed that consumer
+(e.g. publish a listing) with the real ONDC gateway unreachable, and watch
+channel-svc's logs for `ondc circuit breaker open, skipping request` rather
+than hitting a REST endpoint directly. A unit test against `ondc.Client.PublishOnSearch` with a fake gateway
+server -- there is an `adapter_test.go` in that package but no `client_test.go`
+yet -- would be a more direct way to verify the breaker trips than an
+end-to-end HTTP call.
 
 ---
 

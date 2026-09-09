@@ -467,9 +467,6 @@ func (s *Catalog) GetListing(ctx context.Context, listingID uuid.UUID) (domain.L
 	if listingID == uuid.Nil {
 		return domain.Listing{}, fmt.Errorf("listing_id is required: %w", pkgdomain.ErrInvalidInput)
 	}
-	if _, err := auth.RequirePrincipal(ctx); err != nil {
-		return domain.Listing{}, err
-	}
 
 	listing, err := s.store.GetListingDetail(ctx, listingID)
 	if err != nil {
@@ -492,10 +489,10 @@ func (s *Catalog) GetListing(ctx context.Context, listingID uuid.UUID) (domain.L
 // ListListings pages listings under the usual filters. Anything other than a
 // published-only query is an operator or owner view and is authorised as one.
 func (s *Catalog) ListListings(ctx context.Context, filter domain.ListingFilter, page domain.Page) ([]domain.Listing, error) {
-	principal, err := auth.RequirePrincipal(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// An anonymous caller (buyer browsing) is a principal-less Principal{},
+	// which HasRole/Subject-equality both fail safely closed on below --
+	// falling through to the published-only clamp.
+	principal, _ := auth.PrincipalFrom(ctx)
 
 	published := domain.StatePublished
 	if filter.State == nil || *filter.State != published {

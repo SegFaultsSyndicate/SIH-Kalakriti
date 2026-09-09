@@ -1,509 +1,251 @@
 # Kalakriti — Quickstart Guide
 
-**Last updated:** 2026-08-28  
-**Status:** 100% backend implementation complete, ready for frontend integration
-
----
-
 ## What This Is
 
-Kalakriti platform: 7 backend microservices (6 Go + 1 Python) + 3 SvelteKit web frontends served via NGINX.
-- Web frontends at http://localhost (NGINX gateway on port 80)
-  - Buyer Marketplace: http://localhost/ (or `kalakriti.in`)
-  - Artisan PWA: http://localhost/artisan/ (or `artisan.kalakriti.in`)
-  - Admin Dashboard: http://localhost/admin/ (or `admin.kalakriti.in`)
-- REST API at http://localhost:8000 (BFF service, also proxied through NGINX at http://localhost/api/v1/*)
-- gRPC between services
-- Single PostgreSQL database with vector search
-- Event-driven (Kafka + transactional outbox)
-- Observability: OpenTelemetry tracing, Prometheus metrics
+7 backend microservices (6 Go + 1 Python `ml-svc`) behind one REST gateway
+(`bff`), plus 3 SvelteKit web frontends served by NGINX in front of it.
 
-**Frontend team:** BFF exposes REST API at `/api/v1/*` — see API section below. The NGINX reverse proxy (`deploy/nginx/nginx.conf`) handles production routing and SPA fallbacks.
+```
+Browser → NGINX :80 → static buyer/artisan/admin builds
+                    → /api/*, /listing/*, /v/*  proxied to  bff :8000
+                                                                ↓ gRPC
+                                    core-svc / search-svc / collab-svc /
+                                    channel-svc / insight-svc / ml-svc
+```
+
+- Web apps at `http://localhost` (NGINX on port 80) — buyer at `/`, artisan
+  PWA at `/artisan/`, admin at `/admin/`.
+- REST API at `http://localhost:8000/api/v1` (bff), same routes also proxied
+  through NGINX at `http://localhost/api/v1/*`.
+- gRPC between backend services; the bff is the only HTTP surface.
+- Single Postgres (pgvector) + Redis + Kafka (KRaft) + MinIO.
+- OpenTelemetry tracing (Jaeger) + Prometheus metrics.
+
+There is **one** docker-compose file, `docker-compose.yml` — it already
+includes the NGINX web tier. There is no separate "production" compose file.
+
+**API reference:** the bff self-serves its generated OpenAPI spec at
+`GET /api/v1/openapi.json` — that and `docs/API.md` are the source of truth
+for routes; this doc is just how to get the stack running.
 
 ---
 
 ## Prerequisites
 
-Install these before starting:
+| Tool | Version | Notes |
+|---|---|---|
+| Go | 1.23+ | workspace mode (`go.work`) |
+| Docker + Compose v2 | 24+ | `docker compose`, not `docker-compose` |
+| Python | 3.11 | `ml-svc` only |
+| uv | latest | `ml-svc`'s proto codegen |
+| make | GNU 4+ | |
 
-| Tool | Version | Install |
-|------|---------|---------|
-| Docker Desktop | 24+ | https://docker.com |
-| Go | 1.23+ | https://go.dev/dl |
-| Python | 3.11+ | https://python.org (only needed if rebuilding ml-svc) |
-| Make | Any | Built into Git Bash on Windows |
-| Git | Any | https://git-scm.com |
+`buf`, `goose`, `sqlc`, `golangci-lint` are optional — the Makefile falls
+back to a pinned `go run` if the binary isn't on `PATH`.
 
-**Windows users:** Run commands in Git Bash (comes with Git for Windows).
+You do need `protoc-gen-go` and `protoc-gen-go-grpc` as local binaries,
+because `make up`/`make demo-up` both run `make proto sqlc` first:
+
+```sh
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
+
+Then make sure `$(go env GOPATH)/bin` (usually `~/go/bin`) is on `PATH` —
+**this is the single most common cause of a fresh-clone failure.** Symptom:
+`buf generate` fails with `exec: "protoc-gen-go": executable file not found
+in $PATH`, even though the plugin is installed, because the shell that ran
+`make` doesn't have `~/go/bin` on `PATH`.
 
 ---
 
-## Step 1: Clone & Setup
+## Fastest path: full stack, one command
 
-```bash
-cd /c/projects/kalakritibatch13/kalakriti  # You're already here
-
-# Copy environment template
-cp .env.example .env
-
-# .env has local dev defaults, no editing needed for first run
+```sh
+cp .env.example .env      # not auto-loaded by the services; see the file's own comments
+make demo-up               # proto/sqlc codegen, infra, all services, migrate, seed craft ontology
 ```
+
+First run takes a few minutes (Docker image builds); subsequent runs are
+much faster (image cache). This starts **everything**, including the web
+tier — check status with `docker compose ps`.
+
+```
+http://localhost/            buyer marketplace
+http://localhost/artisan/    artisan PWA
+http://localhost/admin/      admin/ministry dashboard
+http://localhost/api/v1/*    REST API (proxied to bff)
+http://localhost:8000        REST API (direct to bff)
+http://localhost:16686       Jaeger tracing UI
+http://localhost:9090        Prometheus
+http://localhost:9001        MinIO console (minioadmin/minioadmin)
+```
+
+**What `make demo-up` seeds:** the craft ontology only (`scripts/data/*.csv`
+— ~14 crafts, 50 aliases), via `make seed`. There is currently no seed data
+for artisans, listings, or orders against the real schema — that gap is
+tracked in `web/FRONTEND.md`. `GET /api/v1/listings` returning
+`{"listings":[]}` right after `demo-up` is expected, not a bug; craft
+browsing (`GET /api/v1/crafts`) has real data.
+
+**Reset:** `make demo-reset` (down + delete volumes + `demo-up` again).
 
 ---
 
-## Step 2: Start Infrastructure Only (Postgres, Redis, Kafka, MinIO)
+## Step-by-step path: infra first, then services by hand
 
-```bash
-make up          # Starts infra containers, waits for healthy (~30s)
-make check       # Verifies each service is responding
+Useful when working on one Go service and iterating with `go run` instead of
+rebuilding a container each time.
+
+### 1. Infra only
+
+```sh
+make up          # proto/sqlc codegen, then infra containers, waits for healthy
+make check       # probes each dependency from the host
 ```
 
-**What just started:**
-- PostgreSQL 18 + pgvector on port 5432
-- Redis 7 on port 6379
-- Kafka (KRaft mode) on port 9092
-- MinIO S3 on port 9000 (console: http://localhost:9001)
-- Jaeger tracing UI on http://localhost:16686
+Starts Postgres 18+pgvector (`:5432`), Redis (`:6379`), Kafka KRaft
+(`:9092`), MinIO (`:9000`, console `:9001`), Jaeger, Prometheus — no
+application services yet.
 
-**Troubleshooting:**
-- "port already in use" → something else using 5432/6379/9092/9000
-  - Stop other services or edit docker-compose.yml ports
-- "Docker daemon not running" → start Docker Desktop
+### 2. Migrate + seed
+
+```sh
+make migrate-up   # goose, all pending migrations
+make seed         # craft ontology CSVs (idempotent)
+```
+
+### 3. Run one service directly
+
+```sh
+cd services/core-svc && go run ./cmd/core-svc
+```
+
+Requires `make proto sqlc` to have run at least once (generates
+`pkg/pb/` and `services/core-svc/internal/core/repo/db/`, neither committed
+to git). core-svc serves gRPC on `:50051` and `/healthz`+`/readyz` HTTP on
+`:8081`. It reads config from real process env vars (not `.env` directly —
+`export` them or use your shell's dotenv support) — see `.env.example` for
+the exact names `pkg/config` expects; several of the *_ADDR/*_PORT names
+there only matter if another service is dialing this one, not for its own
+bind address (each service's own `cmd/*/main.go` has its own flag names,
+usually `<SVC>_GRPC_ADDR`/`<SVC>_HTTP_ADDR`).
+
+With `AUTH_DEV_OTP_ENABLED=true` the login handshake accepts `000000` as the
+OTP with no real SMS provider; startup refuses this flag when
+`APP_ENV=production`.
+
+```sh
+grpcurl -plaintext -d '{"phone_e164":"+919876543210"}' \
+  localhost:50051 identity.v1.IdentityService/RequestOtp
+```
+
+(Note: this raw gRPC contract takes `phone_e164`/`challenge_id` — the bff's
+REST layer simplifies this to a plain `phone`/`otp` pair with no challenge
+ID; see `docs/API.md`.)
 
 ---
 
-## Step 3: Apply Migrations + Seed Data
+## Testing the API once something is running
 
-```bash
-make migrate-up  # Runs all 13 SQL migrations
-make seed        # Loads craft ontology (20 crafts, 50+ aliases)
-```
-
-**What this creates:**
-- 13 tables: users, artisans, listings, media, orders, payments, etc.
-- Indexes including HNSW vector index for search
-- Seed data: craft types (Madhubani, Warli, Kalamkari, etc.)
-
----
-
-## Step 4: Full Demo (All Services)
-
-```bash
-make demo-up
-```
-
-**This does everything:**
-1. Starts infrastructure (Postgres, Redis, Kafka, MinIO)
-2. Builds Docker images for all 6 services
-3. Starts all services in containers
-4. Runs migrations
-5. Seeds 20 artisans, 60 listings, 3 bulk orders
-
-**Wait time:** ~5 minutes first run (Docker builds), ~2 minutes after.
-
-**Services started:**
-- `core-svc` → Identity, catalog, media, provenance (gRPC :50051)
-- `search-svc` → Vector search (gRPC :50052)
-- `collab-svc` → Bulk orders, allocations (gRPC :50053)
-- `bff` → REST API (:8000) — **direct backend API**
-- `ml-svc` → ML inference in MOCK_MODE (:50055)
-- `insight-svc` → Income statements (gRPC :50056)
-- `channel-svc` → Notifications, follows, exports (gRPC :9096)
-- `web` → NGINX gateway (:80) — **serves all 3 frontend apps + proxies `/api/`**
-
-**Frontend & App URLs:**
-- **Buyer Marketplace**: http://localhost/ (or with local DNS / hosts entry `kalakriti.in`)
-- **Artisan PWA**: http://localhost/artisan/ (or `artisan.kalakriti.in`)
-- **Admin Dashboard**: http://localhost/admin/ (or `admin.kalakriti.in`)
-- **API (via NGINX)**: http://localhost/api/v1/*
-- **API (Direct to BFF)**: http://localhost:8000/api/v1/*
-
-**Check if running:**
-```bash
-docker compose -f docker-compose.full.yml ps
-```
-
-All services should show "healthy" status.
-
----
-
-## Step 5: Test the API
-
-### BFF Health Check
-```bash
+```sh
 curl http://localhost:8000/healthz
-# Should return: {"status":"ok"}
-```
 
-### Register an Artisan
-```bash
-# 1. Request OTP (mock mode, always sends 000000)
-curl -X POST http://localhost:8000/api/v1/auth/otp \
-  -H "Content-Type: application/json" \
-  -d '{"phone_e164": "+919876543210"}'
+curl -X POST http://localhost:8000/api/v1/auth/otp/request \
+  -H 'Content-Type: application/json' -d '{"phone":"+919876543210"}'
 
-# Response: {"challenge_id": "some-uuid"}
+curl -X POST http://localhost:8000/api/v1/auth/otp/verify \
+  -H 'Content-Type: application/json' \
+  -d '{"phone":"+919876543210","otp":"000000"}'
+# {"access_token":"...","refresh_token":"..."}
 
-# 2. Verify OTP
-curl -X POST http://localhost:8000/api/v1/auth/verify \
-  -H "Content-Type: application/json" \
-  -d '{
-    "challenge_id": "some-uuid",
-    "phone_e164": "+919876543210",
-    "code": "000000"
-  }'
+export TOKEN="<access_token>"
 
-# Response: {"access_token": "eyJ...", "user_id": "uuid"}
-# Save this token for next requests
-export TOKEN="eyJ..."
+# public reads need no token
+curl http://localhost:8000/api/v1/crafts
+curl "http://localhost:8000/api/v1/listings?page_size=10"
 
-# 3. Create artisan profile
-curl -X POST http://localhost:8000/api/v1/artisans \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "full_name": "Sunita Devi",
-    "craft": "madhubani",
-    "village": "Jitwarpur",
-    "district": "Madhubani",
-    "state": "Bihar"
-  }'
-
-# Response: {"id": "artisan-uuid", "full_name": "Sunita Devi", ...}
-```
-
-### Upload a Photo (3-step process)
-```bash
-# 1. Request presigned upload URL
-curl -X POST http://localhost:8000/api/v1/media/upload-url \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "artisan_id": "artisan-uuid",
-    "content_type": "image/jpeg",
-    "size_bytes": 524288
-  }'
-
-# Response: {"media_id": "media-uuid", "upload_url": "http://localhost:9000/..."}
-
-# 2. Upload file directly to MinIO (replace with real image)
-curl -X PUT "http://localhost:9000/..." \
-  -H "Content-Type: image/jpeg" \
-  --data-binary "@test-photo.jpg"
-
-# 3. Confirm upload (triggers ML pipeline)
-curl -X POST http://localhost:8000/api/v1/media/media-uuid/confirm \
+curl "http://localhost:8000/api/v1/search?q=madhubani" \
   -H "Authorization: Bearer $TOKEN"
-
-# ML pipeline runs in background (~5s in mock mode)
-# Creates draft listing with AI-generated title/description
 ```
 
-### Check Listings
-```bash
-# Wait 5 seconds, then:
-curl http://localhost:8000/api/v1/listings?status=draft \
-  -H "Authorization: Bearer $TOKEN"
+Full route list, auth requirements, error format, idempotency and rate
+limiting: `docs/API.md`.
 
-# Should see the auto-generated listing from your uploaded photo
+### Automated integration tests
+
+```sh
+cd tests/integration && go test -v ./...
 ```
 
-### Search Listings
-```bash
-curl "http://localhost:8000/api/v1/search?q=madhubani+fish" \
-  -H "Authorization: Bearer $TOKEN"
-
-# Hybrid search: BM25 + vector similarity (works in English/Hindi)
-```
+Four journeys: artisan registration → discovery, bulk order allocation +
+reallocation, provenance seal + verify, income statement generation. Needs a
+running stack (`make demo-up` or the step-by-step path above) — these hit
+real containers, not mocks.
 
 ---
 
-## API Overview for Frontend
+## Frontend development
 
-**Base URL:** `http://localhost:8000/api/v1`
+Two ways to run the three SvelteKit apps (`web/apps/{buyer,artisan,admin}`)
+— full detail in `web/FRONTEND.md`.
 
-**Auth:** All endpoints except `/auth/*` require header:
+**Hot reload, against a running backend:**
+```sh
+cd web && pnpm install
+pnpm dev:artisan     # :5173
+pnpm dev:buyer       # :5174
+pnpm dev:admin       # :5175
 ```
-Authorization: Bearer <token>
-```
+Each app's Vite dev server proxies `/api` to `http://localhost:8000` (the
+bff) — so the backend (`make demo-up`, or at least `bff` + its dependencies)
+needs to be running first. Every screen still boots without it (offline-first
+design), but nothing beyond local/cached state resolves.
 
-### Core Endpoints
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| POST | `/auth/otp` | Request OTP for phone |
-| POST | `/auth/verify` | Verify OTP, get token |
-| POST | `/artisans` | Create artisan profile |
-| GET | `/artisans/{id}` | Get artisan details |
-| PATCH | `/artisans/{id}` | Update profile |
-| POST | `/media/upload-url` | Get presigned upload URL |
-| POST | `/media/{id}/confirm` | Confirm upload (triggers ML) |
-| GET | `/listings` | List/filter listings |
-| GET | `/listings/{id}` | Get listing details |
-| POST | `/listings/{id}/publish` | Publish draft listing |
-| GET | `/search` | Search listings (query, craft, price range) |
-| POST | `/orders` | Create bulk order |
-| GET | `/orders/{id}` | Get order status |
-| POST | `/statements` | Generate income statement PDF |
-| GET | `/statements/{code}/verify` | Verify statement signature |
-
-**30 endpoints total** — see `services/bff/internal/bff/handler/*.go` for complete list.
-
----
-
-## Testing End-to-End
-
-### Journey Test (Manual)
-1. Register artisan (POST `/artisans`)
-2. Upload photo (3-step: request URL → PUT to MinIO → confirm)
-3. Wait 5s for ML pipeline
-4. Check listings (GET `/listings?status=draft`)
-5. Publish listing (POST `/listings/{id}/publish`)
-6. Search for it (GET `/search?q=...`)
-
-**Expected:** Listing appears with AI-generated title/description.
-
-### Automated Integration Tests
-```bash
-cd tests/integration
-go test -v ./...
-
-# Tests 4 journeys:
-# 1. Artisan registration → photo → ML → listing
-# 2. Multilingual search (English/Hindi)
-# 3. Bulk order allocation across 3 artisans
-# 4. Income statement generation + verification
-```
-
----
-
-## Observability
-
-### Jaeger (Distributed Tracing)
-http://localhost:16686
-
-Search for service `bff` to see traces across all services. Every request gets a trace ID propagated through Kafka.
-
-### Prometheus (Metrics)
-http://localhost:9090
-
-Query `http_requests_total`, `grpc_server_handled_total`, etc.
-
-### Logs
-```bash
-# All services
-docker compose -f docker-compose.full.yml logs -f
-
-# One service
-docker compose -f docker-compose.full.yml logs -f bff
-
-# Infrastructure only
-docker compose logs -f postgres redis kafka
-```
-
----
-
-## Stopping Everything
-
-```bash
-# Stop services, keep data
-docker compose -f docker-compose.full.yml down
-
-# Stop infrastructure
-make down
-
-# Nuclear reset (deletes all data)
-make demo-reset
-```
-
----
-
-## Git Push Strategy
-
-### Before Pushing
-
-1. **Add `.env` to `.gitignore`** (if not already there):
-```bash
-echo ".env" >> .gitignore
-echo "bin/" >> .gitignore
-echo "*.log" >> .gitignore
-```
-
-2. **Create `.env.example`** (template with no secrets):
-```bash
-cat > .env.example << 'EOF'
-# Infrastructure
-POSTGRES_USER=kalakriti
-POSTGRES_PASSWORD=kalakriti
-POSTGRES_DB=kalakriti
-POSTGRES_PORT=5432
-POSTGRES_DSN=postgres://kalakriti:kalakriti@localhost:5432/kalakriti?sslmode=disable
-
-# Services
-ENV=development
-AUTH_DEV_OTP_ENABLED=true
-JWT_SECRET=dev-secret-change-in-production
-MEDIA_PENDING_TTL=1h
-
-# MinIO
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
-MINIO_ENDPOINT=localhost:9000
-MINIO_BUCKET=kalakriti-media
-
-# Kafka
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-
-# Redis
-REDIS_ADDR=localhost:6379
-
-# Observability
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-PROMETHEUS_PORT=9090
-EOF
-```
-
-3. **Test clean checkout** (optional but recommended):
-```bash
-# In a temp directory
-git clone <your-repo-url> kalakriti-test
-cd kalakriti-test
-cp .env.example .env
-make demo-up
-
-# If this works, your repo is good to share
-```
-
-### Push Commands
-
-```bash
-# Initial push
-git init  # If not already a repo
-git add .
-git commit -m "feat: complete backend implementation
-
-- 7 microservices (core, search, collab, bff, ml, insight, channel)
-- 13 database migrations
-- Docker compose for local dev
-- Integration tests
-- Observability (tracing, metrics)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-
-git remote add origin https://github.com/yourorg/kalakriti.git
-git branch -M main
-git push -u origin main
-```
-
-### For Your Team
-
-Share this in your repo README or Slack:
-
-```markdown
-## For Frontend Team
-
-**Web Apps & Gateway:** http://localhost (NGINX on Port 80)
-- Buyer Marketplace: http://localhost/ (or `kalakriti.in`)
-- Artisan PWA: http://localhost/artisan/ (or `artisan.kalakriti.in`)
-- Admin Dashboard: http://localhost/admin/ (or `admin.kalakriti.in`)
-- Proxied API: http://localhost/api/v1/*
-
-**Direct Backend API:** http://localhost:8000/api/v1
-
-**Setup (Production Container Mode — 5 minutes):**
-1. Install Docker Desktop + Go 1.23
-2. `git clone <repo>` && `cd kalakriti`
-3. `cp .env.example .env`
-4. `make demo-up` (wait 5 min first time)
-5. Web apps ready at http://localhost and API at http://localhost:8000
-
-**Local Frontend Dev (Hot Reload Mode):**
-```bash
-cd web
-pnpm install
-pnpm dev:artisan   # :5173
-pnpm dev:buyer     # :5174
-pnpm dev:admin     # :5175
-```
-
-**API Docs:** See QUICKSTART.md Section "API Overview"
-
-**Test Credentials:**
-- Phone: any `+91` number
-- OTP: always `000000` in dev mode
-```
+**Full container stack** (NGINX serving built apps, no hot reload):
+already covered by `make demo-up` above — apps are at `http://localhost`,
+`/artisan/`, `/admin/`.
 
 ---
 
 ## Troubleshooting
 
-### "Services won't start"
-```bash
-# Check logs
-docker compose -f docker-compose.full.yml logs bff core-svc
+**`exec: "protoc-gen-go": executable file not found in $PATH`** — see
+Prerequisites above; `~/go/bin` isn't on `PATH` in the shell running `make`.
 
-# Common fixes:
-make demo-reset  # Nuclear option, deletes everything and rebuilds
+**Kafka container exits immediately, log says `Cluster ID ... does not
+appear to be a valid UUID`** — `CLUSTER_ID` in whichever compose file you're
+using must be a base64url-encoded 16-byte UUID, not an arbitrary string.
+Regenerate with:
+```sh
+python3 -c "import uuid, base64; print(base64.urlsafe_b64encode(uuid.uuid4().bytes).rstrip(b'=').decode())"
 ```
 
-### "ML service slow"
-ML-svc runs in MOCK_MODE by default (no model weights, returns fake data in <2s).
-Real mode needs 4GB model files. Mock mode is enough for frontend dev.
+**A service crash-loops with `registering pgvector types: vector type not
+found`** — migrations haven't run. `make up` only starts infra; run
+`make migrate-up` (or use `make demo-up`, which does this for you).
 
-### "Database connection failed"
-```bash
-# Check Postgres is up
-docker compose ps postgres
+**`no space left on device` mid-build** — Docker's build cache/data root
+lives on `/`; see the "Disk space" section of `CLAUDE.md` for the safe
+cleanup order.
 
-# Test connection
-docker compose exec postgres psql -U kalakriti -d kalakriti -c 'SELECT version();'
-```
+**Port already in use (5432/6379/9092/9000/8000/80)** — something else is
+bound to it; stop that process or edit the port mapping in
+`docker-compose.yml`.
 
-### "Port conflicts"
-Edit `docker-compose.yml` and `docker-compose.full.yml`:
-```yaml
-ports:
-  - "8000:8000"  # Change left number: "8080:8000"
-```
+**Frontend dev server: `http proxy error ... ECONNREFUSED` on every
+`/api/*` call** — the bff isn't reachable at the port the app's
+`vite.config.ts` proxies to (`server.proxy['/api'].target`, should be
+`http://localhost:8000`). Vite doesn't hot-reload its own config file —
+restart `pnpm dev:*` after checking/fixing it.
 
----
+**`docker compose ps` shows a service unhealthy/restarting** —
+`docker compose logs -f <service>`. Common causes: `JWT_SECRET` under 32
+bytes (crashes bff/core-svc at startup), a `POSTGRES_DSN`/`S3_*`/`KAFKA_*`
+env var typo (see `.env.example`'s comments for the exact names
+`pkg/config` requires), or the `minio-init` one-shot bucket-creation step
+not having completed yet.
 
-## What's Next
-
-**For backend:**
-- ✅ All 18 batches complete
-- ✅ Integration tests passing
-- ⏳ Manual testing (you're doing this now)
-- ⏳ Demo practice for judges
-
-**For frontend:**
-- Connect to http://localhost:8000/api/v1
-- All endpoints return JSON
-- Auth: POST /auth/otp → POST /auth/verify → Bearer token
-- Real S3 presigned URLs for media upload (no backend proxy)
-
-**For deployment (production & k8s):**
-- Web NGINX reverse proxy config in `deploy/nginx/nginx.conf`
-- Multi-stage frontend Dockerfile in `Dockerfile.web` (builds Buyer, Artisan, Admin)
-- K8s manifests in `deploy/k8s/`:
-  - `bff-deployment.yaml`: Go BFF REST deployment + ClusterIP service (:8000)
-  - `web-deployment.yaml`: NGINX web static serving + proxy service (:80)
-  - `ingress.yaml`: Ingress routing subdomains (`kalakriti.in`, `artisan.*`, `admin.*`) and `/api/`
-  - `configmap.yaml`: Cluster configuration and service hostnames
-- Prometheus config in `deploy/prometheus.yml`
-- Multi-stage Dockerfiles already optimized (<30MB per backend service, Alpine NGINX for frontend)
-
----
-
-## Need Help?
-
-**Error messages:** Check `docker compose logs -f <service-name>`  
-**API questions:** Read `services/bff/internal/bff/handler/*.go`  
-**Database schema:** See `migrations/*.sql`  
-**Questions:** Ask your backend dev (that's you!)
-
----
-
-**Timeline:** 23 days until demo (Sept 20, 2026)  
-**Status:** Backend 100% ready for frontend integration  
-**Next:** `make demo-up` and test one full journey
+More accumulated gotchas (docker-compose specifics, migration history, the
+Go-workspace-vs-Docker-build `go.sum` trap, sqlc's nullable-param pattern):
+`CLAUDE.md` at the repo root.

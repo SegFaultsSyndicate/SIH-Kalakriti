@@ -7,48 +7,70 @@ Kalakriti BFF uses Redis-backed sliding window rate limiting to protect against 
 **Sliding Window Counter Algorithm:**
 1. Each request adds a timestamp to a Redis sorted set
 2. Old entries outside the window are removed
-3. If count ≤ limit, request proceeds; otherwise 429 returned
+3. If count ≤ limit, request proceeds; otherwise the request is rejected as
+   **`503 Service Unavailable`** -- not 429 (see "Behavior" below for why)
 4. Tracks both per-IP and per-authenticated-user separately
 
 **Implementation:** `services/bff/internal/bff/middleware/ratelimit.go`
 
 ## Configuration
 
-Set in `.env`:
+**There is no env-based configuration today.** `RATE_LIMIT_RPS`/
+`RATE_LIMIT_BURST`/`RATE_LIMIT_WINDOW`/`RATE_LIMIT_ENDPOINTS` (also listed in
+`.env.example`) are not read by any code -- `grep -rn RATE_LIMIT --include=*.go`
+turns up nothing outside this doc's own claims. The real limits are hardcoded
+in `services/bff/cmd/bff/main.go`:
 
-```bash
-# Global default (applies to all endpoints unless overridden)
-RATE_LIMIT_RPS=100              # Requests per window per IP
-RATE_LIMIT_BURST=200            # Burst allowance (not yet implemented)
-RATE_LIMIT_WINDOW=1m            # Sliding window duration
-
-# Per-endpoint overrides (future)
-RATE_LIMIT_ENDPOINTS=/api/v1/auth/otp:5:10,/api/v1/search:50:100
+```go
+RateLimitPerIP:        100,           // requests per window, per IP
+RateLimitPerPrincipal: 1000,          // requests per window, per authenticated principal
+RateLimitWindow:       time.Minute,
 ```
 
-**Current defaults in code:**
+**Current values:**
 - **Per-IP limit:** 100 requests/minute
-- **Per-authenticated-user limit:** 200 requests/minute  
+- **Per-authenticated-principal limit:** 1000 requests/minute (10x the IP
+  limit, not 2x -- both apply to an authenticated request; whichever is hit
+  first rejects)
 - **Window:** 60 seconds (sliding)
+
+To change these, edit `main.go` and redeploy -- there's no live-tunable knob
+yet. If you want the env vars above to actually work, that's unbuilt: wire
+`RateLimitConfig`'s three fields to `os.Getenv`/`pkg/config` in `main.go`.
 
 ## Limits by Endpoint Type
 
-| Endpoint Type | Recommended Limit | Reason |
+Only one per-endpoint override actually exists today: `POST /auth/otp/request`
+gets an additional, stricter check via `middleware.RateLimitEndpoint(redis,
+"otp", 5, 10*time.Minute)` on top of the global limit above -- 5 requests per
+10 minutes per IP (`services/bff/internal/bff/server.go`). Every other
+route (`/listings`, `/search`, `/orders/bulk`, etc.) shares only the one
+global per-IP/per-principal limit from the Configuration section; the table
+below is a **recommendation for future per-endpoint tuning**, not current
+behavior:
+
+| Endpoint | Recommended Limit | Reason |
 |---------------|-------------------|--------|
-| `/auth/otp` | 5/min per IP | Prevent SMS abuse |
-| `/auth/verify` | 10/min per IP | Prevent brute force |
-| `/media/upload-url` | 20/min per user | Limit storage creation |
-| `/search` | 50/min per IP | Expensive vector queries |
-| `/listings` (read) | 100/min per IP | Cheap reads |
-| `/orders` (write) | 10/min per user | Prevent duplicate orders |
-| All others | 100/min per IP | Default protection |
+| `/auth/otp/request` | 5/10min per IP (**real, already enforced**) | Prevent SMS abuse |
+| `/auth/otp/verify` | 10/min per IP (not yet enforced) | Prevent brute force |
+| `/media/upload-url` | 20/min per user (not yet enforced) | Limit storage creation |
+| `/search` | 50/min per IP (not yet enforced) | Expensive vector queries |
+| `/listings` (read) | 100/min per IP (covered by the global default) | Cheap reads |
+| `/orders/bulk` (write) | 10/min per user (not yet enforced) | Prevent duplicate orders |
+| All others | 100/min per IP, 1000/min per principal (global default) | Default protection |
 
 ## Behavior
 
 **On rate limit exceeded:**
-- HTTP 429 Too Many Requests
-- Response body: `{"error": "rate limit exceeded"}`
-- No retry-after header (yet)
+- HTTP **503 Service Unavailable**, not 429 -- the middleware calls
+  `domain.Unavailable("rate limit exceeded")`, and `pkg/domain`'s status
+  mapping sends `ErrUnavailable` to 503. There is no 429 path in this
+  codebase's rate limiter.
+- Response body (the real two-field error envelope, see `docs/API.md`):
+  `{"error": "unavailable", "message": "rate limit exceeded"}` (the
+  OTP-specific limiter's message is `"otp rate limit exceeded, please retry later"`)
+- No `Retry-After` header, no `X-RateLimit-*` response headers anywhere in
+  the implementation
 
 **On Redis failure:**
 - Request proceeds (fail-open, not fail-closed)
@@ -63,15 +85,21 @@ RATE_LIMIT_ENDPOINTS=/api/v1/auth/otp:5:10,/api/v1/search:50:100
 ## Implementation Details
 
 ```go
-// RateLimitConfig in services/bff/cmd/bff/main.go
-rlCfg := middleware.RateLimitConfig{
-    PerIPLimit:        100,   // from RATE_LIMIT_RPS env
-    PerPrincipalLimit: 200,   // 2x IP limit for authenticated users
-    Window:            time.Minute,
-}
+// RateLimitConfig in services/bff/cmd/bff/main.go -- literal values, not
+// read from any env var despite the field names suggesting otherwise.
+RateLimitPerIP:        100,
+RateLimitPerPrincipal: 1000,  // 10x IP limit for authenticated principals
+RateLimitWindow:       time.Minute,
 
-// Applied in services/bff/internal/bff/server.go
-r.Use(middleware.RateLimit(redisClient, rlCfg))
+// Applied in services/bff/internal/bff/server.go, scoped to the /api/v1
+// group only -- SEO pages (/listing/:slug, /v/:code, /sitemap.xml, etc.)
+// and the SPA fallback are NOT rate limited by this middleware.
+api := r.Group("/api/v1")
+api.Use(httpx.Wrap(middleware.RateLimit(cfg.Redis, middleware.RateLimitConfig{
+    PerIPLimit:        cfg.RateLimitPerIP,
+    PerPrincipalLimit: cfg.RateLimitPerPrincipal,
+    Window:            cfg.RateLimitWindow,
+})))
 ```
 
 **Key format in Redis:**
@@ -108,7 +136,7 @@ done
 
 # Should see:
 # 200 (x100 times)
-# 429 (x50 times)
+# 503 (x50 times)  -- not 429, see "Behavior" above
 ```
 
 ## Future Improvements

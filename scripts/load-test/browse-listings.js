@@ -28,13 +28,13 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000';
 
 export default function () {
   // Browse listings
-  const listingsRes = http.get(`${BASE_URL}/api/v1/listings?status=published&limit=20`);
+  const listingsRes = http.get(`${BASE_URL}/api/v1/listings?state=PUBLISHED`);
   check(listingsRes, {
     'listings status 200': (r) => r.status === 200,
     'listings response time < 500ms': (r) => r.timings.duration < 500,
     'has items': (r) => {
       try {
-        return JSON.parse(r.body).items.length > 0;
+        return JSON.parse(r.body).listings.length > 0;
       } catch {
         return false;
       }
@@ -46,7 +46,7 @@ export default function () {
   // View a specific listing
   if (listingsRes.status === 200) {
     try {
-      const items = JSON.parse(listingsRes.body).items;
+      const items = JSON.parse(listingsRes.body).listings;
       if (items.length > 0) {
         const randomListing = items[Math.floor(Math.random() * items.length)];
         const detailRes = http.get(`${BASE_URL}/api/v1/listings/${randomListing.id}`);

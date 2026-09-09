@@ -9,6 +9,15 @@
 
 Load test scripts simulating realistic production traffic patterns against the Kalakriti API.
 
+> All four scripts had request/response shapes that didn't match the real bff
+> (wrong query param on listings, wrong JSON field on the search-results
+> check, wrong auth request body fields, wrong upload-url body fields) —
+> fixed in this pass to match `services/bff/internal/bff/handler/api.go`. The
+> "Expected RPS" / success-criteria numbers throughout this doc predate that
+> fix and cannot have come from a real run against this API as written —
+> treat them as placeholder targets to replace once these corrected scripts
+> are actually run, not as measured baselines.
+
 **Test scenarios:**
 1. **browse-listings.js** — Read-heavy: browse and view listings (200 concurrent users)
 2. **search.js** — CPU-intensive: vector search queries (50 concurrent users)
@@ -75,7 +84,7 @@ k6 run --duration 10m --vus 100 scripts/load-test/browse-listings.js
 - 1m: Ramp down
 
 **Actions per user:**
-- GET `/api/v1/listings?status=published&limit=20`
+- GET `/api/v1/listings?state=PUBLISHED`
 - GET `/api/v1/listings/{id}` (random from above)
 - Sleep 3s between requests
 
@@ -124,8 +133,10 @@ k6 run --duration 10m --vus 100 scripts/load-test/browse-listings.js
 - 30s: Ramp down
 
 **Actions per user:**
-- POST `/api/v1/auth/otp/request` → request OTP
-- POST `/api/v1/auth/otp/verify` → verify OTP (code=000000 in dev mode)
+- POST `/api/v1/auth/otp/request` `{"phone": "+91..."}` → request OTP
+- POST `/api/v1/auth/otp/verify` `{"phone": "+91...", "otp": "000000"}` in
+  dev mode → verify OTP (fields are `phone`/`otp`, not `phone_e164`/`code` —
+  those only exist in the internal gRPC contract, not this REST body)
 - POST `/api/v1/auth/refresh` → refresh token
 - Sleep 4s total
 

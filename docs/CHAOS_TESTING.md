@@ -144,8 +144,9 @@ KAFKA_CONTAINER=kafka DURATION=60 bash kafka-partition.sh
 
 **Monitoring:**
 ```bash
-# Check outbox queue depth
-psql -c "SELECT COUNT(*) FROM outbox WHERE sent_at IS NULL;"
+# Check outbox queue depth (the column is published_at, not sent_at --
+# see migrations/011_outbox.sql)
+psql -c "SELECT COUNT(*) FROM outbox WHERE published_at IS NULL;"
 
 # Check Kafka consumer lag
 docker exec kafka kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group kalakriti-group
@@ -230,16 +231,21 @@ bash run-suite.sh
 
 ### Metrics to Watch
 
+`:9090` is the Prometheus server itself (its query API / own UI), not a
+service's scrape endpoint -- `curl :9090/metrics` returns Prometheus's own
+internal metrics, not `http_request_duration`/`http_requests_total` from the
+app services. Query the app metrics through Prometheus's query API instead:
+
 **Request latency:**
 ```bash
 # p95/p99 should spike during tests
-curl http://localhost:9090/metrics | grep http_request_duration
+curl 'http://localhost:9090/api/v1/query?query=http_request_duration_seconds'
 ```
 
 **Error rate:**
 ```bash
 # Should stay <1% (except during service crash)
-curl http://localhost:9090/metrics | grep http_requests_total
+curl 'http://localhost:9090/api/v1/query?query=http_requests_total'
 ```
 
 **Circuit breaker state:**

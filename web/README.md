@@ -80,7 +80,7 @@ Preview servers (production build): `:4173`, `:4174`, `:4175`.
 | `pnpm build`                                   | build all three to `apps/*/build`                    |
 | `pnpm check`                                   | brand-token drift check, then `svelte-check` per app |
 | `pnpm lint`                                    | ESLint across apps and first-party packages          |
-| `pnpm test`                                    | Vitest per package, plus the Playwright suite        |
+| `pnpm test`                                    | Vitest per package (excludes e2e; see `pnpm e2e`)    |
 | `pnpm e2e`                                     | Playwright only (starts its own preview servers)     |
 | `pnpm size`                                    | build all three with the budget **enforced**         |
 | `pnpm format`                                  | Prettier                                             |

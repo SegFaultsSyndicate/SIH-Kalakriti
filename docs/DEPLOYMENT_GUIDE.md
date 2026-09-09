@@ -43,24 +43,25 @@ cp .env.example .env
 # Edit .env with production values
 vim .env
 
-# Required values:
-#   DATABASE_URL - PostgreSQL connection string
+# Required values (pkg/config field names -- .env.example documents the
+# full set and flags anything easy to get wrong):
+#   POSTGRES_DSN - PostgreSQL connection string (NOT "DATABASE_URL")
 #   REDIS_ADDR - Redis host:port
-#   JWT_SECRET - Secret for token signing
+#   KAFKA_BROKERS - comma-separated broker list (NOT "KAFKA_BOOTSTRAP_SERVERS")
+#   S3_ENDPOINT / S3_ACCESS_KEY / S3_SECRET_KEY / S3_BUCKET - object storage (NOT "MINIO_*")
+#   JWT_SECRET - >=32 bytes; services refuse to start below that
 ```
 
 ### 2. Run Database Migrations
 
 ```bash
-# Install goose if not already installed
+# make migrate-up wraps this (and reads POSTGRES_DSN itself); shown here
+# unwrapped for a bare production host with no repo checkout beyond migrations/.
 go install github.com/pressly/goose/v3/cmd/goose@latest
 
-# Run migrations
 cd migrations
-goose postgres "$DATABASE_URL" up
-
-# Verify migrations
-goose postgres "$DATABASE_URL" status
+goose postgres "$POSTGRES_DSN" up
+goose postgres "$POSTGRES_DSN" status
 ```
 
 **Expected output:**
@@ -98,6 +99,10 @@ bash scripts/setup-production.sh
 
 **Option A: Systemd (recommended for production)**
 
+`deployments/webhook-worker.service` does not exist in the repo yet -- write
+one (a plain `ExecStart=/path/to/bin/webhook-worker` unit with the env vars
+from step 1) before this step works as written.
+
 ```bash
 # Copy service file
 sudo cp deployments/webhook-worker.service /etc/systemd/system/
@@ -123,7 +128,7 @@ services:
     build: .
     command: ["./bin/webhook-worker"]
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_DSN: ${POSTGRES_DSN}
     depends_on:
       - postgres
     restart: unless-stopped
@@ -132,16 +137,20 @@ services:
 **Option C: Manual (development)**
 
 ```bash
-export DATABASE_URL="postgres://..."
+export POSTGRES_DSN="postgres://..."
 ./bin/webhook-worker
 ```
 
 ### 5. Web Tier (NGINX) & Kubernetes Deployment
 
 **Option A: Full Docker Compose**
-The `web` service in `docker-compose.full.yml` builds all 3 frontend apps (`web/apps/buyer`, `web/apps/artisan`, `web/apps/admin`) and runs NGINX on port 80:
+There is one compose file, `docker-compose.yml` -- it already includes the
+`web` service, which builds all 3 frontend apps (`web/apps/{buyer,artisan,admin}`)
+and runs NGINX on port 80 in front of `bff`. (`docker-compose.full.yml`, if
+still present, is a stale, unmaintained fork predating several fixes here --
+don't build from it.)
 ```bash
-docker compose -f docker-compose.full.yml up -d --build web bff
+docker compose up -d --build web bff
 ```
 
 **Option B: Kubernetes Deployment**
@@ -190,17 +199,16 @@ Failed: 0
 
 ### Webhooks
 
-**Create subscription (via API):**
-```bash
-curl -X POST http://localhost:8080/api/webhooks/subscribe \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://your-system.example.com/webhooks/kalakriti",
-    "secret": "your-webhook-secret",
-    "events": ["order.created", "order.updated"]
-  }'
-```
+**No REST endpoint exists for this yet.** `pkg/webhook.Manager` (subscription
+CRUD, delivery worker, HMAC signing) is fully implemented and the
+`webhook_subscriptions`/`webhook_deliveries` tables are migrated, but nothing
+in `services/bff/internal/bff/server.go` exposes a `/webhooks/subscribe`
+route -- the bff's only webhook-related route is the *inbound* payment
+callback, `POST /api/v1/payments/webhook`. Creating a subscription today
+means calling `webhook.Manager.CreateSubscription` directly (a one-off Go
+script, or from within a service that already imports `pkg/webhook`), not an
+HTTP call. Wire up a bff route before documenting one as available to
+external subscribers.
 
 **Monitor deliveries:**
 ```sql
@@ -217,13 +225,14 @@ WHERE created_at > NOW() - INTERVAL '24 hours';
 
 **Already configured** - BFF now includes i18n middleware.
 
-**Test:**
+**Test** (bff listens on `:8000`, routes are under `/api/v1`, and this needs a
+real order id and bearer token -- see `docs/API.md`):
 ```bash
 # English (default)
-curl http://localhost:8080/api/orders
+curl http://localhost:8000/api/v1/orders/$ORDER_ID -H "Authorization: Bearer $TOKEN"
 
 # Hindi
-curl -H "Accept-Language: hi" http://localhost:8080/api/orders
+curl -H "Accept-Language: hi" http://localhost:8000/api/v1/orders/$ORDER_ID -H "Authorization: Bearer $TOKEN"
 ```
 
 **Add new translations:**
@@ -287,9 +296,12 @@ LIMIT 100;
 
 ### Automated Monitoring Script
 
+`scripts/monitor-production.sh` does not exist in the repo -- the SQL below
+is the actual monitoring content; run it directly with `psql` (or via
+`make psql`) until a wrapper script is written.
+
 ```bash
-# Run monitoring dashboard
-bash scripts/monitor-production.sh
+bash scripts/monitor-production.sh   # not present yet -- see note above
 ```
 
 **Output:**
@@ -380,9 +392,9 @@ k6 run scripts/load-test/mixed-workload.js
 ```bash
 # Rollback last 3 migrations (webhooks, fraud, audit)
 cd migrations
-goose postgres "$DATABASE_URL" down
-goose postgres "$DATABASE_URL" down
-goose postgres "$DATABASE_URL" down
+goose postgres "$POSTGRES_DSN" down
+goose postgres "$POSTGRES_DSN" down
+goose postgres "$POSTGRES_DSN" down
 ```
 
 ### Stop Webhook Worker
@@ -425,7 +437,8 @@ docker-compose logs webhook-worker -f
 ```
 
 **Common issues:**
-- DATABASE_URL not set → Set in .env or environment
+- POSTGRES_DSN not set → set in the environment (services read real env vars,
+  not `.env` directly -- see `.env.example`'s own notes)
 - Database connection refused → Check PostgreSQL is running
 - Migration not run → Run migrations first
 
@@ -460,14 +473,18 @@ FROM pg_trigger
 WHERE tgname LIKE 'trigger_fraud_%';
 ```
 
-**Test manually:**
+**Test manually:** there is no `users` table -- buyer identity is external,
+and `bulk_order.buyer_id` is an opaque `text` column, not a foreign key. The
+table is `bulk_order` (singular) and its status column is `state`, using the
+`bulk_order_state` enum (e.g. `'ALLOCATING'`), not a free-text `status`:
 ```sql
--- Should create fraud flag
-INSERT INTO users (id, phone_e164, created_at)
-VALUES (gen_random_uuid(), '+919999999999', NOW());
-
-INSERT INTO bulk_orders (id, buyer_id, status)
-VALUES (gen_random_uuid(), (SELECT id FROM users WHERE phone_e164 = '+919999999999'), 'pending');
+-- Should create fraud flag (adjust required_by/listing_id/product_id/
+-- unit_price_paise/total_value_paise/quantity to satisfy bulk_order's other
+-- NOT NULL columns and FKs -- see migrations/007_orders.sql)
+INSERT INTO bulk_order (id, buyer_id, listing_id, product_id, quantity,
+                         unit_price_paise, total_value_paise, required_by, state)
+VALUES (gen_random_uuid(), '+919999999999', '<listing-id>', '<product-id>',
+        1, 100000, 100000, NOW() + INTERVAL '30 days', 'ALLOCATING');
 
 -- Check fraud_flags table
 SELECT * FROM fraud_flags ORDER BY created_at DESC LIMIT 1;

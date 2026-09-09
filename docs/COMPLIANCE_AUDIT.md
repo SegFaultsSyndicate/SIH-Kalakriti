@@ -27,27 +27,32 @@ Immutable audit log for regulatory compliance and forensic investigations. Track
 Most audits happen via PostgreSQL triggers — zero code changes needed:
 
 ```sql
--- Payment split created → audit log entry
+-- Payment split created → audit log entry (migrations/025_audit_log.sql)
 CREATE TRIGGER trigger_audit_payment_split_created
-    AFTER INSERT ON payment_splits
+    AFTER INSERT ON payment_split
     FOR EACH ROW
     EXECUTE FUNCTION audit_payment_split_created();
 ```
 
-**Triggered events:**
-- `payment_split_created` — on `INSERT INTO payment_splits`
-- `order_status_changed` — on `UPDATE bulk_orders` when status changes
-- `qc_result_recorded` — on `INSERT INTO qc_results`
+**Triggered events** (table names are singular — `payment_split`/`bulk_order`/
+`qc_result`, not the plural forms an earlier draft of this doc used):
+- `payment_split_created` — on `INSERT INTO payment_split`
+- `order_status_changed` — on `UPDATE bulk_order` when its `state` column changes
+- `qc_result_recorded` — on `INSERT INTO qc_result`
 - `artisan_verified` — on `UPDATE artisan` when `verified` changes to true
 
 ### Application-Level (Explicit)
 
-For audits that need context triggers lack (actor ID, IP address):
+`pkg/audit.Logger` (below) is real and functional, but **no service currently
+imports it** — every audit entry in the system today comes from the four
+triggers above. Wiring a handler up to call this for actions the triggers
+can't see (actor id, IP address) is still open work, not something already
+happening in `core-svc`.
 
 ```go
 import "github.com/ZoroNewbie00/kalakriti/pkg/audit"
 
-auditor := audit.New(db)
+auditor := audit.New(db) // db is a *sql.DB
 
 err := auditor.Log(ctx, audit.Event{
     ActorID:      &userID,
@@ -130,8 +135,11 @@ LIMIT 100;
 
 ### All Payment Splits Created Today
 
+The trigger's `changes` payload has `bulk_order_id`/`gross_total_paise`/
+`net_total_paise` keys — not `total_paise` (see `audit_payment_split_created()`
+in `migrations/025_audit_log.sql`):
 ```sql
-SELECT timestamp, resource_id, changes->>'total_paise' AS amount
+SELECT timestamp, resource_id, changes->>'net_total_paise' AS net_amount_paise
 FROM audit_log
 WHERE action = 'payment_split_created'
   AND timestamp >= CURRENT_DATE
@@ -140,8 +148,10 @@ ORDER BY timestamp DESC;
 
 ### Failed QC Results This Month
 
+`qc_result_recorded`'s `changes` payload is `lot_id`/`inspector_id`/`passed`/
+`notes` — there's no `defect_category` key:
 ```sql
-SELECT timestamp, resource_id, changes->>'defect_category' AS defect
+SELECT timestamp, resource_id, changes->>'notes' AS notes
 FROM audit_log
 WHERE action = 'qc_result_recorded'
   AND changes->>'passed' = 'false'
@@ -155,18 +165,16 @@ ORDER BY timestamp DESC;
 
 ### Example: Manual Listing Approval
 
-```go
-// services/core-svc/internal/core/service/catalog.go
+Illustrative only — `core-svc`'s real `Catalog.ApproveListing` (in
+`services/core-svc/internal/core/service/catalog.go`) does not call
+`pkg/audit` today; this is the shape a caller wiring it in would follow:
 
+```go
 func (s *CatalogService) ApproveListingManually(ctx context.Context, listingID uuid.UUID, adminID uuid.UUID, reason string) error {
-    // Update listing status
-    err := s.repo.UpdateListingStatus(ctx, listingID, "published")
-    if err != nil {
-        return err
-    }
+    // ... perform the approval via the service's real methods ...
 
     // Log audit event
-    err = s.auditor.Log(ctx, audit.Event{
+    err := s.auditor.Log(ctx, audit.Event{
         ActorID:      &adminID,
         ActorType:    "user",
         Action:       "listing_approved_manually",
@@ -230,13 +238,15 @@ LIMIT 10;
 ### Money Movement Audit
 
 ```sql
--- All payment splits with amounts
+-- All payment splits with amounts (real changes keys: bulk_order_id,
+-- gross_total_paise, net_total_paise -- there is no status key, since
+-- this fires on INSERT, not a status transition)
 SELECT
     timestamp,
     resource_id AS split_id,
     changes->>'bulk_order_id' AS order_id,
-    (changes->>'total_paise')::BIGINT / 100.0 AS amount_rupees,
-    changes->>'status' AS status
+    (changes->>'gross_total_paise')::BIGINT / 100.0 AS gross_rupees,
+    (changes->>'net_total_paise')::BIGINT / 100.0 AS net_rupees
 FROM audit_log
 WHERE action = 'payment_split_created'
 ORDER BY timestamp DESC;
@@ -350,7 +360,7 @@ If triggers fail (database issue), log it:
 SELECT
     DATE(created_at) AS date,
     COUNT(*) AS payment_splits
-FROM payment_splits
+FROM payment_split
 WHERE created_at >= NOW() - INTERVAL '7 days'
 GROUP BY DATE(created_at)
 ORDER BY date DESC;
@@ -412,15 +422,16 @@ grep "SELECT.*audit_log" /var/log/postgresql/postgresql-*.log
 ### Verify Triggers Work
 
 ```sql
--- Test payment split audit
-INSERT INTO payment_splits (id, bulk_order_id, total_paise, status)
-VALUES (gen_random_uuid(), gen_random_uuid(), 100000, 'pending');
+-- Test payment split audit (payment_split has no status/total_paise columns
+-- -- see migrations/008_payments.sql for its real NOT NULL columns/FKs)
+INSERT INTO payment_split (id, bulk_order_id, gross_total_paise, commission_total_paise, net_total_paise)
+VALUES (gen_random_uuid(), '<existing-bulk_order-id>', 100000, 5000, 95000);
 
 -- Check audit log
 SELECT * FROM audit_log WHERE action = 'payment_split_created' ORDER BY timestamp DESC LIMIT 1;
 
--- Test order status change audit
-UPDATE bulk_orders SET status = 'in_production' WHERE id = '...';
+-- Test order status change audit (column is `state`, table is `bulk_order`)
+UPDATE bulk_order SET state = 'IN_PRODUCTION' WHERE id = '...';
 
 -- Check audit log
 SELECT * FROM audit_log WHERE action = 'order_status_changed' ORDER BY timestamp DESC LIMIT 1;

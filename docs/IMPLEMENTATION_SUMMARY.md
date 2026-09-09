@@ -48,7 +48,7 @@ subscriptionID, _ := manager.CreateSubscription(ctx, webhook.Subscription{
 - `pkg/i18n/i18n.go` - Translation maps and locale detection
 - `pkg/i18n/middleware.go` - HTTP middleware for Accept-Language
 - `pkg/domain/i18n.go` - Translatable error keys
-- `pkg/httpx/error.go` - Error response with translation
+- `pkg/domain/http.go` - Error response writer (not `pkg/httpx/error.go`, which doesn't exist -- the JSON error body is built in `pkg/domain`, `pkg/httpx/render.go` just calls it)
 - `docs/I18N.md` - Complete documentation
 
 **Features:**
@@ -73,9 +73,10 @@ if quantity <= 0 {
 
 **HTTP Request:**
 ```bash
-curl -H "Accept-Language: hi" http://localhost:8080/api/orders
+curl -H "Accept-Language: hi" http://localhost:8000/api/v1/orders/$ORDER_ID
 # Response: {"error": "मात्रा सकारात्मक होनी चाहिए"}
 ```
+(bff listens on `:8000`, not `:8080`; routes live under `/api/v1`.)
 
 **Next steps:**
 - Add i18n.Middleware to BFF router
@@ -241,8 +242,9 @@ SERVICE=core-svc bash scripts/chaos/service-crash.sh
 1. **Run migrations:**
    ```bash
    cd migrations
-   goose -dir . postgres "$DATABASE_URL" up
+   goose -dir . postgres "$POSTGRES_DSN" up
    ```
+   (`pkg/config` reads `POSTGRES_DSN`, not `DATABASE_URL`.)
 
 2. **Deploy webhook worker:**
    ```bash

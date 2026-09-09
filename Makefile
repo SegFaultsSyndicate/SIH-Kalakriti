@@ -125,31 +125,36 @@ clean: ## Remove build output
 
 # --- demo --------------------------------------------------------------------
 
-demo-up: ## Start full demo: infra + all services + migrate + seed
+demo-up: proto sqlc ## Start full demo: infra + all services + migrate + seed
 	@echo "Starting demo environment..."
-	docker compose -f docker-compose.full.yml up -d
+	$(COMPOSE) up -d
 	@echo "Waiting for services..."
 	sleep 15
 	@echo "Running migrations..."
 	$(MAKE) migrate-up POSTGRES_DSN="$(POSTGRES_DSN)"
-	@echo "Seeding data..."
-	go run scripts/seed/main.go
+	@echo "Seeding craft ontology..."
+	$(MAKE) seed POSTGRES_DSN="$(POSTGRES_DSN)"
 	@echo ""
 	@echo "✓ Demo environment ready!"
 	@echo ""
 	@echo "Services:"
-	@echo "  BFF API:        http://localhost:8000"
+	@echo "  Web (NGINX):    http://localhost/  (buyer, /artisan/, /admin/)"
+	@echo "  BFF API:        http://localhost:8000  (also proxied at http://localhost/api/v1/*)"
 	@echo "  Jaeger UI:      http://localhost:16686"
 	@echo "  Prometheus:     http://localhost:9090"
 	@echo "  MinIO Console:  http://localhost:9001 (minioadmin/minioadmin)"
 
 demo-reset: ## Reset demo: down + volumes + demo-up
 	@echo "Resetting demo environment..."
-	docker compose -f docker-compose.full.yml down -v
+	$(COMPOSE) down -v
 	$(MAKE) demo-up
 
-seed-data: ## Run seed script (idempotent)
-	go run scripts/seed/main.go
+# scripts/seed/main.go targets a users/orders/order_allocations schema that
+# predates the real migrations (no `users` table exists — see CLAUDE.md) and
+# will fail against the current database. There is no working seeder for
+# demo artisans/listings/orders yet (web/FRONTEND.md tracks this gap); this
+# target seeds the craft ontology, same as `make seed`, until one exists.
+seed-data: seed ## Alias for `make seed` (the artisan/listing seeder is broken against the current schema — see comment above)
 
 tags: ## Generate QR code sheet PDF
 	go run scripts/generate-qr-sheet/main.go

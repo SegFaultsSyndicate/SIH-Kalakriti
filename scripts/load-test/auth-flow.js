@@ -27,7 +27,7 @@ export default function () {
   // Request OTP
   const otpRes = http.post(
     `${BASE_URL}/api/v1/auth/otp/request`,
-    JSON.stringify({ phone_e164: phone }),
+    JSON.stringify({ phone: phone }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 
@@ -41,7 +41,7 @@ export default function () {
   // In dev mode with AUTH_DEV_OTP_ENABLED=true, code is always "000000"
   const verifyRes = http.post(
     `${BASE_URL}/api/v1/auth/otp/verify`,
-    JSON.stringify({ phone_e164: phone, code: '000000' }),
+    JSON.stringify({ phone: phone, otp: '000000' }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 

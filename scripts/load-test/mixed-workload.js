@@ -33,7 +33,7 @@ export function setup() {
   const phone = `+919876543210`;
   const verifyRes = http.post(
     `${BASE_URL}/api/v1/auth/otp/verify`,
-    JSON.stringify({ phone_e164: phone, code: '000000' }),
+    JSON.stringify({ phone: phone, otp: '000000' }),
     { headers: { 'Content-Type': 'application/json' } }
   );
 
@@ -59,7 +59,7 @@ export default function (data) {
 
   if (action < 0.4) {
     // 40%: Browse listings
-    const res = http.get(`${BASE_URL}/api/v1/listings?status=published&limit=20`);
+    const res = http.get(`${BASE_URL}/api/v1/listings?state=PUBLISHED`);
     check(res, { 'browse status 200': (r) => r.status === 200 }) || errorRate.add(1);
   } else if (action < 0.6) {
     // 20%: Search
@@ -80,7 +80,7 @@ export default function (data) {
     // 10%: Generate upload URL (write operation)
     const res = http.post(
       `${BASE_URL}/api/v1/media/upload-url`,
-      JSON.stringify({ mime_type: 'image/jpeg' }),
+      JSON.stringify({ content_type: 'image/jpeg', size_bytes: 524288 }),
       { headers }
     );
     check(res, { 'upload-url status 200': (r) => r.status === 200 }) || errorRate.add(1);

@@ -91,9 +91,6 @@ func (s *Ontology) GetCraft(ctx context.Context, id uuid.UUID) (domain.Craft, er
 	if id == uuid.Nil {
 		return domain.Craft{}, fmt.Errorf("craft_id is required: %w", pkgdomain.ErrInvalidInput)
 	}
-	if _, err := auth.RequirePrincipal(ctx); err != nil {
-		return domain.Craft{}, err
-	}
 	craft, ok := s.registry.Craft(id)
 	if !ok {
 		return domain.Craft{}, fmt.Errorf("craft %s not found: %w", id, pkgdomain.ErrNotFound)
@@ -106,9 +103,6 @@ func (s *Ontology) GetCraftByCode(ctx context.Context, code string) (domain.Craf
 	if code == "" {
 		return domain.Craft{}, fmt.Errorf("code is required: %w", pkgdomain.ErrInvalidInput)
 	}
-	if _, err := auth.RequirePrincipal(ctx); err != nil {
-		return domain.Craft{}, err
-	}
 	craft, ok := s.registry.CraftByCode(code)
 	if !ok {
 		return domain.Craft{}, fmt.Errorf("craft %q not found: %w", code, pkgdomain.ErrNotFound)
@@ -119,8 +113,5 @@ func (s *Ontology) GetCraftByCode(ctx context.Context, code string) (domain.Craf
 // ListCrafts returns the whole ontology, ordered by code. It is a few hundred
 // rows and is served from memory, so it is not paged.
 func (s *Ontology) ListCrafts(ctx context.Context) ([]domain.Craft, error) {
-	if _, err := auth.RequirePrincipal(ctx); err != nil {
-		return nil, err
-	}
 	return s.registry.Crafts(), nil
 }

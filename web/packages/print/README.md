@@ -3,7 +3,9 @@
 The provenance product tag as physical print artwork: `src/tag-a4-colour.svg`
 and `src/tag-a4-mono.svg`, each an A4 sheet (210mm x 297mm) of 8 tags
 (90mm x 54mm, 2x4 grid) with corner crop marks for trimming. Regenerate with
-`node scripts/gen-batch8-print.mjs` from the repo root.
+`node scripts/gen-batch8-print.mjs` from `web/` (the script lives at
+`web/scripts/gen-batch8-print.mjs`, not a repo-root `scripts/` — that
+directory holds backend dev/seed scripts, not asset tooling).
 
 ## Why this package breaks two rules every other package enforces
 

@@ -46,7 +46,7 @@ export default function () {
     'search response time < 1s': (r) => r.timings.duration < 1000,
     'has results': (r) => {
       try {
-        return JSON.parse(r.body).results.length >= 0;
+        return JSON.parse(r.body).hits.length >= 0;
       } catch {
         return false;
       }

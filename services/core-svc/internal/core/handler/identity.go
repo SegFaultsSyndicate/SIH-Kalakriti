@@ -32,13 +32,23 @@ func NewIdentity(svc *service.Identity) *Identity {
 }
 
 // PublicMethods are the RPCs callable without an access token: the two steps of
-// the login handshake and the refresh exchange, which authenticates itself with
-// the refresh token in its body rather than a bearer header.
+// the login handshake and the refresh exchange (which authenticates itself
+// with the refresh token in its body rather than a bearer header), plus the
+// read-only catalog/identity RPCs backing bff's public browsing routes
+// (GET /crafts, /listings, /artisans/:id/storefront, /feed/process, and the
+// unauthenticated /v/:code provenance page) -- bff calls these on behalf of
+// anonymous buyers, with no bearer token to forward.
 func PublicMethods() auth.PublicMethods {
 	return auth.NewPublicMethods(
 		"/identity.v1.IdentityService/RequestOtp",
 		"/identity.v1.IdentityService/VerifyOtp",
 		"/identity.v1.IdentityService/RefreshToken",
+		"/identity.v1.IdentityService/GetArtisan",
+		"/catalog.v1.OntologyService/ListCrafts",
+		"/catalog.v1.OntologyService/GetCraft",
+		"/catalog.v1.CatalogService/ListListings",
+		"/catalog.v1.CatalogService/GetListing",
+		"/catalog.v1.CatalogService/GetProvenanceByShortCode",
 	)
 }
 

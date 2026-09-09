@@ -61,8 +61,8 @@ make check       # probes every dependency from the host
 ```
 
 `make up` uses `docker compose up -d --wait`, so it only returns 0 once every
-container reports healthy. `createbuckets` runs once and exits 0 after creating
-`kalakriti-media`.
+container reports healthy. `minio-init` runs once and exits 0 after creating
+the `kalakriti` bucket (`S3_BUCKET`).
 
 ## Verifying each dependency by hand
 
