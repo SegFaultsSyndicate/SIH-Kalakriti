@@ -35,7 +35,9 @@
   /** @type {Props & Record<string, unknown>} */
   let { analyser, bars = 24, label, ...rest } = $props();
 
-  let levels = $state(new Array(bars).fill(0.05));
+  let defaultLevels = $derived(new Array(bars).fill(0.05));
+  let liveLevels = $state(/** @type {number[] | null} */ (null));
+  let levels = $derived(liveLevels ?? defaultLevels);
   let levelPercent = $state(0);
   let reduced = $state(false);
 
@@ -44,7 +46,7 @@
     const data = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(data);
     const step = Math.floor(data.length / bars) || 1;
-    levels = Array.from({ length: bars }, (_, i) => Math.max(0.06, data[i * step] / 255));
+    liveLevels = Array.from({ length: bars }, (_, i) => Math.max(0.06, data[i * step] / 255));
     levelPercent = Math.round(
       (data.reduce((a, b) => a + b, 0) / data.length / 255) * 100,
     );

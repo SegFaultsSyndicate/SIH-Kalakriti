@@ -5,6 +5,8 @@ SHELL := /usr/bin/env bash
 # .env is optional; every variable below has a local-dev default.
 -include .env
 export
+export PATH := $(HOME)/go/bin:$(PATH)
+
 
 COMPOSE ?= docker compose
 BIN_DIR  := bin
@@ -24,7 +26,7 @@ GOOSE ?= $(shell command -v goose 2>/dev/null || echo "go run github.com/pressly
 SQLC  ?= $(shell command -v sqlc  2>/dev/null || echo "go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.27.0")
 LINT  ?= $(shell command -v golangci-lint 2>/dev/null || echo "go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1")
 
-.PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed sqlc test test-ml lint tidy build clean check psql
+.PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed sqlc test test-ml lint tidy build clean check psql services services-stop
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-14s %s\n", $$1, $$2}'
@@ -36,6 +38,15 @@ up: proto sqlc ## Generate code, then start infrastructure and wait for it to be
 
 down: ## Stop infrastructure, keep volumes
 	$(COMPOSE) down --remove-orphans
+
+services: ## Start core-svc and bff in background for local web development
+	@bash scripts/run-services.sh
+
+services-stop: ## Stop background core-svc and bff
+	@pkill -f "services/core-svc/core-svc" 2>/dev/null || true
+	@pkill -f "services/bff/bff" 2>/dev/null || true
+	@echo "Services stopped."
+
 
 logs: ## Tail infrastructure logs
 	$(COMPOSE) logs -f --tail=100
@@ -60,7 +71,11 @@ proto-go: ## Generate Go code from proto/ (buf.gen.yaml only wires Go plugins)
 	$(BUF) generate proto --template buf.gen.yaml
 
 proto-py: ## Generate ml-svc's Python protobuf/grpc stubs into services/ml-svc/pb/
-	cd services/ml-svc && uv run --extra dev ./scripts/gen_proto.sh
+	@if command -v uv >/dev/null 2>&1; then \
+		cd services/ml-svc && uv run --extra dev ./scripts/gen_proto.sh; \
+	else \
+		echo "uv not found; skipping ml-svc proto generation"; \
+	fi
 
 proto-lint: ## Lint and breaking-change-check the protos
 	$(BUF) lint proto

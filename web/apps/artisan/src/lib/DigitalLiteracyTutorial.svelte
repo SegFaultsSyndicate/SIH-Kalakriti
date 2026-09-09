@@ -93,6 +93,7 @@
     <div
       class="tutorial-dialog"
       onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
       role="dialog"
       aria-modal="true"
       aria-label={t('literacy.tutorial.title')}

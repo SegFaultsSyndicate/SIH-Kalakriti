@@ -2,6 +2,7 @@
 import svg from '@poppanator/sveltekit-svg';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import { searchForWorkspaceRoot } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { BACKGROUND_COLOR, THEME_COLOR } from '@kalakriti/tokens/brand';
 import { sizeReport } from '../../scripts/vite/size-report.js';
@@ -143,6 +144,9 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: false,
+    fs: {
+      allow: [searchForWorkspaceRoot(process.cwd())],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

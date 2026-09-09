@@ -1,6 +1,7 @@
 // apps/admin/vite.config.ts
 import svg from '@poppanator/sveltekit-svg';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { searchForWorkspaceRoot } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { sizeReport } from '../../scripts/vite/size-report.js';
 import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.js';
@@ -36,6 +37,9 @@ export default defineConfig({
   server: {
     port: 5175,
     strictPort: false,
+    fs: {
+      allow: [searchForWorkspaceRoot(process.cwd())],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
