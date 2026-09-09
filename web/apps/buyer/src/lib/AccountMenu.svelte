@@ -246,7 +246,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-premium-warm-cream);
+    color: var(--k-premium-header-text, #F4F0EA);
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -287,7 +287,7 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-premium-warm-cream);
+    color: var(--k-premium-header-text, #F4F0EA);
     font-weight: 500;
     opacity: 0.9;
   }
@@ -298,7 +298,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-premium-warm-cream);
+    color: var(--k-premium-header-text, #F4F0EA);
   }
 
   /* Popover */
