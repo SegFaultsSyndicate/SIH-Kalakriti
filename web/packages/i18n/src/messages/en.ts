@@ -697,7 +697,7 @@ export const en = {
   'craft.leather.name': 'Leatherwork',
   'craft.stone.name': 'Stone carving',
   'craft.bamboo.name': 'Bamboo craft',
-  'craft.other.name': 'Something else',
+  'craft.other.name': 'Miscellaneous',
 
   'register.district.heading': 'Which district are you in?',
   'register.district.search': 'Search district',
