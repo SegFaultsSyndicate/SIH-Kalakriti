@@ -211,8 +211,8 @@
     padding-block: var(--k-space-2);
     border: none;
     border-radius: var(--k-radius-md);
-    background-color: var(--k-premium-button-bg, #7A3E26);
-    color: var(--k-premium-button-text, #F4F0EA);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     cursor: pointer;
     font-weight: 600;
   }
