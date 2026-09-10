@@ -745,7 +745,7 @@
 
               <div class="rail-card-body">
                 <img
-                  src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=300&auto=format&fit=crop&q=80"
+                  src="/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg"
                   alt="Dhamadka Ajrakh Saree"
                   class="rail-thumb"
                 />
@@ -794,7 +794,7 @@
 
               <div class="rail-card-body">
                 <img
-                  src="https://images.unsplash.com/photo-1590736704728-f4730bb30770?w=300&auto=format&fit=crop&q=80"
+                  src="/craft-images/metalwork/dhokra-casting.jpg"
                   alt="Bastar Brass Dhokra Nandi"
                   class="rail-thumb"
                 />

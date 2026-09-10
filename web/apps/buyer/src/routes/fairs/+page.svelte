@@ -48,7 +48,7 @@
         "The world's largest open-air handicraft mela showcasing authentic rural craft lineages, living pit looms, and live woodcarving demonstrations by national awardees.",
       crafts: ['Kutch Ajrakh', 'Varanasi Kadwa Silk', 'Bastar Dhokra', 'Channapatna Lacquerware', 'Sohrai Painting'],
       partnerMinistry: 'Ministry of Tourism & Haryana Tourism Council',
-      bannerUrl: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=900&q=80',
+      bannerUrl: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
     },
     {
       id: 'dilli-haat-ina',
@@ -64,7 +64,7 @@
         'A permanent cultural marketplace enabling empanelled weavers and rural craft cooperatives to bypass wholesale brokers and sell directly to metropolitan buyers.',
       crafts: ['Kalamkari Textiles', 'Pochampally Ikat', 'Bankura Terracotta', 'Madhubani Art', 'Jaipur Blue Pottery'],
       partnerMinistry: 'Delhi Tourism & DC (Handicrafts)',
-      bannerUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80',
+      bannerUrl: '/craft-images/pottery/nizamabad-black-pottery.jpg',
     },
     {
       id: 'shilp-samagam-2026',
@@ -80,7 +80,7 @@
         'The apex central government exhibition uniting GI-certified craft clusters, tribal SHG micro-entrepreneurs, and PM Vishwakarma certified master lineages.',
       crafts: ['Kashmir Pashmina', 'Bidri Metalware', 'Tanjore Sacred Art', 'Dhokra Casting', 'Chamba Rumal'],
       partnerMinistry: 'Ministry of Social Justice & Ministry of Textiles',
-      bannerUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=80',
+      bannerUrl: '/craft-images/embroidery/kashmir_pashmina_sozni_01.jpeg',
     },
     {
       id: 'saras-mela-2026',
@@ -96,7 +96,7 @@
         'Dedicated rural livelihoods mela fostering institutional B2B procurement and direct market linkages for women artisan self-help groups (SHGs).',
       crafts: ['Sikki Golden Grass', 'Bhagalpur Tussar Silk', 'Sujani Kantha Stitch', 'Tikuli Art'],
       partnerMinistry: 'Ministry of Rural Development (MoRD)',
-      bannerUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=900&q=80',
+      bannerUrl: '/craft-images/basketry/sikki-grass-basketry.jpg',
     },
     {
       id: 'hunar-haat-mumbai',
@@ -112,7 +112,7 @@
         'High-volume urban expo linking master leather crafters, bell metal founders, and handloom cooperatives directly with interior design houses and exporters.',
       crafts: ['Kolhapuri Chappal', 'Paithani Zari Silk', 'Warli Tribal Murals', 'Ajanta Terracotta'],
       partnerMinistry: 'Ministry of Minority Affairs',
-      bannerUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=900&q=80',
+      bannerUrl: '/craft-images/leatherwork/kolhapuri_chappals_01.jpeg',
     },
   ];
 

@@ -66,7 +66,7 @@
       searchQuery: 'ajrakh',
       tag: 'Kutch & Dhamadka, Gujarat',
       theme: 'Botanical Indigo & Mud-Resist',
-      image: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=1600&q=80',
+      image: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
     },
     {
       titleKey: 'home.hero.slide2.title',
@@ -75,7 +75,7 @@
       searchQuery: 'banarasi',
       tag: 'Varanasi Weavers Colony, UP',
       theme: 'Pure Zari & Kadwa Pit-Loom',
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80',
+      image: '/craft-images/weaving_and_looms/banarasi_brocade_weaving_01.jpeg',
     },
     {
       titleKey: 'home.hero.slide3.title',
@@ -84,7 +84,7 @@
       searchQuery: 'pashmina',
       tag: 'Old Srinagar Valley, J&K',
       theme: 'Microscopic Sozni Needlework',
-      image: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=1600&q=80',
+      image: '/craft-images/embroidery/kashmir_pashmina_sozni_01.jpeg',
     },
   ];
 
@@ -214,7 +214,7 @@
       artisan_state_code: 'UP',
       type: 'READY_STOCK',
       price: { amount_paise: 2450000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/weaving_and_looms/banarasi_brocade_weaving_02.jpeg',
       translations: [
         {
           language: 'en',
@@ -237,7 +237,7 @@
       artisan_state_code: 'JK',
       type: 'READY_STOCK',
       price: { amount_paise: 3800000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/embroidery/kashmir_pashmina_sozni_02.jpeg',
       translations: [
         {
           language: 'en',
@@ -260,7 +260,7 @@
       artisan_state_code: 'GJ',
       type: 'MADE_TO_ORDER',
       price: { amount_paise: 12000000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
       translations: [
         {
           language: 'en',
@@ -283,7 +283,7 @@
       artisan_state_code: 'CT',
       type: 'READY_STOCK',
       price: { amount_paise: 850000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/metalwork/dhokra-casting.jpg',
       translations: [
         {
           language: 'en',
@@ -309,7 +309,7 @@
       artisan_state_code: 'GJ',
       type: 'READY_STOCK',
       price: { amount_paise: 420000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
       translations: [
         {
           language: 'en',
@@ -332,7 +332,7 @@
       artisan_state_code: 'UP',
       type: 'READY_STOCK',
       price: { amount_paise: 320000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/pottery/nizamabad-black-pottery.jpg',
       translations: [
         {
           language: 'en',
@@ -355,7 +355,7 @@
       artisan_state_code: 'KA',
       type: 'READY_STOCK',
       price: { amount_paise: 650000, currency_code: 'INR' },
-      image_url: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=600&q=80',
+      image_url: '/craft-images/metalwork/bidriware.jpg',
       translations: [
         {
           language: 'en',
@@ -609,78 +609,6 @@
   <RegionalBeltNavigator />
 </Section>
 
-<!-- 6. CURATED LIFESTYLE & OCCASION EDITS (ASYMMETRIC EDITORIAL GRID) -->
-<Section variant="khadi-plain">
-  <SectionHeader kicker={t('home.edits.kicker')} heading={t('home.edits.heading')} />
-  <p class="section-subhead">{t('home.edits.subheading')}</p>
-
-  <div class="editorial-lifestyle-grid">
-    <!-- Featured Large Card -->
-    <a href="/search?q=wedding" class="lifestyle-card feature-tile">
-      <div class="tile-photo-wrap">
-        <img
-          src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80"
-          alt={t('home.edits.edit1.title')}
-          loading="lazy"
-        />
-        <span class="tile-tag">Heirloom Wardrobe</span>
-      </div>
-      <div class="tile-details">
-        <h3 class="tile-title">{t('home.edits.edit1.title')}</h3>
-        <p class="tile-desc">{t('home.edits.edit1.desc')}</p>
-      </div>
-    </a>
-
-    <!-- Subordinate Card 1 -->
-    <a href="/search?q=terracotta" class="lifestyle-card">
-      <div class="tile-photo-wrap">
-        <img
-          src="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=800&q=80"
-          alt={t('home.edits.edit2.title')}
-          loading="lazy"
-        />
-        <span class="tile-tag">Vedic Culinary</span>
-      </div>
-      <div class="tile-details">
-        <h3 class="tile-title">{t('home.edits.edit2.title')}</h3>
-        <p class="tile-desc">{t('home.edits.edit2.desc')}</p>
-      </div>
-    </a>
-
-    <!-- Subordinate Card 2 -->
-    <a href="/search?q=brass" class="lifestyle-card">
-      <div class="tile-photo-wrap">
-        <img
-          src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
-          alt={t('home.edits.edit3.title')}
-          loading="lazy"
-        />
-        <span class="tile-tag">Architectural Metal</span>
-      </div>
-      <div class="tile-details">
-        <h3 class="tile-title">{t('home.edits.edit3.title')}</h3>
-        <p class="tile-desc">{t('home.edits.edit3.desc')}</p>
-      </div>
-    </a>
-
-    <!-- Subordinate Card 3 -->
-    <a href="/search?q=jute" class="lifestyle-card">
-      <div class="tile-photo-wrap">
-        <img
-          src="https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=800&q=80"
-          alt={t('home.edits.edit4.title')}
-          loading="lazy"
-        />
-        <span class="tile-tag">Natural Fibers</span>
-      </div>
-      <div class="tile-details">
-        <h3 class="tile-title">{t('home.edits.edit4.title')}</h3>
-        <p class="tile-desc">{t('home.edits.edit4.desc')}</p>
-      </div>
-    </a>
-  </div>
-</Section>
-
 <!-- 7. GI-TAGGED SPECIFIC CATALOGUE RAIL -->
 {#if displayGiListings.length > 0}
   <Section variant="khadi-weft">
@@ -733,7 +661,7 @@
       <p class="journal-lead">
         How the Khatri master dyers of Kutch sustain 16 chemical-free natural resist phases along the seasonal riverbanks of Dhamadka.
       </p>
-      <a href="/search?q=ajrakh" class="journal-read-link">
+      <a href="/journal/ajrakh" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
@@ -749,7 +677,7 @@
       <p class="journal-lead">
         Decoding the sacred geometric algorithms and double-resist warp alignments of Gujarat’s legendary 800-year Patan guild.
       </p>
-      <a href="/search?q=patola" class="journal-read-link">
+      <a href="/journal/patola" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
@@ -765,7 +693,7 @@
       <p class="journal-lead">
         Inside the forest furnaces of Bastar where Ghadwa metalsmiths transform wild honey wax, red clay, and scrap bronze into animist deities.
       </p>
-      <a href="/search?q=dhokra" class="journal-read-link">
+      <a href="/journal/dhokra" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
@@ -1214,93 +1142,6 @@
 
   .discovery-chip:hover {
     border-color: var(--k-border-interactive);
-  }
-
-  /* Asymmetric Lifestyle Grid */
-  .editorial-lifestyle-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--k-space-4);
-  }
-
-  @media (min-width: 44rem) {
-    .editorial-lifestyle-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (min-width: 60rem) {
-    .editorial-lifestyle-grid {
-      grid-template-columns: 1.5fr 1fr 1fr;
-    }
-
-    .feature-tile {
-      grid-row: span 2;
-    }
-  }
-
-  .lifestyle-card {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--k-surface-raised);
-    border: var(--k-hairline) solid var(--k-border-hairline);
-    border-radius: var(--k-radius-sm);
-    overflow: hidden;
-    text-decoration: none;
-    color: inherit;
-    transition: border-color 0.15s ease;
-  }
-
-  .lifestyle-card:hover {
-    border-color: var(--k-border-interactive);
-  }
-
-  .tile-photo-wrap {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    background-color: var(--k-surface-sunken);
-  }
-
-  .tile-photo-wrap img {
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
-  }
-
-  .tile-tag {
-    position: absolute;
-    inset-block-start: var(--k-space-2);
-    inset-inline-start: var(--k-space-2);
-    padding: 2px 8px;
-    background-color: var(--k-surface-inverse);
-    color: var(--k-text-on-inverse);
-    font-size: 0.65rem;
-    font-weight: var(--k-weight-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: var(--k-radius-sm);
-  }
-
-  .tile-details {
-    padding: var(--k-space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--k-space-1);
-  }
-
-  .tile-title {
-    font-family: var(--k-font-display);
-    font-size: var(--k-text-base);
-    color: var(--k-text-primary);
-    margin: 0;
-  }
-
-  .tile-desc {
-    font-size: var(--k-text-xs);
-    color: var(--k-text-secondary);
-    line-height: 1.4;
-    margin: 0;
   }
 
   /* Virasat Journal Editorial Layout */

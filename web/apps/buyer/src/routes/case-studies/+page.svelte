@@ -54,7 +54,7 @@
       cluster: 'Kutch Artisans Collective',
       region: 'Dhamadka, Gujarat',
       giTag: 'GI-72 (Kutch Ajrakh)',
-      imageUrl: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=900&q=80',
+      imageUrl: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
       metrics: [
         { label: 'Artisan Income Surge', value: '+337%' },
         { label: 'Active Pit Vats', value: '18 Vats' },
@@ -111,7 +111,7 @@
       cluster: 'Varanasi Silk Weaver Facility Centre',
       region: 'Varanasi, Uttar Pradesh',
       giTag: 'GI-99 (Banarasi Kadwa)',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=900&q=80',
+      imageUrl: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
       metrics: [
         { label: 'Direct Disbursements', value: '₹1.48 Cr' },
         { label: 'Broker Fee Cut', value: '0%' },
@@ -163,7 +163,7 @@
       cluster: 'Bastar Bell Metal Guild',
       region: 'Kondagaon, Chhattisgarh',
       giTag: 'GI-117 (Bastar Dhokra)',
-      imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=80',
+      imageUrl: '/craft-images/metalwork/dhokra-casting.jpg',
       metrics: [
         { label: 'Raw Metal Financed', value: '14.2 Tons' },
         { label: 'Apprentices Trained', value: '28' },

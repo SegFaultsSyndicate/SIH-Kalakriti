@@ -93,10 +93,6 @@ body::-webkit-scrollbar {
     .shell__wordmark {
       font-size: var(--k-text-md);
     }
-
-    .shell__ministry {
-      font-size: var(--k-text-2xs);
-    }
   }
 
   .shell__lockup {
@@ -121,16 +117,6 @@ body::-webkit-scrollbar {
     line-height: var(--k-leading-tight);
   }
 
-  .shell__ministry {
-    display: block;
-    font-family: var(--k-font-body);
-    font-size: var(--k-text-2xs);
-    font-weight: var(--k-weight-regular);
-    letter-spacing: var(--k-tracking-wide);
-    text-transform: uppercase;
-    opacity: 0.9;
-  }
-
   .shell__actions {
     display: flex;
     align-items: center;
@@ -147,6 +133,23 @@ body::-webkit-scrollbar {
     border-radius: var(--k-radius-md);
   }
 
+  .shell__search-inline {
+    display: flex;
+    flex-shrink: 1;
+    min-inline-size: 0;
+  }
+
+  .shell__search-inline input {
+    inline-size: 9rem;
+    min-inline-size: 0;
+    block-size: 2.25rem;
+    padding-inline: var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-surface-base);
+    font-size: var(--k-text-sm);
+  }
+
   .shell__icon-link:hover {
     background-color: rgba(244, 240, 234, 0.9);
   }
@@ -155,6 +158,28 @@ body::-webkit-scrollbar {
     inline-size: min(100% - (2 * var(--k-gutter)), var(--k-container-buyer));
     margin-inline: auto;
     padding-block: var(--k-space-7) var(--k-space-9);
+  }
+
+  /*
+   * Home page reads as one long full-bleed scroll otherwise: every
+   * <Section> (@kalakriti/patterns, shared with the artisan app -- scoped
+   * here rather than edited there) is a bare colored strip with zero inset
+   * of its own, so headings and rail cards sit flush against the page
+   * gutter. A small inset plus a soft corner turns each into a panel.
+   */
+  .k-section--khadi-plain,
+  .k-section--khadi-weft,
+  .k-section--indigo-panel {
+    padding-inline: var(--k-space-4);
+    border-radius: var(--k-radius-md);
+  }
+
+  @media (max-width: 32rem) {
+    .k-section--khadi-plain,
+    .k-section--khadi-weft,
+    .k-section--indigo-panel {
+      padding-inline: var(--k-space-3);
+    }
   }
 
   .shell__footer {
@@ -170,12 +195,12 @@ body::-webkit-scrollbar {
       gap: var(--k-space-2);
     }
 
-    .shell__ministry {
-      display: none;
-    }
-
     .shell__actions {
       gap: var(--k-space-1);
+    }
+
+    .shell__search-inline {
+      display: none;
     }
 
     .shell__icon-link {

@@ -18,17 +18,45 @@
 
   let activeMenu = $state<string | null>(null);
   let navContainer: HTMLElement | null = $state(null);
+  let menuPos = $state<{ top: number; left: number } | null>(null);
+  let allCraftsWrap: HTMLElement | null = $state(null);
+  let homeWrap: HTMLElement | null = $state(null);
+  let furnitureWrap: HTMLElement | null = $state(null);
+  let paintingsWrap: HTMLElement | null = $state(null);
 
-  function handleMenuEnter(menu: string): void {
+  // .subnav-container scrolls horizontally, which clips an absolutely
+  // positioned dropdown to that scrollbox (the CSS overflow spec forces
+  // overflow-y to clip too once overflow-x isn't visible) -- it renders
+  // hidden behind later page content instead of floating above it. Fixed
+  // positioning computed from the trigger's own rect escapes that clip.
+  function positionMenu(el: HTMLElement): void {
+    if (window.innerWidth <= 768) {
+      menuPos = null;
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    // Dropdowns run up to ~880px wide (all-crafts mega-menu) -- clamp so a
+    // trigger near the right edge doesn't push the panel off-screen.
+    const left = Math.min(r.left, window.innerWidth - 900);
+    menuPos = { top: r.bottom + 6, left: Math.max(left, 8) };
+  }
+
+  function handleMenuEnter(menu: string, el: HTMLElement): void {
     activeMenu = menu;
+    positionMenu(el);
   }
 
   function handleMenuLeave(): void {
     activeMenu = null;
   }
 
-  function toggleMenu(menu: string): void {
-    activeMenu = activeMenu === menu ? null : menu;
+  function toggleMenu(menu: string, el: HTMLElement): void {
+    if (activeMenu === menu) {
+      activeMenu = null;
+      return;
+    }
+    activeMenu = menu;
+    positionMenu(el);
   }
 
   function closeMenu(): void {
@@ -69,7 +97,11 @@
   <div class="subnav-container">
     <!-- 0. All Crafts Mega-Menu featuring all 12 Artisan Crafts -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('all-crafts')}>
+    <div
+      class="menu-item-wrap"
+      bind:this={allCraftsWrap}
+      onmouseenter={() => allCraftsWrap && handleMenuEnter('all-crafts', allCraftsWrap)}
+    >
       <div class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}">
         <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu}>
           <Icon name="cluster" size="0.85rem" />
@@ -78,7 +110,7 @@
         <button
           type="button"
           class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMenu('all-crafts'); }}
+          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
           aria-expanded={activeMenu === 'all-crafts'}
           aria-haspopup="true"
           aria-label="Toggle All 12 Crafts"
@@ -89,7 +121,11 @@
       </div>
 
       {#if activeMenu === 'all-crafts'}
-        <div class="subnav-dropdown all-crafts-dropdown" role="menu">
+        <div
+          class="subnav-dropdown all-crafts-dropdown"
+          role="menu"
+          style={menuPos ? `position: fixed; top: ${menuPos.top}px; left: ${menuPos.left}px;` : ''}
+        >
           <div class="all-crafts-header">
             <div class="all-crafts-title-group">
               <h4 class="col-title">12 National Artisan Craft Disciplines</h4>
@@ -158,7 +194,11 @@
 
     <!-- 1. Home & Living (Image 1 reference) -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('home')}>
+    <div
+      class="menu-item-wrap"
+      bind:this={homeWrap}
+      onmouseenter={() => homeWrap && handleMenuEnter('home', homeWrap)}
+    >
       <div class="subnav-split-pill {activeMenu === 'home' ? 'is-active' : ''}">
         <a
           href="/search?category=Home+and+living"
@@ -170,7 +210,7 @@
         <button
           type="button"
           class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMenu('home'); }}
+          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
           aria-expanded={activeMenu === 'home'}
           aria-haspopup="true"
           aria-label="Toggle Home & Living categories"
@@ -181,7 +221,11 @@
       </div>
 
       {#if activeMenu === 'home'}
-        <div class="subnav-dropdown home-dropdown" role="menu">
+        <div
+          class="subnav-dropdown home-dropdown"
+          role="menu"
+          style={menuPos ? `position: fixed; top: ${menuPos.top}px; left: ${menuPos.left}px;` : ''}
+        >
           <div class="dropdown-grid-4">
             <!-- Col 1: Décor & Utility -->
             <div class="dropdown-col">
@@ -260,7 +304,11 @@
 
     <!-- 2. Furniture (Image 5 reference) -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('furniture')}>
+    <div
+      class="menu-item-wrap"
+      bind:this={furnitureWrap}
+      onmouseenter={() => furnitureWrap && handleMenuEnter('furniture', furnitureWrap)}
+    >
       <div class="subnav-split-pill {activeMenu === 'furniture' ? 'is-active' : ''}">
         <a
           href="/search?category=Furniture"
@@ -272,7 +320,7 @@
         <button
           type="button"
           class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMenu('furniture'); }}
+          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
           aria-expanded={activeMenu === 'furniture'}
           aria-haspopup="true"
           aria-label="Toggle Furniture categories"
@@ -283,7 +331,11 @@
       </div>
 
       {#if activeMenu === 'furniture'}
-        <div class="subnav-dropdown furniture-dropdown" role="menu">
+        <div
+          class="subnav-dropdown furniture-dropdown"
+          role="menu"
+          style={menuPos ? `position: fixed; top: ${menuPos.top}px; left: ${menuPos.left}px;` : ''}
+        >
           <div class="dropdown-grid-3">
             <div class="dropdown-col">
               <h4 class="col-title">Home Outdoors</h4>
@@ -319,7 +371,11 @@
 
     <!-- 3. Paintings (Image 2 reference) -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="menu-item-wrap" onmouseenter={() => handleMenuEnter('paintings')}>
+    <div
+      class="menu-item-wrap"
+      bind:this={paintingsWrap}
+      onmouseenter={() => paintingsWrap && handleMenuEnter('paintings', paintingsWrap)}
+    >
       <div class="subnav-split-pill {activeMenu === 'paintings' ? 'is-active' : ''}">
         <a
           href="/search?category=Paintings"
@@ -331,7 +387,7 @@
         <button
           type="button"
           class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMenu('paintings'); }}
+          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
           aria-expanded={activeMenu === 'paintings'}
           aria-haspopup="true"
           aria-label="Toggle Paintings categories"
@@ -342,7 +398,11 @@
       </div>
 
       {#if activeMenu === 'paintings'}
-        <div class="subnav-dropdown paintings-dropdown" role="menu">
+        <div
+          class="subnav-dropdown paintings-dropdown"
+          role="menu"
+          style={menuPos ? `position: fixed; top: ${menuPos.top}px; left: ${menuPos.left}px;` : ''}
+        >
           <div class="dropdown-grid-2">
             <div class="dropdown-col">
               <h4 class="col-title">Traditional Folk & Heritage</h4>

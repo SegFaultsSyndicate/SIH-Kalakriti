@@ -135,7 +135,6 @@
       <img class="shell__emblem" src="/favicon.svg" alt="" width="32" height="32" />
       <span class="shell__wordmark">
         {t('app.name')}
-        <span class="shell__ministry">{t('app.ministry')}</span>
       </span>
     </a>
 
@@ -147,6 +146,9 @@
     </nav>
 
     <div class="shell__actions">
+      <form class="shell__search-inline" action="/search" role="search">
+        <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
+      </form>
       <a class="shell__icon-link" href="/search" aria-label={t('nav.search')}>
         <Icon name="search" />
       </a>
@@ -246,6 +248,7 @@
   .shell__nav {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: var(--k-space-5, 1.25rem);
     margin-inline-start: var(--k-space-6, 1.5rem);
   }
@@ -263,6 +266,7 @@
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-radius: var(--k-radius-sm, 4px);
+    white-space: nowrap;
     transition: color 0.15s ease, background-color 0.15s ease;
   }
 

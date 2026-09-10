@@ -212,30 +212,6 @@
     font-weight: var(--k-weight-semibold);
   }
 
-  .shell__status {
-    margin-inline-start: auto;
-    display: flex;
-    align-items: center;
-    gap: var(--k-space-2);
-    font-size: var(--k-text-xs);
-    color: var(--k-text-secondary);
-  }
-
-  .net__mark {
-    inline-size: 0.5rem;
-    block-size: 0.5rem;
-    border-radius: var(--k-radius-pill);
-    background-color: var(--k-text-secondary);
-  }
-
-  .net--online .net__mark {
-    background-color: var(--k-accent-success);
-  }
-
-  .net--offline .net__mark {
-    background-color: var(--k-accent-warning-bg);
-  }
-
   .shell__main {
     flex: 1;
     max-inline-size: var(--k-container-artisan);

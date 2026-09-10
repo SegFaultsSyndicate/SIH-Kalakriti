@@ -27,6 +27,7 @@
   import { Icon } from '@kalakriti/icons';
   import { search, searchVoice, getListingSummary, suggest, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
+  import { stubListingsForQuery } from '$lib/stub-listings';
 
   type SearchHit = components['schemas']['SearchHit'];
   type ListingSummary = components['schemas']['ListingSummary'];
@@ -48,6 +49,11 @@
 
   let suggestions = $state<string[]>([]);
   let showSuggestions = $state(false);
+
+  // Backend has no real listings yet (see CLAUDE.md); a category click from
+  // ArtisanCraftGrid or a q= search that comes back empty falls back to the
+  // real photographed pieces in stub-listings.ts instead of a blank page.
+  const fallbackResults = $derived(!loading && hits.length === 0 ? stubListingsForQuery(q) : []);
 
   $effect(() => {
     const trimmed = q.trim();
@@ -258,6 +264,12 @@
 {#if loading && hits.length === 0}
   <div class="results-grid">
     {#each Array(6) as _, i (i)}<Skeleton shape="card" height="16rem" />{/each}
+  </div>
+{:else if hits.length === 0 && fallbackResults.length > 0}
+  <div class="results-grid">
+    {#each fallbackResults as listing (listing.id)}
+      <ListingCard {listing} href={`/listing/${listing.id}`} />
+    {/each}
   </div>
 {:else if hits.length === 0}
   <EmptyState illustration="empty-no-search-results" heading={t('search.zeroResults.heading')} />

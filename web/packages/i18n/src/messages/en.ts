@@ -1124,19 +1124,6 @@ export const en = {
   'home.belts.central.desc': 'Gossamer sheer weaves woven for regal dynasties and animist bronze forest deities.',
   'home.belts.viewBelt': 'Explore Corridors',
 
-  // Buyer Home: Curated Lifestyle & Occasion Edits
-  'home.edits.kicker': 'Curated Living & Occasions',
-  'home.edits.heading': 'The Architectural & Heirloom Catalogue',
-  'home.edits.subheading': 'Objects designed to age with grace, connecting sustainable contemporary living to ancient craft mastery.',
-  'home.edits.edit1.title': 'The Heirloom Wedding Wardrobe',
-  'home.edits.edit1.desc': 'Hand-spun silk brocades, authentic zari lehengas, and GI-certified bridal handlooms made for generations.',
-  'home.edits.edit2.title': 'Raw Terracotta & Vedic Kitchenware',
-  'home.edits.edit2.desc': 'Unglazed earthen handi, black clay cookware from Nizamabad, and natural copper water vessels.',
-  'home.edits.edit3.title': 'Architectural Jaali & Cast Bell Metal',
-  'home.edits.edit3.desc': 'Lost-wax Dhokra totems, brass oil lamps, and hand-chiseled stone lattices for soulful spaces.',
-  'home.edits.edit4.title': 'Botanical Living & Natural Fibers',
-  'home.edits.edit4.desc': 'Golden jute floor mats, wild Kauna grass baskets, and organic indigo hand-blocked linen.',
-
   // Buyer Home: Virasat Cultural Journal
   'home.journal.kicker': 'The Virasat Journal',
   'home.journal.heading': 'Chronicles of Living Heritage',
