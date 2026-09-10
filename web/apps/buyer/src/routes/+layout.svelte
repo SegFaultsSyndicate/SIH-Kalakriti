@@ -91,7 +91,7 @@
 </script>
 
 <svelte:head>
-  <title>{t('app.name')} - Ministry of Social Justice & Empowerment</title>
+  <title>{t('app.name')}</title>
   <meta name="description" content="Kalakriti is India's national AI cataloging, cryptographic GI provenance, and collective fulfillment marketplace for master artisans and heritage looms." />
   <script type="application/ld+json">
     {
