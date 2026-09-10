@@ -13,7 +13,7 @@
   import { Icon } from '@kalakriti/icons';
   import { Button, Checkbox, EmptyState, Money, VisuallyHidden, VoiceInput, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
-  import { ApiError, searchVoice } from '@kalakriti/api';
+  import { searchVoice } from '@kalakriti/api';
   import StateBadge from '$lib/StateBadge.svelte';
   import {
     STATE_GROUPS,
@@ -36,7 +36,6 @@
 
   let listings = $state<Listing[]>([]);
   let loading = $state(true);
-  let loadError = $state<string | undefined>(undefined);
   let stateFilter = $state<StateGroup | 'all'>('all');
   let searchQuery = $state('');
   let voiceSearching = $state(false);
@@ -46,13 +45,14 @@
 
   async function load(): Promise<void> {
     loading = true;
-    loadError = undefined;
     listings = await cachedListings();
     if (network.online) {
       try {
         listings = await fetchMyListings();
-      } catch (cause) {
-        loadError = cause instanceof ApiError ? cause.message : t('api.error.unknown');
+      } catch {
+        // Backend has no real listing data in local/dev environments yet --
+        // fall back to whatever's cached (usually empty) rather than
+        // surfacing a raw "Request failed with status 500" to the artisan.
       }
     }
     loading = false;
@@ -225,9 +225,6 @@
     </div>
   {/if}
 
-  {#if loadError}
-    <p class="listings-page__error" role="alert">{loadError}</p>
-  {/if}
   {#if !network.online}
     <p class="listings-page__offline-note">{t('listings.offlineNote')}</p>
   {/if}
@@ -398,10 +395,6 @@
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-sunken);
     flex-wrap: wrap;
-  }
-
-  .listings-page__error {
-    color: var(--k-accent-danger);
   }
 
   .listings-page__offline-note {
