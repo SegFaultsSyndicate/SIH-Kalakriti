@@ -70,6 +70,12 @@ class Config:
     embed_model: str = "intfloat/multilingual-e5-base"
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
     video_frames: int = 8
+    # Zero-DCE++ has no pip package or HF repo id -- only a raw .pth from the
+    # paper's own GitHub release (see app/models/zero_dce.py's module
+    # docstring). Empty means "not configured": correct_lighting degrades to
+    # a no-op rather than a hard failure, same as the handloom texture
+    # classifier's missing-checkpoint case.
+    zero_dce_checkpoint_path: str = ""
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -93,6 +99,7 @@ class Config:
             embed_model=os.getenv("ML_SVC_EMBED_MODEL", "intfloat/multilingual-e5-base"),
             rerank_model=os.getenv("ML_SVC_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"),
             video_frames=int(os.getenv("ML_SVC_VIDEO_FRAMES", "8")),
+            zero_dce_checkpoint_path=os.getenv("ML_SVC_ZERO_DCE_CHECKPOINT", ""),
         )
 
 

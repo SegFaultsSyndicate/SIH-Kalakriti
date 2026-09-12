@@ -60,6 +60,12 @@ class RealModels:
         self._vlm_processor = None
         self._matte = None
         self._s3 = None
+        # Lazily loaded on first correct_lighting=True request, not in
+        # `load()`: unlike the always-available rembg/birefnet-general
+        # session, there is no bundled Zero-DCE++ checkpoint, so an install
+        # with none configured must not fail startup over an optional op.
+        self._zero_dce_net = None
+        self._zero_dce_load_failed = False
 
     async def load(self) -> None:
         """Pull every model into memory once, off the event loop."""
@@ -120,14 +126,29 @@ class RealModels:
     # --- enhance ------------------------------------------------------------
 
     async def enhance_image(
-        self, object_key: str, remove_background: bool, auto_white_balance: bool, upscale: int
+        self,
+        object_key: str,
+        remove_background: bool,
+        auto_white_balance: bool,
+        upscale: int,
+        correct_lighting: bool = False,
     ) -> tuple[str, list[str]]:
         return await asyncio.to_thread(
-            self._enhance_blocking, object_key, remove_background, auto_white_balance, upscale
+            self._enhance_blocking,
+            object_key,
+            remove_background,
+            auto_white_balance,
+            upscale,
+            correct_lighting,
         )
 
     def _enhance_blocking(
-        self, object_key: str, remove_background: bool, auto_white_balance: bool, upscale: int
+        self,
+        object_key: str,
+        remove_background: bool,
+        auto_white_balance: bool,
+        upscale: int,
+        correct_lighting: bool = False,
     ) -> tuple[str, list[str]]:
         from PIL import Image, ImageOps
 
@@ -137,6 +158,17 @@ class RealModels:
         if auto_white_balance:
             image = ImageOps.autocontrast(image, cutoff=1)
             ops.append("auto-white-balance")
+
+        if correct_lighting:
+            net = self._get_zero_dce_net()
+            if net is not None:
+                image = _apply_zero_dce(image, net)
+                ops.append("correct-lighting")
+            else:
+                log.warning(
+                    "correct_lighting requested but no Zero-DCE++ checkpoint is "
+                    "configured (ML_SVC_ZERO_DCE_CHECKPOINT); skipping"
+                )
 
         if remove_background:
             from rembg import new_session, remove
@@ -159,6 +191,45 @@ class RealModels:
         enhanced_key = f"enhanced/{object_key.rsplit('/', 1)[-1].rsplit('.', 1)[0]}.webp"
         self._put_object(enhanced_key, buffer.getvalue(), "image/webp")
         return enhanced_key, ["denoise", *ops]
+
+    def _get_zero_dce_net(self):
+        """Lazily loads the Zero-DCE++ curve-estimation net, once.
+
+        Optional, the same honest-degradation pattern as
+        `_texture_cnn_score`'s missing checkpoint: Zero-DCE++ has no pip
+        package or HF repo id, only a raw `.pth` from the paper's GitHub
+        release (see `app/models/zero_dce.py`'s module docstring), so an
+        install with `ML_SVC_ZERO_DCE_CHECKPOINT` unset must not fail
+        startup, or even this call, over an optional enhancement op -- it
+        just returns None and the caller skips the op.
+        """
+        if self._zero_dce_net is not None or self._zero_dce_load_failed:
+            return self._zero_dce_net
+
+        path = self._cfg.zero_dce_checkpoint_path
+        if not path:
+            self._zero_dce_load_failed = True
+            return None
+
+        try:
+            import torch
+
+            from app.models.zero_dce import ZeroDCEPPNet
+
+            net = ZeroDCEPPNet()
+            state_dict = torch.load(path, map_location="cpu")
+            net.load_state_dict(state_dict)
+            net.eval()
+        except Exception:
+            log.exception(
+                "failed to load Zero-DCE++ checkpoint at %r; correct_lighting will be a no-op",
+                path,
+            )
+            self._zero_dce_load_failed = True
+            return None
+
+        self._zero_dce_net = net
+        return net
 
     # --- vision -------------------------------------------------------------
 
@@ -568,6 +639,27 @@ def _closed_vocab(value: str, vocab: list[str], craft: str, field: str) -> str:
 def _same_technique(observed: str, claimed: str) -> bool:
     normalise = lambda s: set(re.split(r"[\s\-_]+", s.lower().strip()))  # noqa: E731
     return bool(normalise(observed) & normalise(claimed))
+
+
+def _apply_zero_dce(image, net):
+    """Runs one Zero-DCE++ forward pass over `image` (a PIL RGB Image) and
+    returns the brightened result as a new PIL Image.
+
+    Full resolution, no batching: this is one photo per call, same as every
+    other per-image op in `_enhance_blocking`. See `app/models/zero_dce.py`'s
+    module docstring for why this deliberately skips upstream's own
+    downsample-then-upsample speed trick.
+    """
+    import numpy as np
+    import torch
+    from PIL import Image
+
+    array = np.asarray(image, dtype=np.float32) / 255.0
+    tensor = torch.from_numpy(array).permute(2, 0, 1).unsqueeze(0)
+    with torch.no_grad():
+        enhanced = net(tensor)
+    out = enhanced.clamp(0.0, 1.0).squeeze(0).permute(1, 2, 0).numpy()
+    return Image.fromarray((out * 255.0).round().astype(np.uint8))
 
 
 def _video_frames(data: bytes, count: int) -> list:

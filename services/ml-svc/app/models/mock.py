@@ -54,11 +54,18 @@ class MockModels:
         return None
 
     async def enhance_image(
-        self, object_key: str, remove_background: bool, auto_white_balance: bool, upscale: int
+        self,
+        object_key: str,
+        remove_background: bool,
+        auto_white_balance: bool,
+        upscale: int,
+        correct_lighting: bool = False,
     ) -> tuple[str, list[str]]:
         ops = ["denoise"]
         if auto_white_balance:
             ops.append("auto-white-balance")
+        if correct_lighting:
+            ops.append("correct-lighting")
         if remove_background:
             ops.append("remove-background")
         if upscale > 1:

@@ -21,7 +21,12 @@ class Models(Protocol):
     async def load(self) -> None: ...
 
     async def enhance_image(
-        self, object_key: str, remove_background: bool, auto_white_balance: bool, upscale: int
+        self,
+        object_key: str,
+        remove_background: bool,
+        auto_white_balance: bool,
+        upscale: int,
+        correct_lighting: bool = False,
     ) -> tuple[str, list[str]]: ...
 
     async def extract_attributes(

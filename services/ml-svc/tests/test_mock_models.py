@@ -101,10 +101,23 @@ async def test_transcribe_streams_final_chunks_in_order():
 
 async def test_enhance_names_the_operations_it_applied():
     registry = _registry()
-    key, ops = await registry.enhance_image("artisans/x/y.jpg", True, True, 2)
+    key, ops = await registry.enhance_image("artisans/x/y.jpg", True, True, 2, True)
 
     assert key.startswith("enhanced/") and key.endswith(".webp")
-    assert ops == ["denoise", "auto-white-balance", "remove-background", "upscale-2x"]
+    assert ops == [
+        "denoise",
+        "auto-white-balance",
+        "correct-lighting",
+        "remove-background",
+        "upscale-2x",
+    ]
+
+
+async def test_enhance_correct_lighting_defaults_off():
+    registry = _registry()
+    _, ops = await registry.enhance_image("artisans/x/y.jpg", False, False, 1)
+
+    assert "correct-lighting" not in ops
 
 
 async def test_verify_technique_echoes_the_claim():

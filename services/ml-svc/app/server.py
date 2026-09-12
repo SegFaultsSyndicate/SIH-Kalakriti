@@ -170,6 +170,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
             request.remove_background,
             request.auto_white_balance,
             request.upscale_factor or 1,
+            request.correct_lighting,
         )
         enhanced = common_pb2.MediaRef()
         enhanced.CopyFrom(request.source)
