@@ -88,6 +88,11 @@ body {
     min-inline-size: 0;
   }
 
+  .net--online .shell__status {
+    color: var(--k-accent-success);
+  }
+
+
   .shell__main {
     padding: var(--k-space-5) var(--k-space-4) var(--k-space-8);
   }
@@ -101,7 +106,6 @@ body {
     align-items: center;
     gap: var(--k-space-2);
     font-size: var(--k-text-sm);
-    color: var(--k-premium-header-text, #F4F0EA);
   }
 
   .net__mark {
