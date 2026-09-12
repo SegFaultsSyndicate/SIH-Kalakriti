@@ -73,6 +73,14 @@ type capturedResponse struct {
 	Body   []byte
 }
 
+// responseRecorder captures a handler's response instead of sending it.
+// It must NOT also forward to the embedded ResponseWriter: the real write to
+// the client happens exactly once, from the caller, using the captured
+// capturedResponse -- for both a fresh execution and a genuine replay alike.
+// (This used to forward here too, so every idempotency-protected write
+// -- artisan registration, listings, orders, statements, clusters, moderation
+// actions -- wrote its response to the client twice on every fresh call: once
+// live from here, once again from the caller's replay of the captured copy.)
 type responseRecorder struct {
 	http.ResponseWriter
 	status int
@@ -83,13 +91,11 @@ func (r *responseRecorder) WriteHeader(code int) {
 	if r.status == 0 {
 		r.status = code
 	}
-	r.ResponseWriter.WriteHeader(code)
 }
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
 	if r.status == 0 {
 		r.status = http.StatusOK
 	}
-	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
+	return r.body.Write(b)
 }

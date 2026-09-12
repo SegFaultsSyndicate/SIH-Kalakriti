@@ -6,15 +6,22 @@
 
 import { liveQuery } from 'dexie';
 import { db, getPref, setPref, enqueue, applyOptimistic } from '@kalakriti/offline';
+import { LOCALES } from '@kalakriti/i18n';
+import { DISTRICTS, STATE_CODES } from './ontology';
 
 const DRAFT_PREF_KEY = 'registration.draft';
 const ARTISAN_ID_PREF_KEY = 'registration.artisanId';
 
 export interface RegistrationDraft {
   name?: string;
+  /** Real craft ontology UUID from GET /crafts, per $lib/ontology's loadCrafts(). */
   craftId?: string;
+  /** Display name captured alongside craftId, so profile display never needs a network round-trip. */
+  craftName?: string;
   districtId?: string;
   districtFreeText?: string;
+  /** State name for a free-text district, from $lib/ontology's STATES -- unused when districtId is set (state is derived from it instead). */
+  stateFreeText?: string;
   pehchanId?: string;
   clusterName?: string;
 }
@@ -60,20 +67,50 @@ export function watchArtisanId(onChange: (id: string | undefined) => void): () =
   return () => sub.unsubscribe();
 }
 
+export interface RegisterBody {
+  display_name: string;
+  craft_ids: string[];
+  languages: string[];
+  region: { state_code: string; district?: string };
+  cluster_id?: string;
+  pehchan_id?: string;
+}
+
 /**
- * Only display_name and language reach POST /artisans -- craft, district,
- * the PM Vishwakarma/Pehchan ID and cluster/SHG membership stay in the local
- * draft only. services/bff/openapi.json's requestBody for this endpoint has
- * no field for any of the four, and there is no PATCH /artisans/me to send
- * them to later. Per the ABSOLUTE RULE they are not invented; this is the
- * one place that fact is enforced, so every caller goes through it rather
- * than building its own request body.
+ * commonv1.Language's enum names are the bare English name uppercased
+ * (LANGUAGE_HINDI, LANGUAGE_ENGLISH, ...) -- see
+ * services/bff/internal/bff/client/search.go's languageToProto, which the
+ * bff's Register call runs every entry of `languages` through. LOCALES'
+ * englishName already matches that convention for every locale this app
+ * ships; this only needs the uppercase.
  */
-export function buildRegisterBody(
-  draft: RegistrationDraft,
-  language: string,
-): { display_name: string; language: string } {
-  return { display_name: draft.name?.trim() || '', language };
+function toProtoLanguageName(code: string): string {
+  const meta = (LOCALES as Record<string, { englishName: string }>)[code];
+  return (meta?.englishName ?? 'English').toUpperCase();
+}
+
+/**
+ * Builds POST /artisans' real request body (services/bff/openapi.json,
+ * regenerated from the actual handler requirements -- core-svc rejects a
+ * register call with no craft_ids or no region.state_code). craft/district
+ * selection lives in the local draft the whole wizard writes to; this is the
+ * one place that draft shape is turned into the wire shape, so every caller
+ * goes through it rather than building its own request body.
+ */
+export function buildRegisterBody(draft: RegistrationDraft, language: string): RegisterBody {
+  const district = draft.districtId ? DISTRICTS.find((d) => d.id === draft.districtId) : undefined;
+  const stateName = district?.state ?? draft.stateFreeText;
+  const body: RegisterBody = {
+    display_name: draft.name?.trim() || '',
+    craft_ids: draft.craftId ? [draft.craftId] : [],
+    languages: [toProtoLanguageName(language)],
+    region: {
+      state_code: (stateName && STATE_CODES[stateName]) || '',
+      district: district?.name ?? draft.districtFreeText,
+    },
+  };
+  if (draft.pehchanId) body.pehchan_id = draft.pehchanId;
+  return body;
 }
 
 /**

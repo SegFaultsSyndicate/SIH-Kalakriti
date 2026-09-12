@@ -46,8 +46,9 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   /** A plain value is JSON-encoded; a Blob/ArrayBuffer is sent as-is (e.g. recorded audio) with no Content-Type forced -- set one via headers. */
   body?: unknown;
   /**
-   * Sent as Idempotency-Key. Mandatory for any retried write, which on this
-   * product means every write the outbox carries.
+   * Sent as X-Idempotency-Key (the bff's middleware reads that exact header
+   * name, not bare "Idempotency-Key"). Mandatory for any retried write, which
+   * on this product means every write the outbox carries.
    */
   idempotencyKey?: string;
   /**
@@ -85,7 +86,7 @@ export async function request(path: string, options: RequestOptions = {}): Promi
         Accept: 'application/json',
         'Accept-Language': getAcceptLanguage(),
         ...(body === undefined || isRawBody(body) ? {} : { 'Content-Type': 'application/json' }),
-        ...(idempotencyKey === undefined ? {} : { 'Idempotency-Key': idempotencyKey }),
+        ...(idempotencyKey === undefined ? {} : { 'X-Idempotency-Key': idempotencyKey }),
         ...headers,
       },
       body: body === undefined ? undefined : isRawBody(body) ? body : JSON.stringify(body),
