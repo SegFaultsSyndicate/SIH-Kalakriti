@@ -19,13 +19,13 @@ type IdempotencyStore interface {
 	SaveResponse(ctx context.Context, scope, key string, response []byte) error
 }
 
-// Idempotency checks the X-Idempotency-Key header on mutating requests and
+// Idempotency checks the Idempotency-Key header on mutating requests and
 // replays the first response when the same key is retried. Routes mount this
 // only on POST/PUT/PATCH/DELETE.
 func Idempotency(store IdempotencyStore, scope string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			key := r.Header.Get("X-Idempotency-Key")
+			key := r.Header.Get("Idempotency-Key")
 			if key == "" {
 				// No idempotency key → normal execution, no replay protection.
 				next.ServeHTTP(w, r)

@@ -75,7 +75,7 @@ func TestIdempotency_Replay(t *testing.T) {
 	// First call.
 	req1 := httptest.NewRequest(http.MethodPost, "/api/v1/artisans", bytes.NewBufferString(`{"display_name":"Test"}`))
 	req1.Header.Set("Authorization", "Bearer "+token)
-	req1.Header.Set("X-Idempotency-Key", "idem-123")
+	req1.Header.Set("Idempotency-Key", "idem-123")
 	w1 := httptest.NewRecorder()
 	srv.ServeHTTP(w1, req1)
 
@@ -90,7 +90,7 @@ func TestIdempotency_Replay(t *testing.T) {
 	// Replay with same key → should return the same ID.
 	req2 := httptest.NewRequest(http.MethodPost, "/api/v1/artisans", bytes.NewBufferString(`{"display_name":"Test"}`))
 	req2.Header.Set("Authorization", "Bearer "+token)
-	req2.Header.Set("X-Idempotency-Key", "idem-123")
+	req2.Header.Set("Idempotency-Key", "idem-123")
 	w2 := httptest.NewRecorder()
 	srv.ServeHTTP(w2, req2)
 

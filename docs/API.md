@@ -201,19 +201,12 @@ limited, `503` a downstream dependency is unavailable.
 
 ## Idempotency
 
-The server reads the key from **`X-Idempotency-Key`** (not `Idempotency-Key`
-— note the `X-` prefix), on every route wrapped with `withIdempotency` in
-`server.go` (artisan registration, listing/order/statement/cluster/SHG
-creation, moderation actions). A repeated key within the configured TTL
-replays the original response instead of re-executing the write.
-
-> **Known mismatch:** `web/packages/api/src/transport.ts` currently sends
-> the header as `Idempotency-Key`, without the `X-` prefix the bff actually
-> checks. As shipped, this means the frontend's outbox-retry idempotency
-> guarantee is not actually enforced server-side — a retried write is
-> indistinguishable from a new one. Fix on whichever side is judged correct
-> (add `X-` client-side, or accept the bare name server-side) before relying
-> on retry-safety in production.
+The server reads the key from **`Idempotency-Key`**, on every route wrapped
+with `withIdempotency` in `server.go` (artisan registration,
+listing/order/statement/cluster/SHG creation, moderation actions). A
+repeated key within the configured TTL replays the original response instead
+of re-executing the write. This matches the header `web/packages/api/src/transport.ts`
+already sends.
 
 ---
 
