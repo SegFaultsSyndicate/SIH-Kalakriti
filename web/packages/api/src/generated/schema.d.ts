@@ -1215,6 +1215,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/listings/summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing card summary for many listings in one call */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Comma-separated listing ids */
+                    ids: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Listing summaries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            summaries?: components["schemas"]["ListingSummary"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/listings/{id}/summary": {
         parameters: {
             query?: never;

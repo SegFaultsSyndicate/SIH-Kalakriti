@@ -18,7 +18,7 @@
     getArtisanStorefront,
     getFollowerCount,
     listListings,
-    getListingSummary,
+    batchGetListingSummaries,
     getProcessFeed,
     followArtisan,
     unfollowArtisan,
@@ -59,10 +59,10 @@
           ]);
           followerCount = count?.count;
           const ids = (own.listings ?? []).map((l) => l.id!).filter(Boolean);
-          const fetched = await Promise.allSettled(ids.map((id) => getListingSummary(id)));
-          listings = fetched
-            .filter((r): r is PromiseFulfilledResult<ListingSummary> => r.status === 'fulfilled')
-            .map((r) => r.value);
+          const { summaries } = ids.length
+            ? await batchGetListingSummaries(ids)
+            : { summaries: [] };
+          listings = (summaries ?? []) as ListingSummary[];
           clips = (feed.clips ?? []).filter((c) => c.artisan_id === artisan!.id);
         }
       } catch {
@@ -145,7 +145,14 @@
 
   <header class="storefront-header">
     {#if artisanAvatar}
-      <img class="storefront-header__portrait" src={artisanAvatar} alt="" />
+      <img
+        class="storefront-header__portrait"
+        src={artisanAvatar}
+        alt=""
+        width="128"
+        height="128"
+        fetchpriority="high"
+      />
     {:else}
       <div class="storefront-header__initial-avatar">
         <span>{(artisan.display_name || 'A').charAt(0).toUpperCase()}</span>

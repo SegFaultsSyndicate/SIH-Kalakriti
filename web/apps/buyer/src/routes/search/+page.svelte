@@ -25,7 +25,7 @@
   import { locale } from '@kalakriti/i18n';
   import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Skeleton, Switch } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
-  import { search, searchVoice, getListingSummary, suggest, type components } from '@kalakriti/api';
+  import { search, searchVoice, batchGetListingSummaries, suggest, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
   import { stubListingsForQuery } from '$lib/stub-listings';
 
@@ -103,11 +103,11 @@
 
       const missing = hits.filter((h) => h.listing_id && !summaries[h.listing_id]).map((h) => h.listing_id!);
       if (missing.length > 0) {
-        const fetched = await Promise.allSettled(missing.map((id) => getListingSummary(id)));
+        const { summaries: fetched } = await batchGetListingSummaries(missing);
         const next = { ...summaries };
-        fetched.forEach((r, i) => {
-          if (r.status === 'fulfilled') next[missing[i]] = r.value;
-        });
+        for (const s of fetched ?? []) {
+          if (s.id) next[s.id] = s as ListingSummary;
+        }
         summaries = next;
       }
     } finally {
@@ -166,11 +166,13 @@
       understood = res.understood;
       didYouMean = res.did_you_mean ?? [];
       const ids = hits.map((h) => h.listing_id).filter((id): id is string => !!id);
-      const fetched = await Promise.allSettled(ids.map((id) => getListingSummary(id)));
       const next: Record<string, ListingSummary> = {};
-      fetched.forEach((r, i) => {
-        if (r.status === 'fulfilled') next[ids[i]] = r.value;
-      });
+      if (ids.length > 0) {
+        const { summaries: fetched } = await batchGetListingSummaries(ids);
+        for (const s of fetched ?? []) {
+          if (s.id) next[s.id] = s as ListingSummary;
+        }
+      }
       summaries = next;
     } finally {
       loading = false;

@@ -1285,6 +1285,42 @@
         }
       }
     },
+    "/listings/summaries": {
+      "get": {
+        "summary": "Listing card summary for many listings in one call",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated listing ids",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summaries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingSummary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/listings/{id}/summary": {
       "get": {
         "summary": "Listing card summary: craft, materials, colours, resolved media URLs",

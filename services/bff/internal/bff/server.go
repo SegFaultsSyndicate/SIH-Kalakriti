@@ -138,6 +138,7 @@ func (s *Server) mountRoutes() {
 	api.GET("/search/suggest", httpx.WrapHandler(apiH.Suggest))
 	api.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
 	api.GET("/listings", httpx.WrapHandler(apiH.ListListings))
+	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
 	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
 

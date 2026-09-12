@@ -351,6 +351,18 @@ export function getListingSummary(id: string, options?: CallOptions): Promise<Li
   }) as Promise<ListingSummaryResponse>;
 }
 
+type BatchListingSummariesResponse = Json<paths['/listings/summaries']['get']['responses'][200]>;
+
+export function batchGetListingSummaries(
+  ids: string[],
+  options?: CallOptions,
+): Promise<BatchListingSummariesResponse> {
+  return call(`/listings/summaries${toQueryString({ ids: ids.join(',') })}`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<BatchListingSummariesResponse>;
+}
+
 type ListCraftsResponse = Json<paths['/crafts']['get']['responses'][200]>;
 
 export function listCrafts(options?: CallOptions): Promise<ListCraftsResponse> {

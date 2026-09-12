@@ -228,6 +228,10 @@ func (m *mockListingSvc) GetListingSummary(ctx context.Context, listingID string
 	return nil, pkgdomain.NotFound("listing not found")
 }
 
+func (m *mockListingSvc) BatchGetListingSummaries(ctx context.Context, ids []string) ([]map[string]any, error) {
+	return nil, nil
+}
+
 func (m *mockListingSvc) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	return nil, nil
 }

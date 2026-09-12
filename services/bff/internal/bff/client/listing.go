@@ -373,6 +373,44 @@ func (l *Listing) GetListingSummary(ctx context.Context, listingID string) (map[
 	return m, nil
 }
 
+// maxBatchSummaryIDs bounds a client-supplied id list, same reasoning as
+// maxMediaRefs/maxTranslations above.
+const maxBatchSummaryIDs = 50
+
+// BatchGetListingSummaries fetches GetListingSummary for many listings in
+// one round trip from the caller's point of view. Collapses what used to be
+// N sequential HTTP calls from the buyer storefront page (one per listing)
+// into a single request; each summary is still assembled the same way
+// GetListingSummary does it, just fanned out concurrently.
+func (l *Listing) BatchGetListingSummaries(ctx context.Context, ids []string) ([]map[string]any, error) {
+	if len(ids) > maxBatchSummaryIDs {
+		ids = ids[:maxBatchSummaryIDs]
+	}
+
+	out := make([]map[string]any, len(ids))
+	group, groupCtx := errgroup.WithContext(ctx)
+	for i, id := range ids {
+		i, id := i, id
+		group.Go(func() error {
+			summary, err := l.GetListingSummary(groupCtx, id)
+			if err != nil {
+				return nil // skip listings that failed to resolve, don't fail the whole batch
+			}
+			out[i] = summary
+			return nil
+		})
+	}
+	_ = group.Wait()
+
+	result := make([]map[string]any, 0, len(out))
+	for _, s := range out {
+		if s != nil {
+			result = append(result, s)
+		}
+	}
+	return result, nil
+}
+
 // ListListings pages through listings under the usual filters.
 func (l *Listing) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	ctx, cancel := withTimeout(ctx)

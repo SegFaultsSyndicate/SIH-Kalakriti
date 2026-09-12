@@ -77,6 +77,9 @@ type ListingService interface {
 	// GetListingSummary is GetListing plus craft name, materials, colours and
 	// resolved media URLs -- the buyer-marketplace card shape.
 	GetListingSummary(ctx context.Context, listingID string) (map[string]any, error)
+	// BatchGetListingSummaries is GetListingSummary for many ids in one call,
+	// so a listing grid doesn't need one HTTP round trip per card.
+	BatchGetListingSummaries(ctx context.Context, ids []string) ([]map[string]any, error)
 	ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error)
 	// SealProvenance freezes process evidence for a PUBLISHED listing. fields
 	// carries media (array of confirmed media ids), claimed_technique
@@ -672,6 +675,26 @@ func (h *APIHandler) GetListingSummary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.JSON(w, http.StatusOK, summary)
+}
+
+// BatchGetListingSummaries handles GET /listings/summaries?ids=a,b,c -- the
+// batched form of GetListingSummary a listing grid uses instead of fetching
+// each card's summary in its own request.
+func (h *APIHandler) BatchGetListingSummaries(w http.ResponseWriter, r *http.Request) {
+	raw := r.URL.Query().Get("ids")
+	if raw == "" {
+		httpx.JSON(w, http.StatusOK, map[string]any{"summaries": []map[string]any{}})
+		return
+	}
+
+	ids := strings.Split(raw, ",")
+	summaries, err := h.listingSvc.BatchGetListingSummaries(r.Context(), ids)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{"summaries": summaries})
 }
 
 func (h *APIHandler) ListListings(w http.ResponseWriter, r *http.Request) {

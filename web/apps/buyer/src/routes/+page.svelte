@@ -22,7 +22,7 @@
     listListings,
     listCrafts,
     search,
-    getListingSummary,
+    batchGetListingSummaries,
     getArtisanStorefront,
     type components,
   } from '@kalakriti/api';
@@ -110,10 +110,9 @@
   });
 
   async function hydrate(ids: string[]): Promise<ListingSummary[]> {
-    const settled = await Promise.allSettled(ids.map((id) => getListingSummary(id)));
-    return settled
-      .filter((r): r is PromiseFulfilledResult<ListingSummary> => r.status === 'fulfilled')
-      .map((r) => r.value);
+    if (ids.length === 0) return [];
+    const { summaries } = await batchGetListingSummaries(ids);
+    return (summaries ?? []) as ListingSummary[];
   }
 
   const FALLBACK_CRAFTS: Craft[] = [

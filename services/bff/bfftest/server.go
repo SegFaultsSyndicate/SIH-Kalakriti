@@ -199,6 +199,13 @@ func (s *StubListingSvc) GetListingSummary(ctx context.Context, listingID string
 		"title": "Madhubani Fish Painting",
 	}, nil
 }
+func (s *StubListingSvc) BatchGetListingSummaries(ctx context.Context, ids []string) ([]map[string]any, error) {
+	out := make([]map[string]any, len(ids))
+	for i, id := range ids {
+		out[i] = map[string]any{"id": id, "state": "PUBLISHED", "title": "Madhubani Fish Painting"}
+	}
+	return out, nil
+}
 func (s *StubListingSvc) ListListings(ctx context.Context, filters map[string]any) ([]map[string]any, error) {
 	return []map[string]any{{"id": "listing-1", "state": "PUBLISHED"}}, nil
 }

@@ -79,6 +79,7 @@ export {
   listIncomeStatements,
   suggest,
   getListingSummary,
+  batchGetListingSummaries,
   listCrafts,
   getCraft,
   getArtisanStorefront,
