@@ -60,6 +60,9 @@ func New(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		if err := pgxvec.RegisterTypes(ctx, conn); err != nil {
 			return fmt.Errorf("registering pgvector types: %w", err)
 		}
+		if err := registerEnumArrayTypes(ctx, conn, "language_code"); err != nil {
+			return fmt.Errorf("registering enum array types: %w", err)
+		}
 		return nil
 	}
 
@@ -75,6 +78,35 @@ func New(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("pinging postgres: %w", err)
 	}
 	return pool, nil
+}
+
+// registerEnumArrayTypes registers a Postgres enum's base and array codecs
+// with pgx's type map for one connection. Of the 20+ custom enums in this
+// schema, "language_code" (artisan.languages) is the only one ever used as
+// an array column -- every other enum is a scalar column, which pgx already
+// encodes correctly via its own text-format fallback (Postgres infers the
+// target type from the prepared statement, so an unregistered scalar enum
+// still round-trips). An array of an unregistered element type does not:
+// pgx has no codec to build the array's wire encoding from, and fails with
+// "unable to encode ... into text format for unknown type (OID ...): cannot
+// find encode plan" on every write. Add a name here if a future migration
+// adds another enum array column.
+func registerEnumArrayTypes(ctx context.Context, conn *pgx.Conn, names ...string) error {
+	for _, name := range names {
+		t, err := conn.LoadType(ctx, name)
+		if err != nil {
+			return fmt.Errorf("loading type %s: %w", name, err)
+		}
+		conn.TypeMap().RegisterType(t)
+
+		arrayName := "_" + name
+		arrayType, err := conn.LoadType(ctx, arrayName)
+		if err != nil {
+			return fmt.Errorf("loading type %s: %w", arrayName, err)
+		}
+		conn.TypeMap().RegisterType(arrayType)
+	}
+	return nil
 }
 
 func orDefaultI32(v, def int32) int32 {

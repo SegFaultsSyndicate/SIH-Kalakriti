@@ -18,7 +18,7 @@
   import { db, type MediaRecord } from '@kalakriti/offline';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields, addCapturedMedia, removeCapturedMedia, ensureListingCreateQueued } from '$lib/listing-draft';
-  import { CRAFTS } from '$lib/ontology';
+  import { loadCrafts, type Craft } from '$lib/ontology';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
@@ -26,10 +26,12 @@
   let craftId = $state('');
   let workingTitle = $state('');
   let voice = $state<MediaRecord | undefined>(undefined);
+  let crafts = $state<Craft[]>([]);
+  $effect(() => void loadCrafts().then((c) => (crafts = c)));
 
   const craftOptions = $derived([
     { value: '', label: t('listing.story.craftPlaceholder') },
-    ...CRAFTS.map((craft) => ({ value: craft.id, label: t(craft.nameKey) })),
+    ...crafts.map((craft) => ({ value: craft.id, label: craft.displayName })),
   ]);
 
   $effect(() => {
