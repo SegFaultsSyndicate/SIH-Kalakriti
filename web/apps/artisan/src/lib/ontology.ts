@@ -40,6 +40,29 @@ export interface Craft {
 
 const CRAFTS_CACHE_KEY = 'ontology.crafts';
 
+// Fallback shown when the backend is unreachable and there's no cached
+// fetch yet (fresh install, or first run offline) -- this is the original
+// static list from before /crafts existed. Its ids are slugs, not real
+// ontology UUIDs, so a submission made against this list will fail
+// POST /artisans' craft_ids validation once it reaches a live backend --
+// it exists purely so the picker isn't empty during local frontend work
+// with no backend running. Network data always wins once available.
+const OFFLINE_FALLBACK_CRAFTS: readonly Craft[] = [
+  { id: 'weaving', slug: 'weaving', displayName: 'Weaving', icon: 'weaving' },
+  { id: 'block-printing', slug: 'block-printing', displayName: 'Block Printing', icon: 'block-printing' },
+  { id: 'pottery', slug: 'pottery', displayName: 'Pottery', icon: 'pottery' },
+  { id: 'metalwork', slug: 'metalwork', displayName: 'Metalwork', icon: 'metalwork' },
+  { id: 'woodwork', slug: 'woodwork', displayName: 'Woodwork', icon: 'woodwork' },
+  { id: 'embroidery', slug: 'embroidery', displayName: 'Embroidery', icon: 'embroidery' },
+  { id: 'painting', slug: 'painting', displayName: 'Painting', icon: 'painting' },
+  { id: 'basketry', slug: 'basketry', displayName: 'Basketry', icon: 'basketry' },
+  { id: 'jewellery', slug: 'jewellery', displayName: 'Jewellery', icon: 'jewellery' },
+  { id: 'leather', slug: 'leather', displayName: 'Leather', icon: 'leather' },
+  { id: 'stone', slug: 'stone', displayName: 'Stone Carving', icon: 'stone' },
+  { id: 'bamboo', slug: 'bamboo', displayName: 'Bamboo Craft', icon: 'bamboo' },
+  { id: 'other', slug: 'other', displayName: 'Something else', icon: 'more-horizontal' },
+];
+
 /** slug/display-name substring -> icon, checked in order; first match wins. */
 const ICON_KEYWORDS: readonly (readonly [string, IconName])[] = [
   ['weav', 'weaving'],
@@ -107,7 +130,7 @@ export async function loadCrafts(): Promise<Craft[]> {
     return crafts;
   } catch {
     const cached = await getCached<Craft[]>(CRAFTS_CACHE_KEY);
-    return cached ?? [];
+    return cached ?? OFFLINE_FALLBACK_CRAFTS;
   }
 }
 

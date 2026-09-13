@@ -141,6 +141,17 @@ body::-webkit-scrollbar {
     font-size: var(--k-text-sm);
   }
 
+  .shell__search-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    flex: none;
+    border-radius: var(--k-radius-md);
+    color: var(--k-text-primary);
+  }
+
   .shell__main {
     inline-size: min(100% - (2 * var(--k-gutter)), var(--k-container-buyer));
     margin-inline: auto;
@@ -188,6 +199,10 @@ body::-webkit-scrollbar {
 
     .shell__search-inline {
       display: none;
+    }
+
+    .shell__search-toggle {
+      display: flex;
     }
 
     /* Below this width the crest carries the brand alone -- with hamburger,

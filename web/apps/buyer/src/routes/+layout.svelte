@@ -154,6 +154,9 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
+      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')}>
+        <Icon name="search" size="1.1rem" />
+      </a>
       <!-- AccountMenu last: its popover anchors flush to *its own* right
            edge (inset-inline-end: 0 relative to the trigger), so it only
            avoids running off the left edge of a phone screen if nothing
