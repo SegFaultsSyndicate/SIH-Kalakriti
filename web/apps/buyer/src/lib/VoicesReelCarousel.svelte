@@ -283,7 +283,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     position: relative;
     box-sizing: border-box;
     overflow: hidden;
@@ -311,8 +311,8 @@
     width: 1.15rem;
     height: 1.15rem;
     border-radius: 50%;
-    background-color: var(--k-terracotta-700);
-    color: var(--k-khadi-50);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -359,7 +359,7 @@
   .video-wrapper {
     inline-size: 100%;
     aspect-ratio: 16 / 9;
-    background-color: var(--k-ink-950);
+    background-color: var(--k-surface-inverse);
     border-radius: var(--k-radius-sm);
     overflow: hidden;
   }

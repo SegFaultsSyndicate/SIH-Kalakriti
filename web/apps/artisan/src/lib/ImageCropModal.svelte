@@ -518,7 +518,7 @@
   }
 
   .crop-action-btn:hover {
-    background-color: var(--k-khadi-200);
+    background-color: var(--k-surface-pressed);
     color: var(--k-text-primary);
     border-color: var(--k-terracotta-600);
   }
@@ -531,6 +531,6 @@
     gap: var(--k-space-2);
     width: 100%;
     padding-block-start: var(--k-space-2);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 </style>

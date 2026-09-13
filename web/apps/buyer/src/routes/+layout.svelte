@@ -262,7 +262,7 @@
   .shell__nav-link {
     font-size: var(--k-text-sm, 0.875rem);
     font-weight: 600;
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-radius: var(--k-radius-sm, 4px);
@@ -271,7 +271,7 @@
   }
 
   .shell__nav-link:hover {
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     background-color: rgba(244, 240, 234, 0.9);
   }
 </style>

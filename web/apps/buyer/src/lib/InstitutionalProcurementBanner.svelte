@@ -205,7 +205,7 @@
 
   .calc-slider {
     inline-size: 100%;
-    accent-color: var(--k-terracotta-700);
+    accent-color: var(--k-accent-primary-text);
     cursor: pointer;
   }
 

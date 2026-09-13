@@ -906,9 +906,9 @@
   /* --- Top Hero Section --- */
   .profile-hero {
     position: relative;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     padding: var(--k-space-5);
     overflow: hidden;
   }
@@ -960,14 +960,14 @@
     font-weight: var(--k-weight-medium);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     color: var(--k-terracotta-800);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
 
   .avatar-ctrl-btn:hover {
-    background-color: var(--k-khadi-200);
+    background-color: var(--k-surface-pressed);
     border-color: var(--k-terracotta-700);
   }
 
@@ -991,8 +991,8 @@
     flex-shrink: 0;
     border: 3px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-terracotta-700);
-    color: var(--k-khadi-50);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     box-shadow: 0 0 0 2px var(--k-terracotta-400);
   }
 
@@ -1112,7 +1112,7 @@
 
   .profile-hero__role {
     margin: 0;
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-md);
     font-weight: var(--k-weight-medium);
   }
@@ -1139,7 +1139,7 @@
     margin-block-start: var(--k-space-1);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-primary);
     font-size: var(--k-text-sm);
   }
@@ -1152,7 +1152,7 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-4);
     padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .profile-btn-ghost {
@@ -1170,7 +1170,7 @@
   }
 
   .profile-btn-ghost:hover {
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-primary);
   }
 
@@ -1233,9 +1233,9 @@
     align-items: center;
     gap: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
   }
 
   .trust-badge__text {
@@ -1258,9 +1258,9 @@
   .profile-metrics-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -1276,8 +1276,8 @@
     align-items: center;
     text-align: center;
     padding: var(--k-space-4) var(--k-space-3);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-200);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200);
+    border-inline-end: var(--k-hairline) solid var(--k-border-hairline);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   @media (min-width: 720px) {
@@ -1293,7 +1293,7 @@
   .metric-item__value {
     font-size: var(--k-text-xl);
     font-weight: var(--k-weight-bold);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-variant-numeric: tabular-nums;
   }
 
@@ -1320,9 +1320,9 @@
 
   /* --- General Profile Cards --- */
   .profile-card {
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     padding: var(--k-space-5);
   }
 
@@ -1349,7 +1349,7 @@
     padding: 0.2rem var(--k-space-2);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-secondary);
     font-size: var(--k-text-xs);
     font-family: monospace;
@@ -1379,9 +1379,9 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .detail-tile__label {
@@ -1415,9 +1415,9 @@
     display: flex;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .tool-tile__icon-wrap {
@@ -1428,8 +1428,8 @@
     block-size: 2.75rem;
     flex-shrink: 0;
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
-    color: var(--k-terracotta-700);
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-primary-text);
   }
 
   .tool-tile__content {
@@ -1460,7 +1460,7 @@
     padding: var(--k-space-2) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-indigo-300);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     color: var(--k-indigo-700);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
@@ -1488,7 +1488,7 @@
     padding: var(--k-space-2) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
@@ -1499,8 +1499,8 @@
 
   .lang-pill--active {
     border-color: var(--k-terracotta-700);
-    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-khadi-100));
-    color: var(--k-terracotta-700);
+    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-surface-raised));
+    color: var(--k-accent-primary-text);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -1525,7 +1525,7 @@
     gap: var(--k-space-1);
     background: transparent;
     border: var(--k-hairline) solid var(--k-stone-300);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
     cursor: pointer;
@@ -1535,7 +1535,7 @@
   }
 
   .lang-more-btn:hover {
-    background-color: var(--k-khadi-200);
+    background-color: var(--k-surface-pressed);
     border-color: var(--k-terracotta-700);
   }
 
@@ -1547,7 +1547,7 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
     padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .a11y-quick-btn {
@@ -1557,7 +1557,7 @@
     padding: var(--k-space-1) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     color: var(--k-text-primary);
     font-size: var(--k-text-xs);
     cursor: pointer;
@@ -1582,9 +1582,9 @@
     justify-content: space-between;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .session-info {

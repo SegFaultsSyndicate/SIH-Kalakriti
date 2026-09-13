@@ -196,7 +196,7 @@
     padding: var(--k-space-3) var(--k-space-5);
     border: var(--k-hairline) solid var(--k-border-interactive);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     cursor: text;
     inline-size: 100%;
     max-inline-size: 22rem;

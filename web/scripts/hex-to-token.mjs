@@ -146,6 +146,8 @@ const HEX = /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g;
 
 let converted = 0;
 const unmapped = new Map(); // hex -> count
+const unaliasedSteps = new Map(); // raw step -> count, no semantic alias for its role
+let stepCount = 0;
 const perFile = [];
 
 for (const file of svelteFiles(ROOT)) {
@@ -178,16 +180,44 @@ for (const file of svelteFiles(ROOT)) {
     return decl.replace(value, rewritten);
   });
 
-  if (fileCount > 0) {
+  // Second pass: a raw palette step is as banned as a hex -- it pins the
+  // component to one theme's value. Swap it for the alias that plays its role.
+  // A step with no alias (illustration mid-tones, chart series) has no semantic
+  // equivalent and is left as-is.
+  const next2 = next.replace(/([a-z-]+)\s*:\s*([^;{}]*)/g, (decl, prop, value) => {
+    if (!/var\(--k-[a-z]+-\d+\)/.test(value)) return decl;
+    const rewritten = value.replace(/var\((--k-[a-z]+-\d+)\)/g, (whole, step) => {
+      // Only colour families. --k-space-4 and friends are scale tokens and
+      // are exactly what a component is supposed to reference.
+      if (!steps.has(step)) return whole;
+      const candidates = aliasesForStep.get(step) ?? [];
+      const alias = candidates.find(ROLE_MATCH[roleOf(prop)]);
+      if (!alias) {
+        unaliasedSteps.set(step, (unaliasedSteps.get(step) ?? 0) + 1);
+        return whole;
+      }
+      stepCount++;
+      return `var(${alias})`;
+    });
+    return decl.replace(value, rewritten);
+  });
+
+  if (fileCount > 0 || next2 !== next) {
     converted += fileCount;
     perFile.push([relative('.', file).replace(/\\/g, '/'), fileCount]);
-    if (WRITE) writeFileSync(file, head + next + tail);
+    if (WRITE) writeFileSync(file, head + next2 + tail);
   }
 }
 
 perFile.sort((a, b) => b[1] - a[1]);
 for (const [f, n] of perFile) console.log(`${String(n).padStart(4)}  ${f}`);
 console.log(`\n${converted} hex literals ${WRITE ? 'converted' : 'convertible'} across ${perFile.length} files`);
+console.log(`${stepCount} raw palette steps ${WRITE ? 'converted' : 'convertible'} to semantic aliases`);
+const noAlias = [...unaliasedSteps].sort((a, b) => b[1] - a[1]);
+console.log(
+  `${noAlias.reduce((s, [, n]) => s + n, 0)} raw steps left: no alias plays their role in that property`,
+);
+for (const [step, n] of noAlias.slice(0, 20)) console.log(`  ${step} x${n}`);
 
 const left = [...unmapped].sort((a, b) => b[1] - a[1]);
 const leftTotal = left.reduce((s, [, n]) => s + n, 0);
