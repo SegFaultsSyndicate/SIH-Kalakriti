@@ -837,7 +837,7 @@
 
   .gi-page-subtitle {
     font-size: 0.85rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     margin: 0;
   }
 
@@ -892,7 +892,7 @@
   }
 
   .filter-accordion {
-    border-block-end: 1px solid var(--k-stone-200, var(--k-surface-sunken));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
     padding-block: 0.85rem;
   }
 
@@ -954,7 +954,7 @@
 
   .option-count {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
   }
 
   /* 12 Color Swatches Grid (Image 4) */
@@ -1025,7 +1025,7 @@
     background-color: var(--k-surface-base);
     border: none;
     padding: 0.4rem 0.5rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1068,7 +1068,7 @@
 
   .sort-label {
     font-size: 0.82rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .active-filter-pill {
@@ -1127,7 +1127,7 @@
   /* CARD STYLING */
   .gi-product-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -1138,7 +1138,7 @@
   .gi-product-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    border-color: var(--k-accent-primary-bg);
+    border-color: var(--k-terracotta-700);
   }
 
   .gi-media-frame {
@@ -1172,7 +1172,7 @@
     border-radius: 999px;
     padding: 0.2rem 0.5rem 0.2rem 0.25rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
   }
 
   .gi-tag-num {
@@ -1190,7 +1190,7 @@
     border-radius: 50%;
     background-color: var(--k-surface-base);
     border: 1px solid var(--k-border-hairline);
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1229,7 +1229,7 @@
 
   .state-chip {
     font-size: 0.68rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .gi-product-title {
@@ -1251,7 +1251,7 @@
 
   .artisan-byline {
     font-size: 0.78rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0 0 0.75rem 0;
   }
 
@@ -1346,7 +1346,7 @@
     background-color: var(--k-surface-base);
     border: 1px dashed var(--k-border-hairline);
     border-radius: 6px;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .no-results-panel h3 {

@@ -316,7 +316,7 @@
     justify-content: space-between;
     width: 100%;
     padding-block-end: var(--k-space-2);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-surface-sunken));
+    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-khadi-150));
   }
 
   .crop-header__text {
@@ -367,7 +367,7 @@
     overflow: hidden;
     margin-block: var(--k-space-2);
     border-radius: var(--k-radius-md, 8px);
-    background-color: var(--k-text-primary);
+    background-color: var(--k-ink-900);
     cursor: grab;
     touch-action: none;
   }

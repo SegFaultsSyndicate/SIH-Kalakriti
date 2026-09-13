@@ -74,8 +74,8 @@
 <style>
   .craft-categories-section {
     padding-block: 2.5rem;
-    border-block-start: 1px solid var(--k-surface-sunken);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-khadi-150);
     background-color: var(--k-surface-base);
     margin-block: 1rem;
   }
@@ -114,7 +114,7 @@
 
   .section-subtitle {
     font-size: 0.9rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     line-height: 1.5;
     margin: 0;
   }
@@ -130,7 +130,7 @@
     padding: 0.5rem 0.85rem;
     border-radius: 6px;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     transition: all 0.15s ease;
   }
 
@@ -168,7 +168,7 @@
     flex-direction: column;
     justify-content: space-between;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 10px;
     padding: 1.25rem;
     text-decoration: none;
@@ -210,7 +210,7 @@
     block-size: 2.6rem;
     border-radius: 8px;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -231,7 +231,7 @@
     background-color: var(--k-surface-raised);
     padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
   }
 
   .craft-card__body {
@@ -283,7 +283,7 @@
     align-items: center;
     justify-content: space-between;
     padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--k-surface-raised);
+    border-block-start: 1px solid var(--k-khadi-100);
     font-size: 0.725rem;
   }
 
@@ -291,7 +291,7 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .craft-card__cta {

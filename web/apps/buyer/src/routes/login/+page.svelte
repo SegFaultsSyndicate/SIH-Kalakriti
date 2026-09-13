@@ -368,7 +368,7 @@
     inline-size: 100%;
     max-inline-size: 32rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-surface-pressed));
+    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
     overflow: hidden;
@@ -378,7 +378,7 @@
     padding: 1.75rem 2rem 1.25rem;
     text-align: center;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .auth-brand {
@@ -411,7 +411,7 @@
   .brand-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -426,7 +426,7 @@
 
   .auth-desc {
     font-size: 0.85rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0;
   }
 
@@ -437,7 +437,7 @@
     background-color: var(--k-surface-raised);
     padding: 0.35rem;
     gap: 0.35rem;
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .portal-tab {
@@ -472,7 +472,7 @@
 
   .portal-tab.is-active {
     background-color: var(--k-surface-base);
-    border-color: var(--k-surface-pressed);
+    border-color: var(--k-khadi-200);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
@@ -495,7 +495,7 @@
 
   .portal-label small {
     font-size: 0.65rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   /* Form Panels */
@@ -519,7 +519,7 @@
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.85rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
@@ -589,7 +589,7 @@
   .otp-send-btn {
     padding: 0.65rem 0.9rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -658,7 +658,7 @@
   .panel-footer {
     margin-block-start: 1.5rem;
     padding-block-start: 1.25rem;
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
     text-align: center;
   }
 
@@ -693,7 +693,7 @@
 
   .portal-subtext {
     font-size: 0.825rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     line-height: 1.45;
     margin-block-end: 1.25rem;
   }
@@ -706,7 +706,7 @@
     background-color: var(--k-surface-base);
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     margin-block-end: 1.5rem;
   }
 

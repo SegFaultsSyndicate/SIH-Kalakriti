@@ -497,7 +497,7 @@
     position: relative;
     inline-size: 100%;
     background-color: var(--k-surface-base, var(--k-surface-base));
-    border-block-end: 1px solid var(--k-border-hairline, var(--k-surface-sunken));
+    border-block-end: 1px solid var(--k-border-hairline, var(--k-khadi-150));
     z-index: 40;
     font-family: inherit;
   }
@@ -577,7 +577,7 @@
   .k-main-header {
     padding: 0.85rem 1rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-stone-200, var(--k-surface-sunken));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
   }
 
   .k-main-header-container {
@@ -639,7 +639,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     font-weight: 500;
   }
 
@@ -798,7 +798,7 @@
   .k-nav-link:hover,
   .k-nav-link.active {
     background-color: var(--k-surface-base);
-    border-block-end-color: var(--k-accent-primary-bg); /* Saffron underline */
+    border-block-end-color: var(--k-terracotta-700); /* Saffron underline */
     color: var(--k-accent-primary-text);
   }
 
@@ -838,7 +838,7 @@
   .mega-col {
     display: flex;
     flex-direction: column;
-    border-inline-end: 1px solid var(--k-surface-raised);
+    border-inline-end: 1px solid var(--k-khadi-100);
     padding-inline-end: 0.85rem;
   }
 
@@ -854,7 +854,7 @@
     margin: 0 0 0.65rem 0;
     letter-spacing: 0.04em;
     line-height: 1.3;
-    border-block-end: 1.5px solid var(--k-surface-sunken);
+    border-block-end: 1.5px solid var(--k-khadi-150);
     padding-block-end: 0.35rem;
   }
 
@@ -953,7 +953,7 @@
 
   .dropdown-block-link span {
     font-size: 0.72rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
   }
 
   /* Mobile Drawer Overlay */
@@ -1008,7 +1008,7 @@
 
   .mobile-cat-link {
     padding: 0.65rem 0.5rem;
-    border-block-end: 1px solid var(--k-stone-200, var(--k-surface-sunken));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
     color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.9rem;

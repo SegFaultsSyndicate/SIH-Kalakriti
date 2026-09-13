@@ -271,7 +271,7 @@
     display: flex;
     align-items: center;
     gap: var(--k-space-3);
-    background: linear-gradient(135deg, var(--k-neem-600), var(--k-accent-success));
+    background: linear-gradient(135deg, var(--k-neem-600), var(--k-neem-700));
     color: var(--k-text-on-accent);
     padding: var(--k-space-3) var(--k-space-4);
     border-radius: var(--k-radius-md);
@@ -481,7 +481,7 @@
     border-radius: var(--k-radius-md);
     background: var(--k-surface-base);
     border: 1px solid var(--k-neem-300);
-    color: var(--k-accent-success);
+    color: var(--k-neem-700);
     font-size: var(--k-text-xs);
     line-height: var(--k-leading-normal);
   }

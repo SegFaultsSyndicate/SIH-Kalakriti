@@ -460,7 +460,7 @@
 
   /* 1. Trust Assurance Strip */
   .footer-trust-strip {
-    background-color: var(--k-text-primary);
+    background-color: var(--k-ink-900);
     border-block-end: 1px solid rgba(255, 255, 255, 0.07);
     padding-block: 1.25rem;
   }
@@ -648,7 +648,7 @@
     aspect-ratio: 1;
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.06);
-    color: var(--k-border-hairline);
+    color: var(--k-stone-200);
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
 
@@ -767,7 +767,7 @@
     gap: 0.3rem;
     background: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    color: var(--k-border-hairline);
+    color: var(--k-stone-200);
     font-size: 0.68rem;
     font-weight: 500;
     padding: 0.18rem 0.5rem;
@@ -824,7 +824,7 @@
 
   .seo-keyword-link {
     font-size: 0.7125rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     text-decoration: none;
     transition: color 0.15s ease;
   }
@@ -855,7 +855,7 @@
     flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.72rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .bottom-legal {
@@ -867,7 +867,7 @@
   }
 
   .bottom-legal strong {
-    color: var(--k-border-hairline);
+    color: var(--k-stone-200);
     font-weight: 600;
   }
 

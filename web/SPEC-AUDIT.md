@@ -23,7 +23,7 @@ Verification after every fix below: `svelte-check` across all three apps
 | 8 | BATCH 0: TypeScript strict, no `any` | `artisan/routes/profile/+page.svelte` | Two `catch (err: any)` → `unknown`, narrowed through `ApiError`. |
 | 9 | BANNED: emoji as icons or bullets, anywhere | 9 files | 🏛️ 📍 🎖️ 💡 📖 ⚡ 🎪 📅 💳 🏦 🧵 🧣 🏺 🛍️ 🛡️ and two ★ bullets replaced with `packages/icons` components or dropped. ✓ ✕ ➔ left: dingbats in prose, not icons. |
 | 10 | BATCH 2/3: a component may not reference a raw colour | 33 files, `<style>` blocks | 898 of 901 hex literals mapped to semantic aliases. Kept literal: the tricolour saffron `#FF9933` and green `#138808`, and WhatsApp's `#25D366` — brand and flag colours are reproduced exactly or not at all. |
-| 11 | BATCH 2/3: same, for raw palette steps | 30 files | 46 of 391 raw `--k-<family>-<step>` references swapped for the semantic alias playing their role. The other 345 are blocked — see gap G1. |
+| 11 | BATCH 2/3: same, for raw palette steps | 30 files | 46 raw `--k-<family>-<step>` references swapped for the semantic alias playing their role. The other 515 are blocked — see gap G1. |
 
 The colour work is a codemod, `scripts/hex-to-token.mjs`, kept in the repo so
 the mapping is reviewable and re-runnable rather than a one-off hand edit. It
@@ -37,12 +37,13 @@ token and invert under dark mode.
 ## Gaps: specified but not implemented
 
 **G1 — the semantic token layer has no room for half its own uses.**
-345 raw palette-step references cannot be converted because no alias plays
+515 raw palette-step references cannot be converted because no alias plays
 their role: there is `--k-accent-danger` (text) but no danger *background*, no
-hover step, no decorative border role. A component wanting a danger fill has
+hover step, no decorative border role. The codemod deliberately refuses to borrow an alias from another role to fill the hole: a `color` given `--k-surface-raised` reads correctly in the light theme and then turns light exactly where the background does. It emits the raw step instead and counts it here. A component wanting a danger fill has
 nowhere to go but the raw scale, so BATCH 2's "never reference a raw palette
-step" is unfollowable as the palette currently stands. Worst: `--k-madder-600`
-×60, `--k-neem-600` ×40, `--k-stone-100` ×38, `--k-madder-800` ×34. Fix is
+step" is unfollowable as the palette currently stands. Worst: `--k-stone-500`
+×60, `--k-madder-600` ×60, `--k-khadi-150` ×42, `--k-neem-600` ×40,
+`--k-stone-100` ×38, `--k-madder-800` ×34. Fix is
 adding the missing aliases to `palette.css` with measured ratios — a palette
 decision with contrast consequences, so not guessed at here.
 
@@ -54,7 +55,10 @@ its own inline `verificationPageCSS` with hex values copied literally and a
 `.k-verify` class tree, while `web/packages/patterns/provenance.css` (119 lines,
 token-based, `.k-provenance`) is referenced by nothing. Two stylesheets for one
 page, drifting independently. The "we cannot verify this tag" state does exist,
-on the Go side only.
+on the Go side only. Checked: the Go file's hex values (`#FCFAF6`, `#241E1A`,
+`#254D21`, `#93011E`, `#554B44`) still each match a palette step exactly, so the
+drift has not happened *yet* — but nothing in the build would catch it when it
+does, and the Go copy has no dark or high-contrast theme at all.
 
 **G3 — bundle budgets do not fail the build by default.**
 BATCH 14 asks for budgets enforced in CI, failing on regression. The reporter

@@ -292,7 +292,7 @@
 
   .voice-row :global(button) {
     background: var(--k-surface-base) !important;
-    color: var(--k-surface-inverse) !important;
+    color: var(--k-ink-950) !important;
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border: none;

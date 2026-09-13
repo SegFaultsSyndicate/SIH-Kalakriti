@@ -252,7 +252,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-block-end: 2px solid var(--k-accent-primary-bg);
+    border-block-end: 2px solid var(--k-terracotta-700);
     padding-block-end: var(--k-space-2);
   }
 
@@ -330,7 +330,7 @@
   .preview-id {
     font-size: 0.65rem;
     font-weight: 700;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .preview-qr-box {
@@ -370,7 +370,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.62rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .preview-url {
@@ -444,7 +444,7 @@
       block-size: 2in;
     }
     :global(.preview-card) {
-      border: 2px solid var(--k-accent-primary-bg) !important;
+      border: 2px solid var(--k-terracotta-700) !important;
       box-shadow: none;
     }
   }

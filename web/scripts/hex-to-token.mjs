@@ -127,7 +127,11 @@ function tokenFor(hex, prop = '') {
   if (delta > MAX_DELTA) return { token: null, delta, step: step.name };
   const candidates = aliasesForStep.get(step.name) ?? [];
   const role = roleOf(prop);
-  const alias = candidates.find(ROLE_MATCH[role]) ?? candidates.find(ROLE_MATCH.any);
+  // No cross-role fallback. An alias from the wrong role reads correctly in the
+  // light theme and then inverts: a `color` given --k-surface-raised turns dark
+  // text light exactly where the background also went dark. Better a raw step,
+  // which is at least theme-static, and counted honestly against gap G1.
+  const alias = candidates.find(ROLE_MATCH[role]);
   return { token: `var(${alias ?? step.name})`, delta, step: step.name, aliased: Boolean(alias) };
 }
 

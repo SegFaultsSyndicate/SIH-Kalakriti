@@ -318,7 +318,7 @@
 
   .grievance-icon {
     background-color: rgba(22, 101, 52, 0.1);
-    color: var(--k-accent-success);
+    color: var(--k-neem-700);
   }
 
   .help-card__tag {
@@ -327,7 +327,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .help-card__title {
@@ -391,7 +391,7 @@
 
   .form-subtext {
     font-size: 0.85rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0 0 1.5rem 0;
   }
 
@@ -451,7 +451,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    background-color: var(--k-accent-danger);
+    background-color: var(--k-madder-700);
     color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.925rem;
@@ -496,7 +496,7 @@
   .alert-body h4 {
     margin: 0 0 0.35rem 0;
     font-size: 1rem;
-    color: var(--k-accent-success);
+    color: var(--k-neem-700);
   }
 
   .alert-body p {
@@ -578,7 +578,7 @@
 
   .whatsapp-desc {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     line-height: 1.4;
     margin: 0;
   }

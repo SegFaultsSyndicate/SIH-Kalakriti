@@ -315,7 +315,7 @@
     padding: 0.35rem 0.6rem;
     border-radius: 4px;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     color: var(--k-madder-800);
     font-size: 0.72rem;
     font-weight: 700;
@@ -335,7 +335,7 @@
     gap: 0.25rem;
     padding: 0.35rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     background-color: var(--k-surface-base);
     color: var(--k-stone-600);
     font-size: 0.7rem;
@@ -454,7 +454,7 @@
 
   .listing-card__mrp {
     font-size: var(--k-text-xs, 0.75rem);
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     text-decoration: line-through;
   }
 

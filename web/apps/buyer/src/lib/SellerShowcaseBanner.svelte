@@ -275,7 +275,7 @@
 
   .perk-meta span {
     font-size: 0.775rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     line-height: 1.35;
   }
 
@@ -291,7 +291,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    background-color: var(--k-accent-danger); /* Refined deep madder red matching government craft initiatives */
+    background-color: var(--k-madder-700); /* Refined deep madder red matching government craft initiatives */
     color: var(--k-text-on-accent);
     font-size: 0.95rem;
     font-weight: 700;
@@ -309,7 +309,7 @@
 
   .seller-helper-text {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     font-style: italic;
   }
 
@@ -426,7 +426,7 @@
 
   .seller-cluster {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-border-interactive));
+    color: var(--k-text-secondary, var(--k-stone-500));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -473,7 +473,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     text-transform: uppercase;
   }
 </style>

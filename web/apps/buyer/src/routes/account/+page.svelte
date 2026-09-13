@@ -1112,7 +1112,7 @@
     gap: 1.5rem;
     padding: 1.5rem 1.75rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-surface-pressed));
+    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
     border-radius: 14px;
     margin-block: 1rem 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1137,7 +1137,7 @@
     border-radius: 50%;
     background-color: var(--k-surface-sunken);
     color: var(--k-madder-600);
-    border: 2px solid var(--k-surface-pressed);
+    border: 2px solid var(--k-khadi-200);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1203,8 +1203,8 @@
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
     background-color: var(--k-surface-raised);
-    color: var(--k-border-interactive);
-    border: 1px solid var(--k-surface-pressed);
+    color: var(--k-stone-500);
+    border: 1px solid var(--k-khadi-200);
   }
 
   .profile-contact-strip {
@@ -1213,7 +1213,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.825rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .contact-item {
@@ -1223,7 +1223,7 @@
   }
 
   .contact-divider {
-    color: var(--k-surface-pressed);
+    color: var(--k-khadi-200);
   }
 
   .verified-dot {
@@ -1271,7 +1271,7 @@
     justify-content: center;
     padding: 0.65rem 1rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 10px;
     min-inline-size: 5.5rem;
   }
@@ -1286,7 +1286,7 @@
   .telemetry-label {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-block-start: 0.15rem;
@@ -1321,7 +1321,7 @@
     gap: 1rem;
     padding: 1.25rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 12px;
     text-decoration: none;
     color: inherit;
@@ -1351,7 +1351,7 @@
     border-radius: 10px;
     background-color: var(--k-surface-base);
     color: var(--k-madder-600);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     flex: none;
   }
 
@@ -1370,7 +1370,7 @@
 
   .card-desc {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     line-height: 1.35;
     margin: 0;
   }
@@ -1378,7 +1378,7 @@
   /* Sub-Panels Section */
   .account-details-container {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1389,7 +1389,7 @@
     gap: 0.5rem;
     padding: 0.85rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
     overflow-x: auto;
   }
 
@@ -1403,7 +1403,7 @@
     border: 1px solid transparent;
     font-weight: 600;
     font-size: 0.825rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.15s ease;
@@ -1432,7 +1432,7 @@
     gap: 1rem;
     margin-block-end: 1.75rem;
     padding-block-end: 1rem;
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .panel-title {
@@ -1445,7 +1445,7 @@
 
   .panel-desc {
     font-size: 0.85rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0.2rem 0 0;
   }
 
@@ -1530,7 +1530,7 @@
   .action-inline-btn {
     padding: 0.65rem 0.85rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 8px;
     font-size: 0.775rem;
     font-weight: 600;
@@ -1631,7 +1631,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .default-badge {
@@ -1657,7 +1657,7 @@
 
   .addr-phone {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0 0 0.35rem;
   }
 
@@ -1676,7 +1676,7 @@
     gap: 0.5rem;
     margin-block-start: auto;
     padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
   }
 
   .addr-text-btn {
@@ -1694,7 +1694,7 @@
   }
 
   .btn-divider {
-    color: var(--k-surface-pressed);
+    color: var(--k-khadi-200);
     font-size: 0.75rem;
   }
 
@@ -1738,7 +1738,7 @@
 
   .new-address-placeholder-card small {
     font-size: 0.75rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin-block-start: 0.2rem;
   }
 
@@ -1746,13 +1746,13 @@
   .security-sections {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 10px;
     margin-block-end: 2rem;
   }
 
   .security-sections > * + * {
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
   }
 
   .banner-signout-btn {
@@ -1763,7 +1763,7 @@
     background: transparent;
     border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -1797,7 +1797,7 @@
 
   .sec-meta span {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .sec-edit-btn {
@@ -1819,7 +1819,7 @@
     cursor: pointer;
     border: 1px solid var(--k-border-hairline);
     background-color: var(--k-surface-raised);
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .sec-toggle-btn.is-enabled {
@@ -1832,7 +1832,7 @@
   .active-sessions-block,
   .dpdp-privacy-block {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 10px;
     padding: 1.25rem;
     margin-block-end: 1.5rem;
@@ -1855,7 +1855,7 @@
 
   .block-sub {
     font-size: 0.75rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0.15rem 0 0;
   }
 
@@ -1885,7 +1885,7 @@
     gap: 0.75rem;
     padding: 0.75rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     border-radius: 8px;
   }
 
@@ -1932,7 +1932,7 @@
 
   .sess-loc {
     font-size: 0.725rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .sess-time {
@@ -1973,7 +1973,7 @@
   }
 
   .order-rail-card {
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 12px;
     background-color: var(--k-surface-base);
     overflow: hidden;
@@ -1985,7 +1985,7 @@
     justify-content: space-between;
     padding: 0.85rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .order-id {
@@ -1997,7 +1997,7 @@
 
   .order-date {
     font-size: 0.75rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .rail-price-wrap {
@@ -2041,7 +2041,7 @@
     block-size: 5.5rem;
     object-fit: cover;
     border-radius: 8px;
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     flex: none;
   }
 
@@ -2061,7 +2061,7 @@
 
   .rail-artisan {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0;
   }
 
@@ -2104,7 +2104,7 @@
     gap: 0.75rem;
     padding: 0.75rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
   }
 
   .rail-action-link {
@@ -2115,7 +2115,7 @@
   }
 
   .dot-sep {
-    color: var(--k-border-hairline);
+    color: var(--k-stone-200);
   }
 
   .rail-invoice-btn {
@@ -2133,7 +2133,7 @@
 
   /* Consultation Card */
   .consultation-card {
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 12px;
     padding: 1.5rem;
     background-color: var(--k-surface-base);
@@ -2153,13 +2153,13 @@
     border-radius: 999px;
     background-color: var(--k-surface-pressed);
     color: var(--k-accent-primary-text);
-    border: 1px solid var(--k-accent-warning-bg);
+    border: 1px solid var(--k-haldi-300);
   }
 
   .consult-type {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .artisan-preview {
@@ -2179,7 +2179,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
   }
 
   .artisan-head-name {
@@ -2191,7 +2191,7 @@
 
   .artisan-guild {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0;
   }
 
@@ -2201,7 +2201,7 @@
     background-color: var(--k-surface-base);
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     line-height: 1.45;
   }
 
@@ -2228,7 +2228,7 @@
   .reschedule-btn {
     padding: 0.65rem 1.25rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.85rem;
@@ -2268,7 +2268,7 @@
     justify-content: space-between;
     padding: 1.15rem 1.5rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .modal-title {
@@ -2283,7 +2283,7 @@
     background: transparent;
     border: none;
     font-size: 1.1rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     cursor: pointer;
   }
 
@@ -2296,7 +2296,7 @@
 
   .modal-desc {
     font-size: 0.825rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0;
     line-height: 1.4;
   }
@@ -2314,7 +2314,7 @@
     gap: 0.65rem;
     padding: 1rem 1.5rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
   }
 
   .modal-cancel-btn {

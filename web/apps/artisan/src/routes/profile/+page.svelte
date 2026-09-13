@@ -976,7 +976,7 @@
   }
 
   .avatar-ctrl-btn--danger:hover {
-    color: var(--k-accent-danger);
+    color: var(--k-madder-700);
     border-color: var(--k-madder-400);
     background-color: var(--k-surface-base);
   }
@@ -1644,7 +1644,7 @@
 
   .email-text-input:focus {
     outline: none;
-    border-color: var(--k-terracotta-600, var(--k-accent-primary-bg));
+    border-color: var(--k-terracotta-600, var(--k-terracotta-700));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 
@@ -1727,7 +1727,7 @@
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
     background-color: var(--k-stone-100);
-    color: var(--k-accent-danger);
+    color: var(--k-madder-700);
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-xs);
   }
@@ -1780,7 +1780,7 @@
   }
 
   .phone-otp-field:focus {
-    border-color: var(--k-terracotta-600, var(--k-accent-primary-bg));
+    border-color: var(--k-terracotta-600, var(--k-terracotta-700));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 

@@ -363,7 +363,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-block-end: 2px solid var(--k-accent-primary-bg);
+    border-block-end: 2px solid var(--k-terracotta-700);
     padding-block-end: var(--k-space-3);
     flex-wrap: wrap;
     gap: var(--k-space-2);
@@ -385,7 +385,7 @@
   .gov-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     letter-spacing: 0.04em;
   }
 
@@ -543,7 +543,7 @@
 
   .badge-text small {
     font-size: 0.65rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   /* Mini Catalog */
@@ -671,7 +671,7 @@
     justify-content: center;
     gap: 4px;
     font-size: 0.65rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     font-weight: 600;
   }
 
@@ -702,7 +702,7 @@
     }
     :global(.visiting-card) {
       box-shadow: none !important;
-      border: 2px solid var(--k-accent-primary-bg) !important;
+      border: 2px solid var(--k-terracotta-700) !important;
       padding: 8px !important;
     }
   }

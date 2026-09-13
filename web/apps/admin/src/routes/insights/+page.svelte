@@ -608,7 +608,7 @@
 
   .dying-craft-severity--critical {
     background: var(--k-terracotta-300);
-    color: var(--k-accent-danger);
+    color: var(--k-madder-700);
   }
 
   .dying-craft-severity--warning {
@@ -647,7 +647,7 @@
   }
 
   .dying-craft-item__bar-fill--critical {
-    background: var(--k-accent-danger);
+    background: var(--k-madder-700);
   }
 
   .dying-craft-item__bar-fill--warning {

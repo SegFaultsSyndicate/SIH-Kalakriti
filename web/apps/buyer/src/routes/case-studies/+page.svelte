@@ -665,12 +665,12 @@
 
   .th-before {
     background: var(--k-surface-base);
-    color: var(--k-accent-danger);
+    color: var(--k-madder-700);
   }
 
   .th-after {
     background: var(--k-surface-base);
-    color: var(--k-accent-success);
+    color: var(--k-neem-700);
   }
 
   .dim-cell {
@@ -687,7 +687,7 @@
   }
 
   .after-cell {
-    color: var(--k-accent-success);
+    color: var(--k-neem-700);
     background: rgba(240, 253, 244, 0.4);
     inline-size: 39%;
     font-weight: 600;
@@ -700,7 +700,7 @@
   }
 
   .cell-status--bad {
-    color: var(--k-accent-danger);
+    color: var(--k-madder-700);
   }
 
   .cell-status--good {
@@ -734,7 +734,7 @@
     margin: 0;
     padding: var(--k-space-4);
     background: var(--k-surface-base);
-    border-inline-start: 4px solid var(--k-accent-primary-bg);
+    border-inline-start: 4px solid var(--k-terracotta-700);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 

@@ -246,7 +246,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-ink-900, var(--k-surface-raised));
+    color: var(--k-ink-900, var(--k-khadi-100));
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -287,7 +287,7 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-ink-900, var(--k-surface-raised));
+    color: var(--k-ink-900, var(--k-khadi-100));
     font-weight: 500;
     opacity: 0.9;
   }
@@ -298,7 +298,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-ink-900, var(--k-surface-raised));
+    color: var(--k-ink-900, var(--k-khadi-100));
   }
 
   /* Popover */
@@ -309,7 +309,7 @@
     inline-size: 36rem;
     max-inline-size: 94vw;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-surface-pressed));
+    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
     border-radius: 12px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     z-index: 1000;
@@ -331,7 +331,7 @@
   .popover-header {
     padding: 1rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .user-badge-row {
@@ -362,7 +362,7 @@
   .user-email {
     display: block;
     font-size: 0.75rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin-block-start: 0.15rem;
   }
 
@@ -388,7 +388,7 @@
     margin-block-start: 0.5rem;
     font-size: 0.75rem;
     text-align: center;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin-block-end: 0;
   }
 
@@ -428,7 +428,7 @@
 
   .col-right {
     padding-inline-start: 1.25rem;
-    border-inline-start: 1px solid var(--k-surface-sunken);
+    border-inline-start: 1px solid var(--k-khadi-150);
     background-color: var(--k-surface-base);
   }
 
@@ -445,7 +445,7 @@
 
   .cell-right {
     padding-inline-start: 0.85rem;
-    border-inline-start: 1px solid var(--k-surface-sunken);
+    border-inline-start: 1px solid var(--k-khadi-150);
     background-color: var(--k-surface-base);
   }
 
@@ -473,7 +473,7 @@
     align-items: center;
     justify-content: center;
     flex: none;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
   }
 
   .menu-link__text {
@@ -495,7 +495,7 @@
 
   .menu-link__text small {
     font-size: 0.7rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -529,7 +529,7 @@
   .artisan-badge {
     background-color: var(--k-surface-sunken);
     color: var(--k-accent-primary-text);
-    border: 1px solid var(--k-accent-warning-bg);
+    border: 1px solid var(--k-haldi-300);
   }
 
   .admin-badge {
@@ -541,7 +541,7 @@
   .popover-footer {
     padding: 0.65rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-surface-sunken);
+    border-block-start: 1px solid var(--k-khadi-150);
     display: flex;
     justify-content: flex-end;
   }

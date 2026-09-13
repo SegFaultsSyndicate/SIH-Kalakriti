@@ -657,7 +657,7 @@
   .qr-prompt strong {
     font-size: 0.8rem;
     letter-spacing: 0.05em;
-    color: var(--k-surface-inverse);
+    color: var(--k-ink-950);
   }
 
   .qr-prompt span {
@@ -802,7 +802,7 @@
       padding: 0;
     }
     :global(.placard-card) {
-      border: 4px solid var(--k-accent-primary-bg) !important;
+      border: 4px solid var(--k-terracotta-700) !important;
       box-shadow: none;
     }
   }

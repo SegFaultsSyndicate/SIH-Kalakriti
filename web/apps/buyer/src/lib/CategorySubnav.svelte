@@ -471,7 +471,7 @@
   .category-subnav {
     position: relative;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
     z-index: 80;
   }
 
@@ -552,7 +552,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     border-radius: 0 6px 6px 0;
     transition: color 0.12s ease;
   }
@@ -568,7 +568,7 @@
   }
 
   .subnav-divider {
-    color: var(--k-surface-pressed);
+    color: var(--k-khadi-200);
     font-size: 0.75rem;
     margin-inline: 0.15rem;
   }
@@ -597,7 +597,7 @@
     inset-inline-start: 0;
     inset-block-start: calc(100% + 0.35rem);
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-pressed);
+    border: 1px solid var(--k-khadi-200);
     border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
     padding: 1.5rem;
@@ -627,12 +627,12 @@
     justify-content: space-between;
     padding-block-end: 0.85rem;
     margin-block-end: 1rem;
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .all-crafts-desc {
     font-size: 0.775rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0.2rem 0 0 0;
   }
 
@@ -687,7 +687,7 @@
     padding: 0.65rem 0.75rem;
     border-radius: 8px;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
     text-decoration: none;
     color: inherit;
     transition: all 0.15s ease;
@@ -746,7 +746,7 @@
 
   .craft-mega-card__info small {
     font-size: 0.68rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -802,7 +802,7 @@
     background-color: var(--k-surface-base);
     padding: 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--k-surface-sunken);
+    border: 1px solid var(--k-khadi-150);
   }
 
   .col-title {
@@ -812,7 +812,7 @@
     color: var(--k-text-primary);
     margin: 0 0 0.65rem;
     padding-block-end: 0.35rem;
-    border-block-end: 1px solid var(--k-surface-sunken);
+    border-block-end: 1px solid var(--k-khadi-150);
   }
 
   .sub-title-margin {
@@ -860,7 +860,7 @@
 
   .direct-gi-callout p {
     font-size: 0.725rem;
-    color: var(--k-border-interactive);
+    color: var(--k-stone-500);
     margin: 0.35rem 0 0.5rem;
     line-height: 1.35;
   }
