@@ -20,19 +20,20 @@ it is too slow for the demo's photo sizes (BiRefNet already runs a heavier
 network on full-res photos in `enhance_image` today, so this is unlikely to
 be the bottleneck, but it has not been measured).
 
-Not imported at module scope from anywhere except `app/models/real.py`'s
-`_get_zero_dce_net`, itself only reached from a real (non-mock) `EnhanceImage`
-call with `correct_lighting=True` -- mock mode and every other RPC stay free
-of this import, same discipline as `app/model_loading.py`.
+Not imported at module scope from anywhere except
+`app/models/image_lighting/real.py`'s lazy net loader, itself only reached
+from a real (non-mock) `EnhanceImage` call with `correct_lighting=True` --
+mock mode and every other RPC stay free of this import, same discipline as
+`app/model_loading.py`.
 
 NOT-YET-VALIDATED: never run against a real checkpoint in this sandbox (no
 weights on disk, and this project's standing rule is to never trigger a model
-download -- see `app/models/real.py`'s module docstring). Zero-DCE++ is not
+download -- see this service's CLAUDE.md). Zero-DCE++ is not
 distributed as a pip package or a Hugging Face repo; the only pretrained
 checkpoint is the raw `.pth` file in the paper's GitHub release
 (github.com/Li-Chongyi/Zero-DCE_extension, under
 `Zero-DCE++/snapshots_Zero_DCE++/Epoch99.pth`). To actually exercise this:
-download that file to wherever `ML_SVC_ZERO_DCE_CHECKPOINT` points and set
+download that file to wherever `ML_SVC_IMAGE_LIGHTING_MODEL` points and set
 that env var -- state the download command, don't run it:
   curl -fLo <path> https://raw.githubusercontent.com/Li-Chongyi/Zero-DCE_extension/main/Zero-DCE%2B%2B/snapshots_Zero_DCE%2B%2B/Epoch99.pth
 The architecture below is transcribed from the published reference
