@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kalakriti API",
-    "description": "REST API for the Kalakriti platform — web and mobile clients",
+    "description": "REST API for the Kalakriti platform \u2014 web and mobile clients",
     "version": "1.0.0"
   },
   "servers": [
@@ -262,13 +262,56 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "display_name"
+                  "display_name",
+                  "craft_ids",
+                  "region"
                 ],
                 "properties": {
                   "display_name": {
                     "type": "string"
                   },
-                  "language": {
+                  "craft_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Craft ontology UUIDs (from GET /crafts); at least one required, core-svc caps the max."
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "commonv1.Language enum names without the LANGUAGE_ prefix, e.g. \"HINDI\", \"ENGLISH\"."
+                  },
+                  "region": {
+                    "type": "object",
+                    "required": [
+                      "state_code"
+                    ],
+                    "properties": {
+                      "state_code": {
+                        "type": "string",
+                        "description": "ISO 3166-2:IN, e.g. \"IN-UP\"."
+                      },
+                      "district": {
+                        "type": "string"
+                      },
+                      "block": {
+                        "type": "string"
+                      },
+                      "village": {
+                        "type": "string"
+                      },
+                      "pincode": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "cluster_id": {
+                    "type": "string"
+                  },
+                  "pehchan_id": {
                     "type": "string"
                   }
                 }

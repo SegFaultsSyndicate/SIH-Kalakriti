@@ -43,7 +43,7 @@
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
-  import { CRAFTS, DISTRICTS } from '$lib/ontology';
+  import { DISTRICTS } from '$lib/ontology';
   import ImageCropModal from '$lib/ImageCropModal.svelte';
   import BusinessCardModal from '$lib/BusinessCardModal.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
@@ -108,9 +108,8 @@
       if (draft.pehchanId) pehchanId = draft.pehchanId;
       if (draft.clusterName) clusterName = draft.clusterName;
 
-      if (draft.craftId) {
-        const found = CRAFTS.find((c) => c.id === draft.craftId);
-        if (found) craftName = `${t(found.nameKey)} (${found.id})`;
+      if (draft.craftName) {
+        craftName = draft.craftName;
       }
 
       // Restore email & notification preferences

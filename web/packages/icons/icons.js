@@ -28,6 +28,7 @@ import Icon_filter from './src/filter.svg';
 import Icon_sort from './src/sort.svg';
 import Icon_share from './src/share.svg';
 import Icon_download from './src/download.svg';
+import Icon_dollar_sign from './src/dollar-sign.svg';
 import Icon_print from './src/print.svg';
 import Icon_link from './src/link.svg';
 import Icon_external_link from './src/external-link.svg';
@@ -120,6 +121,7 @@ export const ICON_COMPONENTS = {
   'sort': Icon_sort,
   'share': Icon_share,
   'download': Icon_download,
+  'dollar-sign': Icon_dollar_sign,
   'print': Icon_print,
   'link': Icon_link,
   'external-link': Icon_external_link,

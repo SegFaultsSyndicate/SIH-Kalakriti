@@ -1,7 +1,16 @@
 """services/ml-svc/app/config.py
 
-Configuration from the environment, read once at startup. No model is touched
-here; this module is import-safe with no weights on disk.
+Global configuration from the environment, read once at startup. No model is
+touched here; this module is import-safe with no weights on disk.
+
+Only settings shared across the whole service live here: ports, mock mode,
+batching knobs, logging, and the two paths/names every feature or component
+might reasonably need (the craft ontology allowlist, the media bucket name).
+Everything specific to one swappable model/backend -- its repo id, its API
+endpoint, its checkpoint path -- lives in that component's own `Config` in
+`app/models/<component>/__init__.py`, read via that component's own
+`from_env()`. See `app/registry.py` for how the two compose: every component's
+`build(cfg)` receives this global `Config` and pulls its own env vars itself.
 """
 
 from __future__ import annotations
@@ -18,15 +27,14 @@ def _find_default_allowlist() -> Path:
 
     A full checkout has this file four levels under the repo root
     (services/ml-svc/app/config.py), so the walk finds it immediately. A
-    container image that flattens that layout (e.g. Dockerfile.ml-svc's
-    `WORKDIR /srv`, which puts this file at /srv/app/config.py with only
-    three real parents) has no such ancestor to find — a fixed `.parents[3]`
-    index used to raise IndexError there instead of degrading gracefully.
-    Both Dockerfiles set ML_SVC_CRAFT_ALLOWLIST explicitly, so this fallback
-    is only ever reached by a container that skipped that, or by a
-    from-scratch invocation with no seed CSV at all — in which case a
-    missing file is not fatal (see load_craft_allowlist below), just an
-    empty allowlist.
+    container image that flattens that layout (e.g. Dockerfile's `WORKDIR
+    /srv`, which puts this file at /srv/app/config.py with only three real
+    parents) has no such ancestor to find -- a fixed `.parents[3]` index used
+    to raise IndexError there instead of degrading gracefully. Both
+    Dockerfiles set ML_SVC_CRAFT_ALLOWLIST explicitly, so this fallback is
+    only ever reached by a container that skipped that, or by a from-scratch
+    invocation with no seed CSV at all -- in which case a missing file is not
+    fatal (see load_craft_allowlist below), just an empty allowlist.
     """
     here = Path(__file__).resolve()
     for ancestor in here.parents:
@@ -47,7 +55,8 @@ def _flag(name: str, default: bool) -> bool:
 
 @dataclass(frozen=True)
 class Config:
-    """Everything the service reads from the environment."""
+    """Global settings every feature/component may need. Passed as-is into
+    every component's `build(cfg)` -- see `app/registry.py`."""
 
     grpc_port: int = 50055
     metrics_port: int = 9095
@@ -60,16 +69,6 @@ class Config:
     model_version: str = "mock-v1"
     craft_allowlist_path: Path = _DEFAULT_ALLOWLIST
     media_bucket: str = "kalakriti-media"
-    # Real-mode only; unused and unvalidated in mock mode.
-    s3_endpoint: str = ""
-    s3_access_key: str = ""
-    s3_secret_key: str = ""
-    bhashini_url: str = ""
-    bhashini_api_key: str = ""
-    vlm_model: str = "Qwen/Qwen2.5-VL-3B-Instruct"
-    embed_model: str = "intfloat/multilingual-e5-base"
-    rerank_model: str = "BAAI/bge-reranker-v2-m3"
-    video_frames: int = 8
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -83,16 +82,7 @@ class Config:
             log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
             model_version=os.getenv("ML_SVC_MODEL_VERSION", "mock-v1" if mock else "kalakriti-2026.09"),
             craft_allowlist_path=Path(os.getenv("ML_SVC_CRAFT_ALLOWLIST", str(_DEFAULT_ALLOWLIST))),
-            media_bucket=os.getenv("S3_BUCKET", "kalakriti-media"),
-            s3_endpoint=os.getenv("S3_ENDPOINT", ""),
-            s3_access_key=os.getenv("S3_ACCESS_KEY", ""),
-            s3_secret_key=os.getenv("S3_SECRET_KEY", ""),
-            bhashini_url=os.getenv("BHASHINI_ASR_URL", ""),
-            bhashini_api_key=os.getenv("BHASHINI_API_KEY", ""),
-            vlm_model=os.getenv("ML_SVC_VLM_MODEL", "Qwen/Qwen2.5-VL-3B-Instruct"),
-            embed_model=os.getenv("ML_SVC_EMBED_MODEL", "intfloat/multilingual-e5-base"),
-            rerank_model=os.getenv("ML_SVC_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"),
-            video_frames=int(os.getenv("ML_SVC_VIDEO_FRAMES", "8")),
+            media_bucket=os.getenv("ML_SVC_OBJECT_STORAGE_BUCKET", "kalakriti-media"),
         )
 
 
@@ -123,7 +113,7 @@ def load_craft_vocab(path: Path) -> dict[str, dict[str, list[str]]]:
     crafts.csv carries pipe-separated `techniques` and `materials` columns
     per craft code. Once a craft is known (declared or resolved), the
     extractor should never accept a material/technique for it that isn't in
-    this list — the closed-vocabulary discipline `kalakriti-ml-svc` proved
+    this list -- the closed-vocabulary discipline `kalakriti-ml-svc` proved
     out, applied to this service's flat AttributeSet instead of a per-subtype
     schema. A CSV in the plain-newline-list shape `load_craft_allowlist` also
     accepts has no such columns; that's not an error, it just means no craft

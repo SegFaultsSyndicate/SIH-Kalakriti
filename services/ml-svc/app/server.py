@@ -22,9 +22,18 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 from prometheus_client import Counter, Histogram, start_http_server
 
-from app import models
+from app import registry as registry_module
 from app.batching import MicroBatcher
 from app.config import Config
+from app.features.detect_handloom import HandloomDetector
+from app.features.embed import Embedder
+from app.features.enhance import ImageEnhancer
+from app.features.extract_attributes import AttributeExtractor
+from app.features.generate_description import DescriptionGenerator
+from app.features.rerank import Reranker
+from app.features.transcribe import Transcriber
+from app.features.verify_technique import TechniqueVerifier
+from app.models.vlm import VLMConfig
 from app.pb import common_pb2, inference_pb2, inference_pb2_grpc
 
 SERVICE_NAME = "inference.v1.InferenceService"
@@ -125,11 +134,28 @@ class ObservabilityInterceptor(grpc.aio.ServerInterceptor):
 
 
 class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
-    """Converts protobuf to plain Python, calls the registry, converts back."""
+    """Converts protobuf to plain Python, calls into `features/*.py`, converts
+    back. Never imports a model component directly -- only `app.registry`
+    and `app.features` know those exist.
 
-    def __init__(self, registry: models.Models, cfg: Config) -> None:
-        self._models = registry
+    Constructed before the components are loaded (grpc.aio requires the
+    servicer to be registered before `server.start()`, but loading is slow
+    and must not block the event loop -- see `serve()`); `attach()` fills in
+    the feature objects once `registry.load_all()` finishes, and every RPC
+    below runs after that point, gated by the health check.
+    """
+
+    def __init__(self, cfg: Config) -> None:
         self._cfg = cfg
+        self._version = cfg.model_version
+        self._enhancer: ImageEnhancer | None = None
+        self._extractor: AttributeExtractor | None = None
+        self._describer: DescriptionGenerator | None = None
+        self._verifier: TechniqueVerifier | None = None
+        self._handloom: HandloomDetector | None = None
+        self._embedder: Embedder | None = None
+        self._reranker: Reranker | None = None
+        self._transcriber: Transcriber | None = None
         # Embed and ExtractAttributes are the two RPCs that arrive in bursts —
         # one per listing image, one per search query — so they are the two that
         # go through the batcher.
@@ -146,16 +172,30 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
             name="extract",
         )
 
+    def attach(self, registry: registry_module.Registry) -> None:
+        """Builds every feature from the loaded registry. Called once, after
+        `registry.load_all()` finishes and before the health check flips to
+        SERVING."""
+        vlm_cfg = VLMConfig.from_env()
+        self._enhancer = ImageEnhancer(registry.storage, registry.lighting, registry.background)
+        self._extractor = AttributeExtractor(registry.vlm, registry.storage, self._cfg.craft_allowlist_path)
+        self._describer = DescriptionGenerator(registry.vlm)
+        self._verifier = TechniqueVerifier(registry.vlm, registry.storage, vlm_cfg.video_frames)
+        self._handloom = HandloomDetector(registry.handloom_texture, registry.storage)
+        self._embedder = Embedder(registry.embedder)
+        self._reranker = Reranker(registry.reranker)
+        self._transcriber = Transcriber(registry.transcriber, registry.storage)
+
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         BATCH_SIZE.labels("embed").observe(len(texts))
-        return await self._models.embed(texts)
+        return await self._embedder.embed(texts)
 
     async def _extract_batch(self, items: list[tuple]) -> list[dict]:
         BATCH_SIZE.labels("extract").observe(len(items))
         # The VLM takes one product's images at a time; batching here still wins,
         # because it is one scheduled call instead of N interleaved ones.
         return list(
-            await asyncio.gather(*(self._models.extract_attributes(*item) for item in items))
+            await asyncio.gather(*(self._extractor.extract(*item) for item in items))
         )
 
     async def close(self) -> None:
@@ -165,18 +205,19 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
     # --- RPCs ---------------------------------------------------------------
 
     async def EnhanceImage(self, request, context):
-        key, ops = await self._models.enhance_image(
+        key, ops = await self._enhancer.enhance(
             request.source.object_key,
             request.remove_background,
             request.auto_white_balance,
             request.upscale_factor or 1,
+            request.correct_lighting,
         )
         enhanced = common_pb2.MediaRef()
         enhanced.CopyFrom(request.source)
         enhanced.object_key = key
         enhanced.mime_type = "image/webp"
         return inference_pb2.EnhanceImageResponse(
-            enhanced=enhanced, operations_applied=ops, model_version=self._models.version
+            enhanced=enhanced, operations_applied=ops, model_version=self._version
         )
 
     async def ExtractAttributes(self, request, context):
@@ -188,11 +229,11 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
             )
         )
         return inference_pb2.ExtractAttributesResponse(
-            attributes=_attributes_to_proto(attributes, self._models.version)
+            attributes=_attributes_to_proto(attributes, self._version)
         )
 
     async def GenerateDescription(self, request, context):
-        copy = await self._models.generate_description(
+        copy = await self._describer.generate(
             _attributes_from_proto(request.attributes),
             request.craft_id,
             _language_name(request.language),
@@ -206,11 +247,11 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
             keywords=copy["keywords"],
             attribute_keys_used=copy["attribute_keys_used"],
             language=request.language,
-            model_version=self._models.version,
+            model_version=self._version,
         )
 
     async def VerifyTechnique(self, request, context):
-        verdict = await self._models.verify_technique(
+        verdict = await self._verifier.verify(
             [m.object_key for m in request.media], request.claimed_technique, request.craft_id
         )
         return inference_pb2.VerifyTechniqueResponse(
@@ -220,12 +261,12 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
                 matches=verdict["matches"],
                 confidence=verdict["confidence"],
                 explanation=verdict["explanation"],
-                model_version=self._models.version,
+                model_version=self._version,
             )
         )
 
     async def DetectHandloom(self, request, context):
-        verdict = await self._models.detect_handloom(
+        verdict = await self._handloom.detect(
             request.media.object_key, request.declared_thread_count or 0
         )
         return inference_pb2.DetectHandloomResponse(
@@ -234,7 +275,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
                 confidence=verdict["confidence"],
                 fft_peak_ratio=verdict["fft_peak_ratio"],
                 explanation=verdict["explanation"],
-                model_version=self._models.version,
+                model_version=self._version,
             )
         )
 
@@ -246,25 +287,25 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
         return inference_pb2.EmbedResponse(
             embeddings=[
                 inference_pb2.Embedding(
-                    values=v, dimensions=len(v), model_version=self._models.version
+                    values=v, dimensions=len(v), model_version=self._version
                 )
                 for v in vectors
             ]
         )
 
     async def Rerank(self, request, context):
-        scored = await self._models.rerank(
+        scored = await self._reranker.rerank(
             request.query, [(c.id, c.text) for c in request.candidates]
         )
         if request.top_k:
             scored = scored[: request.top_k]
         return inference_pb2.RerankResponse(
             results=[inference_pb2.RerankResult(id=cid, score=score) for cid, score in scored],
-            model_version=self._models.version,
+            model_version=self._version,
         )
 
     async def Transcribe(self, request, context):
-        async for chunk in self._models.transcribe(
+        async for chunk in self._transcriber.transcribe(
             request.audio.object_key, _language_name(request.language), request.interim_results
         ):
             yield inference_pb2.TranscribeResponse(
@@ -335,8 +376,7 @@ def _attributes_from_proto(attributes: inference_pb2.AttributeSet) -> dict:
 
 
 async def serve(cfg: Config) -> None:
-    registry = models.build(cfg)
-    servicer = InferenceServicer(registry, cfg)
+    servicer = InferenceServicer(cfg)
 
     server = grpc.aio.server(interceptors=[ObservabilityInterceptor()])
     inference_pb2_grpc.add_InferenceServiceServicer_to_server(servicer, server)
@@ -361,7 +401,8 @@ async def serve(cfg: Config) -> None:
     )
 
     started = time.perf_counter()
-    await registry.load()
+    registry = await registry_module.load_all(cfg)
+    servicer.attach(registry)
     await health_servicer.set(SERVICE_NAME, health_pb2.HealthCheckResponse.SERVING)
     await health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
     log.info("ready", extra={"load_seconds": round(time.perf_counter() - started, 3)})

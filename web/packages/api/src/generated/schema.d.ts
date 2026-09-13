@@ -258,7 +258,20 @@ export interface paths {
                 content: {
                     "application/json": {
                         display_name: string;
-                        language?: string;
+                        /** @description Craft ontology UUIDs (from GET /crafts); at least one required, core-svc caps the max. */
+                        craft_ids: string[];
+                        /** @description commonv1.Language enum names without the LANGUAGE_ prefix, e.g. "HINDI", "ENGLISH". */
+                        languages?: string[];
+                        region: {
+                            /** @description ISO 3166-2:IN, e.g. "IN-UP". */
+                            state_code: string;
+                            district?: string;
+                            block?: string;
+                            village?: string;
+                            pincode?: string;
+                        };
+                        cluster_id?: string;
+                        pehchan_id?: string;
                     };
                 };
             };

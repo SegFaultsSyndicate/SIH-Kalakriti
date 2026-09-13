@@ -7,13 +7,15 @@
   import { listen, listenSupported } from '@kalakriti/voice';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft } from '$lib/registration';
-  import { CRAFTS, matchesQuery } from '$lib/ontology';
+  import { loadCrafts, matchesQuery, type Craft } from '$lib/ontology';
 
   const t = $derived(locale.t);
 
   let selected = $state('');
   let query = $state('');
   let listening = $state(false);
+  let crafts = $state<Craft[]>([]);
+  let loading = $state(true);
 
   $effect(() => {
     void getDraft().then((draft) => {
@@ -21,11 +23,18 @@
     });
   });
 
-  const filtered = $derived(CRAFTS.filter((craft) => matchesQuery(t(craft.nameKey), query)));
+  $effect(() => {
+    void loadCrafts().then((loaded) => {
+      crafts = loaded;
+      loading = false;
+    });
+  });
 
-  function choose(id: string): void {
-    selected = id;
-    void patchDraft({ craftId: id });
+  const filtered = $derived(crafts.filter((craft) => matchesQuery(craft.displayName, query)));
+
+  function choose(craft: Craft): void {
+    selected = craft.id;
+    void patchDraft({ craftId: craft.id, craftName: craft.displayName });
   }
 
   async function useVoice(): Promise<void> {
@@ -66,7 +75,9 @@
       {/if}
     </div>
 
-    {#if filtered.length === 0}
+    {#if loading}
+      <p class="craft-empty">{t('state.loading')}</p>
+    {:else if filtered.length === 0}
       <p class="craft-empty">{t('register.craft.empty')}</p>
     {:else}
       <div class="craft-grid" role="radiogroup" aria-label={t('register.craft.heading')}>
@@ -77,10 +88,10 @@
             class:craft-tile--selected={selected === craft.id}
             role="radio"
             aria-checked={selected === craft.id}
-            onclick={() => choose(craft.id)}
+            onclick={() => choose(craft)}
           >
             <Icon name={craft.icon} class="craft-tile__icon" />
-            <span>{t(craft.nameKey)}</span>
+            <span>{craft.displayName}</span>
           </button>
         {/each}
       </div>

@@ -390,6 +390,7 @@ export const en = {
   'crafts.materials': 'Materials',
 
   'language.selector.label': 'Change language',
+  'currency.selector.label': 'Currency',
 
   // Buyer home
   'home.hero.cta': 'Explore the collection',
@@ -705,6 +706,8 @@ export const en = {
   'register.district.empty': 'No district matches that.',
   'register.district.notListed': 'My district is not listed',
   'register.district.notListed.label': 'Type your district',
+  'register.district.notListed.stateLabel': 'State',
+  'register.district.notListed.statePlaceholder': 'Select your state',
 
   'register.pehchan.heading': 'PM Vishwakarma or Pehchan ID',
   'register.pehchan.body':

@@ -41,6 +41,13 @@ describe('formatMoney', () => {
     expect(formatNumber(12345678, 'bn')).toBe('১,২৩,৪৫,৬৭৮');
   });
 
+  it('renders a foreign currency with its own symbol and grouping, INR unchanged by default', () => {
+    expect(formatMoney(3420, 'en', { currency: 'USD' })).toBe('$34.20');
+    expect(formatMoney(123456789, 'en', { currency: 'USD' })).toBe('$1,234,567.89');
+    expect(formatMoney(45000, 'en', { currency: 'INR' })).toBe('₹450');
+    expect(formatMoney(45000, 'en')).toBe('₹450');
+  });
+
   it('formats dates and relative time with the selected locale', () => {
     const date = new Date('2026-01-15T00:00:00Z');
     expect(formatDate(date, 'hi', { timeZone: 'UTC', dateStyle: 'long' })).toContain('2026');

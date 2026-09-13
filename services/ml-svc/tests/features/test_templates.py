@@ -1,17 +1,13 @@
-"""services/ml-svc/tests/test_real_helpers.py
+"""services/ml-svc/tests/features/test_templates.py
 
-The pure-Python grounding logic in app.models.real: closed-vocabulary
-enforcement and the template-first description pipeline. These run with no
-torch/transformers on disk — real.py only imports those inside RealModels'
-instance methods, never at module scope — so this is the part of "real mode"
-that can actually be verified in CI without weights.
+Pure functions shared by extract_attributes/verify_technique/
+generate_description -- no model, no torch, nothing installed beyond stdlib.
 """
 
-from app.config import load_craft_vocab
-from app.models.real import (
+from app.features.templates import (
     _closed_vocab,
     _is_grounded,
-    _parse_json,
+    _same_technique,
     _template_highlights,
     _template_keywords,
     _template_sentence,
@@ -29,37 +25,11 @@ def test_closed_vocab_rejects_a_value_outside_the_list():
 
 
 def test_closed_vocab_passes_through_when_no_vocab_is_recorded():
-    # No techniques/materials columns for this craft: absent data isn't a
-    # constraint, so nothing is rejected.
     assert _closed_vocab("anything", [], "c1", "material") == "anything"
 
 
 def test_closed_vocab_passes_through_an_empty_value():
     assert _closed_vocab("", ["cotton"], "c1", "material") == ""
-
-
-def test_load_craft_vocab_reads_pipe_separated_columns(tmp_path):
-    csv_path = tmp_path / "crafts.csv"
-    csv_path.write_text(
-        "code,display_name,parent_code,gi_registration_no,techniques,materials\n"
-        "ajrakh-block-printing,Ajrakh Block Printing,,,"
-        "hand-block-printing|resist-dyeing,cotton|natural-indigo\n"
-    )
-    vocab = load_craft_vocab(csv_path)
-    assert vocab["ajrakh-block-printing"]["materials"] == ["cotton", "natural-indigo"]
-    assert vocab["ajrakh-block-printing"]["techniques"] == ["hand-block-printing", "resist-dyeing"]
-
-
-def test_load_craft_vocab_is_empty_for_a_plain_code_list(tmp_path):
-    # load_craft_allowlist's other accepted shape: no techniques/materials
-    # columns at all. Should not raise, and should yield no vocabulary.
-    csv_path = tmp_path / "codes.txt"
-    csv_path.write_text("ajrakh-block-printing\nbagru-block-printing\n")
-    assert load_craft_vocab(csv_path) == {}
-
-
-def test_load_craft_vocab_missing_file_is_not_fatal(tmp_path):
-    assert load_craft_vocab(tmp_path / "nope.csv") == {}
 
 
 def test_template_sentence_only_asserts_present_facts():
@@ -117,9 +87,9 @@ def test_vocab_hint_names_both_columns_when_present():
     assert "hand-block-printing" in hint
 
 
-def test_parse_json_extracts_a_fenced_object():
-    assert _parse_json('Sure, here you go:\n```json\n{"a": 1}\n```') == {"a": 1}
+def test_same_technique_matches_on_shared_words():
+    assert _same_technique("hand block printing", "hand-block-printing")
 
 
-def test_parse_json_returns_empty_dict_on_garbage():
-    assert _parse_json("not json at all") == {}
+def test_same_technique_rejects_unrelated_words():
+    assert not _same_technique("wheel throwing", "resist dyeing")

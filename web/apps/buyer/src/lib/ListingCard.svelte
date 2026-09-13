@@ -15,6 +15,7 @@
   import type { components } from '@kalakriti/api';
   import { craftIcon } from './craft-icon';
   import { wishlist } from './wishlist.svelte';
+  import { currency, CURRENCY_RATES, convertPaise } from './currency.svelte';
 
   type ListingSummary = components['schemas']['ListingSummary'];
 
@@ -34,6 +35,12 @@
   );
   const madeToOrder = $derived(listing.type === 'MADE_TO_ORDER');
   const paise = $derived(listing.price?.amount_paise ?? 0);
+
+  // Selected currency comes from the shell header's CurrencySelector -- see
+  // currency.svelte.ts. Defaults to INR (identity rate) until a user picks.
+  const selectedCurrency = $derived(currency.code);
+  const conversionRate = $derived(CURRENCY_RATES[selectedCurrency] ?? 1);
+  const convertedPaise = $derived(convertPaise(paise, conversionRate));
 
   let devAvatar = $state<string | undefined>(undefined);
   $effect(() => {
@@ -175,9 +182,9 @@
       </span>
     {/if}
     <span class="listing-card__price-row">
-      <span class="listing-card__price"><Money {paise} /></span>
+      <span class="listing-card__price"><Money paise={convertedPaise} currency={selectedCurrency} /></span>
       {#if paise > 0}
-        <span class="listing-card__mrp">₹{Math.round((paise * 1.25) / 100).toLocaleString('en-IN')}</span>
+        <span class="listing-card__mrp"><Money paise={Math.round(convertedPaise * 1.25)} currency={selectedCurrency} /></span>
         <span class="listing-card__discount">(20% OFF)</span>
       {/if}
     </span>

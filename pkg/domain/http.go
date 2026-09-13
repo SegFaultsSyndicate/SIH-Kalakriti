@@ -4,6 +4,7 @@ package domain
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 )
 
@@ -65,6 +66,10 @@ func WriteHTTPError(w http.ResponseWriter, err error) {
 	status := HTTPStatus(err)
 	message := err.Error()
 	if status == http.StatusInternalServerError {
+		// The real error never reaches the client on a masked 500 -- log it
+		// here, the one place every such error passes through, or it is
+		// invisible everywhere (no service-level log call sees it either).
+		slog.Default().Error("unmapped error rendered as 500", "error", err)
 		message = "internal error"
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

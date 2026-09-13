@@ -21,6 +21,31 @@ export type Paise = number;
 const RUPEE = '₹';
 
 /**
+ * Display metadata per currency the catalogue can be shown in. The rupee is
+ * the base currency; every other entry is a display target -- exchange rates
+ * are product data and live in the caller (see the buyer app's currency.ts),
+ * formatting metadata belongs here with the rest of the Intl setup.
+ */
+export interface CurrencyMeta {
+  /** Symbol/prefix used in a price string (₹, $, €, "AED "…). */
+  readonly symbol: string;
+  /** Intl locale whose digit grouping this currency uses (lakh for ₹). */
+  readonly numberLocale: string;
+}
+
+export const CURRENCY_META = {
+  INR: { symbol: RUPEE, numberLocale: 'en-IN' },
+  USD: { symbol: '$', numberLocale: 'en-US' },
+  EUR: { symbol: '€', numberLocale: 'de-DE' },
+  GBP: { symbol: '£', numberLocale: 'en-GB' },
+  AED: { symbol: 'AED ', numberLocale: 'en-AE' },
+  JPY: { symbol: '¥', numberLocale: 'ja-JP' },
+} as const satisfies Record<string, CurrencyMeta>;
+
+/** Currency codes supported by the display layer. */
+export type CurrencyCode = keyof typeof CURRENCY_META;
+
+/**
  * Split paise into integer rupees and the 0-99 remainder without float math.
  * Exact for any |paise| below Number.MAX_SAFE_INTEGER, which covers every
  * value an int64 paise field can carry in a price or a statement line.
@@ -41,8 +66,14 @@ export interface MoneyOptions {
    * that silently drops 50 paise is a bug the artisan will notice first.
    */
   paise?: 'auto' | 'always' | 'never';
-  /** Prefix the rupee sign. Off for table cells that carry the unit in the header. */
+  /** Prefix the currency symbol. Off for table cells that carry the unit in the header. */
   symbol?: boolean;
+  /**
+   * Currency to render in. Defaults to INR (the catalogue's base/API currency)
+   * and its Indic digit grouping; a non-default value switches both the symbol
+   * and the grouping locale to that currency's own.
+   */
+  currency?: CurrencyCode;
 }
 
 export function formatMoney(
@@ -50,9 +81,11 @@ export function formatMoney(
   locale: LocaleCode,
   options: MoneyOptions = {},
 ): string {
-  const { paise: paiseMode = 'auto', symbol = true } = options;
+  const { paise: paiseMode = 'auto', symbol = true, currency: currencyCode } = options;
   const { negative, rupees, remainder } = splitPaise(paise);
-  const grouped = new Intl.NumberFormat(LOCALES[locale].numberLocale, {
+  const currency = currencyCode ? (CURRENCY_META[currencyCode] ?? CURRENCY_META.INR) : null;
+  const numberLocale = currency ? currency.numberLocale : LOCALES[locale].numberLocale;
+  const grouped = new Intl.NumberFormat(numberLocale, {
     useGrouping: true,
     maximumFractionDigits: 0,
   }).format(rupees);
@@ -60,7 +93,9 @@ export function formatMoney(
   const showRemainder = paiseMode === 'always' || (paiseMode === 'auto' && remainder !== 0);
   const tail = showRemainder ? `.${String(remainder).padStart(2, '0')}` : '';
 
-  return `${negative ? '-' : ''}${symbol ? RUPEE : ''}${grouped}${tail}`;
+  const prefix = symbol ? (currency ? currency.symbol : RUPEE) : '';
+
+  return `${negative ? '-' : ''}${prefix}${grouped}${tail}`;
 }
 
 /**

@@ -128,6 +128,11 @@ export const ICONS = [
     "file": "src/download.svg"
   },
   {
+    "name": "dollar-sign",
+    "category": "core",
+    "file": "src/dollar-sign.svg"
+  },
+  {
     "name": "print",
     "category": "core",
     "file": "src/print.svg"

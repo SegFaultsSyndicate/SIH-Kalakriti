@@ -2,24 +2,31 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { Input, Button } from '@kalakriti/ui';
+  import { Input, Button, Select, FieldGroup } from '@kalakriti/ui';
   import { listen, listenSupported } from '@kalakriti/voice';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft } from '$lib/registration';
-  import { DISTRICTS, matchesQuery } from '$lib/ontology';
+  import { DISTRICTS, STATES, matchesQuery } from '$lib/ontology';
 
   const t = $derived(locale.t);
 
   let selected = $state('');
   let freeText = $state('');
+  let stateFreeText = $state('');
   let notListed = $state(false);
   let query = $state('');
   let listening = $state(false);
+
+  const stateOptions = $derived([
+    { value: '', label: t('register.district.notListed.statePlaceholder') },
+    ...STATES.map((s) => ({ value: s, label: s })),
+  ]);
 
   $effect(() => {
     void getDraft().then((draft) => {
       selected = draft.districtId ?? '';
       freeText = draft.districtFreeText ?? '';
+      stateFreeText = draft.stateFreeText ?? '';
       notListed = freeText !== '';
 
       // If a district was previously selected, show it in the search box
@@ -55,6 +62,10 @@
     void patchDraft({ districtFreeText: freeText });
   }
 
+  function onStateChange(): void {
+    void patchDraft({ stateFreeText });
+  }
+
   async function useVoice(): Promise<void> {
     listening = true;
     try {
@@ -73,7 +84,12 @@
     }
   }
 
-  const canProceed = $derived(selected !== '' || freeText.trim() !== '');
+  // A free-text district still needs a real region.state_code for POST
+  // /artisans -- state_code cannot be derived from arbitrary free text, so
+  // this path also requires picking a state from the known list.
+  const canProceed = $derived(
+    selected !== '' || (freeText.trim() !== '' && stateFreeText !== ''),
+  );
 
   async function next(): Promise<void> {
     if (!canProceed) return;
@@ -94,6 +110,11 @@
         placeholder={t('register.district.notListed.label')}
         aria-label={t('register.district.notListed.label')}
       />
+      <FieldGroup label={t('register.district.notListed.stateLabel')}>
+        {#snippet children({ id })}
+          <Select {id} bind:value={stateFreeText} options={stateOptions} onchange={onStateChange} />
+        {/snippet}
+      </FieldGroup>
       {#if listenSupported()}
         <button type="button" class="voice-alt" onclick={useVoice} disabled={listening}>
           {listening ? t('ui.voice.recording') : t('register.district.voice')}

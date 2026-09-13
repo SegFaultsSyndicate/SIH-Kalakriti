@@ -20,7 +20,7 @@ import {
   messageKeyFor,
 } from '@kalakriti/api';
 import { locale } from '@kalakriti/i18n';
-import { setArtisanId } from './registration';
+import { setArtisanId, type RegisterBody } from './registration';
 
 export async function sendOutboxEntry(entry: OutboxEntry): Promise<SendResult> {
   switch (entry.kind) {
@@ -58,7 +58,7 @@ async function remoteListingId(draftId: string): Promise<string | undefined> {
 }
 
 async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
-  const body = entry.payload as { display_name: string; language?: string };
+  const body = entry.payload as RegisterBody;
   try {
     const response = await registerArtisan(body, { idempotencyKey: entry.idempotencyKey });
     if (response.artisan_id) await setArtisanId(response.artisan_id);

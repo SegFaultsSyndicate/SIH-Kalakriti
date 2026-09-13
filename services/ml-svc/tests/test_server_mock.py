@@ -72,10 +72,13 @@ def _media(key: str = "artisans/a/b.jpg") -> common_pb2.MediaRef:
 
 async def test_enhance_image(stub):
     response = await stub.EnhanceImage(
-        inference_pb2.EnhanceImageRequest(source=_media(), remove_background=True)
+        inference_pb2.EnhanceImageRequest(
+            source=_media(), remove_background=True, correct_lighting=True
+        )
     )
     assert response.enhanced.object_key.endswith(".webp")
     assert "remove-background" in response.operations_applied
+    assert "correct-lighting" in response.operations_applied
     assert response.model_version
 
 

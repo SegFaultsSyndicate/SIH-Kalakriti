@@ -95,6 +95,12 @@ services:
       S3_BUCKET: kalakriti
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
+      # Without this, OTP login is unusable in local/demo: there is no real
+      # SMS provider (the sender is a stub), and with dev mode off the stub
+      # doesn't even log the code -- 000000 is rejected and the real code is
+      # nowhere a developer can see it. main.go refuses this flag when
+      # APP_ENV=production (unset here, defaults to "local"), so it's safe.
+      AUTH_DEV_OTP_ENABLED: "true"
     ports:
       # main.go defaults: CORE_SVC_GRPC_ADDR :50051, CORE_SVC_HTTP_ADDR :8081
       # (the old 8080/9090 mapping matched neither port core-svc actually
@@ -300,8 +306,6 @@ services:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
       - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
 
   prometheus:
     image: prom/prometheus:v2.47.0

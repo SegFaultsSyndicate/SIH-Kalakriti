@@ -52,6 +52,20 @@ Don't blanket-run `docker system prune -a --volumes` — it can delete named
 volumes (e.g. `hf-cache` for ml-svc) that hold slow-to-regenerate downloaded
 data. Prune build cache and containers first; only remove images if still short.
 
+One `docker builder prune -a -f` is not a one-time fix on a genuinely tight
+partition (seen recurring on a 46G root with ~1GB headroom after a prune) —
+each subsequent multi-service rebuild (e.g. `docker compose up -d --build`
+with no service names, rebuilding all ~7) can refill the cache faster than
+expected and hit the wall again mid-build, or even crash Postgres itself
+(`PANIC: could not write to file "pg_logical/replorigin_checkpoint.tmp": No
+space left on device`, which then crash-loops on WAL replay until space is
+freed). On a tight partition, prefer rebuilding one or two services at a
+time (`docker compose up -d --build <service>`) over a blanket rebuild, and
+re-check `df -h /` between them. `paccache`/`journalctl --vacuum` need a
+password for `sudo` in a non-interactive shell — can't be run silently on
+the user's behalf; ask them to run those two directly if builder+container
+pruning alone isn't enough headroom.
+
 ## docker-compose.yml gotchas already fixed once (don't reintroduce)
 
 - **Postgres 18+ volume mount**: must be `pg_data:/var/lib/postgresql` (the
@@ -341,3 +355,104 @@ fallback data had the two forms backwards (short-form values pushed into
 `svelte-check` failure, not a live request bug, since the one real write
 call (`addClusterMember`) already sent the correct short form. Fixed by
 correcting the mock data, not by touching the request path or the spec.
+## `AUTH_DEV_OTP_ENABLED` was never set in `docker-compose.yml` (fixed)
+
+There is no real SMS provider (`service.LoggingOTPSender` is a stub that only
+logs), and with dev mode off the stub doesn't even log the code — so with
+this unset (defaults `false`), OTP login was **completely unusable** against
+the local stack: `000000` gets rejected and the real code is nowhere a human
+can see it. Every doc assumes this is on for local/demo. Fixed by adding
+`AUTH_DEV_OTP_ENABLED: "true"` to core-svc's environment in
+`docker-compose.yml` (main.go refuses it when `APP_ENV=production`, which is
+unset here, so this is safe for this file specifically — never add it to a
+real deployment's config).
+
+## Idempotency middleware double-wrote every response (fixed)
+
+`services/bff/internal/bff/middleware/idempotency.go`'s `responseRecorder`
+both buffered the handler's response into a byte slice **and** forwarded it
+live to the real `http.ResponseWriter` immediately — and then, after
+capturing it, the middleware's outer code wrote the same captured response
+to that same real writer *again*. Every idempotency-protected mutating route
+(artisan registration, listing/order/statement/cluster/SHG creation,
+moderation actions) double-wrote its response body on every fresh (non-
+replayed) call. Symptom: doubled JSON in the response body
+(`Content-Length` exactly 2x what a single copy would be), and — worse —
+whichever write actually "won" the status line could be a *different*
+status than the handler produced, e.g. an unrelated late failure clobbering
+an already-successful write into a client-visible 500. Fixed by making
+`responseRecorder.WriteHeader`/`Write` buffer only, never touch the real
+`ResponseWriter` — the single real write now happens exactly once, from the
+existing post-`idempotency.Do` code, for both a fresh execution and a true
+replay alike.
+
+## Masked 500s were completely silent everywhere (fixed) — and the real bug they were hiding
+
+`pkg/domain.WriteHTTPError` replaces any error message on a 500 with the
+generic "internal error" **before logging it anywhere** — so an unmapped
+error was invisible not just to the client (intentional) but to every
+service's own logs too (not intentional). Made worse by
+`pkg/domain.GRPCStatus`'s `default` case *also* discarding the real message
+before it even left the originating service — an internal service-to-service
+boundary (e.g. core-svc → bff) has no reason to mask anything; only the
+client-facing edge (`WriteHTTPError`) does. Fixed: `GRPCStatus`'s default
+case now keeps `err.Error()` like every other case there, and
+`WriteHTTPError` now `slog.Default().Error()`s the real error before masking
+it for the client. This is how the next bug was actually found — without it,
+this would have stayed a black box:
+
+**pgx never had `language_code` registered, so no code path could ever write
+`artisan.languages` (fixed).** `pkg/postgres.New()`'s `AfterConnect` only
+registered pgvector's type. `artisan.languages language_code[]` is the
+*only* array-of-custom-enum column in the entire schema (checked: every
+other one of the 20+ custom enums is a scalar column, which pgx's text-
+format fallback already handles fine without registration — only arrays of
+an unregistered element type have no encode plan). Real error, once
+unmasked: `failed to encode args[N]: unable to encode []db.LanguageCode
+{"ENGLISH"} into text format for unknown type (OID ...): cannot find encode
+plan`. This made artisan registration (and anything else touching
+`languages`) fail with a masked 500 on every attempt, with zero trace in
+core-svc's own logs (no panic, no logged error — just a returned error
+nothing had printed yet). Fixed by registering `language_code`'s base and
+array codecs via `conn.LoadType`/`TypeMap().RegisterType` in the same
+`AfterConnect` hook. If a future migration adds another `sometype[]` column,
+add its name to the `registerEnumArrayTypes(ctx, conn, "language_code")`
+call in `pkg/postgres/postgres.go`.
+
+## Artisan registration's real request contract (frontend was built against a stale spec)
+
+`POST /artisans` requires `display_name`, a non-empty `craft_ids` (real
+craft ontology UUIDs from `GET /crafts` — not slugs), and `region.state_code`
+(ISO 3166-2:IN, e.g. `"IN-UP"`) — none of which the checked-in
+`services/bff/openapi.json` documented (it only listed `display_name` as
+required, `language` as an unused optional string the handler never reads).
+`web/apps/artisan/src/lib/registration.ts` had a comment explaining it
+deliberately sent only `display_name`/`language` because "the ABSOLUTE RULE"
+(never invent fields beyond the generated spec) — a correct read of a wrong
+spec. Fixed the whole chain: `services/bff/openapi.json`'s `/artisans` POST
+schema now matches `services/bff/internal/bff/client/artisan.go`'s actual
+`Register()` validation, `web/packages/api/src/generated/schema.d.ts` was
+regenerated from it (`pnpm --filter @kalakriti/api api:gen`), and
+`buildRegisterBody` in `registration.ts` now assembles the real shape
+(`craft_ids`, `languages` as uppercase `commonv1.Language` enum names via
+`LOCALES[code].englishName.toUpperCase()`, `region.state_code` via a new
+`STATE_CODES` map in `$lib/ontology.ts`). The craft picker
+(`/register/craft`) and the listing-creation craft `<Select>`
+(`/listing/new/story`) both used to source a static local slug list
+(`ontology.ts`'s old `CRAFTS`) that had no relation to real craft UUIDs —
+replaced with `loadCrafts()`, which calls the real `GET /crafts` (public,
+no auth) and caches the result via `@kalakriti/offline`'s
+`getCached`/`setCached` for offline reuse. A free-text ("my district isn't
+listed") registration now also needs a state picked from `STATES` (added
+alongside `STATE_CODES`), since `state_code` can't be derived from arbitrary
+free text. If you touch `POST /artisans` again: check
+`client/artisan.go`'s `Register()` for the real required fields, not the
+checked-in `openapi.json` — the two have drifted before and will again
+unless someone runs `pnpm api:gen` after every bff route change.
+
+## Idempotency header mismatch — now fixed (was: found, not yet fixed)
+
+`web/packages/api/src/transport.ts` now sends `X-Idempotency-Key`, matching
+`services/bff/internal/bff/middleware/idempotency.go`. (Previously documented
+here as sending the bare `Idempotency-Key` — that entry is superseded by this
+one; the fix has shipped.)
