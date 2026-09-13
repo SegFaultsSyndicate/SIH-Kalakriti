@@ -14,18 +14,25 @@
   giving both the same name here would shadow the amount with the mode.
 -->
 <script lang="ts">
-  import { locale, formatMoney, type MoneyOptions, type Paise } from '@kalakriti/i18n';
+  import {
+    locale,
+    formatMoney,
+    type CurrencyCode,
+    type MoneyOptions,
+    type Paise,
+  } from '@kalakriti/i18n';
 
   interface Props {
     paise: Paise;
+    currency?: CurrencyCode;
     paiseMode?: MoneyOptions['paise'];
     symbol?: MoneyOptions['symbol'];
     class?: string;
   }
 
-  let { paise, paiseMode, symbol, class: className }: Props = $props();
+  let { paise, currency, paiseMode, symbol, class: className }: Props = $props();
 
-  const formatted = $derived(formatMoney(paise, locale.code, { paise: paiseMode, symbol }));
+  const formatted = $derived(formatMoney(paise, locale.code, { paise: paiseMode, symbol, currency }));
 </script>
 
 <span class="k-money k-tabular {className || ''}">{formatted}</span>

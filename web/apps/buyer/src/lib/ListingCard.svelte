@@ -9,12 +9,13 @@
   made-to-order" rule: same badge size, same position, no greyed styling.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type CurrencyCode } from '@kalakriti/i18n';
   import { Money, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import type { components } from '@kalakriti/api';
   import { craftIcon } from './craft-icon';
   import { wishlist } from './wishlist.svelte';
+  import { CURRENCY_RATES, convertPaise } from './currency';
 
   type ListingSummary = components['schemas']['ListingSummary'];
 
@@ -33,7 +34,14 @@
       '',
   );
   const madeToOrder = $derived(listing.type === 'MADE_TO_ORDER');
+  // The base price of the listing, always INR paise straight from the API.
   const paise = $derived(listing.price?.amount_paise ?? (listing.price as any)?.amount ?? 0);
+
+  // Hardcoded currency switch for now -- no picker exists yet, so every card
+  // renders in this one currency. Swap to real selection state, UX later.
+  const selectedCurrency: CurrencyCode = 'USD';  // hardcoded for now
+  const conversionRate = $derived(CURRENCY_RATES[selectedCurrency] ?? 1);
+  const convertedPaise = $derived(convertPaise(paise, conversionRate));
 
   let devAvatar = $state<string | undefined>(undefined);
   $effect(() => {
@@ -173,9 +181,9 @@
       </span>
     {/if}
     <span class="listing-card__price-row">
-      <span class="listing-card__price"><Money {paise} /></span>
+      <span class="listing-card__price"><Money paise={convertedPaise} currency={selectedCurrency} /></span>
       {#if paise > 0}
-        <span class="listing-card__mrp">₹{Math.round((paise * 1.25) / 100).toLocaleString('en-IN')}</span>
+        <span class="listing-card__mrp"><Money paise={Math.round(convertedPaise * 1.25)} currency={selectedCurrency} /></span>
         <span class="listing-card__discount">(20% OFF)</span>
       {/if}
     </span>
