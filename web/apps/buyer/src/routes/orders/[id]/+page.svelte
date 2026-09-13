@@ -23,7 +23,6 @@
   the other, per the brief's "not visual-only" requirement.
 -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { page } from '$app/state';
   import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Button, Money, EmptyState, Skeleton, Tabs } from '@kalakriti/ui';
@@ -63,8 +62,15 @@
   let view = $state('cards');
   let disputeOpen = $state(false);
 
-  const watcher = watchOrderEvents(orderId);
-  const sseStatus = $derived(watcher.state.status);
+  // Re-subscribe when the route param changes. Capturing the watcher once
+  // bound the stream to the first order id the page ever saw.
+  let watcher = $state<ReturnType<typeof watchOrderEvents> | undefined>(undefined);
+  $effect(() => {
+    const w = watchOrderEvents(orderId);
+    watcher = w;
+    return () => w.stop();
+  });
+  const sseStatus = $derived(watcher?.state.status ?? 'connecting');
 
   async function resolveArtisan(artisanId: string): Promise<void> {
     if (!artisanId || names[artisanId] !== undefined) return;
@@ -103,7 +109,7 @@
   });
 
   $effect(() => {
-    const ev = watcher.state.lastEvent;
+    const ev = watcher?.state.lastEvent;
     if (!ev) return;
     let parsed: RawOrderEvent | undefined;
     try {
@@ -120,7 +126,6 @@
     if (line) liveLines = [...liveLines.slice(-19), line];
   });
 
-  onDestroy(() => watcher.stop());
 
   const lots = $derived(Object.values(allocation.lots));
   const allocated = $derived(allocatedQuantity(allocation.lots));

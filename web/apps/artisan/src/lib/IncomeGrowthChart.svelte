@@ -271,7 +271,7 @@
     display: flex;
     align-items: center;
     gap: var(--k-space-3);
-    background: linear-gradient(135deg, var(--k-neem-600), var(--k-neem-700));
+    background: linear-gradient(135deg, var(--k-accent-success-bg), var(--k-neem-700));
     color: var(--k-text-on-accent);
     padding: var(--k-space-3) var(--k-space-4);
     border-radius: var(--k-radius-md);
@@ -324,7 +324,7 @@
   }
 
   .stat-item--zero .stat-item__val {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .stat-item__lbl {
@@ -366,7 +366,7 @@
   }
 
   .legend-swatch--kalakriti {
-    background: var(--k-neem-600);
+    background: var(--k-accent-success-bg);
   }
 
   /* Visual Grouped Bar Canvas */
@@ -422,7 +422,7 @@
   }
 
   .bar-value--highlight {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 
@@ -447,7 +447,7 @@
   }
 
   .bar-fill--kalakriti {
-    background: linear-gradient(180deg, var(--k-neem-500), var(--k-neem-600));
+    background: linear-gradient(180deg, var(--k-neem-500), var(--k-accent-success-bg));
   }
 
   .quarter-meta {
@@ -466,7 +466,7 @@
   .quarter-uplift-tag {
     font-size: 0.65rem;
     background: rgba(34, 197, 94, 0.15);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 800;
     padding: 1px 6px;
     border-radius: 999px;
@@ -481,7 +481,7 @@
     border-radius: var(--k-radius-md);
     background: var(--k-surface-base);
     border: 1px solid var(--k-neem-300);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
     font-size: var(--k-text-xs);
     line-height: var(--k-leading-normal);
   }
@@ -510,12 +510,12 @@
   }
 
   .cell-green {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 700;
   }
 
   .cell-gain {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 

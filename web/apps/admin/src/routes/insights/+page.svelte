@@ -553,7 +553,7 @@
   }
 
   .insights-kpi__value--uplift {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .insights-kpi__value--risk {
@@ -608,7 +608,7 @@
 
   .dying-craft-severity--critical {
     background: var(--k-terracotta-300);
-    color: var(--k-madder-700);
+    color: var(--k-accent-danger);
   }
 
   .dying-craft-severity--warning {
@@ -618,7 +618,7 @@
 
   .dying-craft-severity--watch {
     background: var(--k-neem-300);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .dying-craft-item__stats {

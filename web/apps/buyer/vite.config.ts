@@ -9,8 +9,8 @@ import { sizeReport } from '../../scripts/vite/size-report.js';
 import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.js';
 
 /**
- * Initial-JS budget, gzip. `SIZE_BUDGET_ENFORCE=1 pnpm build` turns it from a
- * report into a build failure -- that is what CI runs. See the artisan app's
+ * Initial-JS budget, gzip. Enforced on every build; `SIZE_BUDGET_ENFORCE=0`
+ * downgrades it to a report. See the artisan app's
  * vite.config.ts for the same convention.
  */
 const BUYER_JS_BUDGET_KB = 200;
@@ -127,7 +127,10 @@ export default defineConfig({
     sizeReport({
       app: 'buyer',
       budgetKb: BUYER_JS_BUDGET_KB,
-      enforce: process.env.SIZE_BUDGET_ENFORCE === '1',
+      // Enforced by default: a budget that only fails when someone remembers to
+      // set an env var is a report, not a budget. SIZE_BUDGET_ENFORCE=0 is the
+      // escape hatch for a local build you knowingly want to finish anyway.
+      enforce: process.env.SIZE_BUDGET_ENFORCE !== '0',
     }),
   ],
 

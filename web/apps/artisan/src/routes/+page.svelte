@@ -435,7 +435,7 @@
   .sahayak-btn--primary {
     background: var(--k-accent-primary-bg);
     color: var(--k-text-on-accent);
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .home-growth-section {

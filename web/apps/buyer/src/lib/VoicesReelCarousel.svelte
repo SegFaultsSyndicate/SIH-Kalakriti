@@ -277,7 +277,7 @@
     inline-size: 4.5rem;
     block-size: 4.5rem;
     border-radius: var(--k-radius-full, 999px);
-    border: 2px solid var(--k-terracotta-700);
+    border: 2px solid var(--k-border-accent);
     background-color: var(--k-surface-base);
     display: flex;
     flex-direction: column;

@@ -152,7 +152,7 @@
     aspect-ratio: 1;
     border-radius: var(--k-radius-full);
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     margin-block-end: var(--k-space-2);
   }
 
@@ -261,7 +261,7 @@
 
   .pledge-time {
     font-size: 0.72rem;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -321,7 +321,7 @@
   }
 
   .step--complete .step-bullet {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .step--active .step-bullet {

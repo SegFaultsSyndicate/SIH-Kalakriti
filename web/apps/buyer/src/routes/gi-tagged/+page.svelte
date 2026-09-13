@@ -831,13 +831,13 @@
     font-family: var(--k-font-display, serif);
     font-size: 2rem;
     font-weight: 700;
-    color: var(--k-madder-800); /* Official heritage burgundy */
+    color: var(--k-accent-danger-strong); /* Official heritage burgundy */
     margin: 0 0 0.35rem 0;
   }
 
   .gi-page-subtitle {
     font-size: 0.85rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     margin: 0;
   }
 
@@ -875,7 +875,7 @@
   .sidebar-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -892,7 +892,7 @@
   }
 
   .filter-accordion {
-    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
     padding-block: 0.85rem;
   }
 
@@ -943,18 +943,18 @@
 
   .filter-option-btn:hover {
     background-color: var(--k-surface-base);
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
   }
 
   .filter-option-btn.active {
     background-color: var(--k-surface-raised);
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     font-weight: 700;
   }
 
   .option-count {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
   }
 
   /* 12 Color Swatches Grid (Image 4) */
@@ -1025,7 +1025,7 @@
     background-color: var(--k-surface-base);
     border: none;
     padding: 0.4rem 0.5rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1068,7 +1068,7 @@
 
   .sort-label {
     font-size: 0.82rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .active-filter-pill {
@@ -1079,7 +1079,7 @@
     border-radius: 4px;
     background-color: var(--k-surface-base);
     border: 1px solid var(--k-neem-600);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-size: 0.75rem;
     font-weight: 600;
   }
@@ -1127,7 +1127,7 @@
   /* CARD STYLING */
   .gi-product-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -1138,7 +1138,7 @@
   .gi-product-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .gi-media-frame {
@@ -1172,13 +1172,13 @@
     border-radius: 999px;
     padding: 0.2rem 0.5rem 0.2rem 0.25rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
   }
 
   .gi-tag-num {
     font-size: 0.68rem;
     font-weight: 700;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
   }
 
   .gi-quick-share-btn {
@@ -1190,7 +1190,7 @@
     border-radius: 50%;
     background-color: var(--k-surface-base);
     border: 1px solid var(--k-border-hairline);
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1200,7 +1200,7 @@
   }
 
   .gi-quick-share-btn:hover {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     transform: scale(1.1);
   }
 
@@ -1224,12 +1224,12 @@
     text-transform: uppercase;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
   }
 
   .state-chip {
     font-size: 0.68rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .gi-product-title {
@@ -1245,13 +1245,13 @@
   }
 
   .gi-product-title a:hover {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     text-decoration: underline;
   }
 
   .artisan-byline {
     font-size: 0.78rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0 0 0.75rem 0;
   }
 
@@ -1278,7 +1278,7 @@
   .gi-discount-tag {
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--k-neem-600); /* Fair trade saving green */
+    color: var(--k-accent-success-muted); /* Fair trade saving green */
   }
 
   .gi-card-actions {
@@ -1298,7 +1298,7 @@
     border-radius: 4px;
     background-color: var(--k-surface-raised);
     border: 1px solid var(--k-border-hairline);
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     text-decoration: none;
     font-size: 0.82rem;
     font-weight: 600;
@@ -1329,15 +1329,15 @@
   }
 
   .gi-wishlist-btn:hover {
-    border-color: var(--k-madder-600);
-    color: var(--k-madder-600);
-    background-color: var(--k-stone-100);
+    border-color: var(--k-border-danger);
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-neutral);
   }
 
   .gi-wishlist-btn.is-wishlisted {
-    border-color: var(--k-madder-600);
-    color: var(--k-madder-600);
-    background-color: var(--k-stone-100);
+    border-color: var(--k-border-danger);
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-neutral);
   }
 
   .no-results-panel {
@@ -1346,7 +1346,7 @@
     background-color: var(--k-surface-base);
     border: 1px dashed var(--k-border-hairline);
     border-radius: 6px;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .no-results-panel h3 {

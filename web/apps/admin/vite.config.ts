@@ -6,6 +6,9 @@ import { defineConfig } from 'vitest/config';
 import { sizeReport } from '../../scripts/vite/size-report.js';
 import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.js';
 
+/** Initial-JS budget, gzip. Enforced on every build; SIZE_BUDGET_ENFORCE=0 downgrades it to a report. */
+const ADMIN_JS_BUDGET_KB = 80;
+
 // No SvelteKitPWA import at all: absence of a service worker is a decision
 // here, not an omission. See svelte.config.js.
 export default defineConfig({
@@ -20,7 +23,14 @@ export default defineConfig({
         multipass: false,
         plugins: [{ name: 'removeXMLProcInst' }],
       },
-    }), sizeReport({ app: 'admin' })],
+    }), sizeReport({
+      app: 'admin',
+      // Internal tool on office connections, so a looser ceiling than the two
+      // public apps -- but a ceiling. Currently ~35 KB; this is the headroom
+      // before someone should have to argue for it.
+      budgetKb: ADMIN_JS_BUDGET_KB,
+      enforce: process.env.SIZE_BUDGET_ENFORCE !== '0',
+    })],
 
   build: {
     // Same floor as the other two so the shared packages compile once against

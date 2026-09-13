@@ -178,7 +178,7 @@
   /* 1. Become a Seller Hero Banner */
   .seller-cta-banner {
     background: linear-gradient(135deg, var(--k-surface-base) 0%, var(--k-surface-raised) 100%);
-    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 12px;
     padding: 3rem 2.5rem;
     position: relative;
@@ -275,7 +275,7 @@
 
   .perk-meta span {
     font-size: 0.775rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     line-height: 1.35;
   }
 
@@ -309,7 +309,7 @@
 
   .seller-helper-text {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     font-style: italic;
   }
 
@@ -350,7 +350,7 @@
 
   .testimonial-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 8px;
     overflow: hidden;
     display: flex;
@@ -426,7 +426,7 @@
 
   .seller-cluster {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -451,8 +451,8 @@
 
   /* 3. Official Government Accreditation Strip */
   .official-accreditation-strip {
-    border-block-start: 1px solid var(--k-border-subtle, var(--k-stone-100));
-    border-block-end: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border-block-start: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
+    border-block-end: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     padding-block: 1.25rem;
     display: flex;
     align-items: center;
@@ -473,7 +473,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
   }
 </style>

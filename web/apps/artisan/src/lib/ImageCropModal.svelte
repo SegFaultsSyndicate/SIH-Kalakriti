@@ -316,7 +316,7 @@
     justify-content: space-between;
     width: 100%;
     padding-block-end: var(--k-space-2);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-khadi-150));
+    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .crop-header__text {

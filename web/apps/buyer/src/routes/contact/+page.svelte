@@ -236,7 +236,7 @@
 
   .contact-header {
     margin-block-end: 2.5rem;
-    border-block-end: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border-block-end: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     padding-block-end: 1.5rem;
   }
 
@@ -281,7 +281,7 @@
 
   .help-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 1.5rem;
     display: flex;
@@ -318,7 +318,7 @@
 
   .grievance-icon {
     background-color: rgba(22, 101, 52, 0.1);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   .help-card__tag {
@@ -327,7 +327,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .help-card__title {
@@ -375,7 +375,7 @@
 
   .form-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 2rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
@@ -391,7 +391,7 @@
 
   .form-subtext {
     font-size: 0.85rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0 0 1.5rem 0;
   }
 
@@ -484,7 +484,7 @@
     inline-size: 2.25rem;
     aspect-ratio: 1;
     border-radius: 50%;
-    background-color: var(--k-neem-600);
+    background-color: var(--k-accent-success-bg);
     color: var(--k-text-on-accent);
     display: flex;
     align-items: center;
@@ -496,19 +496,19 @@
   .alert-body h4 {
     margin: 0 0 0.35rem 0;
     font-size: 1rem;
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   .alert-body p {
     font-size: 0.85rem;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     margin: 0 0 1rem 0;
   }
 
   .btn-reset {
     background: none;
     border: 1px solid var(--k-neem-600);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 600;
     font-size: 0.8rem;
     padding: 0.4rem 0.85rem;
@@ -519,7 +519,7 @@
   /* Right Office Card */
   .office-info-card {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 1.75rem;
     display: flex;
@@ -578,7 +578,7 @@
 
   .whatsapp-desc {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     line-height: 1.4;
     margin: 0;
   }

@@ -1112,7 +1112,7 @@
     gap: 1.5rem;
     padding: 1.5rem 1.75rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 14px;
     margin-block: 1rem 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1136,8 +1136,8 @@
     block-size: 4.25rem;
     border-radius: 50%;
     background-color: var(--k-surface-sunken);
-    color: var(--k-madder-600);
-    border: 2px solid var(--k-khadi-200);
+    color: var(--k-accent-danger-muted);
+    border: 2px solid var(--k-border-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1191,7 +1191,7 @@
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     border: 1px solid var(--k-neem-300);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -1203,8 +1203,8 @@
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
     background-color: var(--k-surface-raised);
-    color: var(--k-stone-500);
-    border: 1px solid var(--k-khadi-200);
+    color: var(--k-text-tertiary);
+    border: 1px solid var(--k-border-muted);
   }
 
   .profile-contact-strip {
@@ -1213,7 +1213,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.825rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .contact-item {
@@ -1229,7 +1229,7 @@
   .verified-dot {
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     background-color: var(--k-surface-raised);
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
@@ -1271,7 +1271,7 @@
     justify-content: center;
     padding: 0.65rem 1rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     min-inline-size: 5.5rem;
   }
@@ -1279,14 +1279,14 @@
   .telemetry-value {
     font-size: 1.35rem;
     font-weight: 800;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     font-family: var(--k-font-display, Georgia, serif);
   }
 
   .telemetry-label {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-block-start: 0.15rem;
@@ -1321,7 +1321,7 @@
     gap: 1rem;
     padding: 1.25rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 12px;
     text-decoration: none;
     color: inherit;
@@ -1334,11 +1334,11 @@
   .hub-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
   }
 
   .hub-card.card-active {
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
     background-color: var(--k-surface-base);
   }
 
@@ -1350,8 +1350,8 @@
     block-size: 3rem;
     border-radius: 10px;
     background-color: var(--k-surface-base);
-    color: var(--k-madder-600);
-    border: 1px solid var(--k-khadi-150);
+    color: var(--k-accent-danger-muted);
+    border: 1px solid var(--k-border-subtle);
     flex: none;
   }
 
@@ -1370,7 +1370,7 @@
 
   .card-desc {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     line-height: 1.35;
     margin: 0;
   }
@@ -1378,7 +1378,7 @@
   /* Sub-Panels Section */
   .account-details-container {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1389,7 +1389,7 @@
     gap: 0.5rem;
     padding: 0.85rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
     overflow-x: auto;
   }
 
@@ -1403,7 +1403,7 @@
     border: 1px solid transparent;
     font-weight: 600;
     font-size: 0.825rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.15s ease;
@@ -1416,9 +1416,9 @@
   }
 
   .pill-btn.is-active {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
   }
 
   .detail-panel {
@@ -1432,7 +1432,7 @@
     gap: 1rem;
     margin-block-end: 1.75rem;
     padding-block-end: 1rem;
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .panel-title {
@@ -1445,7 +1445,7 @@
 
   .panel-desc {
     font-size: 0.85rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0.2rem 0 0;
   }
 
@@ -1456,7 +1456,7 @@
     gap: 0.4rem;
     padding: 0.5rem 0.9rem;
     border-radius: 8px;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
     border: none;
     font-size: 0.825rem;
@@ -1468,7 +1468,7 @@
 
   .add-addr-btn:hover,
   .view-all-orders-btn:hover {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
   }
 
   /* Form Styles */
@@ -1514,7 +1514,7 @@
 
   .form-input:focus {
     outline: none;
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
     box-shadow: 0 0 0 3px rgba(184, 74, 57, 0.12);
   }
 
@@ -1530,7 +1530,7 @@
   .action-inline-btn {
     padding: 0.65rem 0.85rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-size: 0.775rem;
     font-weight: 600;
@@ -1571,7 +1571,7 @@
 
   .primary-save-btn {
     padding: 0.75rem 1.5rem;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
@@ -1582,7 +1582,7 @@
   }
 
   .primary-save-btn:hover {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
   }
 
   /* Addresses Grid (Amazon Style) */
@@ -1615,8 +1615,8 @@
   }
 
   .address-card.is-default-card {
-    border-color: var(--k-madder-600);
-    box-shadow: 0 0 0 1px var(--k-madder-600);
+    border-color: var(--k-border-danger);
+    box-shadow: 0 0 0 1px var(--k-border-danger);
   }
 
   .addr-header-row {
@@ -1631,13 +1631,13 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .default-badge {
     font-size: 0.65rem;
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .addr-name {
@@ -1657,7 +1657,7 @@
 
   .addr-phone {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0 0 0.35rem;
   }
 
@@ -1676,7 +1676,7 @@
     gap: 0.5rem;
     margin-block-start: auto;
     padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .addr-text-btn {
@@ -1690,7 +1690,7 @@
   }
 
   .addr-text-btn.remove-btn {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .btn-divider {
@@ -1714,7 +1714,7 @@
   }
 
   .new-address-placeholder-card:hover {
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
     background-color: var(--k-surface-base);
   }
 
@@ -1727,7 +1727,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     margin-block-end: 0.65rem;
   }
 
@@ -1738,7 +1738,7 @@
 
   .new-address-placeholder-card small {
     font-size: 0.75rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin-block-start: 0.2rem;
   }
 
@@ -1746,13 +1746,13 @@
   .security-sections {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     margin-block-end: 2rem;
   }
 
   .security-sections > * + * {
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .banner-signout-btn {
@@ -1763,7 +1763,7 @@
     background: transparent;
     border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -1773,7 +1773,7 @@
   .banner-signout-btn:hover {
     background-color: var(--k-surface-base);
     border-color: var(--k-terracotta-400);
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .security-row {
@@ -1797,7 +1797,7 @@
 
   .sec-meta span {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .sec-edit-btn {
@@ -1819,12 +1819,12 @@
     cursor: pointer;
     border: 1px solid var(--k-border-hairline);
     background-color: var(--k-surface-raised);
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .sec-toggle-btn.is-enabled {
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     border-color: var(--k-neem-300);
   }
 
@@ -1832,7 +1832,7 @@
   .active-sessions-block,
   .dpdp-privacy-block {
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     padding: 1.25rem;
     margin-block-end: 1.5rem;
@@ -1855,7 +1855,7 @@
 
   .block-sub {
     font-size: 0.75rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0.15rem 0 0;
   }
 
@@ -1867,7 +1867,7 @@
     background-color: var(--k-surface-base);
     border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
@@ -1885,12 +1885,12 @@
     gap: 0.75rem;
     padding: 0.75rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 8px;
   }
 
   .session-item.is-current-sess {
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
   }
 
   .sess-icon {
@@ -1901,7 +1901,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .sess-info {
@@ -1925,14 +1925,14 @@
     font-size: 0.65rem;
     font-weight: 700;
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
   }
 
   .sess-loc {
     font-size: 0.725rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .sess-time {
@@ -1961,7 +1961,7 @@
   }
 
   .dpdp-btn.danger {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     border-color: var(--k-madder-400);
   }
 
@@ -1973,7 +1973,7 @@
   }
 
   .order-rail-card {
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
     background-color: var(--k-surface-base);
     overflow: hidden;
@@ -1985,7 +1985,7 @@
     justify-content: space-between;
     padding: 0.85rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .order-id {
@@ -1997,7 +1997,7 @@
 
   .order-date {
     font-size: 0.75rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .rail-price-wrap {
@@ -2021,13 +2021,13 @@
   }
 
   .status-ship {
-    background-color: var(--k-stone-100);
+    background-color: var(--k-surface-neutral);
     color: var(--k-indigo-600);
   }
 
   .status-delivered {
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .rail-card-body {
@@ -2041,7 +2041,7 @@
     block-size: 5.5rem;
     object-fit: cover;
     border-radius: 8px;
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     flex: none;
   }
 
@@ -2061,14 +2061,14 @@
 
   .rail-artisan {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
   .rail-gi-tag {
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .rail-progress-track {
@@ -2090,11 +2090,11 @@
 
   .track-step.step-done {
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .track-step.step-active {
-    background-color: var(--k-stone-100);
+    background-color: var(--k-surface-neutral);
     color: var(--k-indigo-600);
   }
 
@@ -2104,7 +2104,7 @@
     gap: 0.75rem;
     padding: 0.75rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .rail-action-link {
@@ -2133,7 +2133,7 @@
 
   /* Consultation Card */
   .consultation-card {
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
     padding: 1.5rem;
     background-color: var(--k-surface-base);
@@ -2159,7 +2159,7 @@
   .consult-type {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .artisan-preview {
@@ -2174,12 +2174,12 @@
     block-size: 2.75rem;
     border-radius: 50%;
     background-color: var(--k-surface-sunken);
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
   }
 
   .artisan-head-name {
@@ -2191,7 +2191,7 @@
 
   .artisan-guild {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
@@ -2201,7 +2201,7 @@
     background-color: var(--k-surface-base);
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     line-height: 1.45;
   }
 
@@ -2216,7 +2216,7 @@
     align-items: center;
     gap: 0.45rem;
     padding: 0.65rem 1.25rem;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
@@ -2228,7 +2228,7 @@
   .reschedule-btn {
     padding: 0.65rem 1.25rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.85rem;
@@ -2268,7 +2268,7 @@
     justify-content: space-between;
     padding: 1.15rem 1.5rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .modal-title {
@@ -2283,7 +2283,7 @@
     background: transparent;
     border: none;
     font-size: 1.1rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     cursor: pointer;
   }
 
@@ -2296,7 +2296,7 @@
 
   .modal-desc {
     font-size: 0.825rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0;
     line-height: 1.4;
   }
@@ -2314,7 +2314,7 @@
     gap: 0.65rem;
     padding: 1rem 1.5rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .modal-cancel-btn {
@@ -2330,7 +2330,7 @@
 
   .modal-submit-btn {
     padding: 0.55rem 1.25rem;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     border: none;
     border-radius: 6px;
     font-weight: 700;

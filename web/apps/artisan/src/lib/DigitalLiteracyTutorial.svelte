@@ -28,7 +28,13 @@
     icon: IconName;
     badge: string;
     speakHindi: string;
-
+    /* Each step carries one accent from the craft palette -- voice is clay,
+       the photo studio is indigo, pricing is turmeric, payment is neem. Four
+       flat fills, no gradient: the colour identifies the step, it is not a
+       decoration laid over it. Both tokens are named so the pairing stays a
+       measured one (see palette.css) rather than whatever reads nicely. */
+    accent: string;
+    onAccent: string;
   }
 
   const STEPS: TutorialStep[] = [
@@ -38,6 +44,8 @@
       icon: 'microphone',
       badge: 'बोलकर सूची बनाएं (Voice-First)',
       speakHindi: 'कलाकृति में टाइप करने की कोई ज़रूरत नहीं है। बस अपनी मातृभाषा में अपने शिल्प के बारे में बोलें। हमारा एआई इसे अपने आप लिख लेगा।',
+      accent: '--k-accent-primary-bg',
+      onAccent: '--k-text-on-accent',
     },
     {
       titleKey: 'literacy.tutorial.step2Title',
@@ -45,6 +53,8 @@
       icon: 'camera',
       badge: 'एआई फोटो स्टूडियो (AI Studio)',
       speakHindi: 'अपने करघे पर ही साधारण मोबाइल फोटो खींचें। हमारा एआई अपने आप पीछे की हलचल हटाकर साफ सफेद पृष्ठभूमि और सही रोशनी बना देगा।',
+      accent: '--k-accent-secondary',
+      onAccent: '--k-text-on-accent',
     },
     {
       titleKey: 'literacy.tutorial.step3Title',
@@ -52,6 +62,8 @@
       icon: 'fair-price',
       badge: 'उचित मूल्य सलाहकार (Fair Pricing)',
       speakHindi: 'कभी घाटे में न बेचें। कलाकृति कच्चे माल और आपकी दैनिक मजदूरी जोड़कर सही सरकारी मूल्य सुझाती है।',
+      accent: '--k-accent-warning-bg',
+      onAccent: '--k-accent-warning-text',
     },
     {
       titleKey: 'literacy.tutorial.step4Title',
@@ -59,6 +71,8 @@
       icon: 'income-statement',
       badge: 'सीधे खाते में भुगतान (Direct DBT)',
       speakHindi: 'ग्राहक और सरकारी खरीद का पूरा पैसा बिना किसी दलाल के सीधे आपके बैंक खाते में पहुंचेगा। शून्य कमीशन।',
+      accent: '--k-accent-success-bg',
+      onAccent: '--k-text-on-accent',
     },
   ];
 
@@ -104,21 +118,29 @@
         </button>
       </header>
 
-      <!-- Step Card Hero -->
-      <div class="step-card">
-        <div class="step-icon-wrap">
-          <Icon name={activeStep.icon} size="2.5rem" />
-        </div>
-        <div class="step-badge">{activeStep.badge}</div>
-        <h2 class="step-title">{t(activeStep.titleKey)}</h2>
-        <p class="step-desc">{t(activeStep.descKey)}</p>
+      <!-- Step Card Hero. Keyed on the step so every part of it is torn down
+           and rebuilt together -- and so the card reads as a new card, not as
+           the old one with a swapped icon. -->
+      {#key currentStep}
+        <div
+          class="step-card"
+          style:--step-accent="var({activeStep.accent})"
+          style:--step-on-accent="var({activeStep.onAccent})"
+        >
+          <div class="step-icon-wrap">
+            <Icon name={activeStep.icon} size="2.5rem" />
+          </div>
+          <div class="step-badge">{activeStep.badge}</div>
+          <h2 class="step-title">{t(activeStep.titleKey)}</h2>
+          <p class="step-desc">{t(activeStep.descKey)}</p>
 
-        <!-- Large Voice Audio Button -->
-        <div class="voice-row">
-          <SpeakButton text={activeStep.speakHindi} label="हिन्दी में सुनें (Listen in Hindi)" />
-          <span class="voice-hint">Tap to listen in spoken Hindi</span>
+          <!-- Large Voice Audio Button -->
+          <div class="voice-row">
+            <SpeakButton text={activeStep.speakHindi} label="हिन्दी में सुनें (Listen in Hindi)" />
+            <span class="voice-hint">Tap to listen in spoken Hindi</span>
+          </div>
         </div>
-      </div>
+      {/key}
 
       <!-- Step Dots Indicator -->
       <div class="dots-row">
@@ -171,7 +193,7 @@
   .tutorial-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.75);
+    background: color-mix(in srgb, var(--k-overlay-scrim) 75%, transparent);
     backdrop-filter: blur(6px);
     z-index: 99999;
     display: flex;
@@ -216,7 +238,7 @@
     display: inline-flex;
     align-items: center;
     background: var(--k-surface-pressed);
-    border: 1px solid var(--k-haldi-700);
+    border: 1px solid var(--k-border-warning);
     color: var(--k-accent-primary-text);
     font-size: 0.68rem;
     font-weight: 800;
@@ -234,11 +256,15 @@
     border-radius: var(--k-radius-pill);
   }
 
-  /* Step Card */
+  /* Step Card. Flat inverse ground with the step's accent carried by a top
+     rule, the icon disc and the badge -- separation by line and fill, never
+     by gradient or shadow. */
   .step-card {
     border-radius: var(--k-radius-lg);
     background: var(--k-surface-inverse);
     color: var(--k-text-on-inverse);
+    border-block-start: 4px solid var(--step-accent, var(--k-accent-primary-bg));
+    animation: stepIn 0.22s ease-out;
     padding: var(--k-space-6);
     display: flex;
     flex-direction: column;
@@ -247,11 +273,23 @@
     gap: var(--k-space-3);
   }
 
+  @keyframes stepIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   .step-icon-wrap {
     inline-size: 5rem;
     block-size: 5rem;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--k-text-on-inverse) 18%, transparent);
+    background: var(--step-accent, var(--k-accent-primary-bg));
+    color: var(--step-on-accent, var(--k-text-on-accent));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -259,7 +297,8 @@
   }
 
   .step-badge {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--step-accent, var(--k-accent-primary-bg));
+    color: var(--step-on-accent, var(--k-text-on-accent));
     font-size: 0.75rem;
     font-weight: 700;
     padding: 2px 12px;
@@ -292,9 +331,8 @@
 
   .voice-row :global(button) {
     background: var(--k-surface-base) !important;
-    color: var(--k-ink-950) !important;
+    color: var(--k-text-primary) !important;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border: none;
   }
 
@@ -323,7 +361,15 @@
   .dot-btn--active {
     inline-size: 2rem;
     border-radius: 999px;
-    background: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
+    background: var(--k-accent-primary-bg);
+  }
+
+  /* One step's colour is not worth a vestibular migraine. */
+  @media (prefers-reduced-motion: reduce) {
+    .step-card,
+    .tutorial-dialog {
+      animation: none;
+    }
   }
 
   /* Footer */

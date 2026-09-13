@@ -434,7 +434,7 @@
     background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
-    border: 1px solid var(--k-stone-100);
+    border: 1px solid var(--k-border-on-inverse);
   }
 
   :global(.placard-card) {
@@ -563,7 +563,7 @@
     block-size: 4.5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--k-haldi-700);
+    border: 3px solid var(--k-border-warning);
   }
 
   .placard-avatar-fallback {
@@ -607,7 +607,7 @@
   }
 
   .placard-tag--gi {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 700;
   }
 
@@ -666,7 +666,7 @@
   }
 
   .placard-footer {
-    border-block-start: 1px solid var(--k-stone-100);
+    border-block-start: 1px solid var(--k-border-on-inverse);
     padding-block-start: var(--k-space-2);
     display: flex;
     flex-direction: column;
@@ -802,7 +802,7 @@
       padding: 0;
     }
     :global(.placard-card) {
-      border: 4px solid var(--k-terracotta-700) !important;
+      border: 4px solid var(--k-border-accent) !important;
       box-shadow: none;
     }
   }

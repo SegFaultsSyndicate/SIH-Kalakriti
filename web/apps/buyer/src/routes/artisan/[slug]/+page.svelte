@@ -307,7 +307,7 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-4);
     background: linear-gradient(135deg, rgba(120, 53, 15, 0.1), rgba(180, 83, 9, 0.05));
-    border: 1px solid var(--k-haldi-700);
+    border: 1px solid var(--k-border-warning);
     border-radius: var(--k-radius-md);
     margin-block-end: var(--k-space-4);
   }

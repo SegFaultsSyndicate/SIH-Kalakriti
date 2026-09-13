@@ -968,7 +968,7 @@
 
   .avatar-ctrl-btn:hover {
     background-color: var(--k-surface-pressed);
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .avatar-ctrl-btn--danger {
@@ -976,7 +976,7 @@
   }
 
   .avatar-ctrl-btn--danger:hover {
-    color: var(--k-madder-700);
+    color: var(--k-accent-danger);
     border-color: var(--k-madder-400);
     background-color: var(--k-surface-base);
   }
@@ -1052,7 +1052,7 @@
     block-size: 1.75rem;
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
+    background-color: var(--k-accent-success-bg);
     color: var(--k-text-on-accent);
   }
 
@@ -1098,7 +1098,7 @@
     border: var(--k-hairline) solid var(--k-neem-300);
     border-radius: var(--k-radius-pill);
     background-color: color-mix(in srgb, var(--k-neem-300) 25%, transparent);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
   }
@@ -1107,7 +1107,7 @@
     inline-size: 6px;
     block-size: 6px;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
+    background-color: var(--k-accent-success-bg);
   }
 
   .profile-hero__role {
@@ -1314,7 +1314,7 @@
     margin-block-start: 0.25rem;
     font-size: var(--k-text-2xs);
     font-weight: var(--k-weight-semibold);
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     text-decoration: none;
   }
 
@@ -1461,7 +1461,7 @@
     border: var(--k-hairline) solid var(--k-indigo-300);
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-base);
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
     text-decoration: none;
@@ -1494,11 +1494,11 @@
   }
 
   .lang-pill:hover {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .lang-pill--active {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
     background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-surface-raised));
     color: var(--k-accent-primary-text);
     font-weight: var(--k-weight-semibold);
@@ -1536,7 +1536,7 @@
 
   .lang-more-btn:hover {
     background-color: var(--k-surface-pressed);
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   /* Accessibility Quick Bar */
@@ -1565,7 +1565,7 @@
 
   .a11y-quick-link {
     margin-inline-start: auto;
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     font-size: var(--k-text-xs);
     text-decoration: none;
   }
@@ -1600,7 +1600,7 @@
 
   .session-info__badge {
     font-size: var(--k-text-xs);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   /* Change Phone Button */
@@ -1644,7 +1644,7 @@
 
   .email-text-input:focus {
     outline: none;
-    border-color: var(--k-terracotta-600, var(--k-terracotta-700));
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 
@@ -1726,8 +1726,8 @@
     align-items: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: var(--k-stone-100);
-    color: var(--k-madder-700);
+    background-color: var(--k-surface-neutral);
+    color: var(--k-accent-danger);
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-xs);
   }
@@ -1780,7 +1780,7 @@
   }
 
   .phone-otp-field:focus {
-    border-color: var(--k-terracotta-600, var(--k-terracotta-700));
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 

@@ -363,7 +363,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-block-end: 2px solid var(--k-terracotta-700);
+    border-block-end: 2px solid var(--k-border-accent);
     padding-block-end: var(--k-space-3);
     flex-wrap: wrap;
     gap: var(--k-space-2);
@@ -385,7 +385,7 @@
   .gov-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     letter-spacing: 0.04em;
   }
 
@@ -394,7 +394,7 @@
     align-items: center;
     gap: 4px;
     background: var(--k-surface-pressed);
-    border: 1px solid var(--k-haldi-700);
+    border: 1px solid var(--k-border-warning);
     color: var(--k-accent-primary-text);
     font-size: 0.68rem;
     font-weight: 800;
@@ -423,7 +423,7 @@
     block-size: 5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--k-haldi-700);
+    border: 3px solid var(--k-border-warning);
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
   }
 
@@ -481,7 +481,7 @@
     inline-size: 6.5rem;
     block-size: 6.5rem;
     background: var(--k-surface-base);
-    border: 1px solid var(--k-stone-100);
+    border: 1px solid var(--k-border-on-inverse);
     padding: 4px;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -515,7 +515,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--k-space-3);
     background: var(--k-surface-base);
-    border: 1px solid var(--k-stone-100);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-3);
   }
@@ -543,7 +543,7 @@
 
   .badge-text small {
     font-size: 0.65rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   /* Mini Catalog */
@@ -569,7 +569,7 @@
   }
 
   .mini-product-card {
-    border: 1px solid var(--k-stone-100);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-sm);
     overflow: hidden;
     background: var(--k-surface-base);
@@ -617,13 +617,13 @@
 
   .mini-price {
     font-size: 0.8rem;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 
   /* Footer */
   .card-footer {
-    border-block-start: 1px solid var(--k-stone-100);
+    border-block-start: 1px solid var(--k-border-on-inverse);
     padding-block-start: var(--k-space-4);
     display: flex;
     flex-direction: column;
@@ -671,7 +671,7 @@
     justify-content: center;
     gap: 4px;
     font-size: 0.65rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     font-weight: 600;
   }
 
@@ -702,7 +702,7 @@
     }
     :global(.visiting-card) {
       box-shadow: none !important;
-      border: 2px solid var(--k-terracotta-700) !important;
+      border: 2px solid var(--k-border-accent) !important;
       padding: 8px !important;
     }
   }

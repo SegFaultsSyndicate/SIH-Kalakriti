@@ -241,7 +241,7 @@
     margin: var(--k-space-7) 0;
     padding: var(--k-space-5);
     background: var(--k-surface-base);
-    border-inline-start: 4px solid var(--k-terracotta-700);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 

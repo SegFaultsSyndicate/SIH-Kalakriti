@@ -318,7 +318,7 @@
   .filter-btn--active {
     background: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
     color: var(--k-text-on-accent);
-    border-color: var(--k-accent-primary-bg, var(--k-terracotta-700));
+    border-color: var(--k-accent-primary-bg, var(--k-border-accent));
   }
 
   .fairs-grid {
@@ -373,7 +373,7 @@
   }
 
   .fair-status-badge--live {
-    background: var(--k-neem-600);
+    background: var(--k-accent-success-bg);
   }
 
   .pulse-dot {

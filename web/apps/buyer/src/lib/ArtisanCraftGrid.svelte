@@ -74,8 +74,8 @@
 <style>
   .craft-categories-section {
     padding-block: 2.5rem;
-    border-block-start: 1px solid var(--k-khadi-150);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
+    border-block-end: 1px solid var(--k-border-subtle);
     background-color: var(--k-surface-base);
     margin-block: 1rem;
   }
@@ -99,7 +99,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     margin-block-end: 0.4rem;
   }
 
@@ -114,7 +114,7 @@
 
   .section-subtitle {
     font-size: 0.9rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     line-height: 1.5;
     margin: 0;
   }
@@ -125,12 +125,12 @@
     gap: 0.5rem;
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
     padding: 0.5rem 0.85rem;
     border-radius: 6px;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     transition: all 0.15s ease;
   }
 
@@ -168,7 +168,7 @@
     flex-direction: column;
     justify-content: space-between;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     padding: 1.25rem;
     text-decoration: none;
@@ -191,11 +191,11 @@
   .craft-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
   }
 
   .craft-card:hover::after {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
   }
 
   .craft-card__header {
@@ -210,7 +210,7 @@
     block-size: 2.6rem;
     border-radius: 8px;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -219,9 +219,9 @@
   }
 
   .craft-card:hover .craft-card__icon-badge {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
   }
 
   .craft-card__gi-pill {
@@ -231,7 +231,7 @@
     background-color: var(--k-surface-raised);
     padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
   }
 
   .craft-card__body {
@@ -291,12 +291,12 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .craft-card__cta {
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     transition: transform 0.15s ease;
   }
 

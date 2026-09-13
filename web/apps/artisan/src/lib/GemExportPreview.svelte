@@ -290,7 +290,7 @@
   .gem-card__price {
     font-weight: 700;
     font-variant-numeric: var(--k-numeric-tabular);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   .gem-card__table code {
@@ -353,7 +353,7 @@
       display: none;
     }
     .gem-card__note {
-      border: 1px solid var(--k-terracotta-700);
+      border: 1px solid var(--k-border-accent);
     }
   }
 </style>

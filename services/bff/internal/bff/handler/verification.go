@@ -262,47 +262,6 @@ func (h *VerificationHandler) renderNotFound(w http.ResponseWriter, r *http.Requ
 	notFoundTmpl.Execute(w, notFoundData)
 }
 
-// verificationPageCSS is the standalone stylesheet for the public provenance
-// page, built from the same tokens web/packages/tokens/src ships (values
-// copied literally since a Go html/template has no CSS custom-property
-// pipeline of its own -- token names kept in comments so a palette change
-// is easy to find and mirror here). No @font-face/@import: the page must
-// render correctly with the network otherwise blocked, so it falls back to
-// the system stack rather than fetch a webfont.
-const verificationPageCSS = `:root{color-scheme:light}
-body{margin:0;padding:0;background:#FCFAF6;color:#241E1A;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.55}
-.k-verify{max-width:34rem;margin:0 auto;padding:2rem 1rem 4rem}
-.k-verify__mark{display:flex;align-items:center;gap:.5rem;font-size:.833rem;letter-spacing:.08em;text-transform:uppercase;color:#554B44;margin-block-end:2rem}
-.k-verify__status{border-block:2px solid;padding:1rem 0;margin-block-end:2rem}
-.k-verify__status--valid{border-color:#254D21;color:#254D21}
-.k-verify__status--invalid{border-color:#93011E;color:#93011E}
-.k-verify__status-title{font-size:1.2rem;font-weight:600;margin:0 0 .25rem}
-.k-verify__status-body{margin:0;color:#241E1A;font-size:.9rem}
-.k-verify h1{font-size:1.44rem;font-weight:600;margin:0 0 .25rem;line-height:1.15}
-.k-verify__subtitle{color:#554B44;margin:0 0 2rem}
-.k-verify__fields{margin:0;padding:0}
-.k-verify__field{display:flex;justify-content:space-between;gap:1rem;padding:.75rem 0;border-block-end:1px solid #CECAC6}
-.k-verify__field:first-child{border-block-start:1px solid #CECAC6}
-.k-verify__label{color:#554B44;font-size:.9rem}
-.k-verify__value{color:#241E1A;font-weight:500;text-align:right}
-.k-verify__badge{display:inline-block;font-size:.833rem;font-weight:600;padding:.125rem .5rem;border-radius:2px}
-.k-verify__badge--yes{background:#B4CCB1;color:#254D21}
-.k-verify__badge--no{background:#EFC7B8;color:#7E1300}
-.k-verify__code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#F5F0E8;padding:.125rem .375rem;border-radius:2px}
-.k-verify__footer{margin-block-start:2rem;color:#554B44;font-size:.833rem}
-.k-verify__footer a{color:#305191}
-@media (prefers-color-scheme:dark){
-  :root{color-scheme:dark}
-  body{background:#0F0A07;color:#F5F0E8}
-  .k-verify__mark{color:#AFAAA5}
-  .k-verify__subtitle,.k-verify__label,.k-verify__footer{color:#AFAAA5}
-  .k-verify__field{border-color:#3D3630}
-  .k-verify__field:first-child{border-color:#3D3630}
-  .k-verify__code{background:#3C332E}
-  .k-verify__status--valid{border-color:#8FAB8B;color:#8FAB8B}
-  .k-verify__status--invalid{border-color:#E68582;color:#E68582}
-}`
-
 const verificationPageTemplate = `{{define "verify"}}<!DOCTYPE html>
 <html lang="en">
 <head>

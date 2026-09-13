@@ -824,7 +824,7 @@
 
   .seo-keyword-link {
     font-size: 0.7125rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     text-decoration: none;
     transition: color 0.15s ease;
   }
@@ -855,7 +855,7 @@
     flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.72rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .bottom-legal {

@@ -368,7 +368,7 @@
     inline-size: 100%;
     max-inline-size: 32rem;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
     overflow: hidden;
@@ -378,7 +378,7 @@
     padding: 1.75rem 2rem 1.25rem;
     text-align: center;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .auth-brand {
@@ -411,7 +411,7 @@
   .brand-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -426,7 +426,7 @@
 
   .auth-desc {
     font-size: 0.85rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
@@ -437,7 +437,7 @@
     background-color: var(--k-surface-raised);
     padding: 0.35rem;
     gap: 0.35rem;
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .portal-tab {
@@ -472,7 +472,7 @@
 
   .portal-tab.is-active {
     background-color: var(--k-surface-base);
-    border-color: var(--k-khadi-200);
+    border-color: var(--k-border-muted);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
@@ -495,7 +495,7 @@
 
   .portal-label small {
     font-size: 0.65rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   /* Form Panels */
@@ -519,7 +519,7 @@
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.85rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
@@ -557,7 +557,7 @@
 
   .forgot-link {
     font-size: 0.75rem;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
@@ -573,7 +573,7 @@
 
   .field-input:focus {
     outline: none;
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
     box-shadow: 0 0 0 3px rgba(184, 74, 57, 0.12);
   }
 
@@ -589,7 +589,7 @@
   .otp-send-btn {
     padding: 0.65rem 0.9rem;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -635,7 +635,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.8rem 1.25rem;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
@@ -647,7 +647,7 @@
   }
 
   .submit-primary-btn:hover {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
   }
 
   .submit-primary-btn:disabled {
@@ -658,7 +658,7 @@
   .panel-footer {
     margin-block-start: 1.5rem;
     padding-block-start: 1.25rem;
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
     text-align: center;
   }
 
@@ -670,7 +670,7 @@
   }
 
   .terms-notice a {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
@@ -693,7 +693,7 @@
 
   .portal-subtext {
     font-size: 0.825rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     line-height: 1.45;
     margin-block-end: 1.25rem;
   }
@@ -706,7 +706,7 @@
     background-color: var(--k-surface-base);
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     margin-block-end: 1.5rem;
   }
 
@@ -719,7 +719,7 @@
   }
 
   .feat-item :global(svg) {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     flex: none;
   }
 

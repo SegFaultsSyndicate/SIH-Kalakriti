@@ -23,7 +23,8 @@ Verification after every fix below: `svelte-check` across all three apps
 | 8 | BATCH 0: TypeScript strict, no `any` | `artisan/routes/profile/+page.svelte` | Two `catch (err: any)` → `unknown`, narrowed through `ApiError`. |
 | 9 | BANNED: emoji as icons or bullets, anywhere | 9 files | 🏛️ 📍 🎖️ 💡 📖 ⚡ 🎪 📅 💳 🏦 🧵 🧣 🏺 🛍️ 🛡️ and two ★ bullets replaced with `packages/icons` components or dropped. ✓ ✕ ➔ left: dingbats in prose, not icons. |
 | 10 | BATCH 2/3: a component may not reference a raw colour | 33 files, `<style>` blocks | 898 of 901 hex literals mapped to semantic aliases. Kept literal: the tricolour saffron `#FF9933` and green `#138808`, and WhatsApp's `#25D366` — brand and flag colours are reproduced exactly or not at all. |
-| 11 | BATCH 2/3: same, for raw palette steps | 30 files | 46 raw `--k-<family>-<step>` references swapped for the semantic alias playing their role. The other 515 are blocked — see gap G1. |
+| 11 | BATCH 2/3: same, for raw palette steps | 30 files | Raw `--k-<family>-<step>` references in component styles: 561 to 195, after G1 added the aliases that were missing. |
+| 12 | BANNED: gradient as a primary surface (follow-up) | `artisan/lib/DigitalLiteracyTutorial.svelte` | Flattening the four step gradients left the card flat and dull. Each step now carries one accent from the craft palette — terracotta, indigo, haldi, neem — on the icon disc, the badge and a 4px top rule, with a keyed 0.22s enter and a `prefers-reduced-motion` opt-out. Flat fills, no gradient. |
 
 The colour work is a codemod, `scripts/hex-to-token.mjs`, kept in the repo so
 the mapping is reviewable and re-runnable rather than a one-off hand edit. It
@@ -34,41 +35,53 @@ token and invert under dark mode.
 
 ---
 
-## Gaps: specified but not implemented
+## Gaps: now closed
 
-**G1 — the semantic token layer has no room for half its own uses.**
-515 raw palette-step references cannot be converted because no alias plays
-their role: there is `--k-accent-danger` (text) but no danger *background*, no
-hover step, no decorative border role. The codemod deliberately refuses to borrow an alias from another role to fill the hole: a `color` given `--k-surface-raised` reads correctly in the light theme and then turns light exactly where the background does. It emits the raw step instead and counts it here. A component wanting a danger fill has
-nowhere to go but the raw scale, so BATCH 2's "never reference a raw palette
-step" is unfollowable as the palette currently stands. Worst: `--k-stone-500`
-×60, `--k-madder-600` ×60, `--k-khadi-150` ×42, `--k-neem-600` ×40,
-`--k-stone-100` ×38, `--k-madder-800` ×34. Fix is
-adding the missing aliases to `palette.css` with measured ratios — a palette
-decision with contrast consequences, so not guessed at here.
+**G1 — the semantic layer had no room for half its own uses. Fixed.**
+13 aliases added to `palette.css` in all three themes, every text and border
+pairing measured and added to `check-contrast.mjs` (66 pairs now, was 39):
+`--k-text-tertiary`, `--k-surface-neutral`, `--k-border-subtle/-muted/
+-on-inverse/-accent/-danger/-warning`, `--k-accent-danger-bg/-success-bg/
+-danger-muted/-danger-strong/-success-muted`. The codemod's text role also
+now recognises accent aliases (`--k-accent-danger` *is* what danger text is
+painted with), which was a script bug, not a missing token. Raw palette-step
+references in component styles: 515 to 195.
 
-**G2 — the public provenance page is styled twice, in two languages.**
-BATCH 12 item 3 asked for one standalone stylesheet built from the tokens, plus
-the exact HTML structure, handed to the backend track so both render
-identically. Reality: `services/bff/internal/bff/handler/verification.go` has
-its own inline `verificationPageCSS` with hex values copied literally and a
-`.k-verify` class tree, while `web/packages/patterns/provenance.css` (119 lines,
-token-based, `.k-provenance`) is referenced by nothing. Two stylesheets for one
-page, drifting independently. The "we cannot verify this tag" state does exist,
-on the Go side only. Checked: the Go file's hex values (`#FCFAF6`, `#241E1A`,
-`#254D21`, `#93011E`, `#554B44`) still each match a palette step exactly, so the
-drift has not happened *yet* — but nothing in the build would catch it when it
-does, and the Go copy has no dark or high-contrast theme at all.
+One case deliberately left raw: `color: #C65D3B` and friends land on
+`--k-terracotta-600`, which is 4.45:1 on `--k-surface-base` — below AA. There
+is no `--k-accent-primary-muted` because minting one would launder a failing
+colour into a token. Those ~16 declarations are pre-existing contrast
+failures and should be darkened, not tokenised.
 
-**G3 — bundle budgets do not fail the build by default.**
-BATCH 14 asks for budgets enforced in CI, failing on regression. The reporter
-exists in all three vite configs but only enforces when `SIZE_BUDGET_ENFORCE=1`,
-which only `pnpm size` sets. A regression passes `pnpm build` silently.
+**G2 — the provenance page is no longer styled twice. Fixed.**
+`verificationPageCSS` was a hand-maintained Go string with the palette's hex
+values copied into it. It is now generated:
+`web/packages/patterns/verify-page.css` holds the rules in tokens,
+`scripts/gen-verification-css.mjs` resolves them against `palette.css` and
+writes `services/bff/internal/bff/handler/verification_css.go`, and
+`pnpm check` runs it with `--check` so a stale copy fails the build. Only the
+tokens the page reaches are emitted (3.2 KB, whole-palette would be 5.5 KB).
+The page stays inlined in one request on purpose — it is reached by a
+stranger scanning a tag, often on a bad connection.
 
-**G4 — two `state_referenced_locally` warnings.**
-`artisan/lib/OrderTimeline.svelte:35` and `buyer/routes/orders/[id]/+page.svelte:66`
-both capture `orderId`'s initial value only. Pre-existing, unrelated to this
-audit; a route-param change would not re-subscribe the SSE stream.
+`packages/patterns/provenance.css` is not a second copy of that page: it is
+the ornamental certificate treatment from the Batch 6 print pack. Its header
+now says so, and says that adopting it on the live page is a design decision
+rather than a cleanup.
+
+**G3 — bundle budgets fail the build by default. Fixed.**
+`enforce` flipped from `SIZE_BUDGET_ENFORCE === '1'` to `!== '0'` in buyer and
+artisan; admin had a reporter but no budget at all and now has one (80 KB).
+Measured: artisan 49.0 KB of 120, buyer 48.2 of 200, admin 35.1 of 80.
+`pnpm size` is now the same thing as `pnpm build`, and the README/FRONTEND.md
+figures were stale by 20 KB and are corrected.
+
+**G4 — the two `state_referenced_locally` warnings. Fixed.**
+`artisan/lib/OrderTimeline.svelte` and `buyer/routes/orders/[id]/+page.svelte`
+both captured `orderId` once, so a route-param change left the SSE stream
+subscribed to the previous order. Both now open the watcher inside an
+`$effect` that re-subscribes and stops the old one on cleanup; the manual
+`onDestroy` teardown is gone with it.
 
 ---
 

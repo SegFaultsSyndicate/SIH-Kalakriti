@@ -1410,7 +1410,7 @@
     font-weight: var(--k-weight-semibold);
     color: var(--k-terracotta-700, var(--k-accent-primary-text));
     text-decoration: none;
-    border-bottom: 1.5px solid var(--k-terracotta-600, var(--k-terracotta-700));
+    border-bottom: 1.5px solid var(--k-terracotta-600, var(--k-border-accent));
     padding-bottom: 2px;
     align-self: flex-start;
     transition: color 0.15s ease, border-color 0.15s ease;

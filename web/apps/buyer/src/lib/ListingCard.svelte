@@ -289,13 +289,13 @@
 
   .listing-card__wishlist-btn:hover {
     background-color: var(--k-surface-base);
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     transform: scale(1.08);
   }
 
   .listing-card__wishlist-btn.is-wishlisted {
-    background-color: var(--k-stone-100);
-    color: var(--k-madder-600);
+    background-color: var(--k-surface-neutral);
+    color: var(--k-accent-danger-muted);
     border-color: var(--k-terracotta-300);
   }
 
@@ -315,8 +315,8 @@
     padding: 0.35rem 0.6rem;
     border-radius: 4px;
     background-color: var(--k-surface-raised);
-    border: 1px solid var(--k-khadi-200);
-    color: var(--k-madder-800);
+    border: 1px solid var(--k-border-muted);
+    color: var(--k-accent-danger-strong);
     font-size: 0.72rem;
     font-weight: 700;
     transition: all 0.15s ease;
@@ -335,7 +335,7 @@
     gap: 0.25rem;
     padding: 0.35rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     background-color: var(--k-surface-base);
     color: var(--k-stone-600);
     font-size: 0.7rem;
@@ -346,9 +346,9 @@
 
   .listing-card__wishlist-cta:hover,
   .listing-card__wishlist-cta.is-wishlisted {
-    border-color: var(--k-madder-600);
-    color: var(--k-madder-600);
-    background-color: var(--k-stone-100);
+    border-color: var(--k-border-danger);
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-neutral);
   }
 
   .listing-card__badge {
@@ -454,14 +454,14 @@
 
   .listing-card__mrp {
     font-size: var(--k-text-xs, 0.75rem);
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     text-decoration: line-through;
   }
 
   .listing-card__discount {
     font-size: var(--k-text-2xs, 0.65rem);
     font-weight: 700;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     background-color: var(--k-surface-raised);
     padding: 0.1rem 0.3rem;
     border-radius: 3px;

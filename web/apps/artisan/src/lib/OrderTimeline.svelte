@@ -15,7 +15,6 @@
   "reconnecting" note, then continues with no gap and no duplicate line.
 -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { watchOrderEvents } from '@kalakriti/api';
   import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
@@ -32,11 +31,19 @@
   let lines = $state<TimelineLine[]>([]);
   let rawEvents = $state<OrderTimelineEvent[]>([]);
 
-  const watcher = watchOrderEvents(orderId);
-  const status = $derived(watcher.state.status);
+  // Re-subscribe when orderId changes. Capturing the watcher once bound the
+  // stream to the first order the component ever saw; a route param change
+  // left it listening to the old one.
+  let watcher = $state<ReturnType<typeof watchOrderEvents> | undefined>(undefined);
+  $effect(() => {
+    const w = watchOrderEvents(orderId);
+    watcher = w;
+    return () => w.stop();
+  });
+  const status = $derived(watcher?.state.status ?? 'connecting');
 
   $effect(() => {
-    const ev = watcher.state.lastEvent;
+    const ev = watcher?.state.lastEvent;
     if (!ev) return;
     let parsed: OrderTimelineEvent | undefined;
     try {
@@ -48,8 +55,6 @@
     rawEvents = [...rawEvents, parsed];
     lines = appendNarrated(lines, parsed);
   });
-
-  onDestroy(() => watcher.stop());
 
   const accepted = $derived(acceptedCount(rawEvents));
 </script>

@@ -436,7 +436,7 @@
   .lighting-toggle-btn--active {
     background: var(--k-haldi-700);
     color: var(--k-text-on-accent);
-    border-color: var(--k-haldi-700);
+    border-color: var(--k-border-warning);
   }
 
   .view-mode-bar {
@@ -500,10 +500,10 @@
   .split-viewer__enhanced--transparent {
     background-color: var(--k-surface-base);
     background-image:
-      linear-gradient(45deg, var(--k-stone-100) 25%, transparent 25%),
-      linear-gradient(-45deg, var(--k-stone-100) 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, var(--k-stone-100) 75%),
-      linear-gradient(-45deg, transparent 75%, var(--k-stone-100) 75%);
+      linear-gradient(45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--k-surface-neutral) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--k-surface-neutral) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
@@ -616,7 +616,7 @@
   }
 
   .side-card--enhanced {
-    border-color: var(--k-haldi-700);
+    border-color: var(--k-border-warning);
   }
 
   .side-card__label {
@@ -644,10 +644,10 @@
   .side-card__media--transparent {
     background-color: var(--k-surface-base);
     background-image:
-      linear-gradient(45deg, var(--k-stone-100) 25%, transparent 25%),
-      linear-gradient(-45deg, var(--k-stone-100) 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, var(--k-stone-100) 75%),
-      linear-gradient(-45deg, transparent 75%, var(--k-stone-100) 75%);
+      linear-gradient(45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--k-surface-neutral) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--k-surface-neutral) 75%);
     background-size: 12px 12px;
   }
 
@@ -695,7 +695,7 @@
   }
 
   .bg-pill--active {
-    border-color: var(--k-haldi-700);
+    border-color: var(--k-border-warning);
     background: rgba(217, 119, 6, 0.05);
   }
 
@@ -709,7 +709,7 @@
 
   .bg-pill__swatch--white {
     background: var(--k-surface-base);
-    box-shadow: inset 0 0 0 1px var(--k-stone-100);
+    box-shadow: inset 0 0 0 1px var(--k-border-on-inverse);
   }
 
   .bg-pill__swatch--checker {

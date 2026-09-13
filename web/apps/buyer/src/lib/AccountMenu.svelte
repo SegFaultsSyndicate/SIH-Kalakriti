@@ -267,7 +267,7 @@
     block-size: 2rem;
     border-radius: 50%;
     background-color: var(--k-premium-warm-cream);
-    color: var(--k-premium-header-bg, var(--k-madder-600));
+    color: var(--k-premium-header-bg, var(--k-accent-danger-muted));
     border: 1px solid rgba(244, 240, 234, 0.3);
     font-size: 0.75rem;
     font-weight: 700;
@@ -309,7 +309,7 @@
     inline-size: 36rem;
     max-inline-size: 94vw;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-border-hairline, var(--k-khadi-200));
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 12px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     z-index: 1000;
@@ -331,7 +331,7 @@
   .popover-header {
     padding: 1rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .user-badge-row {
@@ -353,7 +353,7 @@
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     background-color: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     border: 1px solid var(--k-neem-300);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -362,7 +362,7 @@
   .user-email {
     display: block;
     font-size: 0.75rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin-block-start: 0.15rem;
   }
 
@@ -371,7 +371,7 @@
     inline-size: 100%;
     text-align: center;
     padding: 0.6rem 1rem;
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.85rem;
@@ -381,14 +381,14 @@
   }
 
   .signin-primary-btn:hover {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
   }
 
   .signup-prompt {
     margin-block-start: 0.5rem;
     font-size: 0.75rem;
     text-align: center;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin-block-end: 0;
   }
 
@@ -428,7 +428,7 @@
 
   .col-right {
     padding-inline-start: 1.25rem;
-    border-inline-start: 1px solid var(--k-khadi-150);
+    border-inline-start: 1px solid var(--k-border-subtle);
     background-color: var(--k-surface-base);
   }
 
@@ -445,7 +445,7 @@
 
   .cell-right {
     padding-inline-start: 0.85rem;
-    border-inline-start: 1px solid var(--k-khadi-150);
+    border-inline-start: 1px solid var(--k-border-subtle);
     background-color: var(--k-surface-base);
   }
 
@@ -473,7 +473,7 @@
     align-items: center;
     justify-content: center;
     flex: none;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
   }
 
   .menu-link__text {
@@ -495,7 +495,7 @@
 
   .menu-link__text small {
     font-size: 0.7rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -533,7 +533,7 @@
   }
 
   .admin-badge {
-    background-color: var(--k-stone-100);
+    background-color: var(--k-surface-neutral);
     color: var(--k-indigo-900);
     border: 1px solid var(--k-indigo-300);
   }
@@ -541,7 +541,7 @@
   .popover-footer {
     padding: 0.65rem 1.25rem;
     background-color: var(--k-surface-base);
-    border-block-start: 1px solid var(--k-khadi-150);
+    border-block-start: 1px solid var(--k-border-subtle);
     display: flex;
     justify-content: flex-end;
   }
@@ -552,7 +552,7 @@
     gap: 0.4rem;
     background: transparent;
     border: none;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -562,7 +562,7 @@
   }
 
   .signout-btn:hover {
-    background-color: var(--k-stone-100);
+    background-color: var(--k-surface-neutral);
   }
 
   /* On a very narrow phone the header action row is already saturated:

@@ -115,7 +115,10 @@ function roleOf(prop) {
 
 const ROLE_MATCH = {
   surface: (a) => /^--k-(surface|accent-[a-z]+-bg)/.test(a),
-  text: (a) => /^--k-text|-text$/.test(a),
+  // An accent alias is a text colour unless its name says otherwise:
+  // --k-accent-danger is what you paint danger text with. Only the -bg
+  // names are surfaces, and --k-border-* is matched by the border role.
+  text: (a) => /^--k-text/.test(a) || (/^--k-accent-/.test(a) && !/-bg$/.test(a)),
   border: (a) => /^--k-border/.test(a),
   any: () => true,
 };

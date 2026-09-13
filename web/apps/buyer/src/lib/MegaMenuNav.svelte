@@ -497,7 +497,7 @@
     position: relative;
     inline-size: 100%;
     background-color: var(--k-surface-base, var(--k-surface-base));
-    border-block-end: 1px solid var(--k-border-hairline, var(--k-khadi-150));
+    border-block-end: 1px solid var(--k-border-hairline, var(--k-border-subtle));
     z-index: 40;
     font-family: inherit;
   }
@@ -577,7 +577,7 @@
   .k-main-header {
     padding: 0.85rem 1rem;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .k-main-header-container {
@@ -631,7 +631,7 @@
     font-size: 1.45rem;
     font-weight: 700;
     line-height: 1.1;
-    color: var(--k-madder-800); /* Heritage burgundy */
+    color: var(--k-accent-danger-strong); /* Heritage burgundy */
     letter-spacing: -0.01em;
   }
 
@@ -639,7 +639,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     font-weight: 500;
   }
 
@@ -738,11 +738,11 @@
   }
 
   .k-tool-link:hover {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
   }
 
   .k-tool-link--highlight {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     font-weight: 600;
   }
 
@@ -785,7 +785,7 @@
     background: none;
     border: none;
     border-block-end: 3px solid transparent;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     text-decoration: none;
     font-size: 0.82rem;
     font-weight: 700;
@@ -798,12 +798,12 @@
   .k-nav-link:hover,
   .k-nav-link.active {
     background-color: var(--k-surface-base);
-    border-block-end-color: var(--k-terracotta-700); /* Saffron underline */
+    border-block-end-color: var(--k-border-accent); /* Saffron underline */
     color: var(--k-accent-primary-text);
   }
 
   .k-nav-link--gi {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     font-weight: 800;
   }
 
@@ -850,11 +850,11 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.65rem 0;
     letter-spacing: 0.04em;
     line-height: 1.3;
-    border-block-end: 1.5px solid var(--k-khadi-150);
+    border-block-end: 1.5px solid var(--k-border-subtle);
     padding-block-end: 0.35rem;
   }
 
@@ -905,7 +905,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.5rem 0;
     letter-spacing: 0.03em;
   }
@@ -947,13 +947,13 @@
   }
 
   .dropdown-block-link strong {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     font-size: 0.82rem;
   }
 
   .dropdown-block-link span {
     font-size: 0.72rem;
-    color: var(--k-text-secondary, var(--k-stone-500));
+    color: var(--k-text-secondary, var(--k-text-tertiary));
   }
 
   /* Mobile Drawer Overlay */
@@ -1008,7 +1008,7 @@
 
   .mobile-cat-link {
     padding: 0.65rem 0.5rem;
-    border-block-end: 1px solid var(--k-stone-200, var(--k-khadi-150));
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
     color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.9rem;

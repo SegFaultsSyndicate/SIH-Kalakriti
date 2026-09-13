@@ -546,7 +546,7 @@
   .metric-val {
     font-size: 1.5rem;
     font-weight: 900;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   .metric-lbl {
@@ -558,7 +558,7 @@
   /* Income Comparison Bar */
   .income-comparison-bar-wrap {
     background: var(--k-surface-base);
-    border: 1px solid var(--k-stone-100);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
     display: flex;
@@ -580,7 +580,7 @@
 
   .bar-uplift-badge {
     background: var(--k-surface-raised);
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-size: 0.72rem;
     font-weight: 800;
     padding: 2px 8px;
@@ -608,7 +608,7 @@
   .bar-track {
     inline-size: 100%;
     block-size: 0.85rem;
-    background: var(--k-stone-100);
+    background: var(--k-surface-neutral);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -665,12 +665,12 @@
 
   .th-before {
     background: var(--k-surface-base);
-    color: var(--k-madder-700);
+    color: var(--k-accent-danger);
   }
 
   .th-after {
     background: var(--k-surface-base);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   .dim-cell {
@@ -681,13 +681,13 @@
   }
 
   .before-cell {
-    color: var(--k-madder-800);
+    color: var(--k-accent-danger-strong);
     background: rgba(254, 242, 242, 0.4);
     inline-size: 39%;
   }
 
   .after-cell {
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
     background: rgba(240, 253, 244, 0.4);
     inline-size: 39%;
     font-weight: 600;
@@ -700,11 +700,11 @@
   }
 
   .cell-status--bad {
-    color: var(--k-madder-700);
+    color: var(--k-accent-danger);
   }
 
   .cell-status--good {
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
   }
 
   /* Narrative */
@@ -734,7 +734,7 @@
     margin: 0;
     padding: var(--k-space-4);
     background: var(--k-surface-base);
-    border-inline-start: 4px solid var(--k-terracotta-700);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 

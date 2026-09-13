@@ -471,7 +471,7 @@
   .category-subnav {
     position: relative;
     background-color: var(--k-surface-base);
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
     z-index: 80;
   }
 
@@ -509,7 +509,7 @@
   }
 
   .subnav-item:hover {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     background-color: var(--k-surface-raised);
   }
 
@@ -541,7 +541,7 @@
 
   .subnav-split-pill:hover .subnav-pill-link,
   .subnav-split-pill.is-active .subnav-pill-link {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .subnav-chevron-btn {
@@ -552,14 +552,14 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     border-radius: 0 6px 6px 0;
     transition: color 0.12s ease;
   }
 
   .subnav-split-pill:hover .subnav-chevron-btn,
   .subnav-split-pill.is-active .subnav-chevron-btn {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
   }
 
   .all-btn {
@@ -597,7 +597,7 @@
     inset-inline-start: 0;
     inset-block-start: calc(100% + 0.35rem);
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-200);
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
     padding: 1.5rem;
@@ -627,19 +627,19 @@
     justify-content: space-between;
     padding-block-end: 0.85rem;
     margin-block-end: 1rem;
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .all-crafts-desc {
     font-size: 0.775rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0.2rem 0 0 0;
   }
 
   .all-crafts-all-link {
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
     white-space: nowrap;
   }
@@ -687,7 +687,7 @@
     padding: 0.65rem 0.75rem;
     border-radius: 8px;
     background-color: var(--k-surface-base);
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
     text-decoration: none;
     color: inherit;
     transition: all 0.15s ease;
@@ -695,7 +695,7 @@
 
   .craft-mega-card:hover {
     background-color: var(--k-surface-base);
-    border-color: var(--k-madder-600);
+    border-color: var(--k-border-danger);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
   }
@@ -714,7 +714,7 @@
   }
 
   .craft-mega-card:hover .craft-mega-card__icon {
-    background-color: var(--k-madder-600);
+    background-color: var(--k-accent-danger-bg);
     color: var(--k-text-on-accent);
   }
 
@@ -746,7 +746,7 @@
 
   .craft-mega-card__info small {
     font-size: 0.68rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -802,7 +802,7 @@
     background-color: var(--k-surface-base);
     padding: 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--k-khadi-150);
+    border: 1px solid var(--k-border-subtle);
   }
 
   .col-title {
@@ -812,7 +812,7 @@
     color: var(--k-text-primary);
     margin: 0 0 0.65rem;
     padding-block-end: 0.35rem;
-    border-block-end: 1px solid var(--k-khadi-150);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .sub-title-margin {
@@ -837,7 +837,7 @@
   }
 
   .col-links li a:hover {
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
@@ -852,7 +852,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     background-color: var(--k-surface-raised);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
@@ -860,7 +860,7 @@
 
   .direct-gi-callout p {
     font-size: 0.725rem;
-    color: var(--k-stone-500);
+    color: var(--k-text-tertiary);
     margin: 0.35rem 0 0.5rem;
     line-height: 1.35;
   }
@@ -868,7 +868,7 @@
   .callout-link {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--k-madder-600);
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
   }
 

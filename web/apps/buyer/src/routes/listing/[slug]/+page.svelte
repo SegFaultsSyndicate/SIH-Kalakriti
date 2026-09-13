@@ -446,7 +446,7 @@
 
   .listing__artisan-badge:hover {
     background-color: var(--k-surface-raised);
-    border-color: var(--k-accent-primary-border, var(--k-terracotta-700));
+    border-color: var(--k-accent-primary-border, var(--k-border-accent));
   }
 
   .listing__artisan-avatar {
@@ -482,7 +482,7 @@
     block-size: 1.2rem;
     border: 1.5px solid var(--k-surface-base, var(--k-khadi-50));
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600, var(--k-neem-600));
+    background-color: var(--k-neem-600, var(--k-accent-success-bg));
     color: var(--k-text-on-accent);
   }
 
@@ -638,7 +638,7 @@
 
   .listing__share-btn:hover {
     color: var(--k-terracotta-700, var(--k-accent-primary-text));
-    border-color: var(--k-terracotta-500, var(--k-terracotta-700));
+    border-color: var(--k-terracotta-500, var(--k-border-accent));
   }
 
   .listing__promise-card {

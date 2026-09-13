@@ -205,7 +205,7 @@
   }
 
   .login__readout:focus-within {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
     outline: 2px solid var(--k-terracotta-400);
   }
 

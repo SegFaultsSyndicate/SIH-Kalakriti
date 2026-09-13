@@ -1,0 +1,87 @@
+/*
+ * Kalakriti public provenance page — the live /v/<code> verification screen
+ * ---------------------------------------------------------------
+ * This is the SOURCE for the stylesheet the Go BFF inlines into that page.
+ * It is never linked by a browser directly: `pnpm gen:verify-css` resolves
+ * it against palette.css and writes the result into
+ * services/bff/internal/bff/handler/verification_css.go, which the handler
+ * inlines in a <style> tag.
+ *
+ * Inlined rather than linked on purpose: the page is reached by a stranger
+ * scanning a physical tag, often on a bad connection, and it must render
+ * correctly in one request with no webfont and no second round trip. That
+ * is also why the values are resolved at generation time instead of the Go
+ * side keeping its own copy of the palette — which is exactly the drift
+ * this file exists to end.
+ *
+ * Not to be confused with provenance.css, which is the ornamental
+ * certificate treatment shipped in the Batch 6 asset pack for print and
+ * for a future redesign of this page.
+ * ---------------------------------------------------------------
+ */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--k-surface-base);
+  color: var(--k-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.k-verify { max-width: 34rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+.k-verify__mark {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.833rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-text-secondary);
+  margin-block-end: 2rem;
+}
+
+/* The status band separates by rule, not by fill or shadow: the page has to
+   read the same on a monochrome screen and through a bad camera. */
+.k-verify__status { border-block: 2px solid; padding: 1rem 0; margin-block-end: 2rem; }
+.k-verify__status--valid { border-color: var(--k-accent-success); color: var(--k-accent-success); }
+.k-verify__status--invalid { border-color: var(--k-accent-danger); color: var(--k-accent-danger); }
+.k-verify__status-title { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem; }
+.k-verify__status-body { margin: 0; color: var(--k-text-primary); font-size: 0.9rem; }
+
+.k-verify h1 { font-size: 1.44rem; font-weight: 600; margin: 0 0 0.25rem; line-height: 1.15; }
+.k-verify__subtitle { color: var(--k-text-secondary); margin: 0 0 2rem; }
+
+.k-verify__fields { margin: 0; padding: 0; }
+.k-verify__field {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-block-end: 1px solid var(--k-border-hairline);
+}
+.k-verify__field:first-child { border-block-start: 1px solid var(--k-border-hairline); }
+.k-verify__label { color: var(--k-text-secondary); font-size: 0.9rem; }
+.k-verify__value { color: var(--k-text-primary); font-weight: 500; text-align: right; }
+
+.k-verify__badge {
+  display: inline-block;
+  font-size: 0.833rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 2px;
+}
+.k-verify__badge--yes { background: var(--k-accent-success-bg); color: var(--k-text-on-accent); }
+.k-verify__badge--no { background: var(--k-accent-danger-bg); color: var(--k-text-on-accent); }
+
+.k-verify__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--k-surface-raised);
+  padding: 0.125rem 0.375rem;
+  border-radius: 2px;
+}
+
+.k-verify__footer { margin-block-start: 2rem; color: var(--k-text-secondary); font-size: 0.833rem; }
+.k-verify__footer a { color: var(--k-accent-secondary); }
