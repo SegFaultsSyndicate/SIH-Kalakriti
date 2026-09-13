@@ -125,7 +125,7 @@
 {:else}
   {#if fairParam || stallParam}
     <aside class="fair-welcome-banner">
-      <div class="fair-welcome-banner__icon">🎪</div>
+      <div class="fair-welcome-banner__icon"><Icon name="calendar" size="1.5rem" /></div>
       <div class="fair-welcome-banner__content">
         <strong>
           {#if stallParam}

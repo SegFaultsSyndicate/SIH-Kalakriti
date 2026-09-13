@@ -140,6 +140,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/change/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request OTP to change the caller's registered phone number */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description E.164 phone number */
+                        new_phone: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OTP sent to the new number */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example otp_sent */
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/change/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify OTP and complete the phone number change
+         * @description On success, invalidates the caller's other active sessions and returns a fresh token pair.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        new_phone: string;
+                        otp: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Phone updated, new tokens issued */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example phone_updated */
+                            status?: string;
+                            access_token?: string;
+                            refresh_token?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artisans": {
         parameters: {
             query?: never;

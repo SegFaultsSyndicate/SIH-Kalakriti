@@ -170,10 +170,10 @@
   </div>
   <div class="sahayak-banner__actions">
     <button type="button" class="sahayak-btn" onclick={() => (showTutorial = true)}>
-      📖 {t('literacy.tutorial.open')}
+      <Icon name="help" size="1.1rem" /> {t('literacy.tutorial.open')}
     </button>
     <button type="button" class="sahayak-btn sahayak-btn--primary" onclick={handleStartDemo}>
-      ⚡ {t('literacy.demo.start')}
+      <Icon name="play" size="1.1rem" /> {t('literacy.demo.start')}
     </button>
   </div>
 </aside>
@@ -380,8 +380,9 @@
   .sahayak-banner {
     margin: var(--k-space-4) var(--k-space-4) 0;
     padding: var(--k-space-3) var(--k-space-4);
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.04));
-    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: var(--k-surface-raised);
+    border: 1px solid var(--k-border-hairline);
+    border-inline-start: 3px solid var(--k-accent-warning-bg);
     border-radius: var(--k-radius-lg);
     display: flex;
     justify-content: space-between;

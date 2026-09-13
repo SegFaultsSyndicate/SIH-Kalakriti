@@ -177,7 +177,7 @@
           <p class="crop-subtitle">{t('profile.crop.instruction')}</p>
         </div>
         <button type="button" class="crop-close-btn" onclick={oncancel} title="Close">
-          ✕
+          <Icon name="close" size="1.1rem" />
         </button>
       </div>
 

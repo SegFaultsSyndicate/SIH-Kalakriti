@@ -33,7 +33,7 @@
       '',
   );
   const madeToOrder = $derived(listing.type === 'MADE_TO_ORDER');
-  const paise = $derived(listing.price?.amount_paise ?? (listing.price as any)?.amount ?? 0);
+  const paise = $derived(listing.price?.amount_paise ?? 0);
 
   let devAvatar = $state<string | undefined>(undefined);
   $effect(() => {
@@ -53,7 +53,9 @@
     return undefined;
   });
 
-  const artisanAvatar = $derived((listing as any).artisan_image_url || devAvatar);
+  // The OpenAPI spec carries no artisan image on a listing summary, so this is
+  // the locally-captured avatar only. Do not reintroduce an invented field.
+  const artisanAvatar = $derived(devAvatar);
 
   let copied = $state(false);
 
@@ -271,11 +273,10 @@
     inline-size: 1.95rem;
     block-size: 1.95rem;
     border-radius: var(--k-radius-full, 999px);
-    background-color: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: var(--k-text-secondary, #57534e);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
+    color: var(--k-text-secondary);
     cursor: pointer;
-    backdrop-filter: blur(4px);
     transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }

@@ -162,7 +162,7 @@
           class:filter-btn--active={selectedFilter === 'active'}
           onclick={() => (selectedFilter = 'active')}
         >
-          🎪 Happening Now (2)
+          <Icon name="calendar" size="1rem" /> Happening Now (2)
         </button>
         <button
           type="button"
@@ -170,7 +170,7 @@
           class:filter-btn--active={selectedFilter === 'upcoming'}
           onclick={() => (selectedFilter = 'upcoming')}
         >
-          📅 Upcoming Fairs (3)
+          <Icon name="clock" size="1rem" /> Upcoming Fairs (3)
         </button>
       </div>
     </header>

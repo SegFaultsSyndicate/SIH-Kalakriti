@@ -271,10 +271,20 @@
                 <p class="craft-title" style="color: {selectedFairConfig.accentColor}">{craftName}</p>
 
                 <div class="artisan-tags">
-                  <span class="placard-tag">🏛️ {clusterName || 'Varanasi Weavers Cluster'}</span>
-                  <span class="placard-tag">📍 {districtName || 'Uttar Pradesh'}</span>
-                  <span class="placard-tag placard-tag--gold">🎖️ PM Vishwakarma ID: {pehchanId || 'UP-VNS-2024-0982'}</span>
-                  <span class="placard-tag placard-tag--gi">🇮🇳 Certified GI Handicraft</span>
+                  <span class="placard-tag"
+                    ><Icon name="cluster" size="0.85rem" /> {clusterName ||
+                      'Varanasi Weavers Cluster'}</span
+                  >
+                  <span class="placard-tag"
+                    ><Icon name="location" size="0.85rem" /> {districtName || 'Uttar Pradesh'}</span
+                  >
+                  <span class="placard-tag placard-tag--gold"
+                    ><Icon name="verified-artisan" size="0.85rem" /> PM Vishwakarma ID: {pehchanId ||
+                      'UP-VNS-2024-0982'}</span
+                  >
+                  <span class="placard-tag placard-tag--gi"
+                    ><Icon name="gi-tagged" size="0.85rem" /> Certified GI Handicraft</span
+                  >
                 </div>
               </div>
 

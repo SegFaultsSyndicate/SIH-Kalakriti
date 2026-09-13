@@ -390,26 +390,23 @@
     inline-size: 3rem;
     aspect-ratio: 1;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .card-award-badge {
     position: absolute;
     bottom: 0.75rem;
     left: 0.75rem;
-    background-color: rgba(28, 25, 23, 0.85);
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
     font-size: 0.69rem;
     font-weight: 600;
     padding: 0.25rem 0.6rem;
     border-radius: 4px;
-    backdrop-filter: blur(4px);
   }
 
   .testimonial-card__body {

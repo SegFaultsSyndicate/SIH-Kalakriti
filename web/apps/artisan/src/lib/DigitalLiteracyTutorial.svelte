@@ -28,7 +28,7 @@
     icon: IconName;
     badge: string;
     speakHindi: string;
-    bgGrad: string;
+
   }
 
   const STEPS: TutorialStep[] = [
@@ -38,7 +38,6 @@
       icon: 'microphone',
       badge: 'बोलकर सूची बनाएं (Voice-First)',
       speakHindi: 'कलाकृति में टाइप करने की कोई ज़रूरत नहीं है। बस अपनी मातृभाषा में अपने शिल्प के बारे में बोलें। हमारा एआई इसे अपने आप लिख लेगा।',
-      bgGrad: 'linear-gradient(135deg, #78350f, #92400e)',
     },
     {
       titleKey: 'literacy.tutorial.step2Title',
@@ -46,7 +45,6 @@
       icon: 'camera',
       badge: 'एआई फोटो स्टूडियो (AI Studio)',
       speakHindi: 'अपने करघे पर ही साधारण मोबाइल फोटो खींचें। हमारा एआई अपने आप पीछे की हलचल हटाकर साफ सफेद पृष्ठभूमि और सही रोशनी बना देगा।',
-      bgGrad: 'linear-gradient(135deg, #1e3a8a, #1e40af)',
     },
     {
       titleKey: 'literacy.tutorial.step3Title',
@@ -54,7 +52,6 @@
       icon: 'fair-price',
       badge: 'उचित मूल्य सलाहकार (Fair Pricing)',
       speakHindi: 'कभी घाटे में न बेचें। कलाकृति कच्चे माल और आपकी दैनिक मजदूरी जोड़कर सही सरकारी मूल्य सुझाती है।',
-      bgGrad: 'linear-gradient(135deg, #14532d, #15803d)',
     },
     {
       titleKey: 'literacy.tutorial.step4Title',
@@ -62,7 +59,6 @@
       icon: 'income-statement',
       badge: 'सीधे खाते में भुगतान (Direct DBT)',
       speakHindi: 'ग्राहक और सरकारी खरीद का पूरा पैसा बिना किसी दलाल के सीधे आपके बैंक खाते में पहुंचेगा। शून्य कमीशन।',
-      bgGrad: 'linear-gradient(135deg, #581c87, #6b21a8)',
     },
   ];
 
@@ -109,7 +105,7 @@
       </header>
 
       <!-- Step Card Hero -->
-      <div class="step-card" style:background={activeStep.bgGrad}>
+      <div class="step-card">
         <div class="step-icon-wrap">
           <Icon name={activeStep.icon} size="2.5rem" />
         </div>
@@ -241,27 +237,25 @@
   /* Step Card */
   .step-card {
     border-radius: var(--k-radius-lg);
-    color: #ffffff;
+    background: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
     padding: var(--k-space-6);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: var(--k-space-3);
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25);
   }
 
   .step-icon-wrap {
     inline-size: 5rem;
     block-size: 5rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--k-text-on-inverse) 18%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-block-end: var(--k-space-1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   }
 
   .step-badge {

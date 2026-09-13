@@ -419,7 +419,7 @@
         <!-- 7. GI TAGGED (Image 3 Direct Corridor) -->
         <li class="k-nav-item k-nav-item--gi" role="none">
           <a href="/gi-tagged" class="k-nav-link k-nav-link--gi" role="menuitem">
-            <span class="gi-tag-star">★</span>
+            <span class="gi-tag-star"><Icon name="gi-tagged" size="0.85rem" /></span>
             <span>GI TAGGED</span>
           </a>
         </li>
@@ -458,7 +458,7 @@
 
       <div class="mobile-drawer-content">
         <a href="/gi-tagged" class="mobile-cat-link mobile-cat-link--gi" onclick={() => (isMobileMenuOpen = false)}>
-          ★ GI TAGGED PRODUCTS
+          <Icon name="gi-tagged" size="0.9rem" /> GI TAGGED PRODUCTS
         </a>
         <a href="/search?q=home" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
           Home and Living

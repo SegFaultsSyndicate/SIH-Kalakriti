@@ -214,8 +214,8 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3);
     border-radius: var(--k-radius-md);
-    background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-    color: #fff;
+    background: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
   }
 
   .gem-card__header-emblem {

@@ -24,10 +24,22 @@
   import {
     getFollowerCount,
     getArtisanProfile,
+    requestPhoneChangeOtp,
+    verifyPhoneChangeOtp,
     setAccessToken,
     setRefreshToken,
     session,
+    ApiError,
   } from '@kalakriti/api';
+
+  /** Narrows an unknown throw to something showable. Never leaks a raw status number. */
+  function errorText(err: unknown, fallback: string): string {
+    if (err instanceof ApiError) {
+      const body = err.body as { message?: string; error?: { message?: string } } | null;
+      return body?.error?.message ?? body?.message ?? fallback;
+    }
+    return err instanceof Error && err.message ? err.message : fallback;
+  }
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
@@ -290,17 +302,11 @@
     phoneError = '';
     try {
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to request verification code');
+      await requestPhoneChangeOtp({ new_phone: formatted });
       phoneStep = 'otp';
-      showToast({ message: data.message || 'Verification code sent to new mobile number', variant: 'info' });
-    } catch (err: any) {
-      phoneError = err.message || 'Failed to request verification code';
+      showToast({ message: 'Verification code sent to new mobile number', variant: 'info' });
+    } catch (err: unknown) {
+      phoneError = errorText(err, 'Failed to request verification code');
     } finally {
       phoneLoading = false;
     }
@@ -316,13 +322,10 @@
     try {
       const raw = newPhoneInput.trim().replace(/\s+/g, '');
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted, otp: phoneOtpInput.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Verification failed');
+      const data = await verifyPhoneChangeOtp({ new_phone: formatted, otp: phoneOtpInput.trim() });
+      if (data.access_token) setAccessToken(data.access_token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
+      if (data.access_token) session.establish(data.access_token);
       phone = formatted;
       await setPref('login.phone', formatted);
       showPhoneModal = false;
@@ -333,8 +336,8 @@
         message: 'Mobile number updated! Other active sessions terminated for security.',
         variant: 'success',
       });
-    } catch (err: any) {
-      phoneError = err.message || 'Verification failed';
+    } catch (err: unknown) {
+      phoneError = errorText(err, 'Verification failed');
     } finally {
       phoneLoading = false;
     }
@@ -915,7 +918,7 @@
     inset-block-start: 0;
     inset-inline: 0;
     block-size: 4px;
-    background: linear-gradient(90deg, var(--k-terracotta-700), var(--k-haldi-500), var(--k-indigo-700));
+    background: var(--k-accent-primary-bg);
   }
 
   .profile-hero__main {

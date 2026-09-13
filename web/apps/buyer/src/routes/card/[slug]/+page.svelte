@@ -192,7 +192,7 @@
           <!-- Trust Badges Strip -->
           <div class="trust-strip">
             <div class="trust-badge">
-              <span class="badge-icon">🎖️</span>
+              <span class="badge-icon"><Icon name="verified-artisan" size="1.25rem" /></span>
               <div class="badge-text">
                 <strong>PM Vishwakarma</strong>
                 <small>ID: UP-VNS-2024-0982</small>
@@ -200,7 +200,7 @@
             </div>
 
             <div class="trust-badge">
-              <span class="badge-icon">🏛️</span>
+              <span class="badge-icon"><Icon name="cluster" size="1.25rem" /></span>
               <div class="badge-text">
                 <strong>Weaver Guild CFC</strong>
                 <small>Varanasi Silk Cluster</small>
@@ -208,7 +208,7 @@
             </div>
 
             <div class="trust-badge">
-              <span class="badge-icon">🛡️</span>
+              <span class="badge-icon"><Icon name="provenance" size="1.25rem" /></span>
               <div class="badge-text">
                 <strong>Cryptographic Seal</strong>
                 <small>Ed25519 Provenance</small>
@@ -243,21 +243,21 @@
               {:else}
                 <!-- Fallback sample pieces if empty -->
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🧵</div>
+                  <div class="mini-img-fallback"><Icon name="weaving" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Pure Katan Silk Kadwa Saree</span>
                     <strong class="mini-price">₹18,500</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🧣</div>
+                  <div class="mini-img-fallback"><Icon name="embroidery" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Zari Brocade Stole Yardage</span>
                     <strong class="mini-price">₹4,200</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🏺</div>
+                  <div class="mini-img-fallback"><Icon name="pottery" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Hand-Spun Raw Silk Dupatta</span>
                     <strong class="mini-price">₹3,850</strong>

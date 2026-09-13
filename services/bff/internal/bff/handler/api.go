@@ -415,12 +415,12 @@ func (h *APIHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, map[string]string{"access_token": accessToken})
 }
 
-// idempotencyKeyFrom reuses the client's X-Idempotency-Key when present, so a
+// idempotencyKeyFrom reuses the client's Idempotency-Key when present, so a
 // retried HTTP call also replays at the gRPC layer instead of repeating a
 // write core-svc requires a non-empty idempotency_key for; mints one
 // otherwise.
 func idempotencyKeyFrom(r *http.Request) string {
-	if key := r.Header.Get("X-Idempotency-Key"); key != "" {
+	if key := r.Header.Get("Idempotency-Key"); key != "" {
 		return key
 	}
 	return uuid.NewString()

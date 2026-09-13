@@ -173,7 +173,7 @@
 
               <!-- Key Insight Callout -->
               <div class="insight-banner">
-                <span class="insight-icon">💡</span>
+                <span class="insight-icon"><Icon name="info" size="1.1rem" /></span>
                 <p>
                   <strong>Monsoon Resilience:</strong> Traditional master artisans suffered a 68% income drop during monsoon lulls (Q2).
                   With Kalakriti's continuous digital channel, artisans sustained ₹31,000/month, completely eliminating cyclical moneylender debt.

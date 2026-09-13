@@ -85,6 +85,34 @@ export function updateArtisanProfile(
   return call('/artisans/me', { ...options, method: 'PATCH', body }) as Promise<void>;
 }
 
+type RequestPhoneChangeBody = Json<paths['/auth/phone/change/request']['post']['requestBody']>;
+type RequestPhoneChangeResponse = Json<paths['/auth/phone/change/request']['post']['responses'][200]>;
+
+export function requestPhoneChangeOtp(
+  body: RequestPhoneChangeBody,
+  options?: CallOptions,
+): Promise<RequestPhoneChangeResponse> {
+  return call('/auth/phone/change/request', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<RequestPhoneChangeResponse>;
+}
+
+type VerifyPhoneChangeBody = Json<paths['/auth/phone/change/verify']['post']['requestBody']>;
+type VerifyPhoneChangeResponse = Json<paths['/auth/phone/change/verify']['post']['responses'][200]>;
+
+export function verifyPhoneChangeOtp(
+  body: VerifyPhoneChangeBody,
+  options?: CallOptions,
+): Promise<VerifyPhoneChangeResponse> {
+  return call('/auth/phone/change/verify', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<VerifyPhoneChangeResponse>;
+}
+
 type ListListingsQuery = paths['/listings']['get']['parameters']['query'];
 type ListListingsResponse = Json<paths['/listings']['get']['responses'][200]>;
 

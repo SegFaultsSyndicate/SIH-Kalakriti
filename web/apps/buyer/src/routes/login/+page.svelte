@@ -112,7 +112,7 @@
         class="portal-tab {activePortal === 'buyer' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'buyer')}
       >
-        <span class="portal-icon">🛍️</span>
+        <span class="portal-icon"><Icon name="package" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Buyer Account</strong>
           <small>Orders & Settings</small>
@@ -126,7 +126,7 @@
         class="portal-tab {activePortal === 'artisan' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'artisan')}
       >
-        <span class="portal-icon">🧵</span>
+        <span class="portal-icon"><Icon name="weaving" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Artisan Loom</strong>
           <small>Voice PWA</small>
@@ -140,7 +140,7 @@
         class="portal-tab {activePortal === 'admin' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'admin')}
       >
-        <span class="portal-icon">🏛️</span>
+        <span class="portal-icon"><Icon name="cluster" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Ministry Admin</strong>
           <small>Cluster Console</small>
@@ -280,7 +280,7 @@
     {:else if activePortal === 'artisan'}
       <div class="auth-panel portal-redirect-panel" role="tabpanel">
         <div class="portal-illustration">
-          <span class="big-emoji">🧵</span>
+          <Icon name="weaving" size="3rem" />
         </div>
         <h2 class="portal-heading">Artisan Loom & Guild Studio</h2>
         <p class="portal-subtext">
@@ -318,7 +318,7 @@
     {:else if activePortal === 'admin'}
       <div class="auth-panel portal-redirect-panel" role="tabpanel">
         <div class="portal-illustration">
-          <span class="big-emoji">🏛️</span>
+          <Icon name="cluster" size="3rem" />
         </div>
         <h2 class="portal-heading">Ministry & Cluster Development Admin</h2>
         <p class="portal-subtext">
@@ -681,10 +681,6 @@
 
   .portal-illustration {
     margin-block-end: 0.75rem;
-  }
-
-  .big-emoji {
-    font-size: 2.5rem;
   }
 
   .portal-heading {

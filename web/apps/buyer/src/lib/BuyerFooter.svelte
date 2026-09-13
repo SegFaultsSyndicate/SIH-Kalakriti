@@ -250,10 +250,10 @@
         <div class="footer-block">
           <h3 class="footer-col-heading">We Accept</h3>
           <div class="payment-badges-grid">
-            <span class="pay-badge pay-badge--card">💳 Credit Card</span>
-            <span class="pay-badge pay-badge--debit">💳 Debit Card</span>
-            <span class="pay-badge pay-badge--netbank">🏦 Net Banking</span>
-            <span class="pay-badge pay-badge--upi">⚡ UPI / RuPay</span>
+            <span class="pay-badge pay-badge--card">Credit Card</span>
+            <span class="pay-badge pay-badge--debit">Debit Card</span>
+            <span class="pay-badge pay-badge--netbank">Net Banking</span>
+            <span class="pay-badge pay-badge--upi">UPI / RuPay</span>
           </div>
         </div>
 
