@@ -149,10 +149,14 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
+      <!-- AccountMenu last: its popover anchors flush to *its own* right
+           edge (inset-inline-end: 0 relative to the trigger), so it only
+           avoids running off the left edge of a phone screen if nothing
+           sits to its right pushing it away from the header's true right
+           edge. -->
+      <LanguageSelector triggerSize="lg" />
+      <AccessibilityControl statementHref="/accessibility" triggerSize="lg" />
       <AccountMenu />
-
-      <LanguageSelector />
-      <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
 

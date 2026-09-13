@@ -13,6 +13,7 @@
 
   let isOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
+  let popoverPanel: HTMLDivElement | null = $state(null);
 
   const isAuthenticated = $derived(session.status === 'authenticated' || !!getAccessToken());
   const userName = $derived(
@@ -63,6 +64,28 @@
       document.removeEventListener('mousedown', handleClickOutside);
     };
   });
+
+  // inset-inline-end: 0 below assumes this trigger sits at the true right
+  // edge of the header -- true today (AccountMenu is mounted last), but a
+  // reorder or a narrower screen than anticipated silently reintroduces the
+  // popover running off the left edge. Same clamp as packages/ui/src/Popover.svelte.
+  $effect(() => {
+    if (!isOpen || !popoverPanel) return;
+    const clampToViewport = () => {
+      if (!popoverPanel) return;
+      popoverPanel.style.transform = '';
+      const rect = popoverPanel.getBoundingClientRect();
+      const margin = 8;
+      if (rect.left < margin) {
+        popoverPanel.style.transform = `translateX(${margin - rect.left}px)`;
+      } else if (rect.right > window.innerWidth - margin) {
+        popoverPanel.style.transform = `translateX(-${rect.right - (window.innerWidth - margin)}px)`;
+      }
+    };
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -99,6 +122,7 @@
       class="account-popover"
       role="menu"
       tabindex="-1"
+      bind:this={popoverPanel}
     >
       <!-- Popover Header -->
       <div class="popover-header">

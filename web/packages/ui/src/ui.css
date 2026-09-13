@@ -582,6 +582,10 @@
   position: absolute;
   inset-block-start: calc(100% + var(--k-space-2));
   min-inline-size: 12rem;
+  /* Belt-and-braces with Popover.svelte's own clamp effect: that nudges an
+     already-reasonably-sized panel back on-screen, this stops one from
+     being wider than the viewport in the first place. */
+  max-inline-size: calc(100vw - 2 * var(--k-gutter, 1rem));
   padding: var(--k-space-2);
   border-radius: var(--k-radius-md);
   background: var(--k-surface-raised);

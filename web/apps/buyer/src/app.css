@@ -124,15 +124,6 @@ body::-webkit-scrollbar {
     margin-inline-start: auto;
   }
 
-  .shell__icon-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
-    border-radius: var(--k-radius-md);
-  }
-
   .shell__search-inline {
     display: flex;
     flex-shrink: 1;
@@ -148,10 +139,6 @@ body::-webkit-scrollbar {
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-base);
     font-size: var(--k-text-sm);
-  }
-
-  .shell__icon-link:hover {
-    background-color: rgba(244, 240, 234, 0.9);
   }
 
   .shell__main {
@@ -203,9 +190,12 @@ body::-webkit-scrollbar {
       display: none;
     }
 
-    .shell__icon-link {
-      inline-size: 2.25rem;
-      block-size: 2.25rem;
+    /* Below this width the crest carries the brand alone -- with hamburger,
+       "Kalakriti", and the three action icons all fighting for one row, the
+       wordmark was the single biggest thing to give (about 90px), and it's
+       the one piece a returning visitor least needs spelled out. */
+    .shell__wordmark {
+      display: none;
     }
 
     .shell__main {

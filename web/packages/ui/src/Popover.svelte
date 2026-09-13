@@ -72,6 +72,31 @@
     return () => document.removeEventListener('pointerdown', onDocumentPointerDown);
   });
 
+  // `align` places the panel flush against ITS OWN trigger, on the
+  // assumption the trigger sits at the true edge of the row it's in. Every
+  // current caller mounts several of these side by side in a header (a
+  // trigger in the middle of that row, not at the edge), so a wide panel
+  // anchored that way can run off the opposite side of the viewport -- this
+  // is the nudge-back-in the module comment says a collision engine would
+  // otherwise be needed for; it only ever moves the panel, never resizes it.
+  $effect(() => {
+    if (!open || !panel) return;
+    const clampToViewport = () => {
+      if (!panel) return;
+      panel.style.transform = '';
+      const rect = panel.getBoundingClientRect();
+      const margin = 8;
+      if (rect.left < margin) {
+        panel.style.transform = `translateX(${margin - rect.left}px)`;
+      } else if (rect.right > window.innerWidth - margin) {
+        panel.style.transform = `translateX(-${rect.right - (window.innerWidth - margin)}px)`;
+      }
+    };
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  });
+
   const triggerProps: TriggerProps = {
     get 'aria-expanded'() {
       return open;
