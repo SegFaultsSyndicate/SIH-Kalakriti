@@ -274,7 +274,12 @@
     color: var(--k-text-on-inverse);
     border-block-start: 4px solid var(--step-accent, var(--k-accent-primary-bg));
     animation: stepIn 0.22s ease-out;
-    padding: var(--k-space-6);
+    /* Inline padding trimmed from the block padding: on a narrow phone this is
+       the difference between the Hindi listen button fitting on one line and
+       wrapping mid-word (measured: 229px available vs 281px needed at the
+       old --k-space-6 inline padding). */
+    padding-block: var(--k-space-6);
+    padding-inline: var(--k-space-4);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -342,6 +347,7 @@
     background: var(--k-surface-base) !important;
     color: var(--k-text-primary) !important;
     font-weight: 700;
+    font-size: var(--k-text-base);
     border: none;
   }
 

@@ -149,13 +149,6 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
-      <a class="shell__icon-link" href="/search" aria-label={t('nav.search')}>
-        <Icon name="search" />
-      </a>
-      <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
-        <Icon name="package" />
-      </a>
-
       <AccountMenu />
 
       <LanguageSelector />

@@ -421,6 +421,12 @@
   }
 
   .sahayak-btn {
+    /* Icon + label on one row. The global reset gives every <svg> display:block
+       (packages/tokens/src/reset.css) so a plain <button> with no flex context
+       stacks its icon above its text instead of beside it -- this is the fix. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
     border: 1px solid var(--k-border-interactive);
     background: var(--k-surface-raised);
     color: var(--k-text-primary);
