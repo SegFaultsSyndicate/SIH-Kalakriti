@@ -431,16 +431,16 @@
 
   /* Placard Card */
   .placard-container {
-    background: #fdfbf7;
+    background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-stone-100);
   }
 
   :global(.placard-card) {
     position: relative;
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
     padding: 2.5rem 2rem;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
   }
@@ -482,13 +482,13 @@
   .emblem-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #57534e;
+    color: var(--k-stone-600);
     letter-spacing: 0.05em;
   }
 
   .fair-badge {
     display: inline-block;
-    color: #fff;
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -501,7 +501,7 @@
   .fair-name {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 4px 0 2px;
     letter-spacing: -0.01em;
   }
@@ -513,17 +513,17 @@
     flex-wrap: wrap;
     gap: var(--k-space-2);
     font-size: 0.72rem;
-    color: #57534e;
+    color: var(--k-stone-600);
     margin: 3px 0 6px;
   }
 
   .fair-submeta .dot {
-    color: #cbd5e1;
+    color: var(--k-indigo-300);
   }
 
   .fair-edition {
     font-weight: 700;
-    color: #44403c;
+    color: var(--k-stone-700);
   }
 
   .fair-venue,
@@ -563,15 +563,15 @@
     block-size: 4.5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #d97706;
+    border: 3px solid var(--k-haldi-700);
   }
 
   .placard-avatar-fallback {
     inline-size: 4.5rem;
     block-size: 4.5rem;
     border-radius: 50%;
-    background: #78350f;
-    color: #fff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 1.8rem;
     font-weight: 800;
     display: flex;
@@ -582,14 +582,14 @@
   .artisan-name {
     font-size: 1.3rem;
     font-weight: 800;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .craft-title {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -598,16 +598,16 @@
     flex-direction: column;
     gap: 4px;
     font-size: 0.72rem;
-    color: #44403c;
+    color: var(--k-stone-700);
   }
 
   .placard-tag--gold {
-    color: #92400e;
+    color: var(--k-accent-primary-text);
     font-weight: 700;
   }
 
   .placard-tag--gi {
-    color: #15803d;
+    color: var(--k-neem-600);
     font-weight: 700;
   }
 
@@ -618,15 +618,15 @@
     text-align: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2);
-    background: #f8fafc;
+    background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--k-indigo-300);
   }
 
   .qr-box {
     inline-size: 10rem;
     block-size: 10rem;
-    background: #fff;
+    background: var(--k-surface-base);
     padding: 6px;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -645,7 +645,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--k-indigo-400);
   }
 
   .qr-prompt {
@@ -657,16 +657,16 @@
   .qr-prompt strong {
     font-size: 0.8rem;
     letter-spacing: 0.05em;
-    color: #0f172a;
+    color: var(--k-surface-inverse);
   }
 
   .qr-prompt span {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--k-indigo-500);
   }
 
   .placard-footer {
-    border-block-start: 1px solid #e7e5e4;
+    border-block-start: 1px solid var(--k-stone-100);
     padding-block-start: var(--k-space-2);
     display: flex;
     flex-direction: column;
@@ -680,12 +680,12 @@
     gap: 4px;
     font-size: 0.68rem;
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .footer-url {
     font-size: 0.6rem;
-    color: #a8a29e;
+    color: var(--k-stone-300);
     font-family: monospace;
   }
 
@@ -797,12 +797,12 @@
       inset: 0;
       margin: auto;
       inline-size: 100%;
-      background: #fff;
+      background: var(--k-surface-base);
       border: none;
       padding: 0;
     }
     :global(.placard-card) {
-      border: 4px solid #78350f !important;
+      border: 4px solid var(--k-accent-primary-bg) !important;
       box-shadow: none;
     }
   }

@@ -976,9 +976,9 @@
   }
 
   .avatar-ctrl-btn--danger:hover {
-    color: #b91c1c;
-    border-color: #fca5a5;
-    background-color: #fef2f2;
+    color: var(--k-accent-danger);
+    border-color: var(--k-madder-400);
+    background-color: var(--k-surface-base);
   }
 
   .profile-avatar {
@@ -1031,7 +1031,7 @@
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
     background-color: var(--k-terracotta-800);
-    color: #fff;
+    color: var(--k-text-on-accent);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: transform var(--k-duration-fast) var(--k-ease-standard);
   }
@@ -1053,7 +1053,7 @@
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
     background-color: var(--k-neem-600);
-    color: #fff;
+    color: var(--k-text-on-accent);
   }
 
   .sr-only {
@@ -1470,7 +1470,7 @@
 
   .profile-action-link:hover {
     background-color: var(--k-indigo-700);
-    color: #fff;
+    color: var(--k-text-on-accent);
   }
 
   /* Language Pill Grid */
@@ -1608,7 +1608,7 @@
     display: inline-block;
     margin-inline-start: var(--k-space-2);
     font-size: var(--k-text-xs);
-    color: var(--k-indigo-700, #364190);
+    color: var(--k-indigo-700, var(--k-indigo-800));
     text-decoration: underline;
     background: none;
     border: none;
@@ -1635,16 +1635,16 @@
     flex: 1;
     min-inline-size: 16rem;
     padding: var(--k-space-2) var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-surface-base, #ffffff);
+    background-color: var(--k-surface-base, var(--k-surface-base));
     font-size: var(--k-text-sm);
     color: var(--k-text-primary);
   }
 
   .email-text-input:focus {
     outline: none;
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-accent-primary-bg));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 
@@ -1665,7 +1665,7 @@
 
   .email-pref-row input[type='checkbox'] {
     margin-block-start: 2px;
-    accent-color: var(--k-terracotta-700, #96381e);
+    accent-color: var(--k-terracotta-700, var(--k-accent-primary-text));
   }
 
   /* Phone Change Modal */
@@ -1681,8 +1681,8 @@
   }
 
   .phone-modal-card {
-    background-color: var(--k-surface-base, #ffffff);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-lg);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     max-inline-size: 28rem;
@@ -1726,8 +1726,8 @@
     align-items: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--k-stone-100);
+    color: var(--k-accent-danger);
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-xs);
   }
@@ -1747,17 +1747,17 @@
   .phone-input-wrap {
     display: flex;
     align-items: center;
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     overflow: hidden;
   }
 
   .phone-input-wrap .prefix {
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: var(--k-stone-100, #f5f2ed);
+    background-color: var(--k-stone-100, var(--k-surface-raised));
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-inline-end: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
   }
 
   .phone-text-field {
@@ -1770,7 +1770,7 @@
 
   .phone-otp-field {
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-lg);
     text-align: center;
@@ -1780,7 +1780,7 @@
   }
 
   .phone-otp-field:focus {
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-accent-primary-bg));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 

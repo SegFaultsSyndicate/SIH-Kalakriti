@@ -177,8 +177,8 @@
 
   /* 1. Become a Seller Hero Banner */
   .seller-cta-banner {
-    background: linear-gradient(135deg, #fdfbf7 0%, #f4ede4 100%);
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background: linear-gradient(135deg, var(--k-surface-base) 0%, var(--k-surface-raised) 100%);
+    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
     border-radius: 12px;
     padding: 3rem 2.5rem;
     position: relative;
@@ -201,21 +201,21 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
   }
 
   .seller-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: clamp(1.6rem, 3.5vw, 2.4rem);
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0;
     line-height: 1.25;
   }
 
   .seller-subtitle {
     font-size: 1rem;
-    color: var(--k-text-secondary, #57534e);
+    color: var(--k-text-secondary, var(--k-stone-600));
     max-inline-size: 44rem;
     line-height: 1.5;
     margin: 0;
@@ -239,7 +239,7 @@
   }
 
   .perk-item {
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     border: 1px solid rgba(198, 93, 59, 0.15);
     border-radius: 8px;
     padding: 1.15rem 1.25rem;
@@ -257,7 +257,7 @@
     aspect-ratio: 1;
     border-radius: 50%;
     background-color: rgba(198, 93, 59, 0.1);
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
     flex-shrink: 0;
   }
 
@@ -269,13 +269,13 @@
 
   .perk-meta strong {
     font-size: 0.9rem;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     font-weight: 700;
   }
 
   .perk-meta span {
     font-size: 0.775rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-border-interactive));
     line-height: 1.35;
   }
 
@@ -291,8 +291,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    background-color: #7b1d24; /* Refined deep madder red matching government craft initiatives */
-    color: #ffffff;
+    background-color: var(--k-accent-danger); /* Refined deep madder red matching government craft initiatives */
+    color: var(--k-text-on-accent);
     font-size: 0.95rem;
     font-weight: 700;
     padding: 0.85rem 2rem;
@@ -303,13 +303,13 @@
   }
 
   .seller-register-btn:hover {
-    background-color: #63141a;
+    background-color: var(--k-madder-800);
     transform: translateY(-2px);
   }
 
   .seller-helper-text {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-border-interactive));
     font-style: italic;
   }
 
@@ -325,14 +325,14 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
   }
 
   .testimonials-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0.35rem 0 0 0;
   }
 
@@ -349,8 +349,8 @@
   }
 
   .testimonial-card {
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle, var(--k-stone-100));
     border-radius: 8px;
     overflow: hidden;
     display: flex;
@@ -367,7 +367,7 @@
   .testimonial-card__media {
     position: relative;
     aspect-ratio: 16 / 10;
-    background-color: #f5f5f4;
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -420,13 +420,13 @@
   .seller-name {
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0;
   }
 
   .seller-cluster {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-border-interactive));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -435,7 +435,7 @@
   .seller-craft {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -444,22 +444,22 @@
   .seller-quote {
     font-size: 0.825rem;
     line-height: 1.5;
-    color: var(--k-text-secondary, #44403c);
+    color: var(--k-text-secondary, var(--k-stone-700));
     margin: 0.5rem 0 0 0;
     font-style: italic;
   }
 
   /* 3. Official Government Accreditation Strip */
   .official-accreditation-strip {
-    border-block-start: 1px solid var(--k-border-subtle, #e7e5e4);
-    border-block-end: 1px solid var(--k-border-subtle, #e7e5e4);
+    border-block-start: 1px solid var(--k-border-subtle, var(--k-stone-100));
+    border-block-end: 1px solid var(--k-border-subtle, var(--k-stone-100));
     padding-block: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: space-around;
     flex-wrap: wrap;
     gap: 1.5rem;
-    background-color: #fafaf9;
+    background-color: var(--k-surface-base);
     border-radius: 6px;
   }
 
@@ -473,7 +473,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78716c;
+    color: var(--k-border-interactive);
     text-transform: uppercase;
   }
 </style>

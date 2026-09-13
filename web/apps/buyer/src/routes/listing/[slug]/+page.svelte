@@ -446,7 +446,7 @@
 
   .listing__artisan-badge:hover {
     background-color: var(--k-surface-raised);
-    border-color: var(--k-accent-primary-border, #c45b37);
+    border-color: var(--k-accent-primary-border, var(--k-accent-primary-bg));
   }
 
   .listing__artisan-avatar {
@@ -457,8 +457,8 @@
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-terracotta-700, #96381e);
-    color: #fff;
+    background-color: var(--k-terracotta-700, var(--k-accent-primary-bg));
+    color: var(--k-text-on-accent);
     font-weight: var(--k-weight-bold);
     font-size: var(--k-text-md);
     flex-shrink: 0;
@@ -480,10 +480,10 @@
     justify-content: center;
     inline-size: 1.2rem;
     block-size: 1.2rem;
-    border: 1.5px solid var(--k-surface-base, #fff);
+    border: 1.5px solid var(--k-surface-base, var(--k-surface-base));
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600, #2e7d32);
-    color: #fff;
+    background-color: var(--k-neem-600, var(--k-neem-600));
+    color: var(--k-text-on-accent);
   }
 
   .listing__artisan-info {
@@ -505,7 +505,7 @@
   }
 
   .listing__artisan-view {
-    color: var(--k-accent-primary-text, #96381e);
+    color: var(--k-accent-primary-text, var(--k-accent-primary-text));
   }
 
   .listing__price {
@@ -637,8 +637,8 @@
   }
 
   .listing__share-btn:hover {
-    color: var(--k-terracotta-700, #96381e);
-    border-color: var(--k-terracotta-500, #c45b37);
+    color: var(--k-terracotta-700, var(--k-accent-primary-text));
+    border-color: var(--k-terracotta-500, var(--k-accent-primary-bg));
   }
 
   .listing__promise-card {
@@ -647,8 +647,8 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100, #fcf9f5);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-100, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     margin-block: var(--k-space-2) var(--k-space-3);
     color: var(--k-text-primary);
   }
@@ -661,7 +661,7 @@
   }
 
   .listing__promise-copy strong {
-    color: var(--k-terracotta-800, #7a2010);
+    color: var(--k-terracotta-800, var(--k-terracotta-800));
     font-weight: var(--k-weight-semibold);
   }
 
@@ -721,8 +721,8 @@
       gap: var(--k-space-2);
       padding: var(--k-space-2) var(--k-space-4);
       border-radius: var(--k-radius-md);
-      background-color: var(--k-terracotta-700, #96381e);
-      color: #ffffff;
+      background-color: var(--k-terracotta-700, var(--k-accent-primary-bg));
+      color: var(--k-text-on-accent);
       font-weight: var(--k-weight-semibold);
       font-size: var(--k-text-sm);
       border: none;

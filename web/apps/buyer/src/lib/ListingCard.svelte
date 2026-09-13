@@ -282,21 +282,21 @@
   }
 
   .listing-card__share-btn:hover {
-    background-color: #ffffff;
-    color: var(--k-terracotta-700, #96381e);
+    background-color: var(--k-surface-base);
+    color: var(--k-terracotta-700, var(--k-accent-primary-text));
     transform: scale(1.08);
   }
 
   .listing-card__wishlist-btn:hover {
-    background-color: #ffffff;
-    color: #e11d48;
+    background-color: var(--k-surface-base);
+    color: var(--k-madder-600);
     transform: scale(1.08);
   }
 
   .listing-card__wishlist-btn.is-wishlisted {
-    background-color: #fff1f2;
-    color: #e11d48;
-    border-color: #fecdd3;
+    background-color: var(--k-stone-100);
+    color: var(--k-madder-600);
+    border-color: var(--k-terracotta-300);
   }
 
   .listing-card__action-row {
@@ -314,9 +314,9 @@
     gap: 0.3rem;
     padding: 0.35rem 0.6rem;
     border-radius: 4px;
-    background-color: #f7f4ee;
-    border: 1px solid #ded7cb;
-    color: #7b1c1c;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-surface-pressed);
+    color: var(--k-madder-800);
     font-size: 0.72rem;
     font-weight: 700;
     transition: all 0.15s ease;
@@ -324,9 +324,9 @@
   }
 
   .listing-card:hover .listing-card__order-btn {
-    background-color: #7b1c1c;
-    color: #ffffff;
-    border-color: #7b1c1c;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-madder-800);
   }
 
   .listing-card__wishlist-cta {
@@ -335,9 +335,9 @@
     gap: 0.25rem;
     padding: 0.35rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid #ded7cb;
-    background-color: #ffffff;
-    color: #57534e;
+    border: 1px solid var(--k-surface-pressed);
+    background-color: var(--k-surface-base);
+    color: var(--k-stone-600);
     font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
@@ -346,9 +346,9 @@
 
   .listing-card__wishlist-cta:hover,
   .listing-card__wishlist-cta.is-wishlisted {
-    border-color: #e11d48;
-    color: #e11d48;
-    background-color: #fff1f2;
+    border-color: var(--k-madder-600);
+    color: var(--k-madder-600);
+    background-color: var(--k-stone-100);
   }
 
   .listing-card__badge {
@@ -396,7 +396,7 @@
     height: 1.25rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     flex-shrink: 0;
   }
 
@@ -407,8 +407,8 @@
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 50%;
-    background-color: var(--k-khadi-200, #eedec8);
-    color: var(--k-terracotta-800, #7a2010);
+    background-color: var(--k-khadi-200, var(--k-surface-pressed));
+    color: var(--k-terracotta-800, var(--k-terracotta-800));
     font-size: 0.65rem;
     font-weight: var(--k-weight-bold, 700);
     flex-shrink: 0;
@@ -421,7 +421,7 @@
   .listing-card__artisan-verified {
     display: inline-flex;
     align-items: center;
-    color: var(--k-indigo-700, #364190);
+    color: var(--k-indigo-700, var(--k-indigo-800));
     font-size: 0.85rem;
     flex-shrink: 0;
   }
@@ -449,20 +449,20 @@
 
   .listing-card__price {
     font-weight: var(--k-weight-semibold, 600);
-    color: var(--k-text-primary, #1e1915);
+    color: var(--k-text-primary, var(--k-text-primary));
   }
 
   .listing-card__mrp {
     font-size: var(--k-text-xs, 0.75rem);
-    color: var(--k-text-secondary, #7a7269);
+    color: var(--k-text-secondary, var(--k-border-interactive));
     text-decoration: line-through;
   }
 
   .listing-card__discount {
     font-size: var(--k-text-2xs, 0.65rem);
     font-weight: 700;
-    color: #2e7d32;
-    background-color: #e8f5e9;
+    color: var(--k-neem-600);
+    background-color: var(--k-surface-raised);
     padding: 0.1rem 0.3rem;
     border-radius: 3px;
   }

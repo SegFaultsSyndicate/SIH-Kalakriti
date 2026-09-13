@@ -143,7 +143,7 @@
     flex-direction: column;
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-card, #ffffff);
+    background-color: var(--k-surface-card, var(--k-surface-base));
     overflow: hidden;
   }
 
@@ -157,7 +157,7 @@
   }
 
   .faq-item.open {
-    background-color: var(--k-surface-sunken, #fbf9f6);
+    background-color: var(--k-surface-sunken, var(--k-surface-base));
   }
 
   .faq-trigger {

@@ -215,9 +215,9 @@
   .sahayak-badge {
     display: inline-flex;
     align-items: center;
-    background: #fef3c7;
-    border: 1px solid #d97706;
-    color: #92400e;
+    background: var(--k-surface-pressed);
+    border: 1px solid var(--k-haldi-700);
+    color: var(--k-accent-primary-text);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.05em;
@@ -291,8 +291,8 @@
   }
 
   .voice-row :global(button) {
-    background: #ffffff !important;
-    color: #0f172a !important;
+    background: var(--k-surface-base) !important;
+    color: var(--k-surface-inverse) !important;
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border: none;
@@ -323,7 +323,7 @@
   .dot-btn--active {
     inline-size: 2rem;
     border-radius: 999px;
-    background: var(--k-accent-primary-bg, #b45309);
+    background: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
   }
 
   /* Footer */

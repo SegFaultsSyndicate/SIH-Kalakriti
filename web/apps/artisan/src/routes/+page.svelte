@@ -404,7 +404,7 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .sahayak-banner__title {
@@ -433,9 +433,9 @@
   }
 
   .sahayak-btn--primary {
-    background: #b45309;
-    color: #ffffff;
-    border-color: #b45309;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-accent-primary-bg);
   }
 
   .home-growth-section {

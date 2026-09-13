@@ -299,7 +299,7 @@
   .card-page {
     padding-block: var(--k-space-6) var(--k-space-12);
     min-block-size: 80vh;
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .card-container {
@@ -339,14 +339,14 @@
 
   :global(.visiting-card) {
     position: relative;
-    background: #ffffff;
+    background: var(--k-surface-base);
     box-shadow: 0 8px 32px rgba(120, 53, 15, 0.08);
     padding: 2.5rem 2rem;
-    color: #1c1917;
+    color: var(--k-text-primary);
   }
 
   :global(.visiting-card .k-kolam-corner) {
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     inline-size: 2.75rem;
     block-size: 2.75rem;
     opacity: 0.75;
@@ -363,7 +363,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-block-end: 2px solid #78350f;
+    border-block-end: 2px solid var(--k-accent-primary-bg);
     padding-block-end: var(--k-space-3);
     flex-wrap: wrap;
     gap: var(--k-space-2);
@@ -379,13 +379,13 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .gov-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #78716c;
+    color: var(--k-border-interactive);
     letter-spacing: 0.04em;
   }
 
@@ -393,9 +393,9 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #fef3c7;
-    border: 1px solid #d97706;
-    color: #92400e;
+    background: var(--k-surface-pressed);
+    border: 1px solid var(--k-haldi-700);
+    color: var(--k-accent-primary-text);
     font-size: 0.68rem;
     font-weight: 800;
     padding: 3px 10px;
@@ -423,7 +423,7 @@
     block-size: 5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #d97706;
+    border: 3px solid var(--k-haldi-700);
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
   }
 
@@ -431,8 +431,8 @@
     inline-size: 5rem;
     block-size: 5rem;
     border-radius: 50%;
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 2rem;
     font-weight: 800;
     display: flex;
@@ -449,7 +449,7 @@
   .artisan-name {
     font-size: 1.45rem;
     font-weight: 900;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
     line-height: 1.2;
   }
@@ -457,7 +457,7 @@
   .craft-name {
     font-size: 0.88rem;
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -466,7 +466,7 @@
     align-items: center;
     gap: 4px;
     font-size: 0.75rem;
-    color: #57534e;
+    color: var(--k-stone-600);
     margin-block-start: 2px;
   }
 
@@ -480,8 +480,8 @@
   .qr-frame {
     inline-size: 6.5rem;
     block-size: 6.5rem;
-    background: #ffffff;
-    border: 1px solid #e7e5e4;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-stone-100);
     padding: 4px;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -500,13 +500,13 @@
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--k-indigo-400);
   }
 
   .qr-hint {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   /* Trust Strip */
@@ -514,8 +514,8 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--k-space-3);
-    background: #fdfbf7;
-    border: 1px solid #e7e5e4;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-stone-100);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-3);
   }
@@ -538,12 +538,12 @@
 
   .badge-text strong {
     font-size: 0.75rem;
-    color: #1c1917;
+    color: var(--k-text-primary);
   }
 
   .badge-text small {
     font-size: 0.65rem;
-    color: #78716c;
+    color: var(--k-border-interactive);
   }
 
   /* Mini Catalog */
@@ -558,7 +558,7 @@
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -569,10 +569,10 @@
   }
 
   .mini-product-card {
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-stone-100);
     border-radius: var(--k-radius-sm);
     overflow: hidden;
-    background: #ffffff;
+    background: var(--k-surface-base);
     text-decoration: none;
     color: inherit;
     display: flex;
@@ -593,7 +593,7 @@
   .mini-img-fallback {
     inline-size: 100%;
     aspect-ratio: 1;
-    background: #f5f5f4;
+    background: var(--k-surface-base);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -609,7 +609,7 @@
 
   .mini-title {
     font-size: 0.7rem;
-    color: #44403c;
+    color: var(--k-stone-700);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -617,13 +617,13 @@
 
   .mini-price {
     font-size: 0.8rem;
-    color: #16a34a;
+    color: var(--k-neem-600);
     font-weight: 800;
   }
 
   /* Footer */
   .card-footer {
-    border-block-start: 1px solid #e7e5e4;
+    border-block-start: 1px solid var(--k-stone-100);
     padding-block-start: var(--k-space-4);
     display: flex;
     flex-direction: column;
@@ -642,8 +642,8 @@
     align-items: center;
     gap: 6px;
     border: 1px solid var(--k-border-interactive);
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
     font-size: var(--k-text-xs);
     font-weight: 700;
     padding: var(--k-space-2) var(--k-space-3);
@@ -655,8 +655,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: var(--k-text-xs);
     font-weight: 700;
     padding: var(--k-space-2) var(--k-space-4);
@@ -671,7 +671,7 @@
     justify-content: center;
     gap: 4px;
     font-size: 0.65rem;
-    color: #78716c;
+    color: var(--k-border-interactive);
     font-weight: 600;
   }
 
@@ -681,7 +681,7 @@
       visibility: hidden;
     }
     .card-page {
-      background: #fff;
+      background: var(--k-surface-base);
       padding: 0;
     }
     .card-top-bar,
@@ -702,7 +702,7 @@
     }
     :global(.visiting-card) {
       box-shadow: none !important;
-      border: 2px solid #78350f !important;
+      border: 2px solid var(--k-accent-primary-bg) !important;
       padding: 8px !important;
     }
   }

@@ -22,7 +22,15 @@ import { join, relative } from 'node:path';
 
 const WRITE = process.argv.includes('--write');
 const ROOT = process.argv.find((a) => !a.startsWith('--') && a.endsWith('apps')) ?? 'apps';
-const MAX_DELTA = 12; // CIE76; ~"same colour, different rounding" and no further.
+// CIE76. The default is "same colour, different rounding". --loose also pulls
+// in colours that belong to a palette family but were authored off it (the
+// Tailwind/Material ambers and greens that leaked in), accepting a visible
+// shift onto the nearest craft dye. Run the contrast gate after --loose.
+const MAX_DELTA = process.argv.includes('--loose') ? 55 : 12;
+
+// The national flag's saffron and green are not palette colours and must not be
+// pulled onto one -- they are the tricolour, reproduced exactly or not at all.
+const KEEP = new Set(['#FF9933', '#138808']);
 
 // ---------------------------------------------------------------- palette
 
@@ -114,6 +122,7 @@ const ROLE_MATCH = {
 
 /** The token a hex should become, given the property it sits on. */
 function tokenFor(hex, prop = '') {
+  if (KEEP.has(hex.toUpperCase())) return { token: null, delta: 0, step: 'kept' };
   const { step, delta } = nearestStep(hex);
   if (delta > MAX_DELTA) return { token: null, delta, step: step.name };
   const candidates = aliasesForStep.get(step.name) ?? [];

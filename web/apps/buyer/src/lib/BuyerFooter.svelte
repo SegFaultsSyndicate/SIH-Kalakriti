@@ -450,8 +450,8 @@
 <style>
   /* Base Footer Container — Warm Antique Walnut & Deep Charcoal Theme */
   .buyer-footer {
-    background-color: #171513;
-    color: #a8a29e;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-stone-300);
     font-size: 0.8125rem;
     line-height: 1.5;
     border-block-start: 1px solid rgba(255, 255, 255, 0.08);
@@ -460,7 +460,7 @@
 
   /* 1. Trust Assurance Strip */
   .footer-trust-strip {
-    background-color: #1f1c19;
+    background-color: var(--k-text-primary);
     border-block-end: 1px solid rgba(255, 255, 255, 0.07);
     padding-block: 1.25rem;
   }
@@ -528,7 +528,7 @@
     aspect-ratio: 1;
     border-radius: 50%;
     background-color: rgba(198, 93, 59, 0.14);
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     flex-shrink: 0;
     transition: transform 0.2s ease, background-color 0.2s ease;
   }
@@ -547,7 +547,7 @@
   .trust-pill__title {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -555,7 +555,7 @@
 
   .trust-pill__sub {
     font-size: 0.69rem;
-    color: #a8a29e;
+    color: var(--k-stone-300);
     white-space: nowrap;
   }
 
@@ -602,7 +602,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     margin: 0;
     padding-block-end: 0.35rem;
     border-block-end: 1px solid rgba(255, 255, 255, 0.1);
@@ -619,7 +619,7 @@
   }
 
   .footer-nav-list a {
-    color: #a8a29e;
+    color: var(--k-stone-300);
     text-decoration: none;
     font-size: 0.775rem;
     line-height: 1.4;
@@ -627,7 +627,7 @@
   }
 
   .footer-nav-list a:hover {
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -648,13 +648,13 @@
     aspect-ratio: 1;
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.06);
-    color: #d6d3d1;
+    color: var(--k-border-hairline);
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
 
   .social-btn:hover {
-    background-color: #c65d3b;
-    color: #ffffff;
+    background-color: var(--k-terracotta-600);
+    color: var(--k-text-on-accent);
     transform: translateY(-2px);
   }
 
@@ -673,7 +673,7 @@
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e7e5e4;
+    color: var(--k-stone-100);
     letter-spacing: 0.02em;
   }
 
@@ -696,11 +696,11 @@
   }
 
   .contact-label {
-    color: #a8a29e;
+    color: var(--k-stone-300);
   }
 
   .contact-value {
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     font-weight: 600;
     text-decoration: none;
   }
@@ -743,7 +743,7 @@
   .app-qr-card__label {
     font-size: 0.72rem;
     font-weight: 600;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     line-height: 1.2;
   }
 
@@ -751,8 +751,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 600;
     padding: 0.2rem 0.45rem;
@@ -767,7 +767,7 @@
     gap: 0.3rem;
     background: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #d6d3d1;
+    color: var(--k-border-hairline);
     font-size: 0.68rem;
     font-weight: 500;
     padding: 0.18rem 0.5rem;
@@ -779,7 +779,7 @@
 
   .app-share-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     border-color: rgba(255, 255, 255, 0.3);
   }
 
@@ -800,7 +800,7 @@
 
   /* 3. SEO Category Keyword Cloud Ribbon */
   .footer-seo-cloud {
-    background-color: #131110;
+    background-color: var(--k-surface-inverse);
     border-block-start: 1px solid rgba(255, 255, 255, 0.05);
     border-block-end: 1px solid rgba(255, 255, 255, 0.05);
     padding-block: 1rem;
@@ -824,13 +824,13 @@
 
   .seo-keyword-link {
     font-size: 0.7125rem;
-    color: #78716c;
+    color: var(--k-border-interactive);
     text-decoration: none;
     transition: color 0.15s ease;
   }
 
   .seo-keyword-link:hover {
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     text-decoration: underline;
   }
 
@@ -841,7 +841,7 @@
 
   /* 4. Bottom Government Copyright & Attribution Ribbon */
   .footer-bottom {
-    background-color: #0f0d0c;
+    background-color: var(--k-surface-inverse);
     padding-block: 1.25rem;
   }
 
@@ -855,7 +855,7 @@
     flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.72rem;
-    color: #78716c;
+    color: var(--k-border-interactive);
   }
 
   .bottom-legal {
@@ -867,7 +867,7 @@
   }
 
   .bottom-legal strong {
-    color: #d6d3d1;
+    color: var(--k-border-hairline);
     font-weight: 600;
   }
 

@@ -265,8 +265,8 @@
   }
 
   .gov-badge {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -316,9 +316,9 @@
   }
 
   .filter-btn--active {
-    background: var(--k-accent-primary-bg, #b45309);
-    color: #ffffff;
-    border-color: var(--k-accent-primary-bg, #b45309);
+    background: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
+    color: var(--k-text-on-accent);
+    border-color: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
   }
 
   .fairs-grid {
@@ -361,7 +361,7 @@
     inset-block-start: var(--k-space-3);
     inset-inline-start: var(--k-space-3);
     background: rgba(15, 23, 42, 0.85);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.7rem;
     font-weight: 800;
     padding: 4px 10px;
@@ -373,14 +373,14 @@
   }
 
   .fair-status-badge--live {
-    background: #15803d;
+    background: var(--k-neem-600);
   }
 
   .pulse-dot {
     inline-size: 7px;
     block-size: 7px;
     border-radius: 50%;
-    background: #4ade80;
+    background: var(--k-neem-400);
     box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.4);
     animation: pulse 1.5s infinite;
   }
@@ -417,7 +417,7 @@
 
   .fair-edition {
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .fair-card__title {
@@ -499,8 +499,8 @@
     display: inline-flex;
     align-items: center;
     gap: var(--k-space-2);
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     padding: var(--k-space-2) var(--k-space-4);
     border-radius: var(--k-radius-md);
     font-size: var(--k-text-xs);
@@ -510,7 +510,7 @@
   }
 
   .explore-btn:hover {
-    background: #92400e;
+    background: var(--k-accent-primary-bg);
   }
 
   @media (max-width: 768px) {
