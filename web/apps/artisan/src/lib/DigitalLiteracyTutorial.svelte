@@ -261,7 +261,16 @@
      by gradient or shadow. */
   .step-card {
     border-radius: var(--k-radius-lg);
-    background: var(--k-surface-inverse);
+    /* A tint of the step's own accent falling into the inverse surface. Both
+       stops are tokens, so the four cards differ by hue without anyone
+       inventing a colour pair, and the dark and high-contrast themes still
+       move underneath it. */
+    background:
+      radial-gradient(
+        120% 90% at 50% 0%,
+        color-mix(in srgb, var(--step-accent, var(--k-accent-primary-bg)) 30%, var(--k-surface-inverse)),
+        var(--k-surface-inverse) 68%
+      );
     color: var(--k-text-on-inverse);
     border-block-start: 4px solid var(--step-accent, var(--k-accent-primary-bg));
     animation: stepIn 0.22s ease-out;
