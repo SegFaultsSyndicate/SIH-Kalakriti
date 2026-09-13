@@ -9,13 +9,13 @@
   made-to-order" rule: same badge size, same position, no greyed styling.
 -->
 <script lang="ts">
-  import { locale, type CurrencyCode } from '@kalakriti/i18n';
+  import { locale } from '@kalakriti/i18n';
   import { Money, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import type { components } from '@kalakriti/api';
   import { craftIcon } from './craft-icon';
   import { wishlist } from './wishlist.svelte';
-  import { CURRENCY_RATES, convertPaise } from './currency';
+  import { currency, CURRENCY_RATES, convertPaise } from './currency.svelte';
 
   type ListingSummary = components['schemas']['ListingSummary'];
 
@@ -37,9 +37,9 @@
   // The base price of the listing, always INR paise straight from the API.
   const paise = $derived(listing.price?.amount_paise ?? (listing.price as any)?.amount ?? 0);
 
-  // Hardcoded currency switch for now -- no picker exists yet, so every card
-  // renders in this one currency. Swap to real selection state, UX later.
-  const selectedCurrency: CurrencyCode = 'USD';  // hardcoded for now
+  // Selected currency comes from the shell header's CurrencySelector -- see
+  // currency.svelte.ts. Defaults to INR (identity rate) until a user picks.
+  const selectedCurrency = $derived(currency.code);
   const conversionRate = $derived(CURRENCY_RATES[selectedCurrency] ?? 1);
   const convertedPaise = $derived(convertPaise(paise, conversionRate));
 

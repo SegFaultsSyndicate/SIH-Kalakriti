@@ -390,6 +390,7 @@ export const en = {
   'crafts.materials': 'Materials',
 
   'language.selector.label': 'Change language',
+  'currency.selector.label': 'Currency',
 
   // Buyer home
   'home.hero.cta': 'Explore the collection',

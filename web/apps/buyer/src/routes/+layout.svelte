@@ -24,6 +24,8 @@
   import BuyerFooter from '$lib/BuyerFooter.svelte';
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
+  import CurrencySelector from '$lib/CurrencySelector.svelte';
+  import { currency } from '$lib/currency.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -59,6 +61,9 @@
 
   $effect(() => {
     void locale.init();
+  });
+  $effect(() => {
+    void currency.init();
   });
   $effect(() => {
     void a11y.init();
@@ -159,6 +164,7 @@
       <AccountMenu />
 
       <LanguageSelector />
+      <CurrencySelector />
       <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>

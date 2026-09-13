@@ -26,6 +26,7 @@ export type IconName =
   | 'sort'
   | 'share'
   | 'download'
+  | 'dollar-sign'
   | 'print'
   | 'link'
   | 'external-link'
