@@ -32,6 +32,7 @@ from app.features.extract_attributes import AttributeExtractor
 from app.features.generate_description import DescriptionGenerator
 from app.features.rerank import Reranker
 from app.features.transcribe import Transcriber
+from app.features.translate import Translator
 from app.features.verify_technique import TechniqueVerifier
 from app.models.vlm import VLMConfig
 from app.pb import common_pb2, inference_pb2, inference_pb2_grpc
@@ -156,6 +157,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
         self._embedder: Embedder | None = None
         self._reranker: Reranker | None = None
         self._transcriber: Transcriber | None = None
+        self._translator: Translator | None = None
         # Embed and ExtractAttributes are the two RPCs that arrive in bursts —
         # one per listing image, one per search query — so they are the two that
         # go through the batcher.
@@ -185,6 +187,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
         self._embedder = Embedder(registry.embedder)
         self._reranker = Reranker(registry.reranker)
         self._transcriber = Transcriber(registry.transcriber, registry.storage)
+        self._translator = Translator(registry.translator)
 
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         BATCH_SIZE.labels("embed").observe(len(texts))
@@ -316,6 +319,21 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
                 confidence=chunk["confidence"],
                 language=request.language,
             )
+
+    async def Translate(self, request, context):
+        result = await self._translator.translate(
+            request.title,
+            request.description,
+            list(request.highlights),
+            _language_name(request.source_language),
+            _language_name(request.target_language),
+        )
+        return inference_pb2.TranslateResponse(
+            title=result["title"],
+            description=result["description"],
+            highlights=result["highlights"],
+            model_version=self._version,
+        )
 
 
 # --- protobuf conversion ----------------------------------------------------

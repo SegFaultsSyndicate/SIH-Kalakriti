@@ -157,7 +157,7 @@
     onkeydown={(e) => (e.key === 'Escape' || e.key === 'Enter') && oncancel()}
     role="button"
     tabindex="0"
-    aria-label="Close crop modal"
+    aria-label={t('imageCrop.closeAriaLabel')}
   >
     <div
       class="crop-dialog"
@@ -176,7 +176,7 @@
           </h2>
           <p class="crop-subtitle">{t('profile.crop.instruction')}</p>
         </div>
-        <button type="button" class="crop-close-btn" onclick={oncancel} title="Close">
+        <button type="button" class="crop-close-btn" onclick={oncancel} title={t('imageCrop.close')}>
           <Icon name="close" size="1.1rem" />
         </button>
       </div>
@@ -191,7 +191,7 @@
         onpointercancel={handlePointerUp}
         onwheel={handleWheel}
         role="application"
-        aria-label="Drag to reposition photo"
+        aria-label={t('imageCrop.dragAriaLabel')}
       >
         <!-- The scaled, translated, rotated image -->
         <img
@@ -226,7 +226,7 @@
       <!-- Zoom & Adjustment Controls -->
       <div class="crop-controls">
         <div class="crop-zoom-bar">
-          <button type="button" class="crop-tool-btn" onclick={zoomOut} title="Zoom Out">
+          <button type="button" class="crop-tool-btn" onclick={zoomOut} title={t('imageCrop.zoomOut')}>
             <Icon name="chevron-down" size="1rem" />
           </button>
           <input
@@ -238,17 +238,17 @@
             class="crop-slider"
             aria-label={t('profile.crop.zoom')}
           />
-          <button type="button" class="crop-tool-btn" onclick={zoomIn} title="Zoom In">
+          <button type="button" class="crop-tool-btn" onclick={zoomIn} title={t('imageCrop.zoomIn')}>
             <Icon name="chevron-up" size="1rem" />
           </button>
         </div>
 
         <div class="crop-tool-actions">
-          <button type="button" class="crop-action-btn" onclick={rotateClockwise} title="Rotate 90°">
+          <button type="button" class="crop-action-btn" onclick={rotateClockwise} title={t('profile.crop.rotate')}>
             <Icon name="refresh" size="0.9rem" />
             {t('profile.crop.rotate')}
           </button>
-          <button type="button" class="crop-action-btn" onclick={resetPosition} title="Reset position">
+          <button type="button" class="crop-action-btn" onclick={resetPosition} title={t('profile.crop.reset')}>
             <Icon name="refresh" size="0.9rem" />
             {t('profile.crop.reset')}
           </button>

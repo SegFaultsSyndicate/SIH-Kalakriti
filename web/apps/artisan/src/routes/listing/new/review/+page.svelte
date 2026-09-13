@@ -14,7 +14,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, matchesLocale, type MessageKey } from '@kalakriti/i18n';
   import { Button, Input, SpeakButton } from '@kalakriti/ui';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields } from '$lib/listing-draft';
@@ -57,8 +57,8 @@
     });
   });
 
-  const enTranslation = $derived(translations.find((tr) => tr.language === 'en'));
-  const hiTranslation = $derived(translations.find((tr) => tr.language === 'hi'));
+  const enTranslation = $derived(translations.find((tr) => matchesLocale(tr.language, 'en')));
+  const hiTranslation = $derived(translations.find((tr) => matchesLocale(tr.language, 'hi')));
   const sentences = $derived(
     (enTranslation?.description ?? '').split(/(?<=[.!?])\s+/).filter((s) => s.length > 0),
   );

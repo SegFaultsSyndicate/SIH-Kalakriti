@@ -129,8 +129,14 @@ enum MediaKind {
   MEDIA_KIND_DOCUMENT = 4;
 }
 
-// Language covers the 22 languages of the Eighth Schedule plus English, in BCP-47 terms.
+// Language covers 20 of the 22 languages of the Eighth Schedule plus English,
+// in BCP-47 terms. Manipuri and Santali were dropped (weakest script/font
+// support of the 22, and never had real translated content) -- their tags
+// are reserved, never to be reused.
 enum Language {
+  reserved 12, 18;
+  reserved "LANGUAGE_MANIPURI", "LANGUAGE_SANTALI";
+
   // Undetermined; equivalent to BCP-47 "und". Detect before writing anything user-visible.
   LANGUAGE_UNSPECIFIED = 0;
   // as
@@ -155,8 +161,6 @@ enum Language {
   LANGUAGE_MAITHILI = 10;
   // ml
   LANGUAGE_MALAYALAM = 11;
-  // mni
-  LANGUAGE_MANIPURI = 12;
   // mr
   LANGUAGE_MARATHI = 13;
   // ne
@@ -167,8 +171,6 @@ enum Language {
   LANGUAGE_PUNJABI = 16;
   // sa
   LANGUAGE_SANSKRIT = 17;
-  // sat
-  LANGUAGE_SANTALI = 18;
   // sd
   LANGUAGE_SINDHI = 19;
   // ta

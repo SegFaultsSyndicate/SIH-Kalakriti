@@ -24,10 +24,11 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale, type DntTerm } from '@kalakriti/i18n';
+  import { locale, matchesLocale, type DntTerm } from '@kalakriti/i18n';
   import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getListingSummary, type components } from '@kalakriti/api';
+  import { getCached, setCached } from '@kalakriti/offline';
   import PurchaseForm from '$lib/PurchaseForm.svelte';
 
   type ListingSummary = components['schemas']['ListingSummary'];
@@ -59,6 +60,15 @@
 
   const artisanAvatar = $derived((listing as Record<string, unknown> | undefined)?.artisan_image_url as string | undefined || devAvatar);
 
+  // Caches the full response -- every language's translations[], not just the
+  // one active at fetch time -- so a buyer who switches language offline on a
+  // listing they've already viewed still sees it correctly translated instead
+  // of falling back to whatever locale was active when it was cached. Same
+  // network -> cache pattern as apps/artisan/src/lib/ontology.ts's loadCrafts.
+  function listingCacheKey(id: string): string {
+    return `listing.summary.${id}`;
+  }
+
   $effect(() => {
     const id = listingId;
     void (async () => {
@@ -66,8 +76,9 @@
       activeMediaIndex = 0;
       try {
         listing = await getListingSummary(id);
+        await setCached(listingCacheKey(id), listing);
       } catch {
-        listing = undefined;
+        listing = await getCached<ListingSummary>(listingCacheKey(id));
       } finally {
         loading = false;
       }
@@ -75,12 +86,12 @@
   });
 
   const title = $derived(
-    listing?.translations?.find((tr) => tr.language === locale.code)?.title ??
+    listing?.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.title ??
       listing?.translations?.[0]?.title ??
       '',
   );
   const description = $derived(
-    listing?.translations?.find((tr) => tr.language === locale.code)?.description ??
+    listing?.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.description ??
       listing?.translations?.[0]?.description ??
       '',
   );

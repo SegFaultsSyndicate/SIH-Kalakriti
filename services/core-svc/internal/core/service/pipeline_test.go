@@ -75,6 +75,19 @@ func (f *fakeInference) GenerateDescription(_ context.Context, in domain.CopyReq
 	}, nil
 }
 
+func (f *fakeInference) Translate(_ context.Context, in domain.TranslateRequest) (domain.TranslatedCopy, error) {
+	f.calls[stepTranslate]++
+	f.noteSeen = in.Description
+	if f.failStep == stepTranslate {
+		return domain.TranslatedCopy{}, f.failWith
+	}
+	return domain.TranslatedCopy{
+		Title:       in.TargetLanguage + ": " + in.Title,
+		Description: in.TargetLanguage + ": " + in.Description,
+		Highlights:  in.Highlights,
+	}, nil
+}
+
 // fakePipelineStore reads and writes the same maps the catalog and media fakes
 // use, so the pipeline sees one consistent world.
 type fakePipelineStore struct {

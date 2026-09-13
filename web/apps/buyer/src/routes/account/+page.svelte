@@ -26,7 +26,7 @@
 
   const breadcrumbs = $derived<BreadcrumbItem[]>([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Your Account' },
+    { label: t('account.breadcrumb') },
   ]);
 
   // Active section tab: 'personal' | 'addresses' | 'security' | 'orders' | 'consultations'
@@ -220,7 +220,7 @@
     <section class="profile-banner">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">AS</div>
-        <button type="button" class="avatar-edit-btn" title="Change profile picture" aria-label="Change photo">
+        <button type="button" class="avatar-edit-btn" title={t('account.changePhotoTitle')} aria-label={t('account.changePhotoLabel')}>
           <Icon name="camera" size="0.85rem" />
         </button>
       </div>
@@ -228,8 +228,8 @@
       <div class="profile-meta">
         <div class="name-badge-row">
           <h1 class="profile-name">{fullName}</h1>
-          <span class="patron-tier-pill">Verified Craft Patron</span>
-          <span class="member-since-pill">Patron since 2024</span>
+          <span class="patron-tier-pill">{t('account.patronTier')}</span>
+          <span class="member-since-pill">{t('account.memberSince')}</span>
         </div>
 
         <div class="profile-contact-strip">
@@ -241,7 +241,7 @@
           <span class="contact-item">
             <Icon name="phone" size="0.9rem" />
             {phone}
-            <span class="verified-dot" title="Mobile number OTP verified">✓ Verified</span>
+            <span class="verified-dot" title={t('account.phoneVerifiedTitle')}>{t('account.phoneVerifiedBadge')}</span>
           </span>
         </div>
       </div>
@@ -249,28 +249,28 @@
       <div class="profile-telemetry">
         <div class="telemetry-card">
           <span class="telemetry-value">4</span>
-          <span class="telemetry-label">Total Orders</span>
+          <span class="telemetry-label">{t('account.telemetry.orders')}</span>
         </div>
         <div class="telemetry-card">
           <span class="telemetry-value">6</span>
-          <span class="telemetry-label">GI Passports</span>
+          <span class="telemetry-label">{t('account.telemetry.giPassports')}</span>
         </div>
         <div class="telemetry-card">
           <span class="telemetry-value">1</span>
-          <span class="telemetry-label">Loom Commission</span>
+          <span class="telemetry-label">{t('account.telemetry.loomCommission')}</span>
         </div>
       </div>
 
       <div class="profile-actions-col">
-        <button type="button" class="banner-signout-btn" onclick={handleSignOut} title="Sign Out of Kalakriti">
+        <button type="button" class="banner-signout-btn" onclick={handleSignOut} title={t('account.signOutTitle')}>
           <Icon name="lock" size="0.85rem" />
-          <span>Sign Out</span>
+          <span>{t('account.signOut')}</span>
         </button>
       </div>
     </section>
 
     <!-- Amazon's Signature 6-Card Navigation Hub -->
-    <section class="amazon-hub-section" aria-label="Your Account Shortcuts">
+    <section class="amazon-hub-section" aria-label={t('account.shortcutsAriaLabel')}>
       <div class="hub-grid">
         <!-- Card 1: Your Orders -->
         <a href="/orders" class="hub-card">
@@ -918,7 +918,7 @@
               id="new-phone-input"
               type="tel"
               class="form-input"
-              placeholder="e.g. 9876543210"
+              placeholder={t('account.phonePlaceholder')}
               bind:value={newPhone}
               maxlength="13"
             />

@@ -91,7 +91,7 @@
           <h2>{t('card.title')}</h2>
           <p class="modal-subhead">Share your authentic artisan identity with buyers and institutions.</p>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label="Close">
+        <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
           <Icon name="close" />
         </button>
       </header>

@@ -15,7 +15,15 @@
 // spinner without real state" rule is about backing data, and this has it --
 // the data underneath is mocked, the state machine driving the UI is not.
 
-import type { MessageKey } from '@kalakriti/i18n';
+import { LOCALES, SUPPORTED_LOCALES, type LocaleCode, type MessageKey } from '@kalakriti/i18n';
+
+// The real pipeline stores ListingTranslation.language as the backend's
+// uppercase enum name (e.g. "HINDI"), not the locale code -- see
+// commonv1.Language / matchesLocale in packages/i18n. This mock must match or
+// no buyer-side lookup by locale will ever find it.
+function languageEnumName(code: LocaleCode): string {
+  return LOCALES[code].englishName.toUpperCase();
+}
 
 export type PipelineStageKey = 'upload' | 'enhance' | 'attributes' | 'describe' | 'translate';
 export type PipelineStageStatus = 'pending' | 'active' | 'done' | 'error';
@@ -124,14 +132,27 @@ export function buildMockResult(craftId: string | undefined, workingTitle: strin
     { sentenceIndex: 1, attributeKey: 'material' },
   ];
 
+  // The real pipeline (core-svc's Pipeline.Translate) fans a listing's copy out
+  // to every configured buyer language, not just en+hi -- see
+  // PIPELINE_BUYER_LANGUAGES in pkg/config/config.go. This mock mirrors that
+  // for every supported locale so the offline/demo flow behaves the same way;
+  // 'hi' keeps a hand-written sentence since it is also this file's SpeakButton
+  // demo, everything else gets a generic tagged placeholder.
+  const otherLocales: LocaleCode[] = SUPPORTED_LOCALES.filter((code) => code !== 'hi');
   const translations: ListingTranslation[] = [
-    { language: 'en', title, description: sentences.join(' '), machine_generated: true },
+    { language: languageEnumName('en'), title, description: sentences.join(' '), machine_generated: true },
     {
-      language: 'hi',
+      language: languageEnumName('hi'),
       title,
       description: `यह ${craftLabel} वस्तु कारीगर द्वारा हाथ से तैयार की गई है।`,
       machine_generated: true,
     },
+    ...otherLocales.map((code) => ({
+      language: languageEnumName(code),
+      title,
+      description: `[${code}] ${sentences.join(' ')}`,
+      machine_generated: true,
+    })),
   ];
 
   return { attributes, claims, translations };

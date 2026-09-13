@@ -9,7 +9,7 @@
   made-to-order" rule: same badge size, same position, no greyed styling.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, matchesLocale } from '@kalakriti/i18n';
   import { Money, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import type { components } from '@kalakriti/api';
@@ -29,7 +29,7 @@
 
   const t = $derived(locale.t);
   const title = $derived(
-    listing.translations?.find((tr) => tr.language === locale.code)?.title ??
+    listing.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.title ??
       listing.translations?.[0]?.title ??
       '',
   );

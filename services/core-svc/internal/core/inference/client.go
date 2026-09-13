@@ -118,6 +118,25 @@ func (c *Client) GenerateDescription(ctx context.Context, in domain.CopyRequest)
 	}, nil
 }
 
+// Translate translates listing copy from one language into another.
+func (c *Client) Translate(ctx context.Context, in domain.TranslateRequest) (domain.TranslatedCopy, error) {
+	resp, err := c.stub.Translate(ctx, &inferencev1.TranslateRequest{
+		Title:          in.Title,
+		Description:    in.Description,
+		Highlights:     in.Highlights,
+		SourceLanguage: languageToProto(in.SourceLanguage),
+		TargetLanguage: languageToProto(in.TargetLanguage),
+	})
+	if err != nil {
+		return domain.TranslatedCopy{}, fmt.Errorf("translating %s to %s: %w", in.SourceLanguage, in.TargetLanguage, err)
+	}
+	return domain.TranslatedCopy{
+		Title:       resp.GetTitle(),
+		Description: resp.GetDescription(),
+		Highlights:  resp.GetHighlights(),
+	}, nil
+}
+
 func attributesToProto(a domain.InferredAttributes) *inferencev1.AttributeSet {
 	return &inferencev1.AttributeSet{
 		CraftId:      &inferencev1.ScoredString{Value: a.CraftCode, Confidence: a.CraftConfidence},

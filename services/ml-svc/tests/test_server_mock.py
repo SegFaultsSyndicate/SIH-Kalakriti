@@ -113,6 +113,22 @@ async def test_generate_description(stub):
     assert response.attribute_keys_used
 
 
+async def test_translate(stub):
+    response = await stub.Translate(
+        inference_pb2.TranslateRequest(
+            title="A cotton scarf.",
+            description="Hand woven with {{dnt0}}.",
+            highlights=["soft"],
+            source_language=common_pb2.LANGUAGE_ENGLISH,
+            target_language=common_pb2.LANGUAGE_HINDI,
+        )
+    )
+    assert response.title == "[HINDI] A cotton scarf."
+    assert "{{dnt0}}" in response.description
+    assert response.highlights == ["[HINDI] soft"]
+    assert response.model_version
+
+
 async def test_verify_technique(stub):
     response = await stub.VerifyTechnique(
         inference_pb2.VerifyTechniqueRequest(

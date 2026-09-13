@@ -188,8 +188,6 @@
     { code: 'kok', label: 'कोंकणी', english: 'Konkani' },
     { code: 'brx', label: 'बड़ो', english: 'Bodo' },
     { code: 'doi', label: 'डोगरी', english: 'Dogri' },
-    { code: 'mni', label: 'মৈতৈলোন্', english: 'Manipuri' },
-    { code: 'sat', label: 'ᱥᱟᱱᱛᱟᱲᱤ', english: 'Santali' },
   ];
 
   let showMoreLanguages = $state(false);
@@ -398,7 +396,7 @@
           <span class="profile-avatar__camera-badge" title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}>
             <Icon name="camera" size="0.85rem" />
           </span>
-          <span class="profile-avatar__verified" title="Govt & AI Verified Artisan">
+          <span class="profile-avatar__verified" title={t('profile.verifiedBadgeTitle')}>
             <Icon name="verified-artisan" size="1.25rem" />
           </span>
         </div>
@@ -723,23 +721,23 @@
         <input
           type="email"
           class="email-text-input"
-          placeholder="artisan.master@kalakriti.org"
+          placeholder={t('profile.email.placeholder')}
           bind:value={email}
-          aria-label="Artisan email address"
+          aria-label={t('profile.email.ariaLabel')}
         />
         <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail}>
-          Save Email
+          {t('profile.email.save')}
         </Button>
       </div>
 
       <div class="email-pref-list">
         <label class="email-pref-row">
           <input type="checkbox" bind:checked={emailOrderAlerts} />
-          <span>Real-time SMS & email notifications when large buyer purchase orders are placed</span>
+          <span>{t('profile.email.orderAlerts')}</span>
         </label>
         <label class="email-pref-row">
           <input type="checkbox" bind:checked={emailVideoAlerts} />
-          <span>Video consultation alerts 30 minutes before booked loom sessions</span>
+          <span>{t('profile.email.videoAlerts')}</span>
         </label>
       </div>
     </div>
@@ -775,12 +773,12 @@
         aria-labelledby="phone-modal-heading"
       >
         <div class="phone-modal-header">
-          <h3 id="phone-modal-heading">Update Registered Mobile Number</h3>
+          <h3 id="phone-modal-heading">{t('profile.phoneModal.heading')}</h3>
           <button
             type="button"
             class="phone-modal-close"
             onclick={() => (showPhoneModal = false)}
-            aria-label="Close dialog"
+            aria-label={t('profile.phoneModal.closeAriaLabel')}
           >
             &times;
           </button>

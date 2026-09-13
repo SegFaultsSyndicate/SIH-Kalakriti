@@ -210,7 +210,7 @@
               <Icon name="warning" />
               <span class="moderation-item__flag-label">{t('moderation.modelFlagged')}</span>
             {/if}
-            {item.translations?.find((tr) => tr.language === 'LANGUAGE_ENGLISH')?.title ?? item.id}
+            {item.translations?.find((tr) => tr.language === 'ENGLISH')?.title ?? item.id}
           </h2>
           <span class="moderation-item__state">{item.state}</span>
         </div>

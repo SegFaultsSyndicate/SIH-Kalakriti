@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ type Inference interface {
 	EnhanceImage(ctx context.Context, objectKey string) (enhancedKey string, err error)
 	ExtractAttributes(ctx context.Context, objectKeys []string, declaredCraftID, hint string) (domain.InferredAttributes, error)
 	GenerateDescription(ctx context.Context, in domain.CopyRequest) (domain.GeneratedCopy, error)
+	Translate(ctx context.Context, in domain.TranslateRequest) (domain.TranslatedCopy, error)
 }
 
 // PipelineStore is what the pipeline needs beyond the catalog and media
@@ -309,9 +311,20 @@ func (p *Pipeline) RecordFailure(ctx context.Context, mediaID uuid.UUID, reason 
 
 // --- translation ---------------------------------------------------------------
 
+// translateConcurrency bounds how many languages are in flight against ml-svc
+// at once. 20 buyer languages fired sequentially turned "listing published" into
+// a 20x-latency step once each call is a real IndicTrans2 request instead of the
+// near-instant fake; this caps the fan-out instead of removing it.
+//
+// ponytail: fixed cap, not adaptive to ml-svc's actual capacity. Raise or make
+// configurable if a future language-count bump makes this the bottleneck.
+const translateConcurrency = 8
+
 // Translate fans a published listing's copy out to the buyer languages. Craft
 // terms are held out of the machine's reach and put back verbatim afterwards, so
-// "Ajrakh" does not come back as "indigo cloth".
+// "Ajrakh" does not come back as "indigo cloth". Languages translate concurrently
+// (bounded by translateConcurrency) since each is an independent ml-svc call and
+// an independent stored row.
 func (p *Pipeline) Translate(ctx context.Context, listingID, artisanID uuid.UUID, craftID uuid.UUID) error {
 	existing, err := p.store.ListListingTranslations(ctx, listingID)
 	if err != nil {
@@ -331,38 +344,57 @@ func (p *Pipeline) Translate(ctx context.Context, listingID, artisanID uuid.UUID
 	protected := doNotTranslate(craft)
 	ctx = asArtisan(ctx, artisanID)
 
+	sem := make(chan struct{}, translateConcurrency)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var firstErr error
+
 	for _, language := range p.targetLanguages(source.Language) {
 		// An artisan's own words are never overwritten by a machine.
 		if prior, seen := have[language]; seen && !prior.MachineGenerated {
 			continue
 		}
 
-		generated, err := timed(ctx, stepTranslate, func() (domain.GeneratedCopy, error) {
-			return p.inferrer.GenerateDescription(ctx, domain.CopyRequest{
-				CraftID:     craftID,
-				CraftCode:   craft.Code,
-				Language:    language,
-				ArtisanNote: mask(source.Description, protected),
-			})
-		})
-		if err != nil {
-			// One language failing must not cost the others.
-			p.log.WarnContext(ctx, "translation failed",
-				"listing_id", listingID, "language", language, "error", err)
-			continue
-		}
+		language := language
+		sem <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer func() { <-sem }()
 
-		if _, err := p.catalog.UpsertListingTranslation(ctx, listingID, domain.ListingTranslation{
-			Language:         language,
-			Title:            unmask(generated.Title, protected),
-			Description:      unmask(generated.Description, protected),
-			Highlights:       unmaskAll(generated.Highlights, protected),
-			MachineGenerated: true,
-		}, "pipeline:"+stepTranslate+":"+listingID.String()+":"+language); err != nil {
-			return err
-		}
+			translated, err := timed(ctx, stepTranslate, func() (domain.TranslatedCopy, error) {
+				return p.inferrer.Translate(ctx, domain.TranslateRequest{
+					Title:          mask(source.Title, protected),
+					Description:    mask(source.Description, protected),
+					Highlights:     maskAll(source.Highlights, protected),
+					SourceLanguage: source.Language,
+					TargetLanguage: language,
+				})
+			})
+			if err != nil {
+				// One language failing must not cost the others.
+				p.log.WarnContext(ctx, "translation failed",
+					"listing_id", listingID, "language", language, "error", err)
+				return
+			}
+
+			if _, err := p.catalog.UpsertListingTranslation(ctx, listingID, domain.ListingTranslation{
+				Language:         language,
+				Title:            unmask(translated.Title, protected),
+				Description:      unmask(translated.Description, protected),
+				Highlights:       unmaskAll(translated.Highlights, protected),
+				MachineGenerated: true,
+			}, "pipeline:"+stepTranslate+":"+listingID.String()+":"+language); err != nil {
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = err
+				}
+				mu.Unlock()
+			}
+		}()
 	}
-	return nil
+	wg.Wait()
+	return firstErr
 }
 
 // targetLanguages is the configured buyer languages, minus the one the copy is
@@ -431,6 +463,14 @@ func unmask(text string, terms []string) string {
 		text = strings.ReplaceAll(text, fmt.Sprintf(dntToken, i), term)
 	}
 	return text
+}
+
+func maskAll(texts []string, terms []string) []string {
+	out := make([]string, 0, len(texts))
+	for _, text := range texts {
+		out = append(out, mask(text, terms))
+	}
+	return out
 }
 
 func unmaskAll(texts []string, terms []string) []string {

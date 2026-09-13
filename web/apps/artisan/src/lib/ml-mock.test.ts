@@ -1,5 +1,6 @@
 // apps/artisan/src/lib/ml-mock.test.ts
 import { describe, expect, it } from 'vitest';
+import { LOCALE_CODES, LOCALES } from '@kalakriti/i18n';
 import { assessPhotoQuality, buildMockResult, runMockPipeline, type PipelineStageState } from './ml-mock';
 
 describe('assessPhotoQuality', () => {
@@ -40,7 +41,10 @@ describe('runMockPipeline', () => {
     // The upload stage only completed after uploadDone actually returned true.
     expect(uploadsLeft).toBeLessThanOrEqual(0);
 
-    expect(result.translations.map((t) => t.language).sort()).toEqual(['en', 'hi']);
+    // The mock mirrors the real pipeline: every locale, stored as the
+    // backend's uppercase enum name (e.g. "HINDI"), not the locale code.
+    const expectedLanguages = LOCALE_CODES.map((code) => LOCALES[code].englishName.toUpperCase()).sort();
+    expect(result.translations.map((t) => t.language).sort()).toEqual(expectedLanguages);
     expect(result.translations.every((t) => t.machine_generated)).toBe(true);
     expect(result.attributes.length).toBeGreaterThan(0);
     expect(result.claims.length).toBeGreaterThan(0);

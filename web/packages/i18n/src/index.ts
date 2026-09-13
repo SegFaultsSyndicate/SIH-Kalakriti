@@ -6,6 +6,7 @@ export {
   DEFAULT_LOCALE,
   isLocaleCode,
   resolveLocale,
+  matchesLocale,
   type LocaleCode,
   type LocaleMeta,
 } from './locales';

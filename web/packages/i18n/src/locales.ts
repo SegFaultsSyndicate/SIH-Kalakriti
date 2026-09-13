@@ -9,8 +9,10 @@
 // than inferred: Urdu is the RTL case this product will hit, and inferring
 // direction from the tag is exactly the kind of guess that breaks it.
 //
-// All 22 languages of the Eighth Schedule are listed here, per the batch
-// spec's requirement that every scheduled language resolve to *something*.
+// 20 of the 22 languages of the Eighth Schedule are listed here (Manipuri and
+// Santali were dropped -- weakest script/font support of the 22, and neither
+// had a real translated catalogue), per the batch spec's requirement that
+// every supported language resolve to *something*.
 // `coverage` records which ones actually have a translated catalogue --
 // see messages/ -- versus which fall back through Hindi to English. Adding
 // a real translation later is a messages/<code>.ts file plus one loader
@@ -29,13 +31,15 @@ export interface LocaleMeta {
   /** Locale used for number, currency and date formatting. */
   readonly numberLocale: string;
   /**
-   * 'complete': messages/<code>.ts exists and is the source (en) or a full
-   * translation (hi). 'fallback': no catalogue yet; resolves through the
-   * hi -> en chain. Intl-driven formatting (numbers, dates) still works for
-   * every locale regardless of this value -- it only describes the message
-   * catalogue.
+   * 'complete': messages/<code>.ts exists and is a human-authored source (en)
+   * or full translation. 'machine': messages/<code>.ts exists but was
+   * produced by translation rather than a human reviewer -- correct enough to
+   * ship, but not yet verified the way 'complete' catalogues are. 'fallback':
+   * no catalogue yet; resolves through the hi -> en chain. Intl-driven
+   * formatting (numbers, dates) still works for every locale regardless of
+   * this value -- it only describes the message catalogue.
    */
-  readonly coverage: 'complete' | 'fallback';
+  readonly coverage: 'complete' | 'machine' | 'fallback';
 }
 
 export const LOCALES = {
@@ -147,15 +151,6 @@ export const LOCALES = {
     numberLocale: 'ml-IN',
     coverage: 'fallback',
   },
-  mni: {
-    tag: 'mni-IN',
-    endonym: 'ꯃꯤꯇꯩꯂꯣꯟ',
-    englishName: 'Manipuri',
-    dir: 'ltr',
-    script: 'Mtei',
-    numberLocale: 'mni-IN',
-    coverage: 'fallback',
-  },
   mr: {
     tag: 'mr-IN',
     endonym: 'मराठी',
@@ -201,15 +196,6 @@ export const LOCALES = {
     numberLocale: 'sa-IN',
     coverage: 'fallback',
   },
-  sat: {
-    tag: 'sat-IN',
-    endonym: 'ᱥᱟᱱᱛᱟᱲᱤ',
-    englishName: 'Santali',
-    dir: 'ltr',
-    script: 'Olck',
-    numberLocale: 'sat-IN',
-    coverage: 'fallback',
-  },
   sd: {
     tag: 'sd-IN',
     endonym: 'سنڌي',
@@ -252,13 +238,25 @@ export type LocaleCode = keyof typeof LOCALES;
 
 export const LOCALE_CODES = Object.keys(LOCALES) as LocaleCode[];
 
-/** The 22 constitutionally scheduled languages (English is the source locale). */
+/** The 20 supported scheduled languages (English is the source locale). */
 export const SUPPORTED_LOCALES = LOCALE_CODES.filter((code) => code !== 'en');
 
 export const DEFAULT_LOCALE: LocaleCode = 'hi';
 
 export function isLocaleCode(value: string): value is LocaleCode {
   return Object.prototype.hasOwnProperty.call(LOCALES, value);
+}
+
+/**
+ * Whether a `listing_translation.language` value matches a UI locale. The
+ * real backend stores the trimmed proto enum name (e.g. "HINDI"); a listing
+ * drafted offline before syncing may instead carry the mock pipeline's
+ * lowercase locale code (e.g. "hi", see apps/artisan/src/lib/ml-mock.ts) --
+ * this matches either, so display code works regardless of which one wrote
+ * the row.
+ */
+export function matchesLocale(language: string, locale: LocaleCode): boolean {
+  return language === locale || language === LOCALES[locale].englishName.toUpperCase();
 }
 
 /**

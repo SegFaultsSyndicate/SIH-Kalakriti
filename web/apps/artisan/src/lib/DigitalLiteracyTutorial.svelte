@@ -113,7 +113,7 @@
         <div class="sahayak-badge">
           <span>DIGITAL SAHAYAK • डिजिटल साक्षरता सहायता</span>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label="Close">
+        <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
           <Icon name="close" />
         </button>
       </header>

@@ -10,7 +10,7 @@
   product name, HSN code, unit price, seller details, and category.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, matchesLocale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Dialog, showToast } from '@kalakriti/ui';
   import type { Listing } from '$lib/listings';
@@ -40,7 +40,7 @@
   const productName = $derived(titleFor(listing, locale.code) || t('listings.untitled'));
 
   const description = $derived(
-    listing.translations?.find((tr) => tr.language === locale.code)?.description ??
+    listing.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.description ??
     listing.translations?.[0]?.description ??
     ''
   );

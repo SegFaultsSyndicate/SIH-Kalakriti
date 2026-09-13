@@ -24,7 +24,7 @@
 
   const breadcrumbs = $derived<BreadcrumbItem[]>([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'GI Tagged' },
+    { label: t('giTagged.breadcrumb') },
   ]);
 
   // View Layout
@@ -377,21 +377,21 @@
 
   <!-- Page Header -->
   <header class="gi-page-header">
-    <h1 class="gi-page-title">GI Tagged Product</h1>
+    <h1 class="gi-page-title">{t('giTagged.pageTitle')}</h1>
     <p class="gi-page-subtitle">
-      Government Registered Geographical Indications • Direct Artisan Cooperative Procurement
+      {t('giTagged.pageSubtitle')}
     </p>
   </header>
 
   <!-- Layout: Sidebar + Catalog Grid -->
   <div class="gi-layout">
     <!-- LEFT SIDEBAR: SHOPPING OPTIONS -->
-    <aside class="gi-sidebar" aria-label="Shopping Options">
+    <aside class="gi-sidebar" aria-label={t('giTagged.sidebarAriaLabel')}>
       <div class="sidebar-header">
-        <h2 class="sidebar-title">Shopping Options</h2>
+        <h2 class="sidebar-title">{t('giTagged.shoppingOptions')}</h2>
         {#if selectedCategory !== 'all' || selectedPriceRange || selectedColor || selectedState !== 'all'}
           <button type="button" class="sidebar-clear-btn" onclick={resetAllFilters}>
-            Clear All
+            {t('giTagged.clearAll')}
           </button>
         {/if}
       </div>
@@ -404,7 +404,7 @@
           onclick={() => (isCategoryOpen = !isCategoryOpen)}
           aria-expanded={isCategoryOpen}
         >
-          <span>CATEGORY</span>
+          <span>{t('giTagged.filter.category')}</span>
           <Icon name={isCategoryOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -435,7 +435,7 @@
           onclick={() => (isPriceOpen = !isPriceOpen)}
           aria-expanded={isPriceOpen}
         >
-          <span>PRICE</span>
+          <span>{t('giTagged.filter.price')}</span>
           <Icon name={isPriceOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -466,7 +466,7 @@
           onclick={() => (isColorOpen = !isColorOpen)}
           aria-expanded={isColorOpen}
         >
-          <span>COLOR</span>
+          <span>{t('giTagged.filter.color')}</span>
           <Icon name={isColorOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -499,7 +499,7 @@
           onclick={() => (isWeavingOpen = !isWeavingOpen)}
           aria-expanded={isWeavingOpen}
         >
-          <span>WEAVING STYLE</span>
+          <span>{t('giTagged.filter.weavingStyle')}</span>
           <Icon name={isWeavingOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -530,7 +530,7 @@
           onclick={() => (isPatternOpen = !isPatternOpen)}
           aria-expanded={isPatternOpen}
         >
-          <span>PRINT OR PATTERN TYPE</span>
+          <span>{t('giTagged.filter.patternType')}</span>
           <Icon name={isPatternOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -561,7 +561,7 @@
           onclick={() => (isFabricOpen = !isFabricOpen)}
           aria-expanded={isFabricOpen}
         >
-          <span>FABRIC</span>
+          <span>{t('giTagged.filter.fabric')}</span>
           <Icon name={isFabricOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 
@@ -592,7 +592,7 @@
           onclick={() => (isDiscountOpen = !isDiscountOpen)}
           aria-expanded={isDiscountOpen}
         >
-          <span>DISCOUNT</span>
+          <span>{t('giTagged.filter.discount')}</span>
           <Icon name={isDiscountOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
         </button>
 

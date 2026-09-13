@@ -76,6 +76,6 @@ def _bhashini_code(language: str) -> str:
         "KANNADA": "kn", "MALAYALAM": "ml", "MARATHI": "mr", "ODIA": "or",
         "PUNJABI": "pa", "TAMIL": "ta", "TELUGU": "te", "URDU": "ur",
         "MAITHILI": "mai", "NEPALI": "ne", "SANSKRIT": "sa", "SINDHI": "sd",
-        "KONKANI": "kok", "DOGRI": "doi", "BODO": "brx", "SANTALI": "sat",
-        "KASHMIRI": "ks", "MANIPURI": "mni", "ENGLISH": "en",
+        "KONKANI": "kok", "DOGRI": "doi", "BODO": "brx",
+        "KASHMIRI": "ks", "ENGLISH": "en",
     }.get(language.upper(), "hi")

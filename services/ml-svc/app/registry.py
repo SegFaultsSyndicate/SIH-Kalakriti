@@ -27,6 +27,7 @@ from app.models import (
     image_lighting,
     reranking,
     storage,
+    translation,
     vlm,
     voice_transcription,
 )
@@ -36,6 +37,7 @@ from app.models.image_background import BackgroundRemover
 from app.models.image_lighting import ImageLighting
 from app.models.reranking import TextReranker
 from app.models.storage import ObjectStorage
+from app.models.translation import TranslationModel
 from app.models.vlm import VisionLanguageModel
 from app.models.voice_transcription import VoiceTranscriber
 
@@ -50,6 +52,7 @@ class Registry:
     reranker: TextReranker
     handloom_texture: HandloomTexture
     transcriber: VoiceTranscriber
+    translator: TranslationModel
 
 
 async def load(component_module: Any, cfg: Config) -> Any:
@@ -76,6 +79,7 @@ async def load_all(cfg: Config) -> Registry:
         reranker,
         handloom,
         transcriber,
+        translator,
     ) = await asyncio.gather(
         load(storage, cfg),
         load(image_background, cfg),
@@ -85,6 +89,7 @@ async def load_all(cfg: Config) -> Registry:
         load(reranking, cfg),
         load(handloom_texture, cfg),
         load(voice_transcription, cfg),
+        load(translation, cfg),
     )
     return Registry(
         storage=storage_backend,
@@ -95,4 +100,5 @@ async def load_all(cfg: Config) -> Registry:
         reranker=reranker,
         handloom_texture=handloom,
         transcriber=transcriber,
+        translator=translator,
     )

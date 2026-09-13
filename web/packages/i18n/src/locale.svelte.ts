@@ -82,8 +82,6 @@ const CATALOGUE_LOADERS: Record<LocaleCode, () => Promise<Partial<Messages>>> = 
   ne: async () => (await import('./messages/ne')).ne,
   sa: async () => (await import('./messages/sa')).sa,
   brx: async () => (await import('./messages/brx')).brx,
-  sat: async () => (await import('./messages/sat')).sat,
-  mni: async () => (await import('./messages/mni')).mni,
 };
 
 /**

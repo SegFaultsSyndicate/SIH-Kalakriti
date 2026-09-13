@@ -13,8 +13,11 @@
   - Svelte 5 runes ($state, $derived, $effect)
 -->
 <script lang="ts">
+  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
+
+  const t = $derived(locale.t);
 
   let activeMenu = $state<string | null>(null);
   let navContainer: HTMLElement | null = $state(null);
@@ -90,7 +93,7 @@
 
 <nav
   class="category-subnav"
-  aria-label="Craft Taxonomy & Categories"
+  aria-label={t('subnav.ariaLabel')}
   bind:this={navContainer}
   onmouseleave={handleMenuLeave}
 >
@@ -105,7 +108,7 @@
       <div class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}">
         <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu}>
           <Icon name="cluster" size="0.85rem" />
-          <span>All Crafts</span>
+          <span>{t('subnav.allCrafts')}</span>
         </a>
         <button
           type="button"
@@ -113,8 +116,8 @@
           onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
           aria-expanded={activeMenu === 'all-crafts'}
           aria-haspopup="true"
-          aria-label="Toggle All 12 Crafts"
-          title="Browse All 12 Artisan Craft Disciplines"
+          aria-label={t('subnav.allCraftsToggle')}
+          title={t('subnav.allCraftsTitle')}
         >
           <Icon name="chevron-down" size="0.7rem" />
         </button>
@@ -128,11 +131,11 @@
         >
           <div class="all-crafts-header">
             <div class="all-crafts-title-group">
-              <h4 class="col-title">12 National Artisan Craft Disciplines</h4>
-              <p class="all-crafts-desc">Direct from registered master looms, foundries &amp; carving ateliers across India</p>
+              <h4 class="col-title">{t('subnav.allCraftsHeading')}</h4>
+              <p class="all-crafts-desc">{t('subnav.allCraftsDesc')}</p>
             </div>
             <a href="/catalog" class="all-crafts-all-link" onclick={closeMenu}>
-              View All 74 GI Clusters ➔
+              {t('subnav.allCraftsLink')}
             </a>
           </div>
 
@@ -164,32 +167,32 @@
 
     <!-- 1. Weaving & Handlooms -->
     <a href="/search?category=Weaving" class="subnav-item" onclick={closeMenu}>
-      <span>Weaving &amp; Looms</span>
+      <span>{t('subnav.weaving')}</span>
     </a>
 
     <!-- 2. Block Printing -->
     <a href="/search?category=Block+printing" class="subnav-item" onclick={closeMenu}>
-      <span>Block Printing</span>
+      <span>{t('subnav.blockPrinting')}</span>
     </a>
 
     <!-- 3. Pottery -->
     <a href="/search?category=Pottery" class="subnav-item" onclick={closeMenu}>
-      <span>Pottery</span>
+      <span>{t('subnav.pottery')}</span>
     </a>
 
     <!-- 4. Metalwork -->
     <a href="/search?category=Metalwork" class="subnav-item" onclick={closeMenu}>
-      <span>Metalwork</span>
+      <span>{t('subnav.metalwork')}</span>
     </a>
 
     <!-- 5. Woodwork -->
     <a href="/search?category=Woodwork" class="subnav-item" onclick={closeMenu}>
-      <span>Woodwork</span>
+      <span>{t('subnav.woodwork')}</span>
     </a>
 
     <!-- 6. Embroidery -->
     <a href="/search?category=Embroidery" class="subnav-item" onclick={closeMenu}>
-      <span>Embroidery</span>
+      <span>{t('subnav.embroidery')}</span>
     </a>
 
     <!-- 1. Home & Living (Image 1 reference) -->
@@ -205,7 +208,7 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Home & Living</span>
+          <span>{t('subnav.home')}</span>
         </a>
         <button
           type="button"
@@ -213,8 +216,8 @@
           onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
           aria-expanded={activeMenu === 'home'}
           aria-haspopup="true"
-          aria-label="Toggle Home & Living categories"
-          title="Open Home & Living subcategories"
+          aria-label={t('subnav.homeToggle')}
+          title={t('subnav.homeTitle')}
         >
           <Icon name="chevron-down" size="0.7rem" />
         </button>
@@ -229,7 +232,7 @@
           <div class="dropdown-grid-4">
             <!-- Col 1: Décor & Utility -->
             <div class="dropdown-col">
-              <h4 class="col-title">Home Décor & Utility</h4>
+              <h4 class="col-title">{t('subnav.home.decor')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=candle" onclick={closeMenu}>Artistic Candles</a></li>
                 <li><a href="/search?q=clock" onclick={closeMenu}>Ethnic Wall Clocks</a></li>
@@ -243,7 +246,7 @@
 
             <!-- Col 2: Kitchen & Furnishings -->
             <div class="dropdown-col">
-              <h4 class="col-title">Kitchen & Dining</h4>
+              <h4 class="col-title">{t('subnav.home.kitchen')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=placemat" onclick={closeMenu}>Woven Place Mats</a></li>
                 <li><a href="/search?q=copper" onclick={closeMenu}>Hand-Hammered Copper Bottles</a></li>
@@ -251,7 +254,7 @@
                 <li><a href="/search?q=kitchen" onclick={closeMenu}>Traditional Brass Cookware</a></li>
               </ul>
 
-              <h4 class="col-title sub-title-margin">Home Furnishings</h4>
+              <h4 class="col-title sub-title-margin">{t('subnav.home.furnishings')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=bedsheet" onclick={closeMenu}>Hand-Block Bedsheets</a></li>
                 <li><a href="/search?q=quilt" onclick={closeMenu}>Jaipuri Razai & Throws</a></li>
@@ -261,7 +264,7 @@
 
             <!-- Col 3: Floor Coverings & Musical -->
             <div class="dropdown-col">
-              <h4 class="col-title">Floor Coverings</h4>
+              <h4 class="col-title">{t('subnav.home.floorCoverings')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=carpet" onclick={closeMenu}>Bhadohi Hand-Knotted Carpets</a></li>
                 <li><a href="/search?q=durrie" onclick={closeMenu}>Panipat Cotton Durries</a></li>
@@ -269,7 +272,7 @@
                 <li><a href="/search?q=yoga+mat" onclick={closeMenu}>Organic Grass Yoga Mats</a></li>
               </ul>
 
-              <h4 class="col-title sub-title-margin">Musical Instruments</h4>
+              <h4 class="col-title sub-title-margin">{t('subnav.home.musical')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=flute" onclick={closeMenu}>Bamboo Flutes (Bansuri)</a></li>
                 <li><a href="/search?q=tabla" onclick={closeMenu}>Handcrafted Tabla Sets</a></li>
@@ -280,7 +283,7 @@
 
             <!-- Col 4: Wellness & Temple Items -->
             <div class="dropdown-col highlight-col">
-              <h4 class="col-title">Temple & Wellness</h4>
+              <h4 class="col-title">{t('subnav.home.templeWellness')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=pooja" onclick={closeMenu}>Hand-Cast Brass Pooja Kalash</a></li>
                 <li><a href="/search?q=incense" onclick={closeMenu}>Natural Flora Incense Sticks</a></li>
@@ -290,10 +293,10 @@
               </ul>
 
               <div class="direct-gi-callout">
-                <span class="callout-tag">GI Authenticated</span>
-                <p>All home crafts are stamped with digital Ed25519 provenance seals.</p>
+                <span class="callout-tag">{t('subnav.home.giCalloutTag')}</span>
+                <p>{t('subnav.home.giCalloutDesc')}</p>
                 <a href="/gi-tagged" class="callout-link" onclick={closeMenu}>
-                  Browse Certified Pieces ➔
+                  {t('subnav.home.giCalloutLink')}
                 </a>
               </div>
             </div>
@@ -315,7 +318,7 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Furniture</span>
+          <span>{t('subnav.furniture')}</span>
         </a>
         <button
           type="button"
@@ -323,8 +326,8 @@
           onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
           aria-expanded={activeMenu === 'furniture'}
           aria-haspopup="true"
-          aria-label="Toggle Furniture categories"
-          title="Open Furniture subcategories"
+          aria-label={t('subnav.furnitureToggle')}
+          title={t('subnav.furnitureTitle')}
         >
           <Icon name="chevron-down" size="0.7rem" />
         </button>
@@ -338,7 +341,7 @@
         >
           <div class="dropdown-grid-3">
             <div class="dropdown-col">
-              <h4 class="col-title">Home Outdoors</h4>
+              <h4 class="col-title">{t('subnav.furniture.outdoors')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=patio+chair" onclick={closeMenu}>Cane & Wicker Patio Chairs</a></li>
                 <li><a href="/search?q=patio+sofa" onclick={closeMenu}>Handcrafted Bamboo Loungers</a></li>
@@ -347,7 +350,7 @@
             </div>
 
             <div class="dropdown-col">
-              <h4 class="col-title">Home Indoor</h4>
+              <h4 class="col-title">{t('subnav.furniture.indoor')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=table" onclick={closeMenu}>Saharanpur Carved Bedside Tables</a></li>
                 <li><a href="/search?q=dining" onclick={closeMenu}>Solid Sheesham Dining Tables</a></li>
@@ -356,7 +359,7 @@
             </div>
 
             <div class="dropdown-col">
-              <h4 class="col-title">Office & Study</h4>
+              <h4 class="col-title">{t('subnav.furniture.office')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=cabinet" onclick={closeMenu}>Brass-Fitted Wood Cabinets</a></li>
                 <li><a href="/search?q=chair" onclick={closeMenu}>Hand-Carved Accent Chairs</a></li>
@@ -382,7 +385,7 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Paintings</span>
+          <span>{t('subnav.paintings')}</span>
         </a>
         <button
           type="button"
@@ -390,8 +393,8 @@
           onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
           aria-expanded={activeMenu === 'paintings'}
           aria-haspopup="true"
-          aria-label="Toggle Paintings categories"
-          title="Open Paintings subcategories"
+          aria-label={t('subnav.paintingsToggle')}
+          title={t('subnav.paintingsTitle')}
         >
           <Icon name="chevron-down" size="0.7rem" />
         </button>
@@ -405,7 +408,7 @@
         >
           <div class="dropdown-grid-2">
             <div class="dropdown-col">
-              <h4 class="col-title">Traditional Folk & Heritage</h4>
+              <h4 class="col-title">{t('subnav.paintings.traditional')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=madhubani" onclick={closeMenu}>Mithila Madhubani Paintings (GI-105)</a></li>
                 <li><a href="/search?q=pattachitra" onclick={closeMenu}>Raghurajpur Palm Leaf Pattachitra (GI-220)</a></li>
@@ -417,7 +420,7 @@
             </div>
 
             <div class="dropdown-col highlight-col">
-              <h4 class="col-title">Modern & Contemporary</h4>
+              <h4 class="col-title">{t('subnav.paintings.modern')}</h4>
               <ul class="col-links">
                 <li><a href="/search?q=modern+folk" onclick={closeMenu}>Contemporary Natural Pigment Abstracts</a></li>
                 <li><a href="/search?q=canvas" onclick={closeMenu}>Botanical Dye Hand-Painted Canvases</a></li>
@@ -425,8 +428,8 @@
               </ul>
 
               <div class="direct-gi-callout">
-                <span class="callout-tag">Direct Guild Studio</span>
-                <p>100% natural earth pigments: charcoal, lampblack, indigo, turmeric, and vermillion.</p>
+                <span class="callout-tag">{t('subnav.paintings.calloutTag')}</span>
+                <p>{t('subnav.paintings.calloutDesc')}</p>
               </div>
             </div>
           </div>
@@ -436,33 +439,33 @@
 
     <!-- 7. Jewellery -->
     <a href="/search?category=Jewellery" class="subnav-item" onclick={closeMenu}>
-      <span>Jewellery</span>
+      <span>{t('subnav.jewellery')}</span>
     </a>
 
     <!-- 8. Bamboo & Basketry -->
     <a href="/search?category=Bamboo+craft" class="subnav-item" onclick={closeMenu}>
-      <span>Bamboo &amp; Cane</span>
+      <span>{t('subnav.bambooCane')}</span>
     </a>
 
     <!-- 9. Stone Carving & Leather -->
     <a href="/search?category=Stone+carving" class="subnav-item" onclick={closeMenu}>
-      <span>Stone &amp; Leather</span>
+      <span>{t('subnav.stoneLeather')}</span>
     </a>
 
     <!-- 10. GI Tagged Direct Link (Image 3 reference) -->
     <a href="/gi-tagged" class="subnav-item gi-tagged-link" onclick={closeMenu}>
       <span class="gi-tricolor-dot"></span>
-      <span>GI Tagged Products</span>
+      <span>{t('subnav.giTaggedProducts')}</span>
     </a>
 
     <!-- 11. ODOP Corridors -->
     <a href="/catalog" class="subnav-item" onclick={closeMenu}>
-      <span>One District One Product</span>
+      <span>{t('subnav.odop')}</span>
     </a>
 
     <!-- 12. Bulk Institutional Orders -->
     <a href="/bulk-order" class="subnav-item" onclick={closeMenu}>
-      <span>Institutional RFQs</span>
+      <span>{t('subnav.institutionalRfqs')}</span>
     </a>
   </div>
 </nav>

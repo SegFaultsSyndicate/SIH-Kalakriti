@@ -60,7 +60,7 @@
     const nextLang = locale.code === 'hi' ? 'en' : 'hi';
     await locale.set(nextLang, { persist: true });
     showToast({
-      message: nextLang === 'hi' ? 'भाषा हिन्दी में बदली गई' : 'Language switched to English',
+      message: nextLang === 'hi' ? t('nav.lang.switchedHindi') : t('nav.lang.switchedEnglish'),
       variant: 'info',
     });
   }
@@ -73,17 +73,17 @@
     <div class="k-gov-ribbon-container">
       <div class="k-gov-left">
         <span class="flag-icon" aria-hidden="true">🇮🇳</span>
-        <span class="gov-title">Government of India</span>
+        <span class="gov-title">{t('nav.gov.title')}</span>
         <span class="gov-divider">|</span>
         <span class="gov-ministry">{t('app.ministry') || 'Ministry of Social Justice & Empowerment'}</span>
       </div>
 
       <div class="k-gov-right">
-        <a href="/accessibility" class="gov-a11y-link" title="Accessibility & Screen Reader Access">
-          Screen Reader Access
+        <a href="/accessibility" class="gov-a11y-link" title={t('nav.a11y.title')}>
+          {t('nav.a11y.label')}
         </a>
         <span class="gov-divider">|</span>
-        <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label="Toggle language">
+        <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label={t('nav.lang.toggle')}>
           <span class="lang-symbol">Aअ</span>
           <span class="lang-name">{locale.code === 'hi' ? 'English' : 'हिन्दी'}</span>
           <Icon name="chevron-down" size="0.75rem" />
@@ -100,7 +100,7 @@
         type="button"
         class="mobile-menu-toggle"
         onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-        aria-label="Toggle navigation menu"
+        aria-label={t('nav.mobileMenu.toggle')}
         aria-expanded={isMobileMenuOpen}
       >
         <Icon name={isMobileMenuOpen ? 'close' : 'menu'} size="1.4rem" />
@@ -117,55 +117,55 @@
         />
         <div class="k-brand-text">
           <span class="k-brand-name">Kalakriti</span>
-          <span class="k-brand-tagline">Gateway to Indian GI Heritage</span>
+          <span class="k-brand-tagline">{t('nav.brand.tagline')}</span>
         </div>
       </a>
 
       <!-- Centered Comprehensive Search Box -->
       <form class="k-search-bar" onsubmit={handleSearchSubmit} role="search">
         <div class="search-category-select">
-          <select bind:value={searchCategory} aria-label="Filter search domain">
-            <option value="all">All Heritage</option>
-            <option value="gi">GI Tagged Only</option>
-            <option value="home">Home & Living</option>
-            <option value="apparel">Apparel & Silk</option>
-            <option value="paintings">Paintings</option>
+          <select bind:value={searchCategory} aria-label={t('nav.search.domainLabel')}>
+            <option value="all">{t('nav.search.allHeritage')}</option>
+            <option value="gi">{t('nav.search.giOnly')}</option>
+            <option value="home">{t('nav.search.home')}</option>
+            <option value="apparel">{t('nav.search.apparel')}</option>
+            <option value="paintings">{t('nav.search.paintings')}</option>
           </select>
         </div>
         <input
           type="search"
           class="k-search-input"
-          placeholder="Search authentic GI crafts, handlooms, master artisans..."
+          placeholder={t('nav.search.placeholder')}
           bind:value={searchQuery}
-          aria-label="Search authentic GI crafts"
+          aria-label={t('nav.search.ariaLabel')}
         />
-        <button type="submit" class="k-search-submit" aria-label="Submit search">
+        <button type="submit" class="k-search-submit" aria-label={t('nav.search.submit')}>
           <Icon name="search" size="1.15rem" />
         </button>
       </form>
 
       <!-- Right Action Tools -->
       <div class="k-header-tools">
-        <a href="/gi-tagged" class="k-tool-badge" title="Verified Geographical Indications">
+        <a href="/gi-tagged" class="k-tool-badge" title={t('nav.tools.giRegistryTitle')}>
           <span class="gi-pin-dot"></span>
-          <span class="tool-text">GI Registry</span>
+          <span class="tool-text">{t('nav.tools.giRegistry')}</span>
         </a>
 
-        <a href="/orders" class="k-tool-link" aria-label="Artisan Direct Orders">
+        <a href="/orders" class="k-tool-link" aria-label={t('nav.tools.orders')}>
           <Icon name="collective-order" size="1.2rem" />
-          <span class="tool-label">Orders</span>
+          <span class="tool-label">{t('nav.tools.ordersLabel')}</span>
         </a>
 
-        <a href="/orders/thank-you" class="k-tool-link k-tool-link--highlight" aria-label="Sign In or Track Lots">
+        <a href="/orders/thank-you" class="k-tool-link k-tool-link--highlight" aria-label={t('nav.tools.signIn')}>
           <Icon name="user" size="1.2rem" />
-          <span class="tool-label">Sign In</span>
+          <span class="tool-label">{t('nav.tools.signInLabel')}</span>
         </a>
       </div>
     </div>
   </div>
 
   <!-- 3. Primary Horizontal Category Menu Bar -->
-  <nav class="k-category-nav" aria-label="Main Merchandise Categories">
+  <nav class="k-category-nav" aria-label={t('nav.category.ariaLabel')}>
     <div class="k-category-container">
       <ul class="k-category-list" role="menubar">
         <!-- 1. HOME AND LIVING (MEGA MENU) -->
@@ -182,7 +182,7 @@
             aria-haspopup="true"
             aria-expanded={activeMenu === 'home'}
           >
-            <span>HOME AND LIVING</span>
+            <span>{t('nav.category.home')}</span>
             <Icon name="chevron-down" size="0.7rem" />
           </button>
 
@@ -311,21 +311,21 @@
         <!-- 2. WOMEN -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=women" class="k-nav-link" role="menuitem">
-            <span>WOMEN</span>
+            <span>{t('nav.category.women')}</span>
           </a>
         </li>
 
         <!-- 3. KIDS -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=toys" class="k-nav-link" role="menuitem">
-            <span>KIDS</span>
+            <span>{t('nav.category.kids')}</span>
           </a>
         </li>
 
         <!-- 4. MEN -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=men" class="k-nav-link" role="menuitem">
-            <span>MEN</span>
+            <span>{t('nav.category.men')}</span>
           </a>
         </li>
 
@@ -343,14 +343,14 @@
             aria-haspopup="true"
             aria-expanded={activeMenu === 'furniture'}
           >
-            <span>FURNITURE</span>
+            <span>{t('nav.category.furniture')}</span>
             <Icon name="chevron-down" size="0.7rem" />
           </button>
 
           {#if activeMenu === 'furniture'}
             <div class="k-simple-dropdown" role="menu">
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Home Outdoors</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.outdoors')}</h4>
                 <ul>
                   <li><a href="/search?q=patiochair">Patio Chairs</a></li>
                   <li><a href="/search?q=patiosofa">Patio Sofas</a></li>
@@ -360,7 +360,7 @@
               </div>
 
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Home Indoor</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.indoor')}</h4>
                 <ul>
                   <li><a href="/search?q=bedsidetable">Bedside Tables</a></li>
                   <li><a href="/search?q=diningtable">Dining Tables</a></li>
@@ -368,7 +368,7 @@
               </div>
 
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Offices</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.offices')}</h4>
                 <ul>
                   <li><a href="/search?q=cabinet">Cabinets & Bookcases</a></li>
                   <li><a href="/search?q=chair">Solid Teak Chairs</a></li>
@@ -394,7 +394,7 @@
             aria-haspopup="true"
             aria-expanded={activeMenu === 'paintings'}
           >
-            <span>PAINTINGS</span>
+            <span>{t('nav.category.paintings')}</span>
             <Icon name="chevron-down" size="0.7rem" />
           </button>
 
@@ -402,14 +402,14 @@
             <div class="k-simple-dropdown k-simple-dropdown--compact" role="menu">
               <div class="dropdown-group">
                 <a href="/search?q=traditional+painting" class="dropdown-block-link">
-                  <strong>TRADITIONAL PAINTINGS</strong>
-                  <span>Madhubani, Pattachitra, Warli, Pichwai, Tanjore, Gond</span>
+                  <strong>{t('nav.paintings.traditionalTitle')}</strong>
+                  <span>{t('nav.paintings.traditionalDesc')}</span>
                 </a>
               </div>
               <div class="dropdown-group">
                 <a href="/search?q=modern+painting" class="dropdown-block-link">
-                  <strong>MODERN PAINTINGS</strong>
-                  <span>Contemporary Folk, Canvas Murals, Stylized Tribal Motifs</span>
+                  <strong>{t('nav.paintings.modernTitle')}</strong>
+                  <span>{t('nav.paintings.modernDesc')}</span>
                 </a>
               </div>
             </div>
@@ -420,14 +420,14 @@
         <li class="k-nav-item k-nav-item--gi" role="none">
           <a href="/gi-tagged" class="k-nav-link k-nav-link--gi" role="menuitem">
             <span class="gi-tag-star"><Icon name="gi-tagged" size="0.85rem" /></span>
-            <span>GI TAGGED</span>
+            <span>{t('nav.category.giTagged')}</span>
           </a>
         </li>
 
         <!-- 8. ODOP -->
         <li class="k-nav-item" role="none">
           <a href="/catalog" class="k-nav-link" role="menuitem">
-            <span>ODOP</span>
+            <span>{t('nav.category.odop')}</span>
           </a>
         </li>
       </ul>
@@ -444,12 +444,12 @@
       onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
       tabindex="-1"
       role="dialog"
-      aria-label="Mobile Navigation"
+      aria-label={t('nav.mobile.ariaLabel')}
     >
       <div class="mobile-drawer-head">
         <div class="brand-mini">
           <img src="/favicon.svg" alt="" width="28" height="28" />
-          <span>Kalakriti Categories</span>
+          <span>{t('nav.mobile.brand')}</span>
         </div>
         <button type="button" class="drawer-close" onclick={() => (isMobileMenuOpen = false)}>
           &times;
@@ -458,34 +458,34 @@
 
       <div class="mobile-drawer-content">
         <a href="/gi-tagged" class="mobile-cat-link mobile-cat-link--gi" onclick={() => (isMobileMenuOpen = false)}>
-          <Icon name="gi-tagged" size="0.9rem" /> GI TAGGED PRODUCTS
+          <Icon name="gi-tagged" size="0.9rem" /> {t('nav.mobile.giProducts')}
         </a>
         <a href="/search?q=home" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Home and Living
+          {t('nav.mobile.home')}
         </a>
         <a href="/search?q=women" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Women Apparel & Sarees
+          {t('nav.mobile.women')}
         </a>
         <a href="/search?q=men" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Men Khadi & Kurtas
+          {t('nav.mobile.men')}
         </a>
         <a href="/search?q=toys" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Kids Wooden Toys
+          {t('nav.mobile.kids')}
         </a>
         <a href="/search?q=furniture" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Furniture & Atelier
+          {t('nav.mobile.furniture')}
         </a>
         <a href="/search?q=paintings" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Traditional & Folk Paintings
+          {t('nav.mobile.paintings')}
         </a>
         <a href="/catalog" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          ODOP - One District One Product
+          {t('nav.mobile.odop')}
         </a>
         <a href="/case-studies" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Guild Case Studies
+          {t('nav.mobile.caseStudies')}
         </a>
         <a href="/orders" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          My Purchase Lots & Orders
+          {t('nav.mobile.orders')}
         </a>
       </div>
     </div>

@@ -3,13 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { LOCALES, LOCALE_CODES, SUPPORTED_LOCALES, isLocaleCode, resolveLocale } from './locales';
 
 describe('LOCALES', () => {
-  it('lists all 22 Eighth Schedule languages, plus English', () => {
-    // English is the administrative link language, not one of the 22
-    // constitutionally scheduled languages -- it's the 23rd code, added for
-    // the demo and as the catalogue's source of truth.
-    expect(LOCALE_CODES).toHaveLength(23);
+  it('lists 20 of the 22 Eighth Schedule languages, plus English', () => {
+    // English is the administrative link language, not one of the scheduled
+    // languages -- it's the 21st code, added for the demo and as the
+    // catalogue's source of truth. Manipuri and Santali were dropped (weakest
+    // script/font support of the 22, no translated catalogue).
+    expect(LOCALE_CODES).toHaveLength(21);
     expect(LOCALE_CODES).toContain('en');
-    expect(SUPPORTED_LOCALES).toHaveLength(22);
+    expect(LOCALE_CODES).not.toContain('mni');
+    expect(LOCALE_CODES).not.toContain('sat');
+    expect(SUPPORTED_LOCALES).toHaveLength(20);
     expect(SUPPORTED_LOCALES).not.toContain('en');
   });
 
@@ -34,7 +37,7 @@ describe('LOCALES', () => {
 });
 
 describe('resolveLocale', () => {
-  it('resolves every one of the 22 codes without error', () => {
+  it('resolves every one of the 20 codes without error', () => {
     for (const code of LOCALE_CODES) {
       expect(resolveLocale([code])).toBe(code);
     }
