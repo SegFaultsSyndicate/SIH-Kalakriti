@@ -112,6 +112,10 @@ message EnhanceImageRequest {
   bool auto_white_balance = 3;
   // Upscale factor; 1 leaves resolution untouched.
   optional int32 upscale_factor = 4;
+  // Brighten a dark or unevenly-lit photograph with a zero-reference curve
+  // estimation model (Zero-DCE++), separate from auto_white_balance's colour
+  // correction.
+  bool correct_lighting = 5;
 }
 
 // EnhanceImageResponse returns the enhanced object and what was done to it.

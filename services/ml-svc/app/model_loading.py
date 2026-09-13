@@ -1,10 +1,10 @@
 """services/ml-svc/app/model_loading.py
 
-Shared device/dtype selection and local-cache-first loading for `RealModels`.
-Ported from the standalone `kalakriti-ml-svc` prototype, where this pattern was
-worked out and is used by every HF `from_pretrained()` call. Only imported by
-`app/models/real.py`, and only inside its `_load_blocking()` — mock mode must
-stay free of torch, so nothing here runs at module import time except cheap,
+Shared device/dtype selection and local-cache-first loading, used by every HF
+`from_pretrained()` call across the real backends: `app/models/embedding/real.py`,
+`app/models/reranking/real.py`, `app/models/vlm/real.py`. Only ever imported
+from inside one of those modules' own loading methods -- mock mode must stay
+free of torch, so nothing here runs at module import time except cheap,
 torch-only setup that real mode already pays for.
 
 DESIGN DECISION: local-cache-first, not "ask the Hub, fall back to disk".
