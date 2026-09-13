@@ -154,18 +154,14 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
-      <a class="shell__icon-link" href="/search" aria-label={t('nav.search')}>
-        <Icon name="search" />
-      </a>
-      <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
-        <Icon name="package" />
-      </a>
-
+      <!-- AccountMenu last: its popover anchors flush to *its own* right
+           edge (inset-inline-end: 0 relative to the trigger), so it only
+           avoids running off the left edge of a phone screen if nothing
+           sits to its right pushing it away from the header's true right
+           edge. -->
+      <LanguageSelector triggerSize="lg" />
+      <AccessibilityControl statementHref="/accessibility" triggerSize="lg" />
       <AccountMenu />
-
-      <LanguageSelector />
-      <CurrencySelector />
-      <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
 
@@ -268,7 +264,7 @@
   .shell__nav-link {
     font-size: var(--k-text-sm, 0.875rem);
     font-weight: 600;
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-radius: var(--k-radius-sm, 4px);
@@ -277,7 +273,7 @@
   }
 
   .shell__nav-link:hover {
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     background-color: rgba(244, 240, 234, 0.9);
   }
 </style>

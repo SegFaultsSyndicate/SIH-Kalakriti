@@ -143,6 +143,110 @@
         }
       }
     },
+    "/auth/phone/change/request": {
+      "post": {
+        "summary": "Request OTP to change the caller's registered phone number",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "new_phone"
+                ],
+                "properties": {
+                  "new_phone": {
+                    "type": "string",
+                    "description": "E.164 phone number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent to the new number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "otp_sent"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/phone/change/verify": {
+      "post": {
+        "summary": "Verify OTP and complete the phone number change",
+        "description": "On success, invalidates the caller's other active sessions and returns a fresh token pair.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "new_phone",
+                  "otp"
+                ],
+                "properties": {
+                  "new_phone": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone updated, new tokens issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "phone_updated"
+                    },
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/artisans": {
       "post": {
         "summary": "Register artisan",

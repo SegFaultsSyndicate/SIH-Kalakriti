@@ -177,7 +177,7 @@
           <p class="crop-subtitle">{t('profile.crop.instruction')}</p>
         </div>
         <button type="button" class="crop-close-btn" onclick={oncancel} title="Close">
-          ✕
+          <Icon name="close" size="1.1rem" />
         </button>
       </div>
 
@@ -291,8 +291,8 @@
     width: 100%;
     max-width: 22rem;
     padding: var(--k-space-4);
-    background-color: var(--k-khadi-50, #fffcf7);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-50, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-lg, 12px);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
     user-select: none;
@@ -316,7 +316,7 @@
     justify-content: space-between;
     width: 100%;
     padding-block-end: var(--k-space-2);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200, #e8e2d8);
+    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .crop-header__text {
@@ -332,13 +332,13 @@
     margin: 0;
     font-size: var(--k-text-base);
     font-weight: var(--k-weight-semibold);
-    color: var(--k-terracotta-900, #421008);
+    color: var(--k-terracotta-900, var(--k-stone-800));
   }
 
   .crop-subtitle {
     margin: 0;
     font-size: var(--k-text-xs);
-    color: var(--k-text-secondary, #60574c);
+    color: var(--k-text-secondary, var(--k-stone-600));
     line-height: 1.35;
   }
 
@@ -367,7 +367,7 @@
     overflow: hidden;
     margin-block: var(--k-space-2);
     border-radius: var(--k-radius-md, 8px);
-    background-color: #1a1614;
+    background-color: var(--k-ink-900);
     cursor: grab;
     touch-action: none;
   }
@@ -446,7 +446,7 @@
     right: 0.5rem;
     padding: 0.15rem 0.4rem;
     background: rgba(0, 0, 0, 0.65);
-    color: #fff;
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: var(--k-weight-medium);
     border-radius: var(--k-radius-xs, 4px);
@@ -467,8 +467,8 @@
     gap: var(--k-space-2);
     width: 100%;
     padding: var(--k-space-1) var(--k-space-2);
-    background-color: var(--k-khadi-100, #f6f1e8);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-100, var(--k-surface-raised));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-pill, 999px);
   }
 
@@ -492,7 +492,7 @@
   .crop-slider {
     flex: 1;
     height: 4px;
-    accent-color: var(--k-terracotta-700, #9b2c16);
+    accent-color: var(--k-terracotta-700, var(--k-terracotta-800));
     cursor: pointer;
   }
 
@@ -518,7 +518,7 @@
   }
 
   .crop-action-btn:hover {
-    background-color: var(--k-khadi-200);
+    background-color: var(--k-surface-pressed);
     color: var(--k-text-primary);
     border-color: var(--k-terracotta-600);
   }
@@ -531,6 +531,6 @@
     gap: var(--k-space-2);
     width: 100%;
     padding-block-start: var(--k-space-2);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 </style>

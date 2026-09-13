@@ -214,8 +214,8 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3);
     border-radius: var(--k-radius-md);
-    background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
-    color: #fff;
+    background: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
   }
 
   .gem-card__header-emblem {
@@ -227,7 +227,7 @@
     block-size: 2.5rem;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    color: var(--k-text-on-accent);
   }
 
   .gem-card__header-title {
@@ -290,7 +290,7 @@
   .gem-card__price {
     font-weight: 700;
     font-variant-numeric: var(--k-numeric-tabular);
-    color: #1b5e20;
+    color: var(--k-accent-success);
   }
 
   .gem-card__table code {
@@ -311,10 +311,10 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #1a237e;
+    color: var(--k-indigo-900);
     margin: 0;
     padding-block-start: var(--k-space-2);
-    border-block-start: 2px solid #1a237e;
+    border-block-start: 2px solid var(--k-indigo-900);
   }
 
   .gem-card__description {
@@ -334,8 +334,8 @@
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-sm, 0.25rem);
-    background: #fff3e0;
-    color: #e65100;
+    background: var(--k-surface-sunken);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-xs, 0.75rem);
     line-height: 1.4;
     margin: 0;
@@ -353,7 +353,7 @@
       display: none;
     }
     .gem-card__note {
-      border: 1px solid #e65100;
+      border: 1px solid var(--k-border-accent);
     }
   }
 </style>

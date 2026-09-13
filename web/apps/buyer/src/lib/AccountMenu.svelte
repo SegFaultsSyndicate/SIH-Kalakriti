@@ -13,6 +13,7 @@
 
   let isOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
+  let popoverPanel: HTMLDivElement | null = $state(null);
 
   const isAuthenticated = $derived(session.status === 'authenticated' || !!getAccessToken());
   const userName = $derived(
@@ -63,6 +64,28 @@
       document.removeEventListener('mousedown', handleClickOutside);
     };
   });
+
+  // inset-inline-end: 0 below assumes this trigger sits at the true right
+  // edge of the header -- true today (AccountMenu is mounted last), but a
+  // reorder or a narrower screen than anticipated silently reintroduces the
+  // popover running off the left edge. Same clamp as packages/ui/src/Popover.svelte.
+  $effect(() => {
+    if (!isOpen || !popoverPanel) return;
+    const clampToViewport = () => {
+      if (!popoverPanel) return;
+      popoverPanel.style.transform = '';
+      const rect = popoverPanel.getBoundingClientRect();
+      const margin = 8;
+      if (rect.left < margin) {
+        popoverPanel.style.transform = `translateX(${margin - rect.left}px)`;
+      } else if (rect.right > window.innerWidth - margin) {
+        popoverPanel.style.transform = `translateX(-${rect.right - (window.innerWidth - margin)}px)`;
+      }
+    };
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -99,6 +122,7 @@
       class="account-popover"
       role="menu"
       tabindex="-1"
+      bind:this={popoverPanel}
     >
       <!-- Popover Header -->
       <div class="popover-header">
@@ -246,7 +270,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -267,7 +291,7 @@
     block-size: 2rem;
     border-radius: 50%;
     background-color: var(--k-premium-warm-cream);
-    color: var(--k-premium-header-bg, #873032);
+    color: var(--k-premium-header-bg, var(--k-accent-danger-muted));
     border: 1px solid rgba(244, 240, 234, 0.3);
     font-size: 0.75rem;
     font-weight: 700;
@@ -287,7 +311,7 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
     font-weight: 500;
     opacity: 0.9;
   }
@@ -298,7 +322,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
   }
 
   /* Popover */
@@ -308,8 +332,8 @@
     inset-block-start: calc(100% + 0.5rem);
     inline-size: 36rem;
     max-inline-size: 94vw;
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-hairline, #e2dcd2);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 12px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     z-index: 1000;
@@ -330,8 +354,8 @@
 
   .popover-header {
     padding: 1rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .user-badge-row {
@@ -344,7 +368,7 @@
   .user-name {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .patron-badge {
@@ -352,9 +376,9 @@
     font-weight: 700;
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
+    border: 1px solid var(--k-neem-300);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -362,7 +386,7 @@
   .user-email {
     display: block;
     font-size: 0.75rem;
-    color: #756d65;
+    color: var(--k-text-tertiary);
     margin-block-start: 0.15rem;
   }
 
@@ -371,8 +395,8 @@
     inline-size: 100%;
     text-align: center;
     padding: 0.6rem 1rem;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.85rem;
     border-radius: 8px;
@@ -381,19 +405,19 @@
   }
 
   .signin-primary-btn:hover {
-    background-color: #993b2d;
+    background-color: var(--k-accent-danger-bg);
   }
 
   .signup-prompt {
     margin-block-start: 0.5rem;
     font-size: 0.75rem;
     text-align: center;
-    color: #756d65;
+    color: var(--k-text-tertiary);
     margin-block-end: 0;
   }
 
   .signup-link {
-    color: #1d4ed8;
+    color: var(--k-indigo-900);
     font-weight: 600;
     text-decoration: underline;
   }
@@ -415,7 +439,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #8c8278;
+    color: var(--k-stone-400);
     margin: 0;
     padding: 0.4rem 1rem 0.4rem 1rem;
     display: flex;
@@ -428,8 +452,8 @@
 
   .col-right {
     padding-inline-start: 1.25rem;
-    border-inline-start: 1px solid #eee8df;
-    background-color: #fdfbf7;
+    border-inline-start: 1px solid var(--k-border-subtle);
+    background-color: var(--k-surface-base);
   }
 
   .grid-cell {
@@ -440,13 +464,13 @@
 
   .cell-left {
     padding-inline-start: 0.85rem;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
   }
 
   .cell-right {
     padding-inline-start: 0.85rem;
-    border-inline-start: 1px solid #eee8df;
-    background-color: #fdfbf7;
+    border-inline-start: 1px solid var(--k-border-subtle);
+    background-color: var(--k-surface-base);
   }
 
   .menu-link {
@@ -456,7 +480,7 @@
     padding: 0.45rem 0.5rem;
     border-radius: 6px;
     text-decoration: none;
-    color: #2b2520;
+    color: var(--k-text-primary);
     inline-size: 100%;
     min-block-size: 2.75rem;
     box-sizing: border-box;
@@ -464,7 +488,7 @@
   }
 
   .menu-link:hover {
-    background-color: #f3efe6;
+    background-color: var(--k-surface-raised);
   }
 
   .menu-link__icon {
@@ -473,7 +497,7 @@
     align-items: center;
     justify-content: center;
     flex: none;
-    color: #6a6259;
+    color: var(--k-text-tertiary);
   }
 
   .menu-link__text {
@@ -487,7 +511,7 @@
   .menu-link__text strong {
     font-size: 0.825rem;
     font-weight: 600;
-    color: #1e1915;
+    color: var(--k-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -495,7 +519,7 @@
 
   .menu-link__text small {
     font-size: 0.7rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -507,7 +531,7 @@
 
   .portal-link__ext {
     flex: none;
-    color: #9c9288;
+    color: var(--k-stone-400);
     display: flex;
     align-items: center;
     margin-inline-start: 0.25rem;
@@ -527,21 +551,21 @@
   }
 
   .artisan-badge {
-    background-color: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffe0b2;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-accent-primary-text);
+    border: 1px solid var(--k-haldi-300);
   }
 
   .admin-badge {
-    background-color: #ede7f6;
-    color: #4a148c;
-    border: 1px solid #d1c4e9;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-indigo-900);
+    border: 1px solid var(--k-indigo-300);
   }
 
   .popover-footer {
     padding: 0.65rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-start: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-start: 1px solid var(--k-border-subtle);
     display: flex;
     justify-content: flex-end;
   }
@@ -552,7 +576,7 @@
     gap: 0.4rem;
     background: transparent;
     border: none;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -562,7 +586,7 @@
   }
 
   .signout-btn:hover {
-    background-color: #fee2e2;
+    background-color: var(--k-surface-neutral);
   }
 
   /* On a very narrow phone the header action row is already saturated:

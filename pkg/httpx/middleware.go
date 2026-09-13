@@ -217,7 +217,7 @@ func CORS(cfg Config) func(http.Handler) http.Handler {
 	}
 	headers := cfg.AllowedHeaders
 	if len(headers) == 0 {
-		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "X-Idempotency-Key"}
+		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key"}
 	}
 	allowAll := false
 	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))

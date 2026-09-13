@@ -9,13 +9,21 @@
   that entirely.
 -->
 <script>
-  /** @type {'flat'|'hairline'|'printed'|'media'} */
-  export let variant = 'flat';
-  export let element = 'div';
+  /**
+   * @type {{
+   *   variant?: 'flat'|'hairline'|'printed'|'media',
+   *   element?: string,
+   *   children?: import('svelte').Snippet,
+   *   [key: string]: unknown
+   * }}
+   */
+  let { variant = 'flat', element = 'div', children, ...rest } = $props();
 
-  $: cls = variant === 'printed' ? 'k-card--printed' : `k-card k-card--${variant}`;
+  const cls = $derived(
+    variant === 'printed' ? 'k-card--printed' : `k-card k-card--${variant}`,
+  );
 </script>
 
-<svelte:element this={element} class={cls} {...$$restProps}>
-  <slot />
+<svelte:element this={element} class={cls} {...rest}>
+  {@render children?.()}
 </svelte:element>

@@ -24,10 +24,22 @@
   import {
     getFollowerCount,
     getArtisanProfile,
+    requestPhoneChangeOtp,
+    verifyPhoneChangeOtp,
     setAccessToken,
     setRefreshToken,
     session,
+    ApiError,
   } from '@kalakriti/api';
+
+  /** Narrows an unknown throw to something showable. Never leaks a raw status number. */
+  function errorText(err: unknown, fallback: string): string {
+    if (err instanceof ApiError) {
+      const body = err.body as { message?: string; error?: { message?: string } } | null;
+      return body?.error?.message ?? body?.message ?? fallback;
+    }
+    return err instanceof Error && err.message ? err.message : fallback;
+  }
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
@@ -289,17 +301,11 @@
     phoneError = '';
     try {
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to request verification code');
+      await requestPhoneChangeOtp({ new_phone: formatted });
       phoneStep = 'otp';
-      showToast({ message: data.message || 'Verification code sent to new mobile number', variant: 'info' });
-    } catch (err: any) {
-      phoneError = err.message || 'Failed to request verification code';
+      showToast({ message: 'Verification code sent to new mobile number', variant: 'info' });
+    } catch (err: unknown) {
+      phoneError = errorText(err, 'Failed to request verification code');
     } finally {
       phoneLoading = false;
     }
@@ -315,13 +321,10 @@
     try {
       const raw = newPhoneInput.trim().replace(/\s+/g, '');
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted, otp: phoneOtpInput.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Verification failed');
+      const data = await verifyPhoneChangeOtp({ new_phone: formatted, otp: phoneOtpInput.trim() });
+      if (data.access_token) setAccessToken(data.access_token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
+      if (data.access_token) session.establish(data.access_token);
       phone = formatted;
       await setPref('login.phone', formatted);
       showPhoneModal = false;
@@ -332,8 +335,8 @@
         message: 'Mobile number updated! Other active sessions terminated for security.',
         variant: 'success',
       });
-    } catch (err: any) {
-      phoneError = err.message || 'Verification failed';
+    } catch (err: unknown) {
+      phoneError = errorText(err, 'Verification failed');
     } finally {
       phoneLoading = false;
     }
@@ -902,9 +905,9 @@
   /* --- Top Hero Section --- */
   .profile-hero {
     position: relative;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     padding: var(--k-space-5);
     overflow: hidden;
   }
@@ -914,7 +917,7 @@
     inset-block-start: 0;
     inset-inline: 0;
     block-size: 4px;
-    background: linear-gradient(90deg, var(--k-terracotta-700), var(--k-haldi-500), var(--k-indigo-700));
+    background: var(--k-accent-primary-bg);
   }
 
   .profile-hero__main {
@@ -956,15 +959,15 @@
     font-weight: var(--k-weight-medium);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     color: var(--k-terracotta-800);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
 
   .avatar-ctrl-btn:hover {
-    background-color: var(--k-khadi-200);
-    border-color: var(--k-terracotta-700);
+    background-color: var(--k-surface-pressed);
+    border-color: var(--k-border-accent);
   }
 
   .avatar-ctrl-btn--danger {
@@ -972,9 +975,9 @@
   }
 
   .avatar-ctrl-btn--danger:hover {
-    color: #b91c1c;
-    border-color: #fca5a5;
-    background-color: #fef2f2;
+    color: var(--k-accent-danger);
+    border-color: var(--k-madder-400);
+    background-color: var(--k-surface-base);
   }
 
   .profile-avatar {
@@ -987,8 +990,8 @@
     flex-shrink: 0;
     border: 3px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-terracotta-700);
-    color: var(--k-khadi-50);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     box-shadow: 0 0 0 2px var(--k-terracotta-400);
   }
 
@@ -1027,7 +1030,7 @@
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
     background-color: var(--k-terracotta-800);
-    color: #fff;
+    color: var(--k-text-on-accent);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: transform var(--k-duration-fast) var(--k-ease-standard);
   }
@@ -1048,8 +1051,8 @@
     block-size: 1.75rem;
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
-    color: #fff;
+    background-color: var(--k-accent-success-bg);
+    color: var(--k-text-on-accent);
   }
 
   .sr-only {
@@ -1094,7 +1097,7 @@
     border: var(--k-hairline) solid var(--k-neem-300);
     border-radius: var(--k-radius-pill);
     background-color: color-mix(in srgb, var(--k-neem-300) 25%, transparent);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
   }
@@ -1103,12 +1106,12 @@
     inline-size: 6px;
     block-size: 6px;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
+    background-color: var(--k-accent-success-bg);
   }
 
   .profile-hero__role {
     margin: 0;
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-md);
     font-weight: var(--k-weight-medium);
   }
@@ -1135,7 +1138,7 @@
     margin-block-start: var(--k-space-1);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-primary);
     font-size: var(--k-text-sm);
   }
@@ -1148,7 +1151,7 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-4);
     padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .profile-btn-ghost {
@@ -1166,7 +1169,7 @@
   }
 
   .profile-btn-ghost:hover {
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-primary);
   }
 
@@ -1229,9 +1232,9 @@
     align-items: center;
     gap: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
   }
 
   .trust-badge__text {
@@ -1254,9 +1257,9 @@
   .profile-metrics-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -1272,8 +1275,8 @@
     align-items: center;
     text-align: center;
     padding: var(--k-space-4) var(--k-space-3);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-200);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200);
+    border-inline-end: var(--k-hairline) solid var(--k-border-hairline);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   @media (min-width: 720px) {
@@ -1289,7 +1292,7 @@
   .metric-item__value {
     font-size: var(--k-text-xl);
     font-weight: var(--k-weight-bold);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-variant-numeric: tabular-nums;
   }
 
@@ -1310,15 +1313,15 @@
     margin-block-start: 0.25rem;
     font-size: var(--k-text-2xs);
     font-weight: var(--k-weight-semibold);
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     text-decoration: none;
   }
 
   /* --- General Profile Cards --- */
   .profile-card {
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     padding: var(--k-space-5);
   }
 
@@ -1345,7 +1348,7 @@
     padding: 0.2rem var(--k-space-2);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-secondary);
     font-size: var(--k-text-xs);
     font-family: monospace;
@@ -1375,9 +1378,9 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .detail-tile__label {
@@ -1411,9 +1414,9 @@
     display: flex;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .tool-tile__icon-wrap {
@@ -1424,8 +1427,8 @@
     block-size: 2.75rem;
     flex-shrink: 0;
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
-    color: var(--k-terracotta-700);
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-primary-text);
   }
 
   .tool-tile__content {
@@ -1456,8 +1459,8 @@
     padding: var(--k-space-2) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-indigo-300);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
-    color: var(--k-indigo-700);
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-secondary);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
     text-decoration: none;
@@ -1466,7 +1469,7 @@
 
   .profile-action-link:hover {
     background-color: var(--k-indigo-700);
-    color: #fff;
+    color: var(--k-text-on-accent);
   }
 
   /* Language Pill Grid */
@@ -1484,19 +1487,19 @@
     padding: var(--k-space-2) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
 
   .lang-pill:hover {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .lang-pill--active {
-    border-color: var(--k-terracotta-700);
-    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-khadi-100));
-    color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
+    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-surface-raised));
+    color: var(--k-accent-primary-text);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -1521,7 +1524,7 @@
     gap: var(--k-space-1);
     background: transparent;
     border: var(--k-hairline) solid var(--k-stone-300);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
     cursor: pointer;
@@ -1531,8 +1534,8 @@
   }
 
   .lang-more-btn:hover {
-    background-color: var(--k-khadi-200);
-    border-color: var(--k-terracotta-700);
+    background-color: var(--k-surface-pressed);
+    border-color: var(--k-border-accent);
   }
 
   /* Accessibility Quick Bar */
@@ -1543,7 +1546,7 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
     padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .a11y-quick-btn {
@@ -1553,7 +1556,7 @@
     padding: var(--k-space-1) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     color: var(--k-text-primary);
     font-size: var(--k-text-xs);
     cursor: pointer;
@@ -1561,7 +1564,7 @@
 
   .a11y-quick-link {
     margin-inline-start: auto;
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     font-size: var(--k-text-xs);
     text-decoration: none;
   }
@@ -1578,9 +1581,9 @@
     justify-content: space-between;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .session-info {
@@ -1596,7 +1599,7 @@
 
   .session-info__badge {
     font-size: var(--k-text-xs);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   /* Change Phone Button */
@@ -1604,7 +1607,7 @@
     display: inline-block;
     margin-inline-start: var(--k-space-2);
     font-size: var(--k-text-xs);
-    color: var(--k-indigo-700, #364190);
+    color: var(--k-indigo-700, var(--k-indigo-800));
     text-decoration: underline;
     background: none;
     border: none;
@@ -1631,16 +1634,16 @@
     flex: 1;
     min-inline-size: 16rem;
     padding: var(--k-space-2) var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-surface-base, #ffffff);
+    background-color: var(--k-surface-base, var(--k-surface-base));
     font-size: var(--k-text-sm);
     color: var(--k-text-primary);
   }
 
   .email-text-input:focus {
     outline: none;
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 
@@ -1661,7 +1664,7 @@
 
   .email-pref-row input[type='checkbox'] {
     margin-block-start: 2px;
-    accent-color: var(--k-terracotta-700, #96381e);
+    accent-color: var(--k-terracotta-700, var(--k-accent-primary-text));
   }
 
   /* Phone Change Modal */
@@ -1677,8 +1680,8 @@
   }
 
   .phone-modal-card {
-    background-color: var(--k-surface-base, #ffffff);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-lg);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     max-inline-size: 28rem;
@@ -1722,8 +1725,8 @@
     align-items: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-accent-danger);
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-xs);
   }
@@ -1743,17 +1746,17 @@
   .phone-input-wrap {
     display: flex;
     align-items: center;
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     overflow: hidden;
   }
 
   .phone-input-wrap .prefix {
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: var(--k-stone-100, #f5f2ed);
+    background-color: var(--k-stone-100, var(--k-surface-raised));
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-inline-end: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
   }
 
   .phone-text-field {
@@ -1766,7 +1769,7 @@
 
   .phone-otp-field {
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-lg);
     text-align: center;
@@ -1776,7 +1779,7 @@
   }
 
   .phone-otp-field:focus {
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 

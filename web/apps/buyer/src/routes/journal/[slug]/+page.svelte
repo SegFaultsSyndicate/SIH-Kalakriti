@@ -165,7 +165,7 @@
 <style>
   .essay-page {
     padding-block: var(--k-space-6) var(--k-space-12);
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .essay-container {
@@ -183,7 +183,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin-block-end: var(--k-space-2);
   }
 
@@ -240,15 +240,15 @@
   .essay-quote {
     margin: var(--k-space-7) 0;
     padding: var(--k-space-5);
-    background: #fdfbf7;
-    border-inline-start: 4px solid #b45309;
+    background: var(--k-surface-base);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 
   .essay-quote p {
     font-size: var(--k-text-md);
     font-style: italic;
-    color: #44403c;
+    color: var(--k-stone-700);
     line-height: var(--k-leading-normal);
     margin: 0 0 var(--k-space-2);
   }
@@ -269,7 +269,7 @@
     gap: var(--k-space-2);
     font-size: var(--k-text-sm);
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     text-decoration: none;
   }
 

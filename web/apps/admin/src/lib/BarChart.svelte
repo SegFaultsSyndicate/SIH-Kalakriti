@@ -170,7 +170,7 @@
   }
 
   .barchart__legend-swatch--secondary {
-    background: #66bb6a;
+    background: var(--k-neem-500);
   }
 
   .barchart__empty {
@@ -258,11 +258,11 @@
   }
 
   .barchart__fill--secondary {
-    background: #66bb6a;
+    background: var(--k-neem-500);
   }
 
   .barchart__value--secondary {
-    color: #66bb6a;
+    color: var(--k-neem-500);
     font-weight: 600;
   }
 
@@ -320,7 +320,7 @@
   @media print {
     .barchart {
       break-inside: avoid;
-      border-color: #999;
+      border-color: var(--k-stone-400);
     }
   }
 </style>

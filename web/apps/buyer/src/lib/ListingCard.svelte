@@ -34,8 +34,7 @@
       '',
   );
   const madeToOrder = $derived(listing.type === 'MADE_TO_ORDER');
-  // The base price of the listing, always INR paise straight from the API.
-  const paise = $derived(listing.price?.amount_paise ?? (listing.price as any)?.amount ?? 0);
+  const paise = $derived(listing.price?.amount_paise ?? 0);
 
   // Selected currency comes from the shell header's CurrencySelector -- see
   // currency.svelte.ts. Defaults to INR (identity rate) until a user picks.
@@ -61,7 +60,9 @@
     return undefined;
   });
 
-  const artisanAvatar = $derived((listing as any).artisan_image_url || devAvatar);
+  // The OpenAPI spec carries no artisan image on a listing summary, so this is
+  // the locally-captured avatar only. Do not reintroduce an invented field.
+  const artisanAvatar = $derived(devAvatar);
 
   let copied = $state(false);
 
@@ -279,31 +280,30 @@
     inline-size: 1.95rem;
     block-size: 1.95rem;
     border-radius: var(--k-radius-full, 999px);
-    background-color: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    color: var(--k-text-secondary, #57534e);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
+    color: var(--k-text-secondary);
     cursor: pointer;
-    backdrop-filter: blur(4px);
     transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .listing-card__share-btn:hover {
-    background-color: #ffffff;
-    color: var(--k-terracotta-700, #96381e);
+    background-color: var(--k-surface-base);
+    color: var(--k-terracotta-700, var(--k-accent-primary-text));
     transform: scale(1.08);
   }
 
   .listing-card__wishlist-btn:hover {
-    background-color: #ffffff;
-    color: #e11d48;
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-danger-muted);
     transform: scale(1.08);
   }
 
   .listing-card__wishlist-btn.is-wishlisted {
-    background-color: #fff1f2;
-    color: #e11d48;
-    border-color: #fecdd3;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-accent-danger-muted);
+    border-color: var(--k-terracotta-300);
   }
 
   .listing-card__action-row {
@@ -321,9 +321,9 @@
     gap: 0.3rem;
     padding: 0.35rem 0.6rem;
     border-radius: 4px;
-    background-color: #f7f4ee;
-    border: 1px solid #ded7cb;
-    color: #7b1c1c;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-border-muted);
+    color: var(--k-accent-danger-strong);
     font-size: 0.72rem;
     font-weight: 700;
     transition: all 0.15s ease;
@@ -331,9 +331,9 @@
   }
 
   .listing-card:hover .listing-card__order-btn {
-    background-color: #7b1c1c;
-    color: #ffffff;
-    border-color: #7b1c1c;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-madder-800);
   }
 
   .listing-card__wishlist-cta {
@@ -342,9 +342,9 @@
     gap: 0.25rem;
     padding: 0.35rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid #ded7cb;
-    background-color: #ffffff;
-    color: #57534e;
+    border: 1px solid var(--k-border-muted);
+    background-color: var(--k-surface-base);
+    color: var(--k-stone-600);
     font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
@@ -353,9 +353,9 @@
 
   .listing-card__wishlist-cta:hover,
   .listing-card__wishlist-cta.is-wishlisted {
-    border-color: #e11d48;
-    color: #e11d48;
-    background-color: #fff1f2;
+    border-color: var(--k-border-danger);
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-neutral);
   }
 
   .listing-card__badge {
@@ -403,7 +403,7 @@
     height: 1.25rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     flex-shrink: 0;
   }
 
@@ -414,8 +414,8 @@
     width: 1.25rem;
     height: 1.25rem;
     border-radius: 50%;
-    background-color: var(--k-khadi-200, #eedec8);
-    color: var(--k-terracotta-800, #7a2010);
+    background-color: var(--k-khadi-200, var(--k-surface-pressed));
+    color: var(--k-terracotta-800, var(--k-terracotta-800));
     font-size: 0.65rem;
     font-weight: var(--k-weight-bold, 700);
     flex-shrink: 0;
@@ -428,7 +428,7 @@
   .listing-card__artisan-verified {
     display: inline-flex;
     align-items: center;
-    color: var(--k-indigo-700, #364190);
+    color: var(--k-indigo-700, var(--k-indigo-800));
     font-size: 0.85rem;
     flex-shrink: 0;
   }
@@ -456,20 +456,20 @@
 
   .listing-card__price {
     font-weight: var(--k-weight-semibold, 600);
-    color: var(--k-text-primary, #1e1915);
+    color: var(--k-text-primary, var(--k-text-primary));
   }
 
   .listing-card__mrp {
     font-size: var(--k-text-xs, 0.75rem);
-    color: var(--k-text-secondary, #7a7269);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     text-decoration: line-through;
   }
 
   .listing-card__discount {
     font-size: var(--k-text-2xs, 0.65rem);
     font-weight: 700;
-    color: #2e7d32;
-    background-color: #e8f5e9;
+    color: var(--k-accent-success-muted);
+    background-color: var(--k-surface-raised);
     padding: 0.1rem 0.3rem;
     border-radius: 3px;
   }

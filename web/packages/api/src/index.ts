@@ -54,6 +54,8 @@ export {
   registerArtisan,
   getArtisanProfile,
   updateArtisanProfile,
+  requestPhoneChangeOtp,
+  verifyPhoneChangeOtp,
   listListings,
   createListing,
   getListing,

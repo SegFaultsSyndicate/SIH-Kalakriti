@@ -326,7 +326,7 @@
     left: 0;
     right: 0;
     z-index: 10;
-    background: var(--k-surface-elevated, #fff);
+    background: var(--k-surface-elevated, var(--k-surface-base));
     border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);

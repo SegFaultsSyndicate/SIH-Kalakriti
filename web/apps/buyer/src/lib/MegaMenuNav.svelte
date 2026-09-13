@@ -419,7 +419,7 @@
         <!-- 7. GI TAGGED (Image 3 Direct Corridor) -->
         <li class="k-nav-item k-nav-item--gi" role="none">
           <a href="/gi-tagged" class="k-nav-link k-nav-link--gi" role="menuitem">
-            <span class="gi-tag-star">★</span>
+            <span class="gi-tag-star"><Icon name="gi-tagged" size="0.85rem" /></span>
             <span>GI TAGGED</span>
           </a>
         </li>
@@ -458,7 +458,7 @@
 
       <div class="mobile-drawer-content">
         <a href="/gi-tagged" class="mobile-cat-link mobile-cat-link--gi" onclick={() => (isMobileMenuOpen = false)}>
-          ★ GI TAGGED PRODUCTS
+          <Icon name="gi-tagged" size="0.9rem" /> GI TAGGED PRODUCTS
         </a>
         <a href="/search?q=home" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
           Home and Living
@@ -496,16 +496,16 @@
   .k-mega-header {
     position: relative;
     inline-size: 100%;
-    background-color: var(--k-surface-base, #ffffff);
-    border-block-end: 1px solid var(--k-border-hairline, #e6ded3);
+    background-color: var(--k-surface-base, var(--k-surface-base));
+    border-block-end: 1px solid var(--k-border-hairline, var(--k-border-subtle));
     z-index: 40;
     font-family: inherit;
   }
 
   /* 1. Government Ribbon */
   .k-gov-ribbon {
-    background-color: #7b1c1c; /* Official deep maroon ribbon */
-    color: #ffffff;
+    background-color: var(--k-madder-800); /* Official deep maroon ribbon */
+    color: var(--k-text-on-accent);
     font-size: 0.75rem;
     padding: 0.35rem 1rem;
     border-block-end: 1px solid rgba(0, 0, 0, 0.1);
@@ -548,7 +548,7 @@
   }
 
   .gov-a11y-link {
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     text-decoration: none;
     font-size: 0.72rem;
   }
@@ -560,7 +560,7 @@
   .gov-lang-btn {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.72rem;
     display: inline-flex;
     align-items: center;
@@ -576,8 +576,8 @@
   /* 2. Main Header Bar */
   .k-main-header {
     padding: 0.85rem 1rem;
-    background-color: #ffffff;
-    border-block-end: 1px solid var(--k-stone-200, #e6ded3);
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .k-main-header-container {
@@ -631,7 +631,7 @@
     font-size: 1.45rem;
     font-weight: 700;
     line-height: 1.1;
-    color: #7b1c1c; /* Heritage burgundy */
+    color: var(--k-accent-danger-strong); /* Heritage burgundy */
     letter-spacing: -0.01em;
   }
 
@@ -639,7 +639,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     font-weight: 500;
   }
 
@@ -649,8 +649,8 @@
     max-inline-size: 38rem;
     display: flex;
     align-items: center;
-    background-color: #ffffff;
-    border: 1.5px solid #7b1c1c;
+    background-color: var(--k-surface-base);
+    border: 1.5px solid var(--k-madder-800);
     border-radius: 4px;
     overflow: hidden;
   }
@@ -662,9 +662,9 @@
   }
 
   .search-category-select select {
-    background-color: #f7f4ee;
+    background-color: var(--k-surface-raised);
     border: none;
-    border-inline-end: 1px solid var(--k-stone-300, #d5cec5);
+    border-inline-end: 1px solid var(--k-stone-300, var(--k-border-hairline));
     font-size: 0.8rem;
     color: var(--k-text-primary);
     padding: 0.65rem 0.75rem;
@@ -682,8 +682,8 @@
   }
 
   .k-search-submit {
-    background-color: #7b1c1c;
-    color: #ffffff;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
     border: none;
     padding: 0.65rem 1.15rem;
     cursor: pointer;
@@ -694,7 +694,7 @@
   }
 
   .k-search-submit:hover {
-    background-color: #5c1414;
+    background-color: var(--k-madder-800);
   }
 
   /* Header Right Tools */
@@ -711,9 +711,9 @@
     gap: 0.4rem;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    background-color: #fcf6e8;
-    border: 1px solid #d4a037;
-    color: #8c5b05;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-haldi-500);
+    color: var(--k-haldi-700);
     text-decoration: none;
     font-size: 0.75rem;
     font-weight: 600;
@@ -723,33 +723,33 @@
     inline-size: 0.55rem;
     block-size: 0.55rem;
     border-radius: 50%;
-    background-color: #e65100;
-    box-shadow: 0 0 0 2px #ffb74d;
+    background-color: var(--k-accent-primary-bg);
+    box-shadow: 0 0 0 2px var(--k-haldi-500);
   }
 
   .k-tool-link {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    color: var(--k-text-primary, #2d2621);
+    color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 500;
   }
 
   .k-tool-link:hover {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
   }
 
   .k-tool-link--highlight {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     font-weight: 600;
   }
 
   /* 3. Horizontal Category Navigation Bar */
   .k-category-nav {
-    background-color: #ffffff;
-    border-block-end: 1.5px solid #7b1c1c;
+    background-color: var(--k-surface-base);
+    border-block-end: 1.5px solid var(--k-madder-800);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   }
 
@@ -785,7 +785,7 @@
     background: none;
     border: none;
     border-block-end: 3px solid transparent;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     text-decoration: none;
     font-size: 0.82rem;
     font-weight: 700;
@@ -797,18 +797,18 @@
 
   .k-nav-link:hover,
   .k-nav-link.active {
-    background-color: #fdfaf6;
-    border-block-end-color: #e65100; /* Saffron underline */
-    color: #e65100;
+    background-color: var(--k-surface-base);
+    border-block-end-color: var(--k-border-accent); /* Saffron underline */
+    color: var(--k-accent-primary-text);
   }
 
   .k-nav-link--gi {
-    color: #c0392b;
+    color: var(--k-accent-danger-muted);
     font-weight: 800;
   }
 
   .gi-tag-star {
-    color: #d4a037;
+    color: var(--k-haldi-500);
     font-size: 0.9rem;
   }
 
@@ -819,8 +819,8 @@
     inset-inline-start: 0;
     inline-size: 78rem;
     max-inline-size: 92vw;
-    background-color: #ffffff;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     border-block-start: none;
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
     padding: 1.5rem;
@@ -838,7 +838,7 @@
   .mega-col {
     display: flex;
     flex-direction: column;
-    border-inline-end: 1px solid #f0eae1;
+    border-inline-end: 1px solid var(--k-khadi-100);
     padding-inline-end: 0.85rem;
   }
 
@@ -850,11 +850,11 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.65rem 0;
     letter-spacing: 0.04em;
     line-height: 1.3;
-    border-block-end: 1.5px solid #f5e4d7;
+    border-block-end: 1.5px solid var(--k-border-subtle);
     padding-block-end: 0.35rem;
   }
 
@@ -868,7 +868,7 @@
   }
 
   .mega-sublist a {
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     font-size: 0.78rem;
     line-height: 1.3;
@@ -876,7 +876,7 @@
   }
 
   .mega-sublist a:hover {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     text-decoration: underline;
   }
 
@@ -886,8 +886,8 @@
     inset-block-start: 100%;
     inset-inline-start: 0;
     min-inline-size: 16rem;
-    background-color: #ffffff;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     border-block-start: none;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
     padding: 1.25rem;
@@ -905,7 +905,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.5rem 0;
     letter-spacing: 0.03em;
   }
@@ -920,14 +920,14 @@
   }
 
   .dropdown-group a {
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     font-size: 0.8rem;
     transition: color 0.15s ease;
   }
 
   .dropdown-group a:hover {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     text-decoration: underline;
   }
 
@@ -943,17 +943,17 @@
   }
 
   .dropdown-block-link:hover {
-    background-color: #fcf6e8;
+    background-color: var(--k-surface-raised);
   }
 
   .dropdown-block-link strong {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     font-size: 0.82rem;
   }
 
   .dropdown-block-link span {
     font-size: 0.72rem;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
   }
 
   /* Mobile Drawer Overlay */
@@ -968,7 +968,7 @@
     inline-size: 20rem;
     max-inline-size: 85vw;
     block-size: 100%;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
@@ -979,8 +979,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    background-color: #7b1c1c;
-    color: #ffffff;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
   }
 
   .brand-mini {
@@ -993,7 +993,7 @@
   .drawer-close {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 1.5rem;
     cursor: pointer;
   }
@@ -1008,15 +1008,15 @@
 
   .mobile-cat-link {
     padding: 0.65rem 0.5rem;
-    border-block-end: 1px solid var(--k-stone-200, #e6ded3);
-    color: var(--k-text-primary, #2d2621);
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
+    color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 600;
   }
 
   .mobile-cat-link--gi {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     font-weight: 700;
   }
 </style>

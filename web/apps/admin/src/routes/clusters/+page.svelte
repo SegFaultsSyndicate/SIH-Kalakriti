@@ -60,10 +60,10 @@
         artisan_count: 38,
       },
       members: [
-        { artisan_id: 'art-1', display_name: 'Ismail Khatri', role: 'MASTER', joined_at: '2024-01-15T10:00:00Z' },
-        { artisan_id: 'art-2', display_name: 'Pabiben Rabari', role: 'COORDINATOR', joined_at: '2024-02-10T11:30:00Z' },
-        { artisan_id: 'art-3', display_name: 'Vankar Vishram Valji', role: 'MEMBER', joined_at: '2024-03-01T09:15:00Z' },
-        { artisan_id: 'art-4', display_name: 'Devji Premji Vankar', role: 'MEMBER', joined_at: '2024-03-20T14:00:00Z' },
+        { artisan_id: 'art-1', display_name: 'Ismail Khatri', role: 'CLUSTER_MEMBER_ROLE_MASTER', joined_at: '2024-01-15T10:00:00Z' },
+        { artisan_id: 'art-2', display_name: 'Pabiben Rabari', role: 'CLUSTER_MEMBER_ROLE_COORDINATOR', joined_at: '2024-02-10T11:30:00Z' },
+        { artisan_id: 'art-3', display_name: 'Vankar Vishram Valji', role: 'CLUSTER_MEMBER_ROLE_MEMBER', joined_at: '2024-03-01T09:15:00Z' },
+        { artisan_id: 'art-4', display_name: 'Devji Premji Vankar', role: 'CLUSTER_MEMBER_ROLE_MEMBER', joined_at: '2024-03-20T14:00:00Z' },
       ],
     },
     'jaipur-blue-pottery': {
@@ -75,8 +75,8 @@
         artisan_count: 24,
       },
       members: [
-        { artisan_id: 'art-5', display_name: 'Kripal Kumbhar', role: 'MASTER', joined_at: '2024-01-12T08:00:00Z' },
-        { artisan_id: 'art-6', display_name: 'Ram Gopal Saini', role: 'COORDINATOR', joined_at: '2024-02-18T10:00:00Z' },
+        { artisan_id: 'art-5', display_name: 'Kripal Kumbhar', role: 'CLUSTER_MEMBER_ROLE_MASTER', joined_at: '2024-01-12T08:00:00Z' },
+        { artisan_id: 'art-6', display_name: 'Ram Gopal Saini', role: 'CLUSTER_MEMBER_ROLE_COORDINATOR', joined_at: '2024-02-18T10:00:00Z' },
       ],
     },
   };
@@ -163,6 +163,11 @@
   let newMemberArtisanId = $state('');
   let newMemberRole = $state('MEMBER');
 
+  /** The request enum ("MEMBER") is short-form; the response enum ("CLUSTER_MEMBER_ROLE_MEMBER") is fully qualified -- see services/bff/openapi.json's two distinct role schemas on this endpoint. */
+  function toMemberRoleResponse(role: string): 'CLUSTER_MEMBER_ROLE_MEMBER' | 'CLUSTER_MEMBER_ROLE_COORDINATOR' | 'CLUSTER_MEMBER_ROLE_MASTER' {
+    return `CLUSTER_MEMBER_ROLE_${role}` as 'CLUSTER_MEMBER_ROLE_MEMBER' | 'CLUSTER_MEMBER_ROLE_COORDINATOR' | 'CLUSTER_MEMBER_ROLE_MASTER';
+  }
+
   async function addMember(): Promise<void> {
     if (!cluster?.id) return;
     try {
@@ -176,7 +181,7 @@
           {
             artisan_id: newMemberArtisanId,
             display_name: `Artisan (${newMemberArtisanId})`,
-            role: newMemberRole as 'MEMBER' | 'COORDINATOR' | 'MASTER',
+            role: toMemberRoleResponse(newMemberRole),
             joined_at: new Date().toISOString(),
           },
         ];
@@ -247,7 +252,7 @@
             {
               artisan_id: `art-${row.phone_e164.slice(-4)}`,
               display_name: row.display_name,
-              role: 'MEMBER',
+              role: 'CLUSTER_MEMBER_ROLE_MEMBER',
               joined_at: new Date().toISOString(),
             },
           ];

@@ -135,7 +135,7 @@
   .confirmation-card {
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-card, #ffffff);
+    background-color: var(--k-surface-card, var(--k-surface-base));
     padding: var(--k-space-8);
     display: flex;
     flex-direction: column;
@@ -151,8 +151,8 @@
     inline-size: 4rem;
     aspect-ratio: 1;
     border-radius: var(--k-radius-full);
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
     margin-block-end: var(--k-space-2);
   }
 
@@ -194,7 +194,7 @@
     padding: var(--k-space-3) var(--k-space-4);
     border: 1px dashed var(--k-border-subtle);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-surface-sunken, #fbf9f6);
+    background-color: var(--k-surface-sunken, var(--k-surface-base));
     text-align: start;
   }
 
@@ -236,7 +236,7 @@
     border-radius: var(--k-radius-sm);
     padding: var(--k-space-4);
     text-align: start;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
   }
 
   .pledge-header {
@@ -261,7 +261,7 @@
 
   .pledge-time {
     font-size: 0.72rem;
-    color: #2e7d32;
+    color: var(--k-accent-success-muted);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -307,7 +307,7 @@
   }
 
   .step--complete {
-    border-block-start-color: #2e7d32;
+    border-block-start-color: var(--k-neem-600);
   }
 
   .step--active {
@@ -321,7 +321,7 @@
   }
 
   .step--complete .step-bullet {
-    color: #2e7d32;
+    color: var(--k-accent-success-muted);
   }
 
   .step--active .step-bullet {

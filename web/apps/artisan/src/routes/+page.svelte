@@ -170,10 +170,10 @@
   </div>
   <div class="sahayak-banner__actions">
     <button type="button" class="sahayak-btn" onclick={() => (showTutorial = true)}>
-      📖 {t('literacy.tutorial.open')}
+      <Icon name="help" size="1.1rem" /> {t('literacy.tutorial.open')}
     </button>
     <button type="button" class="sahayak-btn sahayak-btn--primary" onclick={handleStartDemo}>
-      ⚡ {t('literacy.demo.start')}
+      <Icon name="play" size="1.1rem" /> {t('literacy.demo.start')}
     </button>
   </div>
 </aside>
@@ -380,8 +380,9 @@
   .sahayak-banner {
     margin: var(--k-space-4) var(--k-space-4) 0;
     padding: var(--k-space-3) var(--k-space-4);
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.04));
-    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: var(--k-surface-raised);
+    border: 1px solid var(--k-border-hairline);
+    border-inline-start: 3px solid var(--k-accent-warning-bg);
     border-radius: var(--k-radius-lg);
     display: flex;
     justify-content: space-between;
@@ -403,7 +404,7 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .sahayak-banner__title {
@@ -420,6 +421,12 @@
   }
 
   .sahayak-btn {
+    /* Icon + label on one row. The global reset gives every <svg> display:block
+       (packages/tokens/src/reset.css) so a plain <button> with no flex context
+       stacks its icon above its text instead of beside it -- this is the fix. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
     border: 1px solid var(--k-border-interactive);
     background: var(--k-surface-raised);
     color: var(--k-text-primary);
@@ -432,9 +439,9 @@
   }
 
   .sahayak-btn--primary {
-    background: #b45309;
-    color: #ffffff;
-    border-color: #b45309;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-border-accent);
   }
 
   .home-growth-section {

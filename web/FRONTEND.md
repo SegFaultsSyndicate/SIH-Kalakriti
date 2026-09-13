@@ -216,10 +216,11 @@ eviction after ~7 days unopened.
 
 **120 KB gzip** initial JS for the artisan app — the entry chunk plus
 everything it statically imports before first paint. Lazy route chunks
-don't count. `pnpm size` (`SIZE_BUDGET_ENFORCE=1 pnpm build`) turns a
-regression into a build failure; this also runs in CI. Buyer's budget is
-200 KB gzip. Last measured: artisan 70.6 KB (59% of budget), buyer 33.0 KB,
-admin 30.7 KB — see `web/README.md` for the full table and how manual
+don't count. Every build fails when an app is over its budget;
+`SIZE_BUDGET_ENFORCE=0` downgrades it to a report for a local build you
+knowingly want to finish. Buyer's budget is 200 KB gzip, admin's 80 KB.
+Last measured: artisan 49.0 KB (41% of budget), buyer 48.2 KB (24%),
+admin 35.1 KB (44%) — see `web/README.md` for the full table and how manual
 chunking was verified to help.
 
 ---

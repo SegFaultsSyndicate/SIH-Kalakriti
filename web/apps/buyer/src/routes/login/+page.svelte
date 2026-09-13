@@ -112,7 +112,7 @@
         class="portal-tab {activePortal === 'buyer' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'buyer')}
       >
-        <span class="portal-icon">🛍️</span>
+        <span class="portal-icon"><Icon name="package" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Buyer Account</strong>
           <small>Orders & Settings</small>
@@ -126,7 +126,7 @@
         class="portal-tab {activePortal === 'artisan' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'artisan')}
       >
-        <span class="portal-icon">🧵</span>
+        <span class="portal-icon"><Icon name="weaving" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Artisan Loom</strong>
           <small>Voice PWA</small>
@@ -140,7 +140,7 @@
         class="portal-tab {activePortal === 'admin' ? 'is-active' : ''}"
         onclick={() => (activePortal = 'admin')}
       >
-        <span class="portal-icon">🏛️</span>
+        <span class="portal-icon"><Icon name="cluster" size="1.5rem" /></span>
         <span class="portal-label">
           <strong>Ministry Admin</strong>
           <small>Cluster Console</small>
@@ -280,7 +280,7 @@
     {:else if activePortal === 'artisan'}
       <div class="auth-panel portal-redirect-panel" role="tabpanel">
         <div class="portal-illustration">
-          <span class="big-emoji">🧵</span>
+          <Icon name="weaving" size="3rem" />
         </div>
         <h2 class="portal-heading">Artisan Loom & Guild Studio</h2>
         <p class="portal-subtext">
@@ -318,7 +318,7 @@
     {:else if activePortal === 'admin'}
       <div class="auth-panel portal-redirect-panel" role="tabpanel">
         <div class="portal-illustration">
-          <span class="big-emoji">🏛️</span>
+          <Icon name="cluster" size="3rem" />
         </div>
         <h2 class="portal-heading">Ministry & Cluster Development Admin</h2>
         <p class="portal-subtext">
@@ -367,8 +367,8 @@
   .auth-card {
     inline-size: 100%;
     max-inline-size: 32rem;
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-hairline, #e2dcd2);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
     overflow: hidden;
@@ -377,8 +377,8 @@
   .auth-header {
     padding: 1.75rem 2rem 1.25rem;
     text-align: center;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .auth-brand {
@@ -405,13 +405,13 @@
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .brand-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -420,13 +420,13 @@
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.35rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0.25rem 0;
   }
 
   .auth-desc {
     font-size: 0.85rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
@@ -434,10 +434,10 @@
   .portal-tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    background-color: #f3efe6;
+    background-color: var(--k-surface-raised);
     padding: 0.35rem;
     gap: 0.35rem;
-    border-block-end: 1px solid #e5dfd5;
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .portal-tab {
@@ -471,8 +471,8 @@
   }
 
   .portal-tab.is-active {
-    background-color: #ffffff;
-    border-color: #ded7cc;
+    background-color: var(--k-surface-base);
+    border-color: var(--k-border-muted);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
@@ -490,12 +490,12 @@
   .portal-label strong {
     font-size: 0.775rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .portal-label small {
     font-size: 0.65rem;
-    color: #756d65;
+    color: var(--k-text-tertiary);
   }
 
   /* Form Panels */
@@ -505,7 +505,7 @@
 
   .auth-mode-toggle {
     display: flex;
-    background-color: #f7f4ed;
+    background-color: var(--k-surface-raised);
     border-radius: 8px;
     padding: 0.25rem;
     margin-block-end: 1.5rem;
@@ -519,15 +519,15 @@
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.85rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: inherit;
   }
 
   .mode-btn.is-selected {
-    background-color: #ffffff;
-    color: #1e1915;
+    background-color: var(--k-surface-base);
+    color: var(--k-text-primary);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
   }
 
@@ -546,7 +546,7 @@
   .field-label {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #2b2520;
+    color: var(--k-text-primary);
   }
 
   .label-row {
@@ -557,23 +557,23 @@
 
   .forgot-link {
     font-size: 0.75rem;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
   .field-input {
     padding: 0.65rem 0.85rem;
-    border: 1px solid #d5cec5;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 8px;
     font-size: 0.9rem;
-    color: #1e1915;
-    background-color: #ffffff;
+    color: var(--k-text-primary);
+    background-color: var(--k-surface-base);
     transition: border-color 0.15s ease;
   }
 
   .field-input:focus {
     outline: none;
-    border-color: #b84a39;
+    border-color: var(--k-border-danger);
     box-shadow: 0 0 0 3px rgba(184, 74, 57, 0.12);
   }
 
@@ -588,19 +588,19 @@
 
   .otp-send-btn {
     padding: 0.65rem 0.9rem;
-    background-color: #f4eee3;
-    border: 1px solid #dcd4c7;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 0.15s ease;
   }
 
   .otp-send-btn:hover {
-    background-color: #e8ded0;
+    background-color: var(--k-surface-pressed);
   }
 
   .otp-input {
@@ -611,7 +611,7 @@
 
   .field-hint {
     font-size: 0.7rem;
-    color: #8c8278;
+    color: var(--k-stone-400);
   }
 
   .form-actions-row {
@@ -625,7 +625,7 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.8rem;
-    color: #59524a;
+    color: var(--k-stone-600);
     cursor: pointer;
   }
 
@@ -635,8 +635,8 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.8rem 1.25rem;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
     font-size: 0.925rem;
@@ -647,7 +647,7 @@
   }
 
   .submit-primary-btn:hover {
-    background-color: #993b2d;
+    background-color: var(--k-accent-danger-bg);
   }
 
   .submit-primary-btn:disabled {
@@ -658,19 +658,19 @@
   .panel-footer {
     margin-block-start: 1.5rem;
     padding-block-start: 1.25rem;
-    border-block-start: 1px solid #eee8df;
+    border-block-start: 1px solid var(--k-border-subtle);
     text-align: center;
   }
 
   .terms-notice {
     font-size: 0.725rem;
-    color: #8c8278;
+    color: var(--k-stone-400);
     margin: 0;
     line-height: 1.4;
   }
 
   .terms-notice a {
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
@@ -683,21 +683,17 @@
     margin-block-end: 0.75rem;
   }
 
-  .big-emoji {
-    font-size: 2.5rem;
-  }
-
   .portal-heading {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.2rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0.25rem 0 0.5rem;
   }
 
   .portal-subtext {
     font-size: 0.825rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     line-height: 1.45;
     margin-block-end: 1.25rem;
   }
@@ -707,10 +703,10 @@
     flex-direction: column;
     gap: 0.6rem;
     text-align: start;
-    background-color: #faf7f2;
+    background-color: var(--k-surface-base);
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid #eee8df;
+    border: 1px solid var(--k-border-subtle);
     margin-block-end: 1.5rem;
   }
 
@@ -719,11 +715,11 @@
     align-items: center;
     gap: 0.6rem;
     font-size: 0.8rem;
-    color: #3b342e;
+    color: var(--k-stone-700);
   }
 
   .feat-item :global(svg) {
-    color: #2e7d32;
+    color: var(--k-accent-success-muted);
     flex: none;
   }
 
@@ -745,12 +741,12 @@
   }
 
   .artisan-launch {
-    background-color: #e65100;
-    color: #ffffff;
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
   }
 
   .admin-launch {
-    background-color: #4a148c;
-    color: #ffffff;
+    background-color: var(--k-indigo-900);
+    color: var(--k-text-on-accent);
   }
 </style>

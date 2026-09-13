@@ -173,7 +173,7 @@
 
               <!-- Key Insight Callout -->
               <div class="insight-banner">
-                <span class="insight-icon">💡</span>
+                <span class="insight-icon"><Icon name="info" size="1.1rem" /></span>
                 <p>
                   <strong>Monsoon Resilience:</strong> Traditional master artisans suffered a 68% income drop during monsoon lulls (Q2).
                   With Kalakriti's continuous digital channel, artisans sustained ₹31,000/month, completely eliminating cyclical moneylender debt.
@@ -245,7 +245,7 @@
     align-items: center;
     gap: 4px;
     background: rgba(180, 83, 9, 0.12);
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -271,8 +271,8 @@
     display: flex;
     align-items: center;
     gap: var(--k-space-3);
-    background: linear-gradient(135deg, #15803d, #166534);
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--k-accent-success-bg), var(--k-neem-700));
+    color: var(--k-text-on-accent);
     padding: var(--k-space-3) var(--k-space-4);
     border-radius: var(--k-radius-md);
     box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
@@ -324,7 +324,7 @@
   }
 
   .stat-item--zero .stat-item__val {
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
   }
 
   .stat-item__lbl {
@@ -362,11 +362,11 @@
   }
 
   .legend-swatch--baseline {
-    background: #94a3b8;
+    background: var(--k-indigo-400);
   }
 
   .legend-swatch--kalakriti {
-    background: #16a34a;
+    background: var(--k-accent-success-bg);
   }
 
   /* Visual Grouped Bar Canvas */
@@ -422,7 +422,7 @@
   }
 
   .bar-value--highlight {
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 
@@ -443,11 +443,11 @@
   }
 
   .bar-fill--baseline {
-    background: #94a3b8;
+    background: var(--k-indigo-400);
   }
 
   .bar-fill--kalakriti {
-    background: linear-gradient(180deg, #22c55e, #16a34a);
+    background: linear-gradient(180deg, var(--k-neem-500), var(--k-accent-success-bg));
   }
 
   .quarter-meta {
@@ -466,7 +466,7 @@
   .quarter-uplift-tag {
     font-size: 0.65rem;
     background: rgba(34, 197, 94, 0.15);
-    color: #15803d;
+    color: var(--k-accent-success-muted);
     font-weight: 800;
     padding: 1px 6px;
     border-radius: 999px;
@@ -479,9 +479,9 @@
     gap: var(--k-space-2);
     padding: var(--k-space-3);
     border-radius: var(--k-radius-md);
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-neem-300);
+    color: var(--k-accent-success);
     font-size: var(--k-text-xs);
     line-height: var(--k-leading-normal);
   }
@@ -510,12 +510,12 @@
   }
 
   .cell-green {
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
     font-weight: 700;
   }
 
   .cell-gain {
-    color: #15803d;
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 

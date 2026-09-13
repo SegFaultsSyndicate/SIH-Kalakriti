@@ -307,7 +307,7 @@
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-sm);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     max-inline-size: 32rem;
   }
 
@@ -344,7 +344,7 @@
   .belt-chip.active {
     background-color: var(--k-accent-secondary);
     border-color: var(--k-accent-secondary);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -371,7 +371,7 @@
   .cluster-card {
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-card, #ffffff);
+    background-color: var(--k-surface-card, var(--k-surface-base));
     padding: var(--k-space-5);
     display: flex;
     flex-direction: column;
@@ -438,7 +438,7 @@
 
   .tech-tag {
     font-size: 0.65rem;
-    background-color: var(--k-surface-sunken, #f7f4ee);
+    background-color: var(--k-surface-sunken, var(--k-surface-raised));
     color: var(--k-text-secondary);
     padding: 0.15rem 0.4rem;
     border-radius: var(--k-radius-sm);

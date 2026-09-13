@@ -252,17 +252,29 @@ returns the same `{"status":"otp_sent",...}` body regardless of whether the
 phone is registered (deliberate anti-enumeration design) — don't expect a
 `challenge_id` back to feed into the verify call.
 
-## Idempotency header mismatch between frontend and bff (found, not yet fixed)
+## Idempotency header mismatch between frontend and bff (fixed)
 
-`services/bff/internal/bff/middleware/idempotency.go` reads
-**`X-Idempotency-Key`**. `web/packages/api/src/transport.ts` sends
+`services/bff/internal/bff/middleware/idempotency.go` read
+**`X-Idempotency-Key`** while `web/packages/api/src/transport.ts` sends
 **`Idempotency-Key`** (no `X-` prefix). Every mutating BFF route wrapped in
 `withIdempotency` (artisan/listing/order/statement/cluster/SHG creation,
-moderation actions) therefore never actually sees the frontend's key — a
-retried write from the offline outbox is indistinguishable from a new one
-server-side. This is live and unfixed as of this writing; pick a side
-(add `X-` client-side, or accept the bare header name server-side) before
-relying on retry-safety anywhere the outbox drains a queued write twice.
+moderation actions) therefore never actually saw the frontend's key — a
+retried write from the offline outbox was indistinguishable from a new one
+server-side. This was a silent retry-safety gap, not a visible request
+failure: `API_BASE` defaults to same-origin `/api/v1`, dev proxies through
+Vite to `:8000`, and prod serves web + API from the same compose stack, so
+the browser's CORS preflight path (which only allowlisted
+`X-Idempotency-Key` in `pkg/httpx/middleware.go`, and is only mounted at all
+when `AllowedOrigins` is configured) likely never ran for same-origin
+traffic. Fixed by standardizing on the bare `Idempotency-Key` name
+everywhere: the replay middleware, `idempotencyKeyFrom` in
+`services/bff/internal/bff/handler/api.go`, and the CORS allowlist (the
+`admin.go` handlers already read the bare name correctly and needed no
+change) — the CORS allowlist was wrong in the same direction and worth
+fixing regardless, for any deployment that does cross-origin the browser
+frontend. Integration/unit tests that were asserting the old header name
+were updated to match — they were passing only because both sides of the
+test shared the same wrong name.
 
 ## Outbound webhook subscription has no REST endpoint
 
@@ -296,6 +308,53 @@ schemas and keep hand-written docs to route existence + auth requirement +
 one-line purpose, verified against `server.go`'s actual route table rather
 than assumed.
 
+## Phone-change routes existed in the BFF but nowhere in the contract (fixed)
+
+`server.go` has mounted `POST /auth/phone/change/request` and
+`.../verify` (both under `authed`, JWT required) since Batch 13, but neither
+path ever made it into `services/bff/openapi.json`, so `schema.d.ts` and
+`operations.ts` had no types for them either. With no typed operation to
+call, `apps/artisan/src/routes/profile/+page.svelte` hand-rolled a raw
+`fetch('/auth/phone/change/request', …)` — missing the `/api/v1` prefix
+every real route lives under, and missing the `Authorization` bearer header
+`call()` normally attaches automatically. Every phone-change attempt 404'd.
+Fixed by adding both paths to `openapi.json` (request/response shapes taken
+from the actual handler in `services/bff/internal/bff/handler/api.go`),
+regenerating `schema.d.ts`, adding `requestPhoneChangeOtp`/
+`verifyPhoneChangeOtp` to `operations.ts` + the `index.ts` barrel, and
+switching the call site to use them. `verifyPhoneChangeOtp`'s response
+carries a fresh token pair (the endpoint revokes the caller's other
+sessions), so the call site also needs `session.establish(access_token)`
+alongside `setAccessToken`/`setRefreshToken` — see `completeOtpVerification`
+in `web/packages/api/src/auth-flow.ts` for the canonical three-step pattern;
+don't call `setAccessToken`/`setRefreshToken` alone at a new call site
+without it, or `session.claims` goes stale relative to the stored token.
+
+If a BFF route exists in `server.go` but not in `openapi.json`, nothing
+catches it at build time — `route-parity.test.ts` only checks the reverse
+direction (every spec path has *some* reference in `operations.ts`). A route
+missing from the spec has no compile-time signal at all until someone writes
+a raw `fetch()` for it by hand and gets the shape wrong.
+
+## Cluster member role enum is intentionally asymmetric — don't "fix" it
+
+`POST /clusters/{id}/members` accepts `role` as the short form (`"MEMBER"`,
+`"COORDINATOR"`, `"MASTER"`) but every response containing a cluster member
+returns the fully-qualified proto enum name (`"CLUSTER_MEMBER_ROLE_MEMBER"`,
+etc.) — see `services/bff/internal/bff/client/catalog.go`:
+`clusterMemberRoleFromString` parses the short form on the way in,
+`clusterMemberToMap` calls `m.GetRole().String()` (untrimmed) on the way
+out. `openapi.json`'s two schemas for this endpoint already reflect that
+asymmetry correctly. This one enum is the only place in the codebase that
+doesn't run `trimEnumPrefix` on an outbound enum (every other enum — listing
+type/state, media kind, order/lot state, defect severity, pricing anomaly
+level, search listing_type — is trimmed to match a short-form spec on both
+sides). `apps/admin/src/routes/clusters/+page.svelte`'s dev-mode mock/
+fallback data had the two forms backwards (short-form values pushed into
+`members`, which is response-shaped and needs the long form) — that's a
+`svelte-check` failure, not a live request bug, since the one real write
+call (`addClusterMember`) already sent the correct short form. Fixed by
+correcting the mock data, not by touching the request path or the spec.
 ## `AUTH_DEV_OTP_ENABLED` was never set in `docker-compose.yml` (fixed)
 
 There is no real SMS provider (`service.LoggingOTPSender` is a stub that only

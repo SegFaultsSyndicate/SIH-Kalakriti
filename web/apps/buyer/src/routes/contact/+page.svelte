@@ -236,7 +236,7 @@
 
   .contact-header {
     margin-block-end: 2.5rem;
-    border-block-end: 1px solid var(--k-border-subtle, #e7e5e4);
+    border-block-end: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     padding-block-end: 1.5rem;
   }
 
@@ -246,20 +246,20 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
   }
 
   .contact-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: clamp(1.8rem, 3.5vw, 2.5rem);
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0.25rem 0 0.5rem 0;
   }
 
   .contact-subtitle {
     font-size: 1rem;
-    color: var(--k-text-secondary, #57534e);
+    color: var(--k-text-secondary, var(--k-stone-600));
     max-inline-size: 46rem;
     line-height: 1.5;
     margin: 0;
@@ -280,8 +280,8 @@
   }
 
   .help-card {
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 1.5rem;
     display: flex;
@@ -308,17 +308,17 @@
 
   .phone-icon {
     background-color: rgba(198, 93, 59, 0.12);
-    color: #c65d3b;
+    color: var(--k-terracotta-600);
   }
 
   .email-icon {
     background-color: rgba(30, 58, 138, 0.1);
-    color: #1e3a8a;
+    color: var(--k-indigo-800);
   }
 
   .grievance-icon {
     background-color: rgba(22, 101, 52, 0.1);
-    color: #166534;
+    color: var(--k-accent-success);
   }
 
   .help-card__tag {
@@ -327,19 +327,19 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #78716c;
+    color: var(--k-text-tertiary);
   }
 
   .help-card__title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0.2rem 0 0.4rem 0;
   }
 
   .help-card__desc {
     font-size: 0.8125rem;
-    color: var(--k-text-secondary, #57534e);
+    color: var(--k-text-secondary, var(--k-stone-600));
     line-height: 1.45;
     margin: 0 0 1rem 0;
     flex: 1;
@@ -351,7 +351,7 @@
     gap: 0.4rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: #c65d3b;
+    color: var(--k-terracotta-600);
     text-decoration: none;
     inline-size: fit-content;
   }
@@ -374,8 +374,8 @@
   }
 
   .form-card {
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 2rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
@@ -385,13 +385,13 @@
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.35rem;
     font-weight: 700;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0 0 0.35rem 0;
   }
 
   .form-subtext {
     font-size: 0.85rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     margin: 0 0 1.5rem 0;
   }
 
@@ -422,7 +422,7 @@
   .form-label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #292524;
+    color: var(--k-text-primary);
   }
 
   .form-input,
@@ -431,10 +431,10 @@
     font-family: inherit;
     font-size: 0.875rem;
     padding: 0.65rem 0.85rem;
-    border: 1px solid #d6d3d1;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    background-color: #fdfbf7;
-    color: #1c1917;
+    background-color: var(--k-surface-base);
+    color: var(--k-text-primary);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
@@ -442,7 +442,7 @@
   .form-select:focus,
   .form-textarea:focus {
     outline: none;
-    border-color: #c65d3b;
+    border-color: var(--k-terracotta-600);
     box-shadow: 0 0 0 3px rgba(198, 93, 59, 0.12);
   }
 
@@ -451,8 +451,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    background-color: #7b1d24;
-    color: #ffffff;
+    background-color: var(--k-madder-700);
+    color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.925rem;
     padding: 0.85rem 1.75rem;
@@ -465,7 +465,7 @@
   }
 
   .submit-btn:hover {
-    background-color: #63141a;
+    background-color: var(--k-madder-800);
     transform: translateY(-1px);
   }
 
@@ -474,8 +474,8 @@
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    background-color: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-neem-300);
     border-radius: 8px;
     padding: 1.5rem;
   }
@@ -484,8 +484,8 @@
     inline-size: 2.25rem;
     aspect-ratio: 1;
     border-radius: 50%;
-    background-color: #16a34a;
-    color: #ffffff;
+    background-color: var(--k-accent-success-bg);
+    color: var(--k-text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -496,19 +496,19 @@
   .alert-body h4 {
     margin: 0 0 0.35rem 0;
     font-size: 1rem;
-    color: #166534;
+    color: var(--k-accent-success);
   }
 
   .alert-body p {
     font-size: 0.85rem;
-    color: #15803d;
+    color: var(--k-accent-success-muted);
     margin: 0 0 1rem 0;
   }
 
   .btn-reset {
     background: none;
-    border: 1px solid #16a34a;
-    color: #15803d;
+    border: 1px solid var(--k-neem-600);
+    color: var(--k-accent-success-muted);
     font-weight: 600;
     font-size: 0.8rem;
     padding: 0.4rem 0.85rem;
@@ -518,8 +518,8 @@
 
   /* Right Office Card */
   .office-info-card {
-    background-color: #faf7f2;
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 10px;
     padding: 1.75rem;
     display: flex;
@@ -532,7 +532,7 @@
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.2rem;
     font-weight: 700;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
@@ -541,20 +541,20 @@
     align-items: flex-start;
     gap: 0.75rem;
     font-size: 0.825rem;
-    color: #44403c;
+    color: var(--k-stone-700);
     line-height: 1.5;
   }
 
   .divider {
     block-size: 1px;
-    background-color: #e7e2d8;
+    background-color: var(--k-surface-sunken);
     margin-block: 0.25rem;
   }
 
   .sub-heading {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
@@ -566,7 +566,7 @@
     flex-direction: column;
     gap: 0.45rem;
     font-size: 0.8rem;
-    color: #57534e;
+    color: var(--k-stone-600);
   }
 
   .timings-list li {
@@ -578,7 +578,7 @@
 
   .whatsapp-desc {
     font-size: 0.775rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     line-height: 1.4;
     margin: 0;
   }
@@ -589,7 +589,7 @@
     justify-content: center;
     gap: 0.6rem;
     background-color: #25d366;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.85rem;
     padding: 0.75rem 1.25rem;
@@ -600,7 +600,7 @@
   }
 
   .whatsapp-btn:hover {
-    background-color: #1ebe5d;
+    background-color: var(--k-neem-500);
     transform: translateY(-1px);
   }
 </style>

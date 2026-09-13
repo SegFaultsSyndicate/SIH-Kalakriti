@@ -374,7 +374,7 @@
 <style>
   .studies-page {
     padding-block: var(--k-space-6) var(--k-space-12);
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .studies-container {
@@ -397,8 +397,8 @@
   }
 
   .studies-kicker {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -459,7 +459,7 @@
     inset-block-start: var(--k-space-4);
     inset-inline-start: var(--k-space-4);
     background: rgba(15, 23, 42, 0.85);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 4px 10px;
@@ -474,7 +474,7 @@
     inset-block-end: var(--k-space-4);
     inset-inline-start: var(--k-space-4);
     background: rgba(120, 53, 15, 0.92);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-md);
     display: flex;
@@ -509,7 +509,7 @@
 
   .study-region {
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .study-item-title {
@@ -546,7 +546,7 @@
   .metric-val {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #15803d;
+    color: var(--k-accent-success-muted);
   }
 
   .metric-lbl {
@@ -557,8 +557,8 @@
 
   /* Income Comparison Bar */
   .income-comparison-bar-wrap {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
     display: flex;
@@ -575,12 +575,12 @@
   .bar-title {
     font-size: var(--k-text-xs);
     font-weight: 700;
-    color: #334155;
+    color: var(--k-stone-700);
   }
 
   .bar-uplift-badge {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
     font-size: 0.72rem;
     font-weight: 800;
     padding: 2px 8px;
@@ -608,7 +608,7 @@
   .bar-track {
     inline-size: 100%;
     block-size: 0.85rem;
-    background: #e2e8f0;
+    background: var(--k-surface-neutral);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -619,11 +619,11 @@
   }
 
   .bar-fill--red {
-    background: #f87171;
+    background: var(--k-madder-500);
   }
 
   .bar-fill--green {
-    background: #22c55e;
+    background: var(--k-neem-500);
   }
 
   /* Before vs. After Table */
@@ -638,7 +638,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -664,13 +664,13 @@
   }
 
   .th-before {
-    background: #fef2f2;
-    color: #991b1b;
+    background: var(--k-surface-base);
+    color: var(--k-accent-danger);
   }
 
   .th-after {
-    background: #f0fdf4;
-    color: #166534;
+    background: var(--k-surface-base);
+    color: var(--k-accent-success);
   }
 
   .dim-cell {
@@ -681,13 +681,13 @@
   }
 
   .before-cell {
-    color: #7f1d1d;
+    color: var(--k-accent-danger-strong);
     background: rgba(254, 242, 242, 0.4);
     inline-size: 39%;
   }
 
   .after-cell {
-    color: #14532d;
+    color: var(--k-accent-success);
     background: rgba(240, 253, 244, 0.4);
     inline-size: 39%;
     font-weight: 600;
@@ -700,11 +700,11 @@
   }
 
   .cell-status--bad {
-    color: #dc2626;
+    color: var(--k-accent-danger);
   }
 
   .cell-status--good {
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
   }
 
   /* Narrative */
@@ -733,15 +733,15 @@
   .study-quote {
     margin: 0;
     padding: var(--k-space-4);
-    background: #fdfbf7;
-    border-inline-start: 4px solid #b45309;
+    background: var(--k-surface-base);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 
   .study-quote p {
     font-size: var(--k-text-sm);
     font-style: italic;
-    color: #44403c;
+    color: var(--k-stone-700);
     line-height: var(--k-leading-normal);
     margin: 0 0 var(--k-space-2);
   }
@@ -778,13 +778,13 @@
 
   .action-btn--card {
     border: 1px solid var(--k-border-interactive);
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
   }
 
   .action-btn--store {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     margin-inline-start: auto;
   }
 

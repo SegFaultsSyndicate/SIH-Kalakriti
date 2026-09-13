@@ -202,11 +202,10 @@ limited, `503` a downstream dependency is unavailable.
 ## Idempotency
 
 The server reads the key from **`Idempotency-Key`**, on every route wrapped
-with `withIdempotency` in `server.go` (artisan registration,
-listing/order/statement/cluster/SHG creation, moderation actions). A
-repeated key within the configured TTL replays the original response instead
-of re-executing the write. This matches the header `web/packages/api/src/transport.ts`
-already sends.
+with `withIdempotency` in `server.go` (artisan registration, listing/order/
+statement/cluster/SHG creation, moderation actions). A repeated key within
+the configured TTL replays the original response instead of re-executing the
+write. `web/packages/api/src/transport.ts` sends the same header name.
 
 ---
 

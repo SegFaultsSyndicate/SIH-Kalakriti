@@ -115,13 +115,13 @@ Svelte 5.57.0:
 
 | App     | Initial JS (gzip)           | All JS (gzip) | CSS (gzip) | Build dir |
 | ------- | --------------------------- | ------------- | ---------- | --------- |
-| artisan | **70.6 KB** (59% of budget) | 73.2 KB       | 3.8 KB     | 1.1 MB    |
-| buyer   | 33.0 KB                     | 35.6 KB       | 2.8 KB     | 698 KB    |
-| admin   | 30.7 KB                     | 32.7 KB       | 2.8 KB     | 624 KB    |
+| artisan | **49.0 KB** (41% of 120 KB) | 73.2 KB       | 3.8 KB     | 1.1 MB    |
+| buyer   | 48.2 KB (24% of 200 KB)     | 35.6 KB       | 2.8 KB     | 698 KB    |
+| admin   | 35.1 KB (44% of 80 KB)      | 32.7 KB       | 2.8 KB     | 624 KB    |
 
-Every build prints this table. `SIZE_BUDGET_ENFORCE=1 pnpm build` (that is what
-`pnpm size` runs, and what CI runs) turns going over the budget into a build
-failure. Each app also writes `apps/<app>/size-report.json` with the per-chunk
+Every build prints this table, and going over the budget fails the build --
+there is no flag to remember. `SIZE_BUDGET_ENFORCE=0` downgrades it to a
+report for a local build you knowingly want to finish anyway. Each app also writes `apps/<app>/size-report.json` with the per-chunk
 numbers.
 
 The artisan figure is higher than the other two because it carries Dexie and

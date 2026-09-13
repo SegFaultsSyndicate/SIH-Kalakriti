@@ -43,7 +43,7 @@
   }
 
   .sahayak-tooltip__icon {
-    color: #d97706;
+    color: var(--k-haldi-700);
     margin-block-start: 2px;
     flex-shrink: 0;
   }
@@ -59,7 +59,7 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .sahayak-tooltip__text {
