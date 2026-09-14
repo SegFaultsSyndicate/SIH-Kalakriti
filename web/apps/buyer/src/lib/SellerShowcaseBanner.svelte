@@ -7,37 +7,45 @@
   - Official National Partner & Government Accreditation strip (Make in India, Digital India, india.gov.in, GI Registry, ONDC).
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
 
-  const testimonials = [
+  const testimonials: {
+    id: string;
+    nameKey: MessageKey;
+    titleKey: MessageKey;
+    clusterKey: MessageKey;
+    craftKey: MessageKey;
+    quoteKey: MessageKey;
+    image: string;
+  }[] = [
     {
       id: 'seller-1',
-      name: 'Altaf Hussain',
-      title: 'National Awardee Woodcarver',
-      cluster: 'Saharanpur, Uttar Pradesh',
-      craft: 'Shisham Inlay & Jali Carving',
-      quote: 'A National Awardee Seller showcasing the beauty of handcrafted heritage creations. Through Kalakriti, we connect directly with global patrons without commission brokers.',
+      nameKey: 'sellerShowcase.testimonial.1.name',
+      titleKey: 'sellerShowcase.testimonial.1.title',
+      clusterKey: 'sellerShowcase.testimonial.1.cluster',
+      craftKey: 'sellerShowcase.testimonial.1.craft',
+      quoteKey: 'sellerShowcase.testimonial.1.quote',
       image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-2',
-      name: 'Mohammed Shafiuddin',
-      title: 'State Awardee Master Craftsman',
-      cluster: 'Bidar, Karnataka',
-      craft: 'GI-Certified Bidriware Metalwork',
-      quote: 'Showcasing our 600-year-old silver inlay art globally through digital infrastructure provided by the Government of India. Orders reach our village workshop with zero intermediaries.',
+      nameKey: 'sellerShowcase.testimonial.2.name',
+      titleKey: 'sellerShowcase.testimonial.2.title',
+      clusterKey: 'sellerShowcase.testimonial.2.cluster',
+      craftKey: 'sellerShowcase.testimonial.2.craft',
+      quoteKey: 'sellerShowcase.testimonial.2.quote',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-3',
-      name: 'Amrita Saavan',
-      title: 'Master Weaver & SHG Leader',
-      cluster: 'Imphal, Manipur',
-      craft: 'Shaphee Lanphee & Loin Loom',
-      quote: 'Our women’s cooperative registered in minutes using the low-literacy Voice PWA. Prompt doorstep logistics and DBT bank settlements have revived our traditional loin looms.',
+      nameKey: 'sellerShowcase.testimonial.3.name',
+      titleKey: 'sellerShowcase.testimonial.3.title',
+      clusterKey: 'sellerShowcase.testimonial.3.cluster',
+      craftKey: 'sellerShowcase.testimonial.3.craft',
+      quoteKey: 'sellerShowcase.testimonial.3.quote',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
     },
   ];
@@ -125,19 +133,19 @@
       {#each testimonials as seller}
         <article class="testimonial-card">
           <div class="testimonial-card__media">
-            <img src={seller.image} alt={seller.name} class="testimonial-img" loading="lazy" />
+            <img src={seller.image} alt={t(seller.nameKey)} class="testimonial-img" loading="lazy" />
             <div class="video-play-indicator" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
             </div>
-            <div class="card-award-badge">{seller.title}</div>
+            <div class="card-award-badge">{t(seller.titleKey)}</div>
           </div>
           <div class="testimonial-card__body">
-            <h4 class="seller-name">{seller.name}</h4>
-            <span class="seller-cluster"><Icon name="location" size="0.85rem" /> {seller.cluster}</span>
-            <span class="seller-craft"><Icon name="verified-artisan" size="0.85rem" /> {seller.craft}</span>
-            <p class="seller-quote">"{seller.quote}"</p>
+            <h4 class="seller-name">{t(seller.nameKey)}</h4>
+            <span class="seller-cluster"><Icon name="location" size="0.85rem" /> {t(seller.clusterKey)}</span>
+            <span class="seller-craft"><Icon name="verified-artisan" size="0.85rem" /> {t(seller.craftKey)}</span>
+            <p class="seller-quote">"{t(seller.quoteKey)}"</p>
           </div>
         </article>
       {/each}

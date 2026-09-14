@@ -7,7 +7,7 @@
   reorder directly from their digital storefront year-round.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
@@ -38,15 +38,15 @@
 
   interface FairConfig {
     value: string;
-    label: string;
-    shortName: string;
-    fullName: string;
-    edition: string;
-    venue: string;
-    dates: string;
-    ministry: string;
-    subDept: string;
-    badge: string;
+    labelKey: MessageKey;
+    shortNameKey: MessageKey;
+    fullNameKey: MessageKey;
+    editionKey: MessageKey;
+    venueKey: MessageKey;
+    datesKey: MessageKey;
+    ministryKey: MessageKey;
+    subDeptKey: MessageKey;
+    badgeKey: MessageKey;
     accentColor: string;
     accentBg: string;
     borderAccent: string;
@@ -55,75 +55,75 @@
   const FAIRS: FairConfig[] = [
     {
       value: 'surajkund-2026',
-      label: 'Surajkund International Crafts Mela (Faridabad, Haryana)',
-      shortName: 'Surajkund Crafts Mela',
-      fullName: 'Surajkund International Crafts Mela',
-      edition: '39th Annual International Edition • 2026',
-      venue: 'Surajkund Mela Grounds, Faridabad, Haryana',
-      dates: '02 Feb – 18 Feb 2026',
-      ministry: 'MINISTRY OF TOURISM & MINISTRY OF TEXTILES • GOVT. OF INDIA',
-      subDept: 'DEVELOPMENT COMMISSIONER (HANDICRAFTS) & HARYANA TOURISM',
-      badge: 'OFFICIAL CRAFTS MELA PLACARD',
+      labelKey: 'exhibition.stallCard.fair.surajkund.label',
+      shortNameKey: 'exhibition.stallCard.fair.surajkund.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.surajkund.fullName',
+      editionKey: 'exhibition.stallCard.fair.surajkund.edition',
+      venueKey: 'exhibition.stallCard.fair.surajkund.venue',
+      datesKey: 'exhibition.stallCard.fair.surajkund.dates',
+      ministryKey: 'exhibition.stallCard.fair.surajkund.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.surajkund.subDept',
+      badgeKey: 'exhibition.stallCard.fair.surajkund.badge',
       accentColor: '#78350f',
       accentBg: '#fef3c7',
       borderAccent: '#d97706',
     },
     {
       value: 'shilp-samagam-2026',
-      label: 'Shilp Samagam (Major Dhyan Chand Stadium, New Delhi)',
-      shortName: 'Shilp Samagam Expo',
-      fullName: 'Shilp Samagam Apex Handicraft Expo',
-      edition: 'Apex National Pavilion • 2026',
-      venue: 'Major Dhyan Chand National Stadium, India Gate, New Delhi',
-      dates: '01 Nov – 15 Nov 2026',
-      ministry: 'MINISTRY OF SOCIAL JUSTICE & MINISTRY OF TEXTILES • GOVT. OF INDIA',
-      subDept: 'DEVELOPMENT COMMISSIONER (HANDICRAFTS & HANDLOOMS)',
-      badge: 'APEX EXHIBITION STALL PLACARD',
+      labelKey: 'exhibition.stallCard.fair.shilpSamagam.label',
+      shortNameKey: 'exhibition.stallCard.fair.shilpSamagam.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.shilpSamagam.fullName',
+      editionKey: 'exhibition.stallCard.fair.shilpSamagam.edition',
+      venueKey: 'exhibition.stallCard.fair.shilpSamagam.venue',
+      datesKey: 'exhibition.stallCard.fair.shilpSamagam.dates',
+      ministryKey: 'exhibition.stallCard.fair.shilpSamagam.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.shilpSamagam.subDept',
+      badgeKey: 'exhibition.stallCard.fair.shilpSamagam.badge',
       accentColor: '#1e3a8a',
       accentBg: '#dbeafe',
       borderAccent: '#2563eb',
     },
     {
       value: 'dilli-haat-ina',
-      label: 'Dilli Haat Master Crafts Fortnight (INA, New Delhi)',
-      shortName: 'Dilli Haat Fortnight',
-      fullName: 'Dilli Haat Master Crafts Fortnight',
-      edition: 'National Master Craftsmen Rotation • 2026',
-      venue: 'INA Market Complex, Sri Aurobindo Marg, New Delhi',
-      dates: 'Year-Round Rotating Fortnight',
-      ministry: 'DELHI TOURISM & TRANSPORT DEVELOPMENT CORP • GOVT. OF NCT',
-      subDept: 'OFFICE OF DEVELOPMENT COMMISSIONER (HANDICRAFTS)',
-      badge: 'OFFICIAL DILLI HAAT STALL PASS',
+      labelKey: 'exhibition.stallCard.fair.dilliHaat.label',
+      shortNameKey: 'exhibition.stallCard.fair.dilliHaat.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.dilliHaat.fullName',
+      editionKey: 'exhibition.stallCard.fair.dilliHaat.edition',
+      venueKey: 'exhibition.stallCard.fair.dilliHaat.venue',
+      datesKey: 'exhibition.stallCard.fair.dilliHaat.dates',
+      ministryKey: 'exhibition.stallCard.fair.dilliHaat.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.dilliHaat.subDept',
+      badgeKey: 'exhibition.stallCard.fair.dilliHaat.badge',
       accentColor: '#065f46',
       accentBg: '#d1fae5',
       borderAccent: '#059669',
     },
     {
       value: 'saras-mela-2026',
-      label: 'Saras Mela National Exhibition (Patna, Bihar)',
-      shortName: 'Saras Mela National Expo',
-      fullName: 'Saras Mela National Rural Crafts Exhibition',
-      edition: 'National Livelihoods Pavilion • 2026',
-      venue: 'Gandhi Maidan, Patna, Bihar',
-      dates: '10 Dec – 22 Dec 2026',
-      ministry: 'MINISTRY OF RURAL DEVELOPMENT (MoRD) • GOVT. OF INDIA',
-      subDept: 'NATIONAL RURAL LIVELIHOOD MISSION (NRLM) / DEENDAYAL ANTYODAYA',
-      badge: 'OFFICIAL SARAS MELA STALL CARD',
+      labelKey: 'exhibition.stallCard.fair.sarasMela.label',
+      shortNameKey: 'exhibition.stallCard.fair.sarasMela.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.sarasMela.fullName',
+      editionKey: 'exhibition.stallCard.fair.sarasMela.edition',
+      venueKey: 'exhibition.stallCard.fair.sarasMela.venue',
+      datesKey: 'exhibition.stallCard.fair.sarasMela.dates',
+      ministryKey: 'exhibition.stallCard.fair.sarasMela.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.sarasMela.subDept',
+      badgeKey: 'exhibition.stallCard.fair.sarasMela.badge',
       accentColor: '#831843',
       accentBg: '#fce7f3',
       borderAccent: '#db2777',
     },
     {
       value: 'hunar-haat-mumbai',
-      label: 'Hunar Haat Craft Pavilion (BKC, Mumbai)',
-      shortName: 'Hunar Haat Pavilion',
-      fullName: 'Hunar Haat Heritage Craft Pavilion',
-      edition: 'Western Metropolitan Pavilion • 2026',
-      venue: 'MMRDA Grounds, Bandra-Kurla Complex (BKC), Mumbai',
-      dates: '14 Jan – 25 Jan 2026',
-      ministry: 'MINISTRY OF MINORITY AFFAIRS • GOVT. OF INDIA',
-      subDept: 'USTTAD & CRAFT REVIVAL INITIATIVE',
-      badge: 'OFFICIAL HUNAR HAAT PAVILION PLACARD',
+      labelKey: 'exhibition.stallCard.fair.hunarHaat.label',
+      shortNameKey: 'exhibition.stallCard.fair.hunarHaat.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.hunarHaat.fullName',
+      editionKey: 'exhibition.stallCard.fair.hunarHaat.edition',
+      venueKey: 'exhibition.stallCard.fair.hunarHaat.venue',
+      datesKey: 'exhibition.stallCard.fair.hunarHaat.dates',
+      ministryKey: 'exhibition.stallCard.fair.hunarHaat.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.hunarHaat.subDept',
+      badgeKey: 'exhibition.stallCard.fair.hunarHaat.badge',
       accentColor: '#4c1d95',
       accentBg: '#ede9fe',
       borderAccent: '#7c3aed',
@@ -175,7 +175,7 @@
     const text = t('exhibition.stallCard.shareMessage', {
       name: artisanName,
       stall: currentStallDisplay,
-      fair: selectedFairConfig.shortName,
+      fair: t(selectedFairConfig.shortNameKey),
       craft: craftName,
       url: targetUrl,
     });
@@ -210,7 +210,7 @@
           <label for="fair-select" class="field-label">{t('exhibition.stallCard.selectFair')}</label>
           <select id="fair-select" bind:value={selectedFair} class="field-select">
             {#each FAIRS as fair}
-              <option value={fair.value}>{fair.label}</option>
+              <option value={fair.value}>{t(fair.labelKey)}</option>
             {/each}
           </select>
         </div>
@@ -240,23 +240,23 @@
             <div class="placard-gov-header" style="border-color: {selectedFairConfig.accentColor}">
               <div class="emblem-strip">
                 <span class="emblem-text" style="color: {selectedFairConfig.accentColor}">
-                  {selectedFairConfig.ministry}
+                  {t(selectedFairConfig.ministryKey)}
                 </span>
                 <span class="emblem-sub">
-                  {selectedFairConfig.subDept}
+                  {t(selectedFairConfig.subDeptKey)}
                 </span>
               </div>
               <div class="fair-banner">
                 <span class="fair-badge" style="background: {selectedFairConfig.accentColor}">
-                  {selectedFairConfig.badge}
+                  {t(selectedFairConfig.badgeKey)}
                 </span>
-                <h3 class="fair-name">{selectedFairConfig.fullName}</h3>
+                <h3 class="fair-name">{t(selectedFairConfig.fullNameKey)}</h3>
                 <div class="fair-submeta">
-                  <span class="fair-edition">{selectedFairConfig.edition}</span>
+                  <span class="fair-edition">{t(selectedFairConfig.editionKey)}</span>
                   <span class="dot">•</span>
-                  <span class="fair-venue">{selectedFairConfig.venue}</span>
+                  <span class="fair-venue">{t(selectedFairConfig.venueKey)}</span>
                   <span class="dot">•</span>
-                  <span class="fair-dates">{selectedFairConfig.dates}</span>
+                  <span class="fair-dates">{t(selectedFairConfig.datesKey)}</span>
                 </div>
                 <div
                   class="stall-pill"

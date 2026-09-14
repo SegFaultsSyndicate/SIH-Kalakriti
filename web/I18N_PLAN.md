@@ -1045,6 +1045,100 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       locale to match (`npx vitest run` 46/46 confirmed after). Not touching
       any other file with this same bug outside what 3.5/3.6 already
       modified -- left for whichever batch touches those files next.
+  - [x] **3.7** Data files (§4.1b/c) -- seed/demo content standing in for
+        real backend catalog data, which per §4.1 must also become
+        catalogue keys so it renders correctly in all 20 languages even
+        when the backend is down (D8), as distinct from genuine simulated
+        backend content (an artisan's own listing translations) which
+        stays untranslated by design.
+    - Fixed: `apps/buyer/src/lib/stub-listings.ts` (`StubItem.title` ->
+      `titleKey: MessageKey`, 65 numbered `stub.listing.<NN>.title` keys
+      plus a `stub.listing.descriptionTemplate`; `toListing`/
+      `stubListingsForQuery` now take a `t` function and resolve lazily
+      per call instead of eagerly building a stale `PAIRS` array; only
+      consumer `search/+page.svelte` updated to pass `t`).
+    - Fixed: `apps/buyer/src/lib/craft-categories.ts` (removed the
+      `hindiName` anti-pattern -- a hardcoded Hindi string shown to every
+      locale regardless of the picked language -- replaced with
+      `nativeNameKey`/`subtitleKey`/`taglineKey`; `name` kept as-is since
+      it's a stable identifier matched against in `/search?category=`
+      routing; `nameKey` reuses the pre-existing `craft.<id>.name` keys
+      from the artisan registration flow rather than duplicating them).
+      Consumers `ArtisanCraftGrid.svelte` and `CategorySubnav.svelte`
+      updated to render all four fields through `t()`.
+    - Fixed: `apps/buyer/src/routes/gi-tagged/+page.svelte` -- the biggest
+      item in this batch. `GI_PRODUCTS`' 11 product titles converted to
+      `titleKey` (sort comparator, share-link toast, img alt, and the
+      product `<h3>` all updated to resolve through `t()`). All 7 sidebar
+      filter arrays (`COLOR_SWATCHES`, `PRICE_TIERS`, `CATEGORY_FILTERS`,
+      `WEAVING_STYLES`, `PATTERN_TYPES`, `FABRICS`, `DISCOUNT_TIERS`)
+      converted to the dual-field pattern: the original `label`/`name`
+      field is kept untouched as the stable value compared in filter-state
+      logic (`selectedCategory === cat.label`, etc.), with a new
+      `labelKey`/`nameKey: MessageKey` field added purely for display.
+      `CATEGORY_FILTERS`' 12 craft-name entries reuse the same pre-existing
+      `craft.<id>.name` keys as `craft-categories.ts` (DRY); its 3
+      non-craft entries (Home and living, Furniture, Discounted Products)
+      got new `giTagged.category.*` keys. TypeScript required each array
+      to carry an explicit type annotation (`{ label: string; labelKey:
+      MessageKey; ... }[]`) since a bare array literal widens `labelKey`
+      to `string`, which fails against the `MessageKey` union at every
+      `t()` call site -- caught immediately by svelte-check.
+    - Fixed: `apps/buyer/src/lib/RegionalBeltNavigator.svelte` -- the top-
+      level belt fields were already wired from an earlier batch; this
+      pass converted the remaining gap, the 20 `featuredCrafts[].name`
+      entries (4 per belt x 5 belts), to `nameKey` against 20 new
+      `home.belts.<region>.craft.<n>.name` keys.
+    - Fixed: `apps/buyer/src/lib/SellerShowcaseBanner.svelte` -- the 3
+      seller `testimonials` (name/title/cluster/craft/quote, 15 fields
+      total) converted to `*Key: MessageKey` fields against 15 new
+      `sellerShowcase.testimonial.<n>.*` keys.
+    - Fixed: `apps/buyer/src/lib/VoicesReelCarousel.svelte` -- required a
+      slightly different shape than the other data files because
+      `FALLBACK_STORIES` must satisfy the real `ProcessClip` API type
+      (`title`/`artisan_name`/`craft_discipline` as plain strings) when
+      assigned into the same `clips` list a live `getProcessFeed()` result
+      populates. Introduced a separate `FallbackStory` raw-key type,
+      resolved into a `StoryItem` via a new `toStoryItem()` helper, and
+      changed `clips` from a `$state` snapshot assigned once in `onMount`
+      to a `$derived` over `apiClips` (`$state<ProcessClip[] | null>`) so
+      the fallback path re-resolves reactively if the locale changes
+      instead of freezing at whatever locale was active when the backend
+      call failed. 18 new `home.voices.story.<n>.*` keys (title/
+      artisanName/craftDiscipline x 6 stories); `cluster_origin` left
+      untouched since it's carried in the data but never actually rendered
+      by the template.
+    - Fixed: `apps/artisan/src/lib/StallCardModal.svelte` -- the 5-fair
+      `FAIRS` array (official government mela placard data shown to every
+      artisan) converted to `*Key: MessageKey` fields (label/shortName/
+      fullName/edition/venue/dates/ministry/subDept/badge, 9 per fair x 5
+      fairs = 45 new `exhibition.stallCard.fair.<slug>.*` keys); `value`
+      (the select-binding/URL-param identifier) and the three color
+      fields left untouched. `handleShare()`'s WhatsApp message and every
+      placard render site (`<option>`, government emblem strip, fair
+      banner/badge/name/submeta) updated to resolve through `t()`.
+    - Confirmed false positives / correctly left untranslated (no changes):
+      `apps/buyer/src/lib/craft-icon.ts` (pure icon-mapping logic on craft
+      slug substrings, no user-visible text); `apps/artisan/src/lib/
+      demo-listing.ts` and `ml-mock.ts` (both simulate a specific artisan's
+      own real listing content -- per §4.1's carve-out this renders in
+      whatever language the artisan typed and is never translated, unlike
+      the seed/demo catalog data this batch converted); `apps/artisan/src/
+      lib/ontology.ts` (pre-existing concurrent WIP for an unrelated b2b/
+      trends feature, untouched by this session per the standing rule
+      against touching other in-flight work).
+    - en.ts grew 2214 -> 2363 keys across this batch's four commits.
+      `i18n-baseline.json` ceilings updated to match real per-locale audit
+      counts after each. `npx vitest run` (46/46) and `apps/buyer` +
+      `apps/artisan` svelte-check (767 / 961 files, 0 errors each) all
+      clean at the end of the batch. Spot-verified live in the buyer dev
+      server with the backend intentionally down (every `/api/v1/*` proxy
+      call failing with `ECONNREFUSED`): `RegionalBeltNavigator`'s
+      featured-craft names, `SellerShowcaseBanner`'s testimonial names, and
+      `VoicesReelCarousel`'s fallback artisan/craft names all rendered
+      correctly through the fallback path, and `/gi-tagged` rendered its
+      full product grid and all 7 filter groups with translated labels and
+      zero console errors beyond the expected backend-down proxy noise.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.

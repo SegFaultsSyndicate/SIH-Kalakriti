@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Dialog, Button } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getProcessFeed, type components } from '@kalakriti/api';
@@ -17,7 +17,7 @@
 
   const t = $derived(locale.t);
 
-  let clips = $state<ProcessClip[]>([]);
+  let apiClips = $state<ProcessClip[] | null>(null);
   let activeIndex = $state<number | null>(null);
   let isStoryOpen = $state(false);
   let isAudioMuted = $state(true);
@@ -29,79 +29,103 @@
     cluster_origin?: string;
   }
 
-  const FALLBACK_STORIES: StoryItem[] = [
+  interface FallbackStory {
+    listing_id: string;
+    listing_slug: string;
+    titleKey: MessageKey;
+    artisanNameKey: MessageKey;
+    thumbnail_url: string;
+    craftDisciplineKey: MessageKey;
+    cluster_origin: string;
+    video_url: string;
+  }
+
+  const FALLBACK_STORIES: FallbackStory[] = [
     {
       listing_id: 'story-1',
       listing_slug: 'ajrakh-indigo-stole',
-      title: '16-Stage Natural Indigo Vat Immersion',
-      artisan_name: 'Ismail Khatri',
+      titleKey: 'home.voices.story.1.title',
+      artisanNameKey: 'home.voices.story.1.artisanName',
       thumbnail_url: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
-      craft_discipline: 'Ajrakh Print',
+      craftDisciplineKey: 'home.voices.story.1.craftDiscipline',
       cluster_origin: 'Dhamadka, Kutch',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     },
     {
       listing_id: 'story-2',
       listing_slug: 'banarasi-kadwa-silk',
-      title: 'Kadwa Pit-Loom Zari Interlocking',
-      artisan_name: 'Mohammad Kabir Ansari',
+      titleKey: 'home.voices.story.2.title',
+      artisanNameKey: 'home.voices.story.2.artisanName',
       thumbnail_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
-      craft_discipline: 'Kadwa Weave',
+      craftDisciplineKey: 'home.voices.story.2.craftDiscipline',
       cluster_origin: 'Varanasi, UP',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     },
     {
       listing_id: 'story-3',
       listing_slug: 'kashmir-pashmina-shawl',
-      title: 'Sozni Needle Stitching on Changthangi Wool',
-      artisan_name: 'Ghulam Nabi Mir',
+      titleKey: 'home.voices.story.3.title',
+      artisanNameKey: 'home.voices.story.3.artisanName',
       thumbnail_url: '/craft-images/embroidery/kashmir_pashmina_sozni_01.jpeg',
-      craft_discipline: 'Sozni Needle',
+      craftDisciplineKey: 'home.voices.story.3.craftDiscipline',
       cluster_origin: 'Srinagar, J&K',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     },
     {
       listing_id: 'story-4',
       listing_slug: 'dhokra-brass-figurine',
-      title: 'Lost-Wax Molten Bell Metal Curing',
-      artisan_name: 'Budheshwar Ghadwa',
+      titleKey: 'home.voices.story.4.title',
+      artisanNameKey: 'home.voices.story.4.artisanName',
       thumbnail_url: '/craft-images/metalwork/dhokra-casting.jpg',
-      craft_discipline: 'Lost-Wax',
+      craftDisciplineKey: 'home.voices.story.4.craftDiscipline',
       cluster_origin: 'Bastar, CG',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
     },
     {
       listing_id: 'story-5',
       listing_slug: 'pochampally-double-ikat',
-      title: 'Tie-and-Dye Warp Tension Calculation',
-      artisan_name: 'Savitriamma Devadas',
+      titleKey: 'home.voices.story.5.title',
+      artisanNameKey: 'home.voices.story.5.artisanName',
       thumbnail_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
-      craft_discipline: 'Double-Ikat',
+      craftDisciplineKey: 'home.voices.story.5.craftDiscipline',
       cluster_origin: 'Pochampally, TG',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
     },
     {
       listing_id: 'story-6',
       listing_slug: 'nizamabad-black-pottery',
-      title: 'Smoke Kiln Clay Reduction Firing',
-      artisan_name: 'Ram Prakash Prajapati',
+      titleKey: 'home.voices.story.6.title',
+      artisanNameKey: 'home.voices.story.6.artisanName',
       thumbnail_url: '/craft-images/pottery/nizamabad-black-pottery.jpg',
-      craft_discipline: 'Black Pottery',
+      craftDisciplineKey: 'home.voices.story.6.craftDiscipline',
       cluster_origin: 'Nizamabad, UP',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
     },
   ];
 
+  function toStoryItem(raw: FallbackStory): StoryItem {
+    return {
+      listing_id: raw.listing_id,
+      listing_slug: raw.listing_slug,
+      title: t(raw.titleKey),
+      artisan_name: t(raw.artisanNameKey),
+      thumbnail_url: raw.thumbnail_url,
+      craft_discipline: t(raw.craftDisciplineKey),
+      cluster_origin: raw.cluster_origin,
+      video_url: raw.video_url,
+    };
+  }
+
+  const clips = $derived(
+    apiClips && apiClips.length > 0 ? apiClips : FALLBACK_STORIES.map(toStoryItem)
+  );
+
   onMount(async () => {
     try {
       const res = await getProcessFeed();
-      if (res.clips && res.clips.length > 0) {
-        clips = res.clips;
-      } else {
-        clips = FALLBACK_STORIES;
-      }
+      apiClips = res.clips ?? [];
     } catch {
-      clips = FALLBACK_STORIES;
+      apiClips = [];
     }
   });
 
