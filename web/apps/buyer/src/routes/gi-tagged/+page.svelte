@@ -15,7 +15,7 @@
     - Direct Order & Social Share copy actions
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Breadcrumbs, type BreadcrumbItem, Money, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { wishlist } from '$lib/wishlist.svelte';
@@ -48,7 +48,7 @@
 
   interface GIProduct {
     id: string;
-    title: string;
+    titleKey: MessageKey;
     craftName: string;
     giRegNo: string;
     state: string;
@@ -67,7 +67,7 @@
   const GI_PRODUCTS: GIProduct[] = [
     {
       id: 'gi-1',
-      title: 'Aipanart Decoration Sri Goljyu Mahraz Painting 1212',
+      titleKey: 'giTagged.product.gi-1.title',
       craftName: 'Uttarakhand Aipan Art',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
@@ -81,7 +81,7 @@
     },
     {
       id: 'gi-2',
-      title: 'Aipanart Decorations Sri Krishna Balgopal 1212',
+      titleKey: 'giTagged.product.gi-2.title',
       craftName: 'Uttarakhand Aipan Art',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
@@ -95,7 +95,7 @@
     },
     {
       id: 'gi-3',
-      title: 'Handcrafted Aipan Art Laxmi Aipan Gmr2424',
+      titleKey: 'giTagged.product.gi-3.title',
       craftName: 'Uttarakhand Aipan Art',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
@@ -109,7 +109,7 @@
     },
     {
       id: 'gi-4',
-      title: 'Handcrafted Aipan Art Ganesh Aipan Gmr2424',
+      titleKey: 'giTagged.product.gi-4.title',
       craftName: 'Uttarakhand Aipan Art',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
@@ -123,7 +123,7 @@
     },
     {
       id: 'gi-5',
-      title: 'Kutch Botanical Indigo Ajrakh Bedcover Set',
+      titleKey: 'giTagged.product.gi-5.title',
       craftName: 'Ajrakh Block Print',
       giRegNo: 'GI-384',
       state: 'Gujarat',
@@ -137,7 +137,7 @@
     },
     {
       id: 'gi-6',
-      title: 'Varanasi Pure Kadwa Zari Brocade Silk Saree',
+      titleKey: 'giTagged.product.gi-6.title',
       craftName: 'Banarasi Brocade',
       giRegNo: 'GI-99',
       state: 'Uttar Pradesh',
@@ -151,7 +151,7 @@
     },
     {
       id: 'gi-7',
-      title: 'Kashmir Hand-Spun Sozni Pashmina Shawl',
+      titleKey: 'giTagged.product.gi-7.title',
       craftName: 'Kashmir Pashmina',
       giRegNo: 'GI-46',
       state: 'Jammu & Kashmir',
@@ -165,7 +165,7 @@
     },
     {
       id: 'gi-8',
-      title: 'Bastar Bell Metal Traditional Bull & Deity',
+      titleKey: 'giTagged.product.gi-8.title',
       craftName: 'Bastar Dhokra',
       giRegNo: 'GI-83',
       state: 'Chhattisgarh',
@@ -179,7 +179,7 @@
     },
     {
       id: 'gi-9',
-      title: 'Jaipur Hand-Turned Quartz Blue Pottery Vase',
+      titleKey: 'giTagged.product.gi-9.title',
       craftName: 'Blue Pottery',
       giRegNo: 'GI-180',
       state: 'Rajasthan',
@@ -193,7 +193,7 @@
     },
     {
       id: 'gi-10',
-      title: 'Madhubani Kohbar Mithila Fine Line Painting',
+      titleKey: 'giTagged.product.gi-10.title',
       craftName: 'Madhubani Painting',
       giRegNo: 'GI-105',
       state: 'Bihar',
@@ -207,7 +207,7 @@
     },
     {
       id: 'gi-12',
-      title: 'Patan Double-Ikat Silk Heritage Dupatta',
+      titleKey: 'giTagged.product.gi-12.title',
       craftName: 'Patan Patola',
       giRegNo: 'GI-232',
       state: 'Gujarat',
@@ -222,81 +222,81 @@
   ];
 
   // Colors from Image 4
-  const COLOR_SWATCHES = [
-    { name: 'Royal Blue', hex: '#0033cc' },
-    { name: 'Raw Ivory', hex: '#fdfcf0' },
-    { name: 'Kutch Ochre', hex: '#c68237' },
-    { name: 'Madder Maroon', hex: '#8c2323' },
-    { name: 'Pale Haldi', hex: '#fff9d2' },
-    { name: 'Bright Haldi', hex: '#ffd200' },
-    { name: 'Deep Crimson', hex: '#730000' },
-    { name: 'Brass Gold', hex: '#f4c430' },
-    { name: 'Marigold Orange', hex: '#ff9900' },
-    { name: 'Gulabi Pink', hex: '#f8b9cb' },
-    { name: 'Sindoor Red', hex: '#e60000' },
-    { name: 'Forest Teal', hex: '#007a78' },
+  const COLOR_SWATCHES: { name: string; nameKey: MessageKey; hex: string }[] = [
+    { name: 'Royal Blue', nameKey: 'giTagged.color.1', hex: '#0033cc' },
+    { name: 'Raw Ivory', nameKey: 'giTagged.color.2', hex: '#fdfcf0' },
+    { name: 'Kutch Ochre', nameKey: 'giTagged.color.3', hex: '#c68237' },
+    { name: 'Madder Maroon', nameKey: 'giTagged.color.4', hex: '#8c2323' },
+    { name: 'Pale Haldi', nameKey: 'giTagged.color.5', hex: '#fff9d2' },
+    { name: 'Bright Haldi', nameKey: 'giTagged.color.6', hex: '#ffd200' },
+    { name: 'Deep Crimson', nameKey: 'giTagged.color.7', hex: '#730000' },
+    { name: 'Brass Gold', nameKey: 'giTagged.color.8', hex: '#f4c430' },
+    { name: 'Marigold Orange', nameKey: 'giTagged.color.9', hex: '#ff9900' },
+    { name: 'Gulabi Pink', nameKey: 'giTagged.color.10', hex: '#f8b9cb' },
+    { name: 'Sindoor Red', nameKey: 'giTagged.color.11', hex: '#e60000' },
+    { name: 'Forest Teal', nameKey: 'giTagged.color.12', hex: '#007a78' },
   ];
 
   // Price Tiers from Image 4
-  const PRICE_TIERS = [
-    { label: '₹0 - ₹999', min: 0, max: 99999, count: 20 },
-    { label: '₹1,000 - ₹1,999', min: 100000, max: 199999, count: 9 },
-    { label: '₹2,000 - ₹2,999', min: 200000, max: 299999, count: 9 },
-    { label: '₹3,000 - ₹3,999', min: 300000, max: 399999, count: 7 },
-    { label: '₹4,000 - ₹4,999', min: 400000, max: 499999, count: 10 },
-    { label: '₹5,000 - ₹5,999', min: 500000, max: 599999, count: 13 },
-    { label: '₹6,000 - ₹6,999', min: 600000, max: 699999, count: 5 },
-    { label: '₹7,000 - ₹7,999', min: 700000, max: 799999, count: 4 },
-    { label: '₹9,000 - ₹9,999', min: 900000, max: 999999, count: 2 },
-    { label: '₹10,000 and above', min: 1000000, max: 999999999, count: 27 },
+  const PRICE_TIERS: { label: string; labelKey: MessageKey; min: number; max: number; count: number }[] = [
+    { label: '₹0 - ₹999', labelKey: 'giTagged.priceTier.1', min: 0, max: 99999, count: 20 },
+    { label: '₹1,000 - ₹1,999', labelKey: 'giTagged.priceTier.2', min: 100000, max: 199999, count: 9 },
+    { label: '₹2,000 - ₹2,999', labelKey: 'giTagged.priceTier.3', min: 200000, max: 299999, count: 9 },
+    { label: '₹3,000 - ₹3,999', labelKey: 'giTagged.priceTier.4', min: 300000, max: 399999, count: 7 },
+    { label: '₹4,000 - ₹4,999', labelKey: 'giTagged.priceTier.5', min: 400000, max: 499999, count: 10 },
+    { label: '₹5,000 - ₹5,999', labelKey: 'giTagged.priceTier.6', min: 500000, max: 599999, count: 13 },
+    { label: '₹6,000 - ₹6,999', labelKey: 'giTagged.priceTier.7', min: 600000, max: 699999, count: 5 },
+    { label: '₹7,000 - ₹7,999', labelKey: 'giTagged.priceTier.8', min: 700000, max: 799999, count: 4 },
+    { label: '₹9,000 - ₹9,999', labelKey: 'giTagged.priceTier.9', min: 900000, max: 999999, count: 2 },
+    { label: '₹10,000 and above', labelKey: 'giTagged.priceTier.10', min: 1000000, max: 999999999, count: 27 },
   ];
 
-  const CATEGORY_FILTERS = [
-    { label: 'Weaving', count: 38 },
-    { label: 'Block printing', count: 14 },
-    { label: 'Pottery', count: 11 },
-    { label: 'Metalwork', count: 19 },
-    { label: 'Woodwork', count: 16 },
-    { label: 'Embroidery', count: 21 },
-    { label: 'Painting', count: 61 },
-    { label: 'Basketry', count: 8 },
-    { label: 'Jewellery', count: 12 },
-    { label: 'Leatherwork', count: 7 },
-    { label: 'Stone carving', count: 9 },
-    { label: 'Bamboo craft', count: 15 },
-    { label: 'Home and living', count: 22 },
-    { label: 'Furniture', count: 6 },
-    { label: 'Discounted Products', count: 5 },
+  const CATEGORY_FILTERS: { label: string; labelKey: MessageKey; count: number }[] = [
+    { label: 'Weaving', labelKey: 'craft.weaving.name', count: 38 },
+    { label: 'Block printing', labelKey: 'craft.block-printing.name', count: 14 },
+    { label: 'Pottery', labelKey: 'craft.pottery.name', count: 11 },
+    { label: 'Metalwork', labelKey: 'craft.metalwork.name', count: 19 },
+    { label: 'Woodwork', labelKey: 'craft.woodwork.name', count: 16 },
+    { label: 'Embroidery', labelKey: 'craft.embroidery.name', count: 21 },
+    { label: 'Painting', labelKey: 'craft.painting.name', count: 61 },
+    { label: 'Basketry', labelKey: 'craft.basketry.name', count: 8 },
+    { label: 'Jewellery', labelKey: 'craft.jewellery.name', count: 12 },
+    { label: 'Leatherwork', labelKey: 'craft.leather.name', count: 7 },
+    { label: 'Stone carving', labelKey: 'craft.stone.name', count: 9 },
+    { label: 'Bamboo craft', labelKey: 'craft.bamboo.name', count: 15 },
+    { label: 'Home and living', labelKey: 'giTagged.category.homeAndLiving', count: 22 },
+    { label: 'Furniture', labelKey: 'giTagged.category.furniture', count: 6 },
+    { label: 'Discounted Products', labelKey: 'giTagged.category.discountedProducts', count: 5 },
   ];
 
   // Weaving Style Filters (from IndiaHandmade reference)
-  const WEAVING_STYLES = [
-    { label: 'Handloom with extra-weft thread/zari work', count: 6 },
-    { label: 'Kanjeevaram / Kanchipuram', count: 1 },
+  const WEAVING_STYLES: { label: string; labelKey: MessageKey; count: number }[] = [
+    { label: 'Handloom with extra-weft thread/zari work', labelKey: 'giTagged.weavingStyle.1', count: 6 },
+    { label: 'Kanjeevaram / Kanchipuram', labelKey: 'giTagged.weavingStyle.2', count: 1 },
   ];
 
   // Print or Pattern Type (from IndiaHandmade reference)
-  const PATTERN_TYPES = [
-    { label: 'Checkered', count: 1 },
-    { label: 'Ethnic Motif', count: 1 },
-    { label: 'Others', count: 5 },
+  const PATTERN_TYPES: { label: string; labelKey: MessageKey; count: number }[] = [
+    { label: 'Checkered', labelKey: 'giTagged.patternType.1', count: 1 },
+    { label: 'Ethnic Motif', labelKey: 'giTagged.patternType.2', count: 1 },
+    { label: 'Others', labelKey: 'giTagged.patternType.3', count: 5 },
   ];
 
   // Fabric Filters (from IndiaHandmade reference)
-  const FABRICS = [
-    { label: 'Cotton', count: 4 },
-    { label: 'Silk', count: 7 },
-    { label: 'Wool', count: 5 },
-    { label: 'Khadi', count: 11 },
-    { label: 'Other', count: 1 },
+  const FABRICS: { label: string; labelKey: MessageKey; count: number }[] = [
+    { label: 'Cotton', labelKey: 'giTagged.fabricOption.1', count: 4 },
+    { label: 'Silk', labelKey: 'giTagged.fabricOption.2', count: 7 },
+    { label: 'Wool', labelKey: 'giTagged.fabricOption.3', count: 5 },
+    { label: 'Khadi', labelKey: 'giTagged.fabricOption.4', count: 11 },
+    { label: 'Other', labelKey: 'giTagged.fabricOption.5', count: 1 },
   ];
 
   // Discount Tiers (from IndiaHandmade reference)
-  const DISCOUNT_TIERS = [
-    { label: '10% and above', minPct: 10, count: 95 },
-    { label: '20% and above', minPct: 20, count: 51 },
-    { label: '30% and above', minPct: 30, count: 11 },
-    { label: '40% and above', minPct: 40, count: 5 },
+  const DISCOUNT_TIERS: { label: string; labelKey: MessageKey; minPct: number; count: number }[] = [
+    { label: '10% and above', labelKey: 'giTagged.discountTier.1', minPct: 10, count: 95 },
+    { label: '20% and above', labelKey: 'giTagged.discountTier.2', minPct: 20, count: 51 },
+    { label: '30% and above', labelKey: 'giTagged.discountTier.3', minPct: 30, count: 11 },
+    { label: '40% and above', labelKey: 'giTagged.discountTier.4', minPct: 40, count: 5 },
   ];
 
   const filteredProducts = $derived(
@@ -329,7 +329,7 @@
       if (sortBy === 'price_asc') return a.price - b.price;
       if (sortBy === 'price_desc') return b.price - a.price;
       if (sortBy === 'discount') return b.discountPct - a.discountPct;
-      return a.title.localeCompare(b.title);
+      return t(a.titleKey).localeCompare(t(b.titleKey));
     }),
   );
 
@@ -338,7 +338,7 @@
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
         showToast({
-          message: t('giTagged.linkCopiedToast', { title: prod.title }),
+          message: t('giTagged.linkCopiedToast', { title: t(prod.titleKey) }),
           variant: 'success',
         });
       });
@@ -415,7 +415,7 @@
                   class:active={selectedCategory === cat.label}
                   onclick={() => (selectedCategory = selectedCategory === cat.label ? 'all' : cat.label)}
                 >
-                  <span class="option-name">{cat.label}</span>
+                  <span class="option-name">{t(cat.labelKey)}</span>
                   <span class="option-count">({cat.count})</span>
                 </button>
               </li>
@@ -446,7 +446,7 @@
                   class:active={selectedPriceRange === tier.label}
                   onclick={() => (selectedPriceRange = selectedPriceRange === tier.label ? null : tier.label)}
                 >
-                  <span class="option-name">{tier.label}</span>
+                  <span class="option-name">{t(tier.labelKey)}</span>
                   <span class="option-count">({tier.count})</span>
                 </button>
               </li>
@@ -475,8 +475,8 @@
                 class="swatch-circle"
                 class:active={selectedColor === swatch.hex}
                 style="background-color: {swatch.hex};"
-                title={swatch.name}
-                aria-label={`Filter by ${swatch.name}`}
+                title={t(swatch.nameKey)}
+                aria-label={t('giTagged.colorFilterAriaLabel', { color: t(swatch.nameKey) })}
                 onclick={() => (selectedColor = selectedColor === swatch.hex ? null : swatch.hex)}
               >
                 {#if selectedColor === swatch.hex}
@@ -510,7 +510,7 @@
                   class:active={selectedWeavingStyle === style.label}
                   onclick={() => (selectedWeavingStyle = selectedWeavingStyle === style.label ? null : style.label)}
                 >
-                  <span class="option-name">{style.label}</span>
+                  <span class="option-name">{t(style.labelKey)}</span>
                   <span class="option-count">({style.count})</span>
                 </button>
               </li>
@@ -541,7 +541,7 @@
                   class:active={selectedPattern === pat.label}
                   onclick={() => (selectedPattern = selectedPattern === pat.label ? null : pat.label)}
                 >
-                  <span class="option-name">{pat.label}</span>
+                  <span class="option-name">{t(pat.labelKey)}</span>
                   <span class="option-count">({pat.count})</span>
                 </button>
               </li>
@@ -572,7 +572,7 @@
                   class:active={selectedFabric === fab.label}
                   onclick={() => (selectedFabric = selectedFabric === fab.label ? null : fab.label)}
                 >
-                  <span class="option-name">{fab.label}</span>
+                  <span class="option-name">{t(fab.labelKey)}</span>
                   <span class="option-count">({fab.count})</span>
                 </button>
               </li>
@@ -603,7 +603,7 @@
                   class:active={selectedDiscount === disc.minPct}
                   onclick={() => (selectedDiscount = selectedDiscount === disc.minPct ? null : disc.minPct)}
                 >
-                  <span class="option-name">{disc.label}</span>
+                  <span class="option-name">{t(disc.labelKey)}</span>
                   <span class="option-count">({disc.count})</span>
                 </button>
               </li>
@@ -705,7 +705,7 @@
                 <a href={`/listing/${prod.id}`} class="gi-media-link">
                   <img
                     src={prod.image}
-                    alt={`${prod.title} - ${prod.craftName}`}
+                    alt={`${t(prod.titleKey)} - ${prod.craftName}`}
                     loading="lazy"
                     class="gi-product-img"
                   />
@@ -758,7 +758,7 @@
                 </div>
 
                 <h3 class="gi-product-title">
-                  <a href={`/listing/${prod.id}`}>{prod.title}</a>
+                  <a href={`/listing/${prod.id}`}>{t(prod.titleKey)}</a>
                 </h3>
 
                 <p class="artisan-byline">
@@ -787,7 +787,7 @@
                     type="button"
                     class="gi-wishlist-btn"
                     class:is-wishlisted={wishlist.has(prod.id)}
-                    onclick={(e) => { e.preventDefault(); wishlist.toggle(prod.id, prod.title); }}
+                    onclick={(e) => { e.preventDefault(); wishlist.toggle(prod.id, t(prod.titleKey)); }}
                     title={wishlist.has(prod.id) ? t('listingCard.removeFromWishlist') : t('listingCard.addToWishlist')}
                     aria-label={t('listingCard.wishlistAriaLabel')}
                   >
