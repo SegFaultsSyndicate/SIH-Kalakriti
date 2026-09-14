@@ -150,6 +150,17 @@ class LocaleState {
   }
 
   /**
+   * Tooltip resolver getter. Re-derives when code, version, or catalogue changes.
+   */
+  get tooltip(): (key: MessageKey) => string {
+    void this.#code;
+    void this.#catalogue;
+    void this.#hiCatalogue;
+    void this.#version;
+    return (key: MessageKey) => this.#lookup(key);
+  }
+
+  /**
    * Plural-aware translate. `base.one` / `base.other` (etc, per CLDR
    * category) are looked up as ordinary keys through the same active -> hi ->
    * en chain as `t`; `base.other` is the required fallback if the selected
@@ -240,5 +251,5 @@ export function tPlural(base: string, count: number, values?: MessageValues): st
  * No endonym or fallback marker is appended. Every key must exist in en.ts.
  */
 export function tooltip(key: MessageKey): string {
-  return locale.t(key);
+  return locale.tooltip(key);
 }

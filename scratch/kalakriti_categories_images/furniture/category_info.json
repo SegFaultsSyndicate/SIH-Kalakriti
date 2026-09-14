@@ -1,0 +1,27 @@
+{
+  "category_id": "furniture",
+  "category_name": "Furniture",
+  "hindi_name": "फर्नीचर व काष्ठ सज्जा",
+  "description": "Solid wood accent chairs, carved cabinets, inlaid stools, and sustainable cane patio furnishings.",
+  "gi_certified_count": 8,
+  "listings_summary": [
+    {
+      "craft_slug": "jodhpur-furniture",
+      "craft_name": "Jodhpur Handcrafted Furniture",
+      "title_en": "Jodhpur Hand-Turned Camel Bone Inlay Moroccan Pattern Bedside Cabinet",
+      "title_hi": "जोधपुर का हाथ से जड़ा ऊंट की हड्डी इनले वाला बेडसाइड कैबिनेट",
+      "artisan": "Gopal Suthar",
+      "region": "Sangaria, Jodhpur, Rajasthan",
+      "image_filename": "jodhpur-furniture.jpg"
+    },
+    {
+      "craft_slug": "saharanpur-wood-carving",
+      "craft_name": "Saharanpur Wood Carving & Furniture",
+      "title_en": "Hand-Carved Floral Lattice Sheesham Wood Foldable Accent Table",
+      "title_hi": "हाथ से नक्काशीदार शीशम की लकड़ी की नक्काशी वाली फोल्डेबल तिपाई टेबल",
+      "artisan": "Irfan Ahmed Ansari",
+      "region": "Sheikhpura, Saharanpur, Uttar Pradesh",
+      "image_filename": "saharanpur-wood-carving.jpg"
+    }
+  ]
+}

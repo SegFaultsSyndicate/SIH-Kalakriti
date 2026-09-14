@@ -6,15 +6,21 @@
   Adheres to Svelte 5 runes ($state, $derived, $effect).
 -->
 <script lang="ts">
-  import { tooltip } from '@kalakriti/i18n';
+  import { locale, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
   import { session, getAccessToken, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
   import { showToast, Tooltip } from '@kalakriti/ui';
+  import { currency, CURRENCY_RATES } from './currency.svelte';
 
   let isOpen = $state(false);
+  let isCurrencyMenuOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
   let popoverPanel: HTMLDivElement | null = $state(null);
+  let currencyWrapper: HTMLDivElement | null = $state(null);
+
+  const tt = $derived(locale.tooltip);
+  const currencyOptions = Object.keys(CURRENCY_RATES) as CurrencyCode[];
 
   const isAuthenticated = $derived(session.status === 'authenticated' || !!getAccessToken());
   const userName = $derived(
@@ -29,15 +35,30 @@
 
   function toggleMenu(): void {
     isOpen = !isOpen;
+    if (!isOpen) isCurrencyMenuOpen = false;
   }
 
   function closeMenu(): void {
     isOpen = false;
+    isCurrencyMenuOpen = false;
+  }
+
+  function toggleCurrencyMenu(): void {
+    isCurrencyMenuOpen = !isCurrencyMenuOpen;
+  }
+
+  function selectCurrency(code: CurrencyCode): void {
+    currency.set(code);
+    isCurrencyMenuOpen = false;
   }
 
   function handleKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && isOpen) {
-      isOpen = false;
+    if (e.key === 'Escape') {
+      if (isCurrencyMenuOpen) {
+        isCurrencyMenuOpen = false;
+      } else if (isOpen) {
+        isOpen = false;
+      }
     }
   }
 
@@ -46,6 +67,7 @@
     setRefreshToken(undefined);
     session.clear();
     isOpen = false;
+    isCurrencyMenuOpen = false;
     showToast({ message: 'Signed out successfully', variant: 'info' });
     void goto('/');
   }
@@ -57,6 +79,9 @@
     function handleClickOutside(event: MouseEvent): void {
       if (menuContainer && !menuContainer.contains(event.target as Node)) {
         isOpen = false;
+        isCurrencyMenuOpen = false;
+      } else if (isCurrencyMenuOpen && currencyWrapper && !currencyWrapper.contains(event.target as Node)) {
+        isCurrencyMenuOpen = false;
       }
     }
 
@@ -92,7 +117,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="account-menu" bind:this={menuContainer}>
-  <Tooltip text={tooltip('tooltip.account')}>
+  <Tooltip text={tt('tooltip.account')}>
     {#snippet trigger(props)}
       <button
         type="button"
@@ -250,9 +275,50 @@
         </div>
       </div>
 
-      {#if isAuthenticated}
-        <div class="popover-footer">
-          <Tooltip text={tooltip('tooltip.signout')}>
+      <div class="popover-footer">
+        <div class="currency-picker-wrapper" bind:this={currencyWrapper}>
+          <Tooltip text={tt('tooltip.currency')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="currency-btn"
+                onclick={toggleCurrencyMenu}
+                aria-expanded={isCurrencyMenuOpen}
+                aria-haspopup="true"
+                aria-label="Change currency"
+                {...tp}
+              >
+                <Icon name="dollar-sign" size="0.9rem" />
+                <span>Change currency</span>
+              </button>
+            {/snippet}
+          </Tooltip>
+
+          {#if isCurrencyMenuOpen}
+            <ul class="currency-dropdown" role="list">
+              {#each currencyOptions as code (code)}
+                <li>
+                  <button
+                    type="button"
+                    class="currency-option"
+                    class:currency-option--active={currency.code === code}
+                    aria-current={currency.code === code ? 'true' : undefined}
+                    onclick={() => selectCurrency(code)}
+                  >
+                    <span class="currency-option__code">{code}</span>
+                    <span class="currency-option__symbol">{CURRENCY_META[code].symbol}</span>
+                    {#if currency.code === code}
+                      <Icon name="check" size="0.85rem" />
+                    {/if}
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        </div>
+
+        {#if isAuthenticated}
+          <Tooltip text={tt('tooltip.signout')}>
             {#snippet trigger(tp)}
               <button type="button" class="signout-btn" onclick={handleSignOut} {...tp}>
                 <Icon name="lock" size="0.9rem" />
@@ -260,8 +326,8 @@
               </button>
             {/snippet}
           </Tooltip>
-        </div>
-      {/if}
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -577,7 +643,85 @@
     background-color: var(--k-surface-base);
     border-block-start: 1px solid var(--k-border-subtle);
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-2, 0.5rem);
+    position: relative;
+  }
+
+  .currency-picker-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .currency-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: none;
+    color: var(--k-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    font-family: inherit;
+    transition: background-color var(--k-duration-fast, 150ms) ease, color var(--k-duration-fast, 150ms) ease;
+  }
+
+  .currency-btn:hover {
+    background-color: var(--k-surface-neutral);
+    color: var(--k-text-primary);
+  }
+
+  .currency-dropdown {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: calc(100% + 0.4rem);
+    min-inline-size: 11rem;
+    max-block-size: 14rem;
+    overflow-y: auto;
+    background-color: var(--k-surface-card);
+    border: 1px solid var(--k-border-subtle);
+    border-radius: var(--k-radius-md, 8px);
+    box-shadow: var(--k-elevation-menu);
+    padding: var(--k-space-1, 0.25rem);
+    margin: 0;
+    list-style: none;
+    z-index: var(--k-z-dropdown, 110);
+  }
+
+  .currency-option {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2, 0.5rem);
+    inline-size: 100%;
+    padding: 0.45rem 0.65rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--k-radius-sm, 4px);
+    text-align: start;
+    cursor: pointer;
+    font-size: var(--k-text-sm, 0.875rem);
+    color: var(--k-text-primary);
+    font-family: inherit;
+    transition: background-color var(--k-duration-fast, 150ms) ease;
+  }
+
+  .currency-option:hover,
+  .currency-option--active {
+    background-color: var(--k-surface-sunken);
+  }
+
+  .currency-option__code {
+    font-weight: 600;
+  }
+
+  .currency-option__symbol {
+    color: var(--k-text-secondary);
+    margin-inline-start: auto;
+    font-size: var(--k-text-xs, 0.75rem);
   }
 
   .signout-btn {
@@ -593,6 +737,7 @@
     padding: 0.3rem 0.5rem;
     border-radius: 4px;
     font-family: inherit;
+    margin-inline-start: auto;
   }
 
   .signout-btn:hover {

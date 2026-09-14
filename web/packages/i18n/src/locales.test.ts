@@ -58,3 +58,37 @@ describe('isLocaleCode', () => {
     expect(isLocaleCode('xx')).toBe(false);
   });
 });
+
+describe('tooltip translations', () => {
+  it('has translated tooltips without placeholder suffixes in message bundles', async () => {
+    const { hi } = await import('./messages/hi');
+    const { kok } = await import('./messages/kok');
+    const { bn } = await import('./messages/bn');
+    const { ta } = await import('./messages/ta');
+    const { mr } = await import('./messages/mr');
+
+    expect(hi['tooltip.back']).toBe('पीछे जाएं');
+    expect(hi['tooltip.search']).toBe('खोजें');
+    expect(kok['tooltip.back']).toBe('फाटीं वचा');
+    expect(kok['tooltip.search']).toBe('सोदा');
+    expect(bn['tooltip.back']).toBe('ফিরে যান');
+    expect(bn['tooltip.search']).toBe('অনুসন্ধান');
+    expect(ta['tooltip.back']).toBe('பின்னே செல்க');
+    expect(ta['tooltip.search']).toBe('தேடுக');
+    expect(mr['tooltip.back']).toBe('मागे जा');
+    expect(mr['tooltip.search']).toBe('शोधा');
+
+    // Verify none of the tooltips contain the dummy "(hi)" or "(kok)" pattern
+    for (const [key, val] of Object.entries(hi)) {
+      if (key.startsWith('tooltip.')) {
+        expect(val).not.toMatch(/\([a-z]{2,3}\)$/);
+      }
+    }
+    for (const [key, val] of Object.entries(kok)) {
+      if (key.startsWith('tooltip.')) {
+        expect(val).not.toMatch(/\([a-z]{2,3}\)$/);
+      }
+    }
+  });
+});
+

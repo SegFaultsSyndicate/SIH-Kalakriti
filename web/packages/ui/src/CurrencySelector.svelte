@@ -8,7 +8,7 @@
   card's price line via the shared `currency` store.
 -->
 <script lang="ts">
-  import { locale, tooltip, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
+  import { locale, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { currency, CURRENCY_RATES } from '../../../apps/buyer/src/lib/currency.svelte';
   import Popover from './Popover.svelte';
@@ -24,6 +24,7 @@
   let { triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
   let open = $state(false);
 
   const options = Object.keys(CURRENCY_RATES) as CurrencyCode[];
@@ -36,7 +37,7 @@
 
 <Popover align="end" bind:open>
   {#snippet trigger(props)}
-    <Button icon="dollar-sign" label={t('currency.selector.label')} variant="ghost" tooltip={tooltip('tooltip.currency')} size={triggerSize} {...props} />
+    <Button icon="dollar-sign" label={t('currency.selector.label')} variant="ghost" tooltip={tt('tooltip.currency')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <ul class="k-currency-panel" role="list">

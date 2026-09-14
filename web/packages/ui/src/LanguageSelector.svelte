@@ -7,7 +7,7 @@
   select cleanly, they just render through the hi -> en message chain.
 -->
 <script lang="ts">
-  import { locale, tooltip } from '@kalakriti/i18n';
+  import { locale } from '@kalakriti/i18n';
   import { LOCALES, LOCALE_CODES, type LocaleCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import Popover from './Popover.svelte';
@@ -23,6 +23,7 @@
   let { triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
   let open = $state(false);
 
   function select(code: LocaleCode): void {
@@ -33,7 +34,7 @@
 
 <Popover align="end" bind:open>
   {#snippet trigger(props)}
-    <Button icon="language" label={t('language.selector.label')} variant="ghost" tooltip={tooltip('tooltip.language')} size={triggerSize} {...props} />
+    <Button icon="language" label={t('language.selector.label')} variant="ghost" tooltip={tt('tooltip.language')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <ul class="k-lang-panel" role="list">

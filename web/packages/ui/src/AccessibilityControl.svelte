@@ -11,7 +11,7 @@
   directly -- callers mount this once and never touch the store themselves.
 -->
 <script lang="ts">
-  import { locale, tooltip } from '@kalakriti/i18n';
+  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import Popover from './Popover.svelte';
   import Button, { type ButtonSize } from './Button.svelte';
@@ -31,6 +31,7 @@
   let { statementHref, triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
 
   const stepIndex = $derived(TEXT_SCALE_STEPS.indexOf(a11y.textScale));
   const canDecrease = $derived(stepIndex > 0);
@@ -92,7 +93,7 @@
 
 <Popover align="end">
   {#snippet trigger(props)}
-    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" tooltip={tooltip('tooltip.accessibility')} size={triggerSize} {...props} />
+    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" tooltip={tt('tooltip.accessibility')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <div class="k-a11y-panel">

@@ -1,0 +1,27 @@
+{
+  "category_id": "weaving_and_looms",
+  "category_name": "Weaving & Looms",
+  "hindi_name": "बुनाई व हथकरघा",
+  "description": "Pit-loom, jacquard, and throw-shuttle handwoven textiles from master weavers across India.",
+  "gi_certified_count": 38,
+  "listings_summary": [
+    {
+      "craft_slug": "banarasi-brocade-weaving",
+      "craft_name": "Banarasi Brocade Weaving",
+      "title_en": "Kashi Kadwa Pure Silver-Gilt Pit-Loom Mulberry Silk Saree",
+      "title_hi": "काशी कड़वा शुद्ध चांदी-जरी जरीदार बनारसी रेशमी साड़ी",
+      "artisan": "Mohammad Kabir Ansari",
+      "region": "Kotwa, Varanasi Weavers Colony, Uttar Pradesh",
+      "image_filename": "banarasi-brocade-weaving.jpg"
+    },
+    {
+      "craft_slug": "patan-patola",
+      "craft_name": "Patan Patola",
+      "title_en": "Patan Double-Ikat Shikargah Royal Heritage Silk Saree",
+      "title_hi": "पाटन डबल-इकत शिकारगाह शाही हेरिटेज पटोला साड़ी",
+      "artisan": "Dinesh Salvi Guild",
+      "region": "Salvi Wada, Patan, Gujarat",
+      "image_filename": "patan-patola.jpg"
+    }
+  ]
+}

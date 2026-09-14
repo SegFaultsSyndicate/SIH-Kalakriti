@@ -1,0 +1,27 @@
+{
+  "category_id": "woodwork",
+  "category_name": "Woodwork",
+  "hindi_name": "काष्ठकला व नक्काशी",
+  "description": "Hand-carved sheesham, rosewood, walnut, and turned lacquerware from master carpenters.",
+  "gi_certified_count": 16,
+  "listings_summary": [
+    {
+      "craft_slug": "channapatna-toys",
+      "craft_name": "Channapatna Toys & Lacquerware",
+      "title_en": "Channapatna Natural Vegetable Lacquer Turned Ivory-Wood Stacking Rings",
+      "title_hi": "चन्नापटना की प्राकृतिक लाख से रंगे खिलौने (टर्निंग वुड)",
+      "artisan": "Syed Basha",
+      "region": "Toy Town, Channapatna, Karnataka",
+      "image_filename": "channapatna-toys.jpg"
+    },
+    {
+      "craft_slug": "saharanpur-wood-carving",
+      "craft_name": "Saharanpur Wood Carving",
+      "title_en": "Hand-Chiseled Sheesham Wood Floral Jali Openwork Incense Box",
+      "title_hi": "सहारनपुर की नक्काशीदार शीशम की जालीदार धूपबत्ती पेटी",
+      "artisan": "Irfan Ahmed Qureshi",
+      "region": "Chhajjupura, Saharanpur, Uttar Pradesh",
+      "image_filename": "saharanpur-wood-carving.jpg"
+    }
+  ]
+}
