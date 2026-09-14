@@ -342,7 +342,7 @@ func (r *Repo) ListBoutiqueMatchesForArtisan(ctx context.Context, artisanID uuid
 			CompanyID:  row.CompanyID,
 			ArtisanID:  row.ArtisanID,
 			MatchScore: row.MatchScore,
-			Status:     domain.MatchStatus(row.Status),
+			Status:     domain.BoutiqueMatchStatus(row.Status),
 			BoutiqueName: row.BoutiqueName,
 			BoutiqueLocation: domain.StoreLocation{
 				Latitude:  row.StoreLatitude,

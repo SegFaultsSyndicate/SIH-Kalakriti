@@ -41,14 +41,14 @@ const (
 	InterestStatusDeclined InterestStatus = "DECLINED"
 )
 
-// MatchStatus tracks boutique-artisan match lifecycle.
-type MatchStatus string
+// BoutiqueMatchStatus tracks boutique-artisan match lifecycle.
+type BoutiqueMatchStatus string
 
 const (
-	MatchStatusSuggested MatchStatus = "SUGGESTED"
-	MatchStatusContacted MatchStatus = "CONTACTED"
-	MatchStatusActive    MatchStatus = "ACTIVE"
-	MatchStatusDeclined  MatchStatus = "DECLINED"
+	MatchStatusSuggested BoutiqueMatchStatus = "SUGGESTED"
+	MatchStatusContacted BoutiqueMatchStatus = "CONTACTED"
+	MatchStatusActive    BoutiqueMatchStatus = "ACTIVE"
+	MatchStatusDeclined  BoutiqueMatchStatus = "DECLINED"
 )
 
 // Indian standard 15-character GSTIN format: 2 digits state code, 10 alphanumeric PAN,
@@ -323,7 +323,7 @@ type BoutiqueMatch struct {
 	CompanyID         uuid.UUID
 	ArtisanID         uuid.UUID
 	MatchScore        float32
-	Status            MatchStatus
+	Status            BoutiqueMatchStatus
 	BoutiqueName      string
 	BoutiqueLocation  StoreLocation
 	OverlappingCrafts []string
