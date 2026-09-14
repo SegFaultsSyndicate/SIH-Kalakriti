@@ -13,10 +13,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: t('caseStudies.breadcrumbLabel') },
-  ]);
+  const breadcrumbs = $derived([{ label: t('caseStudies.breadcrumbLabel') }]);
 
   interface BeforeAfterRow {
     dimension: string;
@@ -216,7 +213,7 @@
 
 <div class="studies-page">
   <div class="studies-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <!-- Header Section -->
     <header class="studies-header">

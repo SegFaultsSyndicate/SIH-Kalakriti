@@ -1025,6 +1025,26 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
     - en.ts grew 1988 -> 2111 keys. `i18n-baseline.json` ceilings raised to
       match. `npx vitest run` (46/46) and `apps/buyer` svelte-check (767
       files, 0 errors) both clean.
+    - Closed the "duplicate home breadcrumb" finding flagged in 3.1 (section
+      3, batch 3.1 notes) for every file it named that this session's
+      batches 3.5/3.6 actually touched: `privacy`, `terms`, `case-studies`,
+      `catalog`, `fairs`, `journal/[slug]` (all pass a redundant `{
+      label: t('nav.home') || 'X', href: '/' }` as `items[0]` on top of
+      `<Breadcrumbs>`'s own unconditional home link), plus two more found
+      by the same pattern while touching their files this session --
+      `contact` and `gi-tagged` (no `homeLabel` override, so both links
+      read "Home" twice). Fixed by deleting the redundant first item from
+      each `breadcrumbs` array (and the dead `t(key) || 'X'` fallback
+      idiom with it -- `t()` never returns falsy for a real key) and adding
+      a `nav.marketplace` key so the seven files using
+      `homeLabel="Marketplace"` no longer hardcode that literal. Verified
+      live in the buyer dev server on `/terms` and `/contact`: single
+      breadcrumb home link in both, Hindi label ("मुख्य पृष्ठ") renders
+      correctly where no `homeLabel` override applies. en.ts 2111 -> 2112
+      keys (`nav.marketplace`); baseline ceilings bumped by exactly 1 per
+      locale to match (`npx vitest run` 46/46 confirmed after). Not touching
+      any other file with this same bug outside what 3.5/3.6 already
+      modified -- left for whichever batch touches those files next.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.

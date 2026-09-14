@@ -12,10 +12,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: t('exhibition.fairs.breadcrumbLabel') },
-  ]);
+  const breadcrumbs = $derived([{ label: t('exhibition.fairs.breadcrumbLabel') }]);
 
   interface Fair {
     id: string;
@@ -133,7 +130,7 @@
 
 <div class="fairs-page">
   <div class="fairs-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <!-- Header Section -->
     <header class="fairs-header">

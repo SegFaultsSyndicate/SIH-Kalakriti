@@ -98,7 +98,6 @@
   const essay = $derived(ESSAYS.find((e) => e.slug === slug));
 
   const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
     { label: t('journal.breadcrumbLabel'), href: '/#journal' },
     { label: essay?.title ?? t('journal.breadcrumbEssayFallback') },
   ]);
@@ -114,7 +113,7 @@
 {#if !essay}
   <div class="essay-page">
     <div class="essay-container">
-      <Breadcrumbs items={[{ label: t('nav.home') || 'Home', href: '/' }, { label: t('journal.notFoundBreadcrumb') }]} />
+      <Breadcrumbs items={[{ label: t('journal.notFoundBreadcrumb') }]} />
       <h1>{t('journal.notFoundHeading')}</h1>
       <p><a href="/">{t('journal.returnHome')}</a></p>
     </div>
@@ -122,7 +121,7 @@
 {:else}
   <div class="essay-page">
     <div class="essay-container">
-      <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+      <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
       <header class="essay-header">
         <span class="essay-kicker">{t('journal.kickerPrefix', { cluster: essay.cluster.toUpperCase() })}</span>

@@ -12,10 +12,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: t('catalog.breadcrumbLabel') },
-  ]);
+  const breadcrumbs = $derived([{ label: t('catalog.breadcrumbLabel') }]);
 
   let searchQuery = $state('');
   let selectedBelt = $state('all');
@@ -143,7 +140,7 @@
 
 <div class="catalog-page">
   <div class="catalog-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <header class="catalog-header">
       <span class="catalog-kicker">{t('catalog.kicker')}</span>

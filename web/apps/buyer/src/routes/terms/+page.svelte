@@ -10,10 +10,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Marketplace', href: '/' },
-    { label: t('terms.breadcrumbLabel') },
-  ]);
+  const breadcrumbs = $derived([{ label: t('terms.breadcrumbLabel') }]);
 </script>
 
 <svelte:head>
@@ -23,7 +20,7 @@
 
 <div class="legal-page">
   <div class="legal-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <header class="legal-header">
       <span class="legal-kicker">{t('terms.kicker')}</span>

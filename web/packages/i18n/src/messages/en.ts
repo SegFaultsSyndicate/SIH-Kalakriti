@@ -1984,6 +1984,7 @@ export const en = {
   'listing.viewArtisanProfileTitle': 'View artisan profile',
   'listing.viewArtisanStorefront': 'View artisan storefront →',
   'listing.quickOrderDockAriaLabel': 'Quick order dock',
+  'nav.marketplace': 'Marketplace',
 
   // 9. Category Subnav
   'subnav.ariaLabel': 'Craft Taxonomy & Categories',

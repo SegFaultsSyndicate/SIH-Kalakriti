@@ -22,10 +22,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived<BreadcrumbItem[]>([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: t('giTagged.breadcrumb') },
-  ]);
+  const breadcrumbs = $derived<BreadcrumbItem[]>([{ label: t('giTagged.breadcrumb') }]);
 
   // View Layout
   let viewMode = $state<'grid' | 'list'>('grid');

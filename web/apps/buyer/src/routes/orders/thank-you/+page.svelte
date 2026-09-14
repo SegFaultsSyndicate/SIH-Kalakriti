@@ -32,7 +32,7 @@
 
 <div class="thank-you-page">
   <div class="thank-you-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <div class="confirmation-card">
       <div class="success-icon-box">

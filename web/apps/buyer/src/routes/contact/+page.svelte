@@ -16,10 +16,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived<BreadcrumbItem[]>([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: t('contact.breadcrumbLabel') },
-  ]);
+  const breadcrumbs = $derived<BreadcrumbItem[]>([{ label: t('contact.breadcrumbLabel') }]);
 
   let inquiryType = $state('order_tracking');
   let fullName = $state('');
