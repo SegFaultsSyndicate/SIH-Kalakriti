@@ -125,6 +125,7 @@ func (h *Identity) RegisterArtisan(ctx context.Context, req *identityv1.Register
 		PMVishwakarmaID:   req.PmVishwakarmaId,
 		YearsOfExperience: req.YearsOfExperience,
 		Bio:               req.Bio,
+		SocialCategory:    req.SocialCategory,
 	}
 
 	artisan, err := h.svc.RegisterArtisan(ctx, in, req.GetIdempotencyKey())

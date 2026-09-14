@@ -83,6 +83,9 @@ func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fi
 	if v, ok := fields["bio"].(string); ok {
 		req.Bio = &v
 	}
+	if v, ok := fields["social_category"].(string); ok && v != "" {
+		req.SocialCategory = &v
+	}
 
 	ctx, cancel := withTimeout(ctx)
 	defer cancel()

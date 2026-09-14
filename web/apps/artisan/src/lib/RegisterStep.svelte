@@ -37,6 +37,7 @@
     t('register.craft.heading'),
     t('register.district.heading'),
     t('register.pehchan.heading'),
+    t('registration.socialCategory.label'),
     t('register.cluster.heading'),
   ]);
 </script>

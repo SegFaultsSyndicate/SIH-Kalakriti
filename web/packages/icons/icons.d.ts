@@ -90,6 +90,13 @@ export type IconName =
   | 'leather'
   | 'stone'
   | 'bamboo'
+  | 'badge-verified'
+  | 'badge-master'
+  | 'badge-milestone'
+  | 'badge-coordinator'
+  | 'badge-gi'
+  | 'badge-award'
+  | 'badge-locked'
   | 'charkha-spinner'
   | 'upload-zone';
 

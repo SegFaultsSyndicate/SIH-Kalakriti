@@ -448,6 +448,41 @@ export const ICONS = [
     "file": "src/bamboo.svg"
   },
   {
+    "name": "badge-verified",
+    "category": "domain",
+    "file": "src/badge-verified.svg"
+  },
+  {
+    "name": "badge-master",
+    "category": "domain",
+    "file": "src/badge-master.svg"
+  },
+  {
+    "name": "badge-milestone",
+    "category": "domain",
+    "file": "src/badge-milestone.svg"
+  },
+  {
+    "name": "badge-coordinator",
+    "category": "domain",
+    "file": "src/badge-coordinator.svg"
+  },
+  {
+    "name": "badge-gi",
+    "category": "domain",
+    "file": "src/badge-gi.svg"
+  },
+  {
+    "name": "badge-award",
+    "category": "domain",
+    "file": "src/badge-award.svg"
+  },
+  {
+    "name": "badge-locked",
+    "category": "domain",
+    "file": "src/badge-locked.svg"
+  },
+  {
     "name": "charkha-spinner",
     "category": "core",
     "file": "src/charkha-spinner.svg"

@@ -195,6 +195,8 @@ message RegisterArtisanRequest {
   optional string bio = 10;
   // Caller-supplied key making a retried registration a no-op.
   string idempotency_key = 11;
+  // Social category for government scheme guidance (e.g. GENERAL, OBC, SC, ST, EWS, PREFER_NOT_TO_SAY).
+  optional string social_category = 12;
 }
 
 // RegisterArtisanResponse returns the created profile.

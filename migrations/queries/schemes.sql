@@ -67,9 +67,9 @@ SELECT
     a.state_code,
     a.years_of_experience,
     a.social_category,
-    (a.pehchan_id IS NOT NULL) AS has_pehchan_id,
-    (a.pm_vishwakarma_id IS NOT NULL) AS has_pm_vishwakarma_id,
-    (a.primary_cluster_id IS NOT NULL) AS is_cluster_member,
+    (a.pehchan_id IS NOT NULL)::boolean AS has_pehchan_id,
+    (a.pm_vishwakarma_id IS NOT NULL)::boolean AS has_pm_vishwakarma_id,
+    (a.primary_cluster_id IS NOT NULL)::boolean AS is_cluster_member,
     EXISTS (SELECT 1 FROM shg_member sm WHERE sm.artisan_id = a.id) AS is_shg_member,
     COALESCE(
         (SELECT array_agg(DISTINCT p.craft_id) FROM product p WHERE p.artisan_id = a.id),

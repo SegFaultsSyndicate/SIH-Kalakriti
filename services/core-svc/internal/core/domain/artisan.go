@@ -64,6 +64,7 @@ type Artisan struct {
 	PhotoMediaID      *uuid.UUID
 	Verified          bool
 	CreatedBy         string
+	SocialCategory    *string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }
@@ -80,6 +81,7 @@ type RegisterArtisanInput struct {
 	PMVishwakarmaID   *string
 	YearsOfExperience *int32
 	Bio               *string
+	SocialCategory    *string
 	// CreatedBy is the subject id of the actor performing the registration,
 	// which is the artisan themselves for self-service and an officer's id
 	// when field staff register someone by proxy.
@@ -121,6 +123,13 @@ func (in RegisterArtisanInput) Validate() error {
 	}
 	if in.PMVishwakarmaID != nil && strings.TrimSpace(*in.PMVishwakarmaID) == "" {
 		return fmt.Errorf("pm_vishwakarma_id must not be blank when present: %w", pkgdomain.ErrInvalidInput)
+	}
+	if in.SocialCategory != nil && strings.TrimSpace(*in.SocialCategory) != "" {
+		switch *in.SocialCategory {
+		case "GENERAL", "OBC", "SC", "ST", "EWS", "PREFER_NOT_TO_SAY":
+		default:
+			return fmt.Errorf("invalid social_category %q: %w", *in.SocialCategory, pkgdomain.ErrInvalidInput)
+		}
 	}
 	return nil
 }

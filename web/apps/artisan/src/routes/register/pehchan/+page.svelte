@@ -21,7 +21,7 @@
   }
 
   async function next(): Promise<void> {
-    await goto('/register/cluster');
+    await goto('/register/social-category');
   }
 </script>
 
