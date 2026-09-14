@@ -37,6 +37,7 @@ import (
 	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
 	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
 	badgesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1"
+	schemesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1"
 	trendsv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
@@ -229,6 +230,8 @@ func run() error {
 	trendsHandler := handler.NewTrends(trendsSvc)
 	badgesSvc := service.NewBadges(repository, log)
 	badgesHandler := handler.NewBadges(badgesSvc)
+	schemesSvc := service.NewSchemes(repository, log)
+	schemesHandler := handler.NewSchemes(schemesSvc)
 	healthHandler := handler.NewHealth(pool, rdb)
 
 	// --- gRPC server ---------------------------------------------------------
@@ -251,6 +254,7 @@ func run() error {
 	b2bv1.RegisterB2BServiceServer(grpcServer, b2bHandler)
 	trendsv1.RegisterTrendServiceServer(grpcServer, trendsHandler)
 	badgesv1.RegisterBadgeServiceServer(grpcServer, badgesHandler)
+	schemesv1.RegisterSchemeServiceServer(grpcServer, schemesHandler)
 
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)

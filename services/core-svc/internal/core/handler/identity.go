@@ -54,6 +54,7 @@ func PublicMethods() auth.PublicMethods {
 		"/b2b.v1.B2BService/ListCompanies",
 		"/badges.v1.BadgeService/ListBadgeCatalog",
 		"/badges.v1.BadgeService/ListArtisanBadges",
+		"/schemes.v1.SchemeService/ListSchemes",
 	)
 }
 
