@@ -124,7 +124,7 @@
     <p class="studio-subhead">{t('listing.studio.subheading')}</p>
 
     {#if photos.length > 1}
-      <div class="photo-selector" role="tablist" aria-label="Select photo to enhance">
+      <div class="photo-selector" role="tablist" aria-label={t('listing.studio.selectPhotoAria')}>
         {#each photos as photo, i (photo.id)}
           <button
             type="button"
@@ -157,12 +157,12 @@
         onclick={toggleLighting}
         aria-pressed={autoLighting}
       >
-        {autoLighting ? 'Active' : 'Off'}
+        {autoLighting ? t('listing.studio.toggleActive') : t('listing.studio.toggleOff')}
       </button>
     </div>
 
     <!-- View Mode Selector -->
-    <div class="view-mode-bar" role="tablist" aria-label="Comparison View Mode">
+    <div class="view-mode-bar" role="tablist" aria-label={t('listing.studio.comparisonModeAria')}>
       <button
         type="button"
         class="view-mode-btn"
@@ -171,7 +171,7 @@
         role="tab"
         aria-selected={viewMode === 'split'}
       >
-        Split Slider
+        {t('listing.studio.splitSlider')}
       </button>
       <button
         type="button"
@@ -181,7 +181,7 @@
         role="tab"
         aria-selected={viewMode === 'sideBySide'}
       >
-        Side-by-Side
+        {t('listing.studio.sideBySide')}
       </button>
     </div>
 
@@ -242,9 +242,9 @@
           <div class="side-card">
             <span class="side-card__label">{t('listing.studio.before')}</span>
             <div class="side-card__media">
-              <img src={activePhotoUrl} alt="Original workshop capture" />
+              <img src={activePhotoUrl} alt={t('listing.studio.originalAlt')} />
             </div>
-            <span class="side-card__caption">Raw Workshop Capture</span>
+            <span class="side-card__caption">{t('listing.studio.rawCaption')}</span>
           </div>
 
           <div class="side-card side-card--enhanced">
@@ -256,12 +256,12 @@
             >
               <img
                 src={activePhotoUrl}
-                alt="AI Studio Enhanced"
+                alt={t('listing.studio.enhancedAlt')}
                 class:split-viewer__img--enhanced={autoLighting}
                 class:split-viewer__img--isolated={backgroundMode !== 'natural'}
               />
             </div>
-            <span class="side-card__caption">Clean Studio + Light Balancer</span>
+            <span class="side-card__caption">{t('listing.studio.enhancedCaption')}</span>
           </div>
         </div>
       {/if}
@@ -282,7 +282,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--white"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgWhite')}</strong>
-            <small>E-Commerce Showroom</small>
+            <small>{t('listing.studio.bgWhiteDesc')}</small>
           </span>
           {#if backgroundMode === 'white'}
             <Icon name="check" class="bg-pill__check" />
@@ -300,7 +300,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--checker"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgTransparent')}</strong>
-            <small>Cutout for Banners</small>
+            <small>{t('listing.studio.bgTransparentDesc')}</small>
           </span>
           {#if backgroundMode === 'transparent'}
             <Icon name="check" class="bg-pill__check" />
@@ -318,7 +318,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--natural"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgNatural')}</strong>
-            <small>Keep Loom Backdrop</small>
+            <small>{t('listing.studio.bgNaturalDesc')}</small>
           </span>
           {#if backgroundMode === 'natural'}
             <Icon name="check" class="bg-pill__check" />

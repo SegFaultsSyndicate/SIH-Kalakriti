@@ -158,7 +158,7 @@
   });
 
   const spokenProfileText = $derived(
-    `Namaste ${name}. You are registered as an authentic artisan in ${districtName}. Craft: ${craftName}. Your profile is verified with PM Vishwakarma.`,
+    t('profile.spokenSummary', { name, district: districtName, craft: craftName }),
   );
 
   const initial = $derived((name.trim()[0] ?? 'A').toUpperCase());
@@ -204,7 +204,7 @@
       });
     } catch {
       showToast({
-        message: `Language updated to ${code.toUpperCase()}`,
+        message: t('profile.languageUpdated', { lang: code.toUpperCase() }),
         variant: 'info',
       });
     }
@@ -212,12 +212,12 @@
 
   function downloadIncomeStatement(): void {
     showToast({
-      message: 'Generating cryptographically signed Income Statement (PDF)...',
+      message: t('profile.incomeStatement.generating'),
       variant: 'info',
     });
     setTimeout(() => {
       showToast({
-        message: 'Income Statement generated and verified with Ed25519 seal.',
+        message: t('profile.incomeStatement.ready'),
         variant: 'success',
       });
     }, 1200);
@@ -256,7 +256,7 @@
         window.dispatchEvent(new Event('storage'));
       }
     } catch {}
-    showToast({ message: 'Profile picture updated successfully!', variant: 'success' });
+    showToast({ message: t('profile.photoUpdated'), variant: 'success' });
   }
 
   function handleCancelCrop(): void {
@@ -284,7 +284,7 @@
     await setPref('profile.emailVideoAlerts', emailVideoAlerts);
     savingEmail = false;
     showToast({
-      message: 'Email and VIP video consultation preferences saved!',
+      message: t('profile.email.saved'),
       variant: 'success',
     });
   }
@@ -292,7 +292,7 @@
   async function requestPhoneChange(): Promise<void> {
     const raw = newPhoneInput.trim().replace(/\s+/g, '');
     if (raw.length < 10) {
-      phoneError = 'Please enter a valid 10-digit mobile number';
+      phoneError = t('profile.phone.invalidNew');
       return;
     }
     phoneLoading = true;
@@ -301,9 +301,9 @@
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
       await requestPhoneChangeOtp({ new_phone: formatted });
       phoneStep = 'otp';
-      showToast({ message: 'Verification code sent to new mobile number', variant: 'info' });
+      showToast({ message: t('profile.phone.otpSent'), variant: 'info' });
     } catch (err: unknown) {
-      phoneError = errorText(err, 'Failed to request verification code');
+      phoneError = errorText(err, t('profile.phone.otpSendFailed'));
     } finally {
       phoneLoading = false;
     }
@@ -311,7 +311,7 @@
 
   async function verifyPhoneChange(): Promise<void> {
     if (phoneOtpInput.trim().length < 4) {
-      phoneError = 'Please enter the verification OTP';
+      phoneError = t('profile.phone.otpRequired');
       return;
     }
     phoneLoading = true;
@@ -330,11 +330,11 @@
       phoneOtpInput = '';
       phoneStep = 'phone';
       showToast({
-        message: 'Mobile number updated! Other active sessions terminated for security.',
+        message: t('profile.phone.updated'),
         variant: 'success',
       });
     } catch (err: unknown) {
-      phoneError = errorText(err, 'Verification failed');
+      phoneError = errorText(err, t('profile.phone.verifyFailed'));
     } finally {
       phoneLoading = false;
     }
@@ -345,7 +345,7 @@
     setRefreshToken(undefined);
     await setArtisanId(undefined);
     session.clear();
-    showToast({ message: 'Logged out successfully.', variant: 'info' });
+    showToast({ message: t('profile.loggedOut'), variant: 'info' });
     await goto('/welcome');
   }
 </script>
@@ -604,11 +604,11 @@
           <Icon name="verified-artisan" size="1.5rem" />
         </div>
         <div class="tool-tile__content">
-          <h3 class="tool-tile__heading">Exhibition Stall Placard</h3>
-          <p class="tool-tile__desc">Generate & print an official QR placard for your exhibition stand at Dilli Haat, Surajkund, or Shilp Samagam.</p>
+          <h3 class="tool-tile__heading">{t('profile.tools.stallCard')}</h3>
+          <p class="tool-tile__desc">{t('profile.tools.stallCardDesc')}</p>
           <Button variant="secondary" size="md" onclick={openStallCard}>
             <Icon name="print" size="1rem" />
-            Generate Stall Card
+            {t('profile.tools.generateStallCard')}
           </Button>
         </div>
       </div>
@@ -707,13 +707,13 @@
     <div class="profile-card__header">
       <h2 class="profile-card__title">
         <Icon name="message" size="1.2rem" />
-        Official Email & Buyer Video Consultation Alerts
+        {t('profile.emailCard.title')}
       </h2>
-      <span class="profile-card__tag">Government Verified</span>
+      <span class="profile-card__tag">{t('profile.emailCard.badge')}</span>
     </div>
 
     <p class="profile-card__desc">
-      Add your official email address to receive real-time updates for bulk order lot allocations, advance dispatch notices, and calendar invitations whenever buyers book VIP loom video consultations.
+      {t('profile.emailCard.desc')}
     </p>
 
     <div class="email-settings-box">
@@ -785,7 +785,7 @@
         </div>
 
         <p class="phone-modal-desc">
-          Changing your phone requires 2-factor OTP verification. In compliance with security standards, updating your number will automatically terminate all other active login sessions.
+          {t('profile.phoneModal.desc')}
         </p>
 
         {#if phoneError}
@@ -797,21 +797,23 @@
 
         {#if phoneStep === 'phone'}
           <div class="phone-modal-body">
-            <label class="phone-modal-label" for="new-phone-input">New 10-Digit Mobile Number</label>
+            <label class="phone-modal-label" for="new-phone-input"
+              >{t('profile.phoneModal.newNumberLabel')}</label
+            >
             <div class="phone-input-wrap">
               <span class="prefix">+91</span>
               <input
                 id="new-phone-input"
                 type="tel"
                 class="phone-text-field"
-                placeholder="9876543210"
+                placeholder={t('profile.phoneModal.newNumberPlaceholder')}
                 bind:value={newPhoneInput}
                 maxlength="10"
               />
             </div>
             <div class="phone-modal-actions">
               <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)}>
-                Cancel
+                {t('action.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -820,27 +822,27 @@
                 loading={phoneLoading}
                 disabled={!newPhoneInput}
               >
-                Send Verification OTP
+                {t('profile.phoneModal.sendOtp')}
               </Button>
             </div>
           </div>
         {:else}
           <div class="phone-modal-body">
             <label class="phone-modal-label" for="phone-otp-input">
-              Enter 6-Digit Verification OTP sent to {newPhoneInput}
+              {t('profile.phoneModal.otpLabel', { phone: newPhoneInput })}
             </label>
             <input
               id="phone-otp-input"
               type="text"
               inputmode="numeric"
               class="phone-otp-field"
-              placeholder="123456"
+              placeholder={t('profile.phoneModal.otpPlaceholder')}
               bind:value={phoneOtpInput}
               maxlength="6"
             />
             <div class="phone-modal-actions">
               <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')}>
-                Back
+                {t('action.back')}
               </Button>
               <Button
                 variant="primary"
@@ -849,7 +851,7 @@
                 loading={phoneLoading}
                 disabled={!phoneOtpInput}
               >
-                Verify & Update Mobile
+                {t('profile.phoneModal.verifyAndUpdate')}
               </Button>
             </div>
           </div>

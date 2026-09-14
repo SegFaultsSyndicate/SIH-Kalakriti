@@ -806,6 +806,60 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       fallback idiom repeated at every one of these call sites -- `t()`
       never returns falsy for a real key, so the `|| 'X'` never fires; harmless
       but worth deleting when these files are touched for real in 3.4-3.6.
+  - [x] **3.2** `apps/artisan` -- ~40 files manually reviewed against the
+        scanner's flagged-string list; real hardcoded-string hits were
+        concentrated in a handful of modal/wizard components, the rest
+        (`.ts` files, already-wired `.svelte` pages) were scanner noise
+        (CSS classes, type literals, comments, doc examples), confirming
+        3.1's recalibration held for this app too.
+    - Fixed (wired existing/new `t()` keys, no prose left hardcoded):
+      `Breadcrumbs.svelte` (3.1), `StallCardModal.svelte` (11 new
+      `exhibition.stallCard.*` keys), `profile/+page.svelte` (13 new keys
+      plus 4 previously-orphaned keys wired in), `IncomeGrowthChart.svelte`
+      (restructured `QUARTERS` to carry `MessageKey`s instead of hardcoded
+      period/highlight strings, 13 new `growth.*` keys), `+page.svelte`
+      (home, 1 new key), `BusinessCardModal.svelte` (12 new `card.*` keys:
+      subtitle, ministry line, PM Vishwakarma badge, QR alt, scan-to-buy,
+      DBT/GI line, copy-link/WhatsApp button labels, clipboard toast,
+      parametrized share message, ID label), `DigitalLiteracyTutorial.svelte`
+      (8 new `literacy.tutorial.*` keys: per-step badges pulled out of the
+      hardcoded bilingual `STEPS` array into `badgeKey: MessageKey`, sahayak
+      badge, "Listen in Hindi" label, voice hint, dot aria-label), `listing/
+      new/studio/+page.svelte` (13 new `listing.studio.*` keys: aria-labels,
+      view-mode tab labels, before/after alt text and captions, background
+      pill descriptions, lighting toggle Active/Off), `ImageCropModal.svelte`
+      (1 key: crop preview alt text), `GemExportPreview.svelte` (4 keys:
+      marketplace name/sub used both in the rendered card header and in the
+      plain-text export, so one key pair drives both surfaces).
+    - Confirmed false positives, no fix needed (scanner flagged, manual
+      review found the file already fully wired or the "hit" was a type
+      literal / enum value / internal `Error()` never rendered):
+      `login/+page.svelte`, `offer/+page.svelte`, `lots/[lotId]/+page.svelte`,
+      `listings/[id]/+page.svelte`, `listings/[id]/provenance/+page.svelte`,
+      `listing/new/processing/+page.svelte`, `verify/+page.svelte`,
+      `register/district/+page.svelte`, `offline/+page.svelte`, `listing/new/
+      review/+page.svelte`, `listing/new/pricing/+page.svelte`, `language/
+      +page.svelte`, `HandloomVerdict.svelte`, `register/pehchan/+page.svelte`,
+      `register/cluster/+page.svelte`, `listings/+page.svelte`, `earnings/
+      +page.svelte`, `SahayakTooltip.svelte`, `RegisterStep.svelte`,
+      `PwaUpdatePrompt.svelte`, `listing-draft.ts`, `listings.ts`, `orders.ts`,
+      `route-guard.ts`, `provenance.ts`, `outbox-send.ts`.
+    - Deliberately deferred to **3.7 (data pass)**, not UI chrome: `demo-
+      listing.ts` (sample listing title/description/attribute values, canvas
+      GI-seal text -- demo content, not translatable interface text),
+      `ml-mock.ts` (fabricated ML pipeline output explicitly marked for
+      replacement per `ml_wiring.md` -- mock AI descriptions, not product
+      copy), the FAIRS array and demo-default state values in
+      `StallCardModal.svelte`/`profile/+page.svelte` (flagged in 3.1/3.2
+      review, unchanged), `district.name`/`district.state` and other
+      `ontology.ts`-sourced data rendered as-is in `register/district`.
+      `trends/+page.svelte` and `ontology.ts` remain skipped (pre-existing
+      concurrent WIP / dead-data-table, per the session's established rule).
+    - en.ts grew 1411 → 1501 keys this batch. `i18n-baseline.json` ratchet
+      ceilings raised accordingly for every non-en locale (each is "missing"
+      every new key until its own Phase 4 translation batch lands) --
+      verified via `pnpm --filter @kalakriti/i18n run audit`, no ceiling
+      raised without a matching real key increase in `en.ts`.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.

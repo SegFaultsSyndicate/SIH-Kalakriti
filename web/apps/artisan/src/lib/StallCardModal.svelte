@@ -172,7 +172,13 @@
   }
 
   function handleShare(): void {
-    const text = `Namaste! Visit ${artisanName}'s stall (${currentStallDisplay}) at ${selectedFairConfig.shortName} or scan to order authentic handmade ${craftName} anytime: ${targetUrl}`;
+    const text = t('exhibition.stallCard.shareMessage', {
+      name: artisanName,
+      stall: currentStallDisplay,
+      fair: selectedFairConfig.shortName,
+      craft: craftName,
+      url: targetUrl,
+    });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 </script>
@@ -211,7 +217,12 @@
 
         <div class="field-item">
           <label for="stall-num" class="field-label">{t('exhibition.stallCard.stallNumber')}</label>
-          <input id="stall-num" bind:value={stallNumber} placeholder="e.g. B-42" class="field-input" />
+          <input
+            id="stall-num"
+            bind:value={stallNumber}
+            placeholder={t('exhibition.stallCard.stallNumberPlaceholder')}
+            class="field-input"
+          />
         </div>
       </div>
 
@@ -251,7 +262,7 @@
                   class="stall-pill"
                   style="background: {selectedFairConfig.accentBg}; border-color: {selectedFairConfig.borderAccent}; color: {selectedFairConfig.accentColor}"
                 >
-                  STALL NUMBER: {currentStallDisplay}
+                  {t('exhibition.stallCard.stallNumberDisplay', { number: currentStallDisplay })}
                 </div>
               </div>
             </div>
@@ -279,11 +290,13 @@
                     ><Icon name="location" size="0.85rem" /> {districtName || 'Uttar Pradesh'}</span
                   >
                   <span class="placard-tag placard-tag--gold"
-                    ><Icon name="verified-artisan" size="0.85rem" /> PM Vishwakarma ID: {pehchanId ||
-                      'UP-VNS-2024-0982'}</span
+                    ><Icon name="verified-artisan" size="0.85rem" />
+                    {t('exhibition.stallCard.pmVishwakarmaId', {
+                      id: pehchanId || 'UP-VNS-2024-0982',
+                    })}</span
                   >
                   <span class="placard-tag placard-tag--gi"
-                    ><Icon name="gi-tagged" size="0.85rem" /> Certified GI Handicraft</span
+                    ><Icon name="gi-tagged" size="0.85rem" /> {t('exhibition.stallCard.giCertified')}</span
                   >
                 </div>
               </div>
@@ -292,14 +305,14 @@
               <div class="placard-qr-section">
                 <div class="qr-box">
                   {#if qrDataUrl}
-                    <img src={qrDataUrl} alt="Scan QR Code to order" class="qr-image" />
+                    <img src={qrDataUrl} alt={t('exhibition.stallCard.qrAlt')} class="qr-image" />
                   {:else}
-                    <div class="qr-placeholder">Generating QR...</div>
+                    <div class="qr-placeholder">{t('exhibition.stallCard.generatingQr')}</div>
                   {/if}
                 </div>
                 <p class="qr-prompt">
-                  <strong>SCAN TO REORDER ANYTIME</strong>
-                  <span>Direct Artisan Delivery • Zero Middlemen • Authentic GI</span>
+                  <strong>{t('exhibition.stallCard.scanCta')}</strong>
+                  <span>{t('exhibition.stallCard.scanPrompt')}</span>
                 </p>
               </div>
             </div>
@@ -308,7 +321,7 @@
             <footer class="placard-footer">
               <div class="footer-seal" style="color: {selectedFairConfig.accentColor}">
                 <Icon name="verified-artisan" />
-                <span>Verified Public Digital Infrastructure — Powered by Kalakriti</span>
+                <span>{t('exhibition.stallCard.poweredBy')}</span>
               </div>
               <span class="footer-url">{targetUrl}</span>
             </footer>
@@ -321,12 +334,12 @@
         <Button variant="secondary" size="sm" onclick={handleShare} class="placard-btn">
           <Icon name="share" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.shareWhatsapp')}</span>
-          <span class="btn-label--mobile">WhatsApp</span>
+          <span class="btn-label--mobile">{t('exhibition.stallCard.shareWhatsappShort')}</span>
         </Button>
         <Button variant="primary" size="sm" onclick={handlePrint} class="placard-btn">
           <Icon name="print" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.print')}</span>
-          <span class="btn-label--mobile">Print Placard</span>
+          <span class="btn-label--mobile">{t('exhibition.stallCard.printShort')}</span>
         </Button>
       </footer>
     </div>

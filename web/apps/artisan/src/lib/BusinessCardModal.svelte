@@ -61,12 +61,12 @@
   function copyLink(): void {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(cardUrl);
-      showToast({ message: 'Digital business card link copied to clipboard!', variant: 'success' });
+      showToast({ message: t('card.linkCopied'), variant: 'success' });
     }
   }
 
   function shareWhatsApp(): void {
-    const text = `Namaste! Discover authentic handmade ${craftName} by ${artisanName} (${districtName}) on Kalakriti Platform. View my verified digital business card & catalog here: ${cardUrl}`;
+    const text = t('card.shareMessage', { craft: craftName, name: artisanName, district: districtName, url: cardUrl });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
@@ -89,7 +89,7 @@
       <header class="modal-header">
         <div>
           <h2>{t('card.title')}</h2>
-          <p class="modal-subhead">Share your authentic artisan identity with buyers and institutions.</p>
+          <p class="modal-subhead">{t('card.subtitle')}</p>
         </div>
         <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
           <Icon name="close" />
@@ -106,8 +106,8 @@
 
           <div class="preview-content">
             <div class="preview-header">
-              <span class="preview-gov">MINISTRY OF TEXTILES • GOVT. OF INDIA</span>
-              <span class="preview-badge">PM VISHWAKARMA VERIFIED</span>
+              <span class="preview-gov">{t('card.ministryLine')}</span>
+              <span class="preview-badge">{t('card.pmVishwakarmaVerified')}</span>
             </div>
 
             <div class="preview-main">
@@ -123,22 +123,22 @@
                   <h3 class="preview-name">{artisanName}</h3>
                   <p class="preview-craft">{craftName}</p>
                   <p class="preview-loc">{districtName} • {clusterName}</p>
-                  <span class="preview-id">ID: {pehchanId}</span>
+                  <span class="preview-id">{t('card.idLabel', { id: pehchanId })}</span>
                 </div>
               </div>
 
               <div class="preview-qr-box">
                 {#if qrDataUrl}
-                  <img src={qrDataUrl} alt="QR Code" class="preview-qr" />
+                  <img src={qrDataUrl} alt={t('card.qrAlt')} class="preview-qr" />
                 {:else}
                   <div class="preview-qr-ph">QR</div>
                 {/if}
-                <span class="preview-scan-text">Scan to Buy</span>
+                <span class="preview-scan-text">{t('card.scanToBuy')}</span>
               </div>
             </div>
 
             <footer class="preview-footer">
-              <span>Direct Artisan Payments (DBT) • Authentic GI Provenance</span>
+              <span>{t('card.dbtProvenance')}</span>
               <span class="preview-url">{cardUrl}</span>
             </footer>
           </div>
@@ -149,11 +149,11 @@
       <footer class="modal-actions">
         <Button variant="secondary" size="sm" onclick={copyLink}>
           <Icon name="link" size="0.85rem" />
-          <span>Copy Link</span>
+          <span>{t('card.copyLink')}</span>
         </Button>
         <Button variant="secondary" size="sm" onclick={shareWhatsApp}>
           <Icon name="whatsapp" size="0.85rem" />
-          <span>WhatsApp</span>
+          <span>{t('card.whatsapp')}</span>
         </Button>
         <Button variant="primary" size="sm" onclick={handlePrint}>
           <Icon name="print" size="0.85rem" />

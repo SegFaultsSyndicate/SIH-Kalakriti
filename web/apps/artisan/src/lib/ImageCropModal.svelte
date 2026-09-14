@@ -196,7 +196,7 @@
         <!-- The scaled, translated, rotated image -->
         <img
           src={imageSrc}
-          alt="Preview to crop"
+          alt={t('imageCrop.previewAlt')}
           class="crop-img"
           class:is-dragging={isDragging}
           style="

@@ -62,8 +62,8 @@
   function buildPlainText(): string {
     const lines = [
       '══════════════════════════════════════════',
-      '  GeM — Government e-Marketplace',
-      '  Product Catalog Entry (Draft)',
+      `  ${t('gem.plainTextHeading')}`,
+      `  ${t('gem.plainTextSubheading')}`,
       '══════════════════════════════════════════',
       '',
       `${t('gem.catalogId')}:    ${catalogId}`,
@@ -114,8 +114,8 @@
         </svg>
       </div>
       <div class="gem-card__header-text">
-        <p class="gem-card__header-title">Government e-Marketplace</p>
-        <p class="gem-card__header-sub">gem.gov.in — Product Catalog Entry</p>
+        <p class="gem-card__header-title">{t('gem.marketplaceName')}</p>
+        <p class="gem-card__header-sub">{t('gem.marketplaceSub')}</p>
       </div>
     </div>
 

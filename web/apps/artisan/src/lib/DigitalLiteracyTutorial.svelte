@@ -25,8 +25,8 @@
   interface TutorialStep {
     titleKey: MessageKey;
     descKey: MessageKey;
+    badgeKey: MessageKey;
     icon: IconName;
-    badge: string;
     speakHindi: string;
     /* Each step carries one accent from the craft palette -- voice is clay,
        the photo studio is indigo, pricing is turmeric, payment is neem. Four
@@ -41,8 +41,8 @@
     {
       titleKey: 'literacy.tutorial.step1Title',
       descKey: 'literacy.tutorial.step1Desc',
+      badgeKey: 'literacy.tutorial.step1Badge',
       icon: 'microphone',
-      badge: 'बोलकर सूची बनाएं (Voice-First)',
       speakHindi: 'कलाकृति में टाइप करने की कोई ज़रूरत नहीं है। बस अपनी मातृभाषा में अपने शिल्प के बारे में बोलें। हमारा एआई इसे अपने आप लिख लेगा।',
       accent: '--k-accent-primary-bg',
       onAccent: '--k-text-on-accent',
@@ -50,8 +50,8 @@
     {
       titleKey: 'literacy.tutorial.step2Title',
       descKey: 'literacy.tutorial.step2Desc',
+      badgeKey: 'literacy.tutorial.step2Badge',
       icon: 'camera',
-      badge: 'एआई फोटो स्टूडियो (AI Studio)',
       speakHindi: 'अपने करघे पर ही साधारण मोबाइल फोटो खींचें। हमारा एआई अपने आप पीछे की हलचल हटाकर साफ सफेद पृष्ठभूमि और सही रोशनी बना देगा।',
       accent: '--k-accent-secondary',
       onAccent: '--k-text-on-accent',
@@ -59,8 +59,8 @@
     {
       titleKey: 'literacy.tutorial.step3Title',
       descKey: 'literacy.tutorial.step3Desc',
+      badgeKey: 'literacy.tutorial.step3Badge',
       icon: 'fair-price',
-      badge: 'उचित मूल्य सलाहकार (Fair Pricing)',
       speakHindi: 'कभी घाटे में न बेचें। कलाकृति कच्चे माल और आपकी दैनिक मजदूरी जोड़कर सही सरकारी मूल्य सुझाती है।',
       accent: '--k-accent-warning-bg',
       onAccent: '--k-accent-warning-text',
@@ -68,8 +68,8 @@
     {
       titleKey: 'literacy.tutorial.step4Title',
       descKey: 'literacy.tutorial.step4Desc',
+      badgeKey: 'literacy.tutorial.step4Badge',
       icon: 'income-statement',
-      badge: 'सीधे खाते में भुगतान (Direct DBT)',
       speakHindi: 'ग्राहक और सरकारी खरीद का पूरा पैसा बिना किसी दलाल के सीधे आपके बैंक खाते में पहुंचेगा। शून्य कमीशन।',
       accent: '--k-accent-success-bg',
       onAccent: '--k-text-on-accent',
@@ -111,7 +111,7 @@
     >
       <header class="tutorial-header">
         <div class="sahayak-badge">
-          <span>DIGITAL SAHAYAK • डिजिटल साक्षरता सहायता</span>
+          <span>{t('literacy.tutorial.sahayakBadge')}</span>
         </div>
         <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
           <Icon name="close" />
@@ -130,14 +130,14 @@
           <div class="step-icon-wrap">
             <Icon name={activeStep.icon} size="2.5rem" />
           </div>
-          <div class="step-badge">{activeStep.badge}</div>
+          <div class="step-badge">{t(activeStep.badgeKey)}</div>
           <h2 class="step-title">{t(activeStep.titleKey)}</h2>
           <p class="step-desc">{t(activeStep.descKey)}</p>
 
           <!-- Large Voice Audio Button -->
           <div class="voice-row">
-            <SpeakButton text={activeStep.speakHindi} label="हिन्दी में सुनें (Listen in Hindi)" />
-            <span class="voice-hint">Tap to listen in spoken Hindi</span>
+            <SpeakButton text={activeStep.speakHindi} label={t('literacy.tutorial.listenHindi')} />
+            <span class="voice-hint">{t('literacy.tutorial.voiceHint')}</span>
           </div>
         </div>
       {/key}
@@ -150,7 +150,7 @@
             class="dot-btn"
             class:dot-btn--active={i === currentStep}
             onclick={() => (currentStep = i)}
-            aria-label={`Go to step ${i + 1}`}
+            aria-label={t('literacy.tutorial.dotAriaLabel', { step: String(i + 1) })}
           ></button>
         {/each}
       </div>

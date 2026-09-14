@@ -195,12 +195,31 @@
   </a>
   <button type="button" class="home-links-row__link home-links-row__btn" onclick={() => (showStallModal = true)}>
     <Icon name="verified-artisan" />
-    <span>Stall Placard</span>
+    <span>{t('home.stallPlacard')}</span>
   </button>
   <a class="home-links-row__link" href="/notifications">
     <Icon name="bell" />
-    {t('home.notifications')}
+    <span>{t('home.notifications')}</span>
   </a>
+  <a class="home-links-row__link" href="/trends">
+    <Icon name="link" />
+    <span>{t('nav.trends')}</span>
+  </a>
+</div>
+
+<!-- B2B Enterprise & Boutique Partners Strip -->
+<div class="b2b-opportunity-card">
+  <div class="b2b-header">
+    <Icon name="package" />
+    <span class="b2b-kicker">Year-Round Sourcing &amp; Boutique Partnerships</span>
+  </div>
+  <p class="b2b-desc">
+    Verified retailers, independent boutique studios, and export houses procure authenticated craft pieces directly from certified clusters.
+  </p>
+  <div class="b2b-actions">
+    <a href="/orders" class="b2b-btn">View Sourcing Lots</a>
+    <a href="/trends" class="b2b-btn secondary">View Market Trends</a>
+  </div>
 </div>
 
 <!-- Economic Growth & Income Uplift Section -->
@@ -530,5 +549,61 @@
   .lots__row-status {
     color: var(--k-accent-warning);
     font-size: var(--k-text-sm);
+  }
+
+  .b2b-opportunity-card {
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface-raised);
+    padding: var(--k-space-3);
+    margin-block: var(--k-space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+  }
+
+  .b2b-header {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    color: var(--k-terracotta);
+  }
+
+  .b2b-kicker {
+    font-size: var(--k-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .b2b-desc {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .b2b-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--k-space-2);
+    margin-block-start: var(--k-space-1);
+  }
+
+  .b2b-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--k-space-2) var(--k-space-3);
+    font-size: var(--k-text-xs);
+    font-weight: 600;
+    text-decoration: none;
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface);
+    color: var(--k-ink);
+  }
+
+  .b2b-btn:not(.secondary) {
+    background-color: var(--k-terracotta);
+    color: var(--k-khadi);
+    border-color: transparent;
   }
 </style>

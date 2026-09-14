@@ -7,7 +7,7 @@
   temporary exhibition sales spikes into continuous year-round digital prosperity.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Tabs } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
@@ -21,42 +21,17 @@
   let activeTab = $state('chart');
 
   interface QuarterData {
-    periodKey: string;
-    periodLabel: string;
+    periodKey: MessageKey;
+    highlightKey: MessageKey;
     baseline: number;     // Earnings without Kalakriti (only physical melas)
     kalakriti: number;    // Earnings with Kalakriti (year-round digital + melas)
-    highlight: string;
   }
 
   const QUARTERS: QuarterData[] = [
-    {
-      periodKey: 'growth.q1',
-      periodLabel: 'Q1 (Apr–Jun) Post-Mela Transition',
-      baseline: 12000,
-      kalakriti: 38500,
-      highlight: 'First repeat orders from Surajkund Mela stall QR card',
-    },
-    {
-      periodKey: 'growth.q2',
-      periodLabel: 'Q2 (Jul–Sep) Monsoon Season',
-      baseline: 6000,
-      kalakriti: 31000,
-      highlight: 'Zero debt cycle; continuous online boutique orders',
-    },
-    {
-      periodKey: 'growth.q3',
-      periodLabel: 'Q3 (Oct–Dec) Festive Pre-Orders',
-      baseline: 18000,
-      kalakriti: 54000,
-      highlight: 'GeM institutional corporate summit gifting lots',
-    },
-    {
-      periodKey: 'growth.q4',
-      periodLabel: 'Q4 (Jan–Mar) Winter Expos & Melas',
-      baseline: 32000,
-      kalakriti: 61500,
-      highlight: 'Dilli Haat in-person sales + instant digital reorders',
-    },
+    { periodKey: 'growth.q1', highlightKey: 'growth.q1.highlight', baseline: 12000, kalakriti: 38500 },
+    { periodKey: 'growth.q2', highlightKey: 'growth.q2.highlight', baseline: 6000, kalakriti: 31000 },
+    { periodKey: 'growth.q3', highlightKey: 'growth.q3.highlight', baseline: 18000, kalakriti: 54000 },
+    { periodKey: 'growth.q4', highlightKey: 'growth.q4.highlight', baseline: 32000, kalakriti: 61500 },
   ];
 
   const totalBaseline = $derived(QUARTERS.reduce((acc, q) => acc + q.baseline, 0));
@@ -77,7 +52,7 @@
     <div class="growth-header__title-box">
       <div class="growth-badge">
         <Icon name="verified-artisan" size="0.85rem" />
-        <span>ECONOMIC IMPACT TRACKER</span>
+        <span>{t('growth.badge')}</span>
       </div>
       <h2 class="growth-title">{t('growth.title')}</h2>
       <p class="growth-subhead">{t('growth.subtitle')}</p>
@@ -87,8 +62,8 @@
     <div class="uplift-hero">
       <div class="uplift-hero__num">+{upliftPercentage}%</div>
       <div class="uplift-hero__label">
-        <strong>Annual Net Uplift</strong>
-        <span>+{formatInr(totalUpliftPaise)} Extra Income</span>
+        <strong>{t('growth.annualUplift')}</strong>
+        <span>{t('growth.extraIncome', { amount: formatInr(totalUpliftPaise) })}</span>
       </div>
     </div>
   </header>
@@ -137,7 +112,7 @@
         {#snippet children(tabId)}
           {#if tabId === 'chart'}
             <!-- Visual Grouped Bar Chart -->
-            <div class="chart-canvas" role="figure" aria-label="Quarterly income uplift chart">
+            <div class="chart-canvas" role="figure" aria-label={t('growth.chartAriaLabel')}>
               <div class="bars-container">
                 {#each QUARTERS as q (q.periodKey)}
                   {@const baselinePct = Math.round((q.baseline / maxVal) * 100)}
@@ -164,7 +139,7 @@
                     </div>
 
                     <div class="quarter-meta">
-                      <span class="quarter-label">{q.periodLabel.split(' ')[0]}</span>
+                      <span class="quarter-label">{t(q.periodKey).split(' ')[0]}</span>
                       <span class="quarter-uplift-tag">+{quarterUplift}%</span>
                     </div>
                   </div>
@@ -175,8 +150,7 @@
               <div class="insight-banner">
                 <span class="insight-icon"><Icon name="info" size="1.1rem" /></span>
                 <p>
-                  <strong>Monsoon Resilience:</strong> Traditional master artisans suffered a 68% income drop during monsoon lulls (Q2).
-                  With Kalakriti's continuous digital channel, artisans sustained ₹31,000/month, completely eliminating cyclical moneylender debt.
+                  <strong>{t('growth.insight.heading')}</strong> {t('growth.insight.body')}
                 </p>
               </div>
             </div>
@@ -186,29 +160,29 @@
               <table class="growth-table">
                 <thead>
                   <tr>
-                    <th scope="col">Timeline</th>
-                    <th scope="col">Physical Melas Only</th>
-                    <th scope="col">With Kalakriti Digital</th>
-                    <th scope="col">Net Gain</th>
-                    <th scope="col">Driver</th>
+                    <th scope="col">{t('growth.table.timeline')}</th>
+                    <th scope="col">{t('growth.table.physicalMelasOnly')}</th>
+                    <th scope="col">{t('growth.table.withKalakritiDigital')}</th>
+                    <th scope="col">{t('growth.table.netGain')}</th>
+                    <th scope="col">{t('growth.table.driver')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {#each QUARTERS as q}
                     <tr>
-                      <th scope="row"><strong>{q.periodLabel}</strong></th>
+                      <th scope="row"><strong>{t(q.periodKey)}</strong></th>
                       <td>{formatInr(q.baseline)}</td>
                       <td class="cell-green">{formatInr(q.kalakriti)}</td>
                       <td class="cell-gain">+{formatInr(q.kalakriti - q.baseline)}</td>
-                      <td class="cell-highlight">{q.highlight}</td>
+                      <td class="cell-highlight">{t(q.highlightKey)}</td>
                     </tr>
                   {/each}
                   <tr class="table-total">
-                    <th scope="row"><strong>ANNUAL TOTAL</strong></th>
+                    <th scope="row"><strong>{t('growth.table.annualTotal')}</strong></th>
                     <td><strong>{formatInr(totalBaseline)}</strong></td>
                     <td class="cell-green"><strong>{formatInr(totalKalakriti)}</strong></td>
                     <td class="cell-gain"><strong>+{formatInr(totalUpliftPaise)} (+{upliftPercentage}%)</strong></td>
-                    <td><strong>Direct Bank Transfer (DBT)</strong></td>
+                    <td><strong>{t('growth.table.dbt')}</strong></td>
                   </tr>
                 </tbody>
               </table>
