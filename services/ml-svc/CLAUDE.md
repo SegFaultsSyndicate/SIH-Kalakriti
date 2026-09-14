@@ -74,10 +74,53 @@ a ninth.
 | `image_background` | `EnhanceImage` | rembg / BiRefNet | `ML_SVC_IMAGE_BACKGROUND_MODEL` |
 | `image_lighting` | `EnhanceImage` | Zero-DCE++ (`net.py`, the old top-level `zero_dce.py`) | `ML_SVC_IMAGE_LIGHTING_MODEL` (a checkpoint path; empty = optional, degrades to unavailable) |
 | `vlm` | `ExtractAttributes`, `VerifyTechnique`, `GenerateDescription`'s polish | Qwen2.5-VL, one checkpoint backs all three | `ML_SVC_IMAGE_ATTRIBUTE_EXTRACTION_MODEL`, `ML_SVC_TECHNIQUE_VERIFICATION_MODEL`, `ML_SVC_IMAGE_DESCRIPTION_MODEL` (all default to the same repo id; see `vlm/real.py`'s docstring for what happens if they diverge), `ML_SVC_VIDEO_FRAMES` |
-| `embedding` | `Embed` | SentenceTransformer (e5) | `ML_SVC_TEXT_EMBEDDING_MODEL` |
-| `reranking` | `Rerank` | CrossEncoder (bge) | `ML_SVC_TEXT_RERANKING_MODEL` |
+| `embedding` | `Embed` | SentenceTransformer (e5), ONNX Runtime by default | `ML_SVC_TEXT_EMBEDDING_MODEL`, `ML_SVC_TEXT_EMBEDDING_BACKEND` (`onnx`\|`torch`) |
+| `reranking` | `Rerank` | CrossEncoder (bge), ONNX Runtime by default | `ML_SVC_TEXT_RERANKING_MODEL`, `ML_SVC_TEXT_RERANKING_BACKEND` (`onnx`\|`torch`) |
 | `handloom_texture` | `DetectHandloom` | FFT peak-ratio + an optional, never-yet-trained texture CNN | `ML_SVC_HANDLOOM_DETECTION_MODEL` (checkpoint path; not wired to any loader yet -- see `real.py`, this was true before the refactor too) |
 | `voice_transcription` | `Transcribe` | Bhashini HTTP API -- proof "a model" can be an external API call, not just a local checkpoint | `ML_SVC_VOICE_TRANSCRIPTION_URL`/`_API_KEY` |
+
+**`embedding`/`reranking` run through ONNX Runtime, not eager PyTorch, by
+default** (`backend="onnx"` on both `EmbeddingConfig`/`RerankingConfig`,
+passed straight into `SentenceTransformer(...)`/`CrossEncoder(...)`). Unlike
+the VLM, these are static-graph encoder models with no autoregressive
+decode, so ONNX export is mature and low-risk here -- the same category of
+win `image_background` already gets from rembg shipping ONNX weights, just
+applied via sentence-transformers' native `backend` kwarg instead of a
+vendor library. Set `ML_SVC_TEXT_EMBEDDING_BACKEND`/
+`ML_SVC_TEXT_RERANKING_BACKEND` to `torch` to fall back to eager mode. The
+VLM stays on plain `transformers` -- see the "Adding or swapping a model"
+section below for why ONNX doesn't fit it.
+
+**A repo with no pre-published `onnx/model.onnx` on the Hub (e.g.
+`BAAI/bge-reranker-v2-m3`; `intfloat/multilingual-e5-base` happens to have
+one) does NOT get its on-the-fly export persisted by sentence-transformers
+itself** -- confirmed empirically, it logs "heavily recommended to save...
+push_to_hub" and holds the export in memory only, so a naive `backend="onnx"`
+call would silently re-export from scratch on every process restart, a real
+and avoidable cost, not just a one-time one. `app/model_loading.py`'s
+`load_or_export_onnx`/`onnx_export_dir`/`save_onnx_export_if_needed` fix
+this: both `embedding/real.py` and `reranking/real.py` check
+`$HF_HOME/onnx-exports/<repo-id-with-double-dash>/` first and load straight
+from there if it exists (no download, no export), otherwise load+export
+normally and save into it for next time. Harmless no-op for a repo that
+already had a Hub-published onnx file (just a redundant local copy) --
+callers don't need to know which case applied. Verified both paths manually
+(first load exports+saves; second load skips straight to the saved copy)
+since there's no automated test for real-mode loading (see the Tests
+section below).
+
+**`onnxruntime` is pinned to `1.22.0` in `pyproject.toml`, not left to
+`sentence-transformers[onnx]` extra's own resolution** -- confirmed
+empirically, anything newer (`1.29.0` as of this pin) crashes every
+real-mode embedding/reranking load with `AttributeError: module 'torch' has
+no attribute 'int4'`. `onnxruntime`'s `transformers/io_binding_helper.py`
+unconditionally references `torch.int4` in a type-mapping dict regardless of
+whether the model actually uses int4, and `torch.int4` doesn't exist before
+torch 2.5 -- this project pins `torch==2.4.0` for Qwen2.5-VL/bitsandbytes
+compatibility (see the `vlm` row above), so bumping torch to fix this would
+risk the VLM's carefully-pinned quantization stack instead. Bisected
+1.17.3-1.29.0 by hand; 1.17.3 through 1.22.0 lack the offending entries. Same
+pin applies to `onnxruntime-gpu` in the `onnx-gpu` extra.
 
 **Every one of these env var names changed in the modularization pass** (from
 vendor/backend-shaped names like `ML_SVC_VLM_MODEL`, `S3_*`, `BHASHINI_*` to
@@ -186,6 +229,15 @@ to be generated before the suite can import `app.pb`/run
   implementing the `VisionLanguageModel` Protocol, add a `backend` selector to
   `VLMConfig`/`build(cfg)`. Zero changes to `features/generate_description.py`
   or `server.py` -- this is the whole point of the Protocol boundary.
+- **Why the VLM doesn't get the same ONNX treatment as `embedding`/
+  `reranking`**: those two are static-graph encoders; the VLM is
+  autoregressive generation over a vision tower plus a decoder with a
+  dynamic KV cache, a shape ONNX Runtime and Optimum's export tooling don't
+  handle well for Qwen2.5-VL as of `transformers==4.49.0`. If VLM throughput
+  ever needs to improve, look at a dedicated serving runtime (e.g. vLLM,
+  which loads HF safetensors checkpoints directly -- no export step, so a
+  future fine-tuned or LoRA-adapted checkpoint drops straight in) rather
+  than ONNX.
 - **Adding a ninth component**: new `app/models/<name>/` package following the
   shape above, one `load(...)` call added to `app/registry.py`'s `load_all`
   and one field added to `Registry`, a new or extended `features/<rpc>.py`.

@@ -29,6 +29,7 @@ from __future__ import annotations
 import logging
 import os
 from functools import lru_cache
+from pathlib import Path
 
 import torch
 
@@ -90,3 +91,51 @@ def local_files_only_kwargs(repo_id: str) -> dict[str, bool]:
     """kwargs to splat into from_pretrained(): {"local_files_only": True} once
     `repo_id` is already installed, {} (normal download-if-needed) otherwise."""
     return {"local_files_only": True} if is_cached_locally(repo_id) else {}
+
+
+def onnx_export_dir(repo_id: str) -> Path:
+    """Where `save_onnx_export_if_needed` persists an on-the-fly ONNX export.
+
+    DESIGN DECISION: this is a second, separate cache directory, not
+    something layered onto `is_cached_locally`'s HF cache scan. A repo that
+    already publishes ONNX weights on the Hub (e.g. intfloat/multilingual-e5-base)
+    downloads them into the normal HF cache and needs nothing here --
+    sentence-transformers finds them next to the torch weights on its own.
+    This directory exists only for the other case (e.g. BAAI/bge-reranker-v2-m3,
+    no published ONNX weights): sentence-transformers exports one on the fly
+    but -- confirmed empirically, it logs "heavily recommended to save...
+    push_to_hub" -- holds that export in memory only, re-exporting from
+    scratch on every process restart unless something saves it. So every
+    `backend="onnx"` real component checks this directory first and saves
+    into it after an export; which of the two cases actually applied for a
+    given repo id doesn't need to be known by the caller.
+    """
+    from huggingface_hub.constants import HF_HUB_CACHE
+
+    return Path(HF_HUB_CACHE).parent / "onnx-exports" / repo_id.replace("/", "--")
+
+
+def save_onnx_export_if_needed(model, repo_id: str) -> None:
+    """Persist `model`'s ONNX export to `onnx_export_dir(repo_id)` the first
+    time it's loaded, so a later restart's `load_or_export_onnx` call finds
+    it and skips both the download and the export. A no-op past the first
+    call for a given repo id, and harmless (just a redundant local copy) for
+    a repo that already had published ONNX weights and so never actually
+    exported anything on the fly."""
+    export_dir = onnx_export_dir(repo_id)
+    if not export_dir.exists():
+        model.save_pretrained(str(export_dir))
+
+
+def load_or_export_onnx(load_fn, repo_id: str):
+    """`load_fn(model_name_or_path)` loads a SentenceTransformer/CrossEncoder
+    with `backend="onnx"` already bound. Loads from a previous export in
+    `onnx_export_dir(repo_id)` if one exists (no download, no export);
+    otherwise loads (and, if needed, exports) from `repo_id` itself, then
+    saves the result for next time."""
+    export_dir = onnx_export_dir(repo_id)
+    if export_dir.exists():
+        return load_fn(str(export_dir))
+    model = load_fn(repo_id)
+    save_onnx_export_if_needed(model, repo_id)
+    return model

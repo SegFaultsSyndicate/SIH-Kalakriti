@@ -4,6 +4,15 @@ The text-embedding component. Swappable independently of reranking, the VLM,
 or anything else: `ML_SVC_TEXT_EMBEDDING_MODEL` names a SentenceTransformer
 repo id today; a future backend (a hosted embeddings API, say) implements the
 same `TextEmbedder` Protocol with no change to `features/embed.py`.
+
+`backend` picks the sentence-transformers execution backend, not a different
+component -- "onnx" (default) runs this same repo id through ONNX Runtime
+instead of eager PyTorch. sentence-transformers exports the checkpoint to
+ONNX on first load if the repo has no pre-exported `onnx/model.onnx` (needs
+the `onnx` extra -- see pyproject.toml) and caches the export next to the
+torch weights in the same HF cache entry, so this is a one-time cost per
+repo id, not a separate download. Set `ML_SVC_TEXT_EMBEDDING_BACKEND=torch`
+to fall back to eager mode.
 """
 
 from __future__ import annotations
@@ -30,12 +39,15 @@ class EmbeddingConfig:
     # GPU's VRAM for a component that needs it more (see vlm's 4-bit
     # quantization) -- this model is small enough to run fine on CPU.
     device: str | None = None
+    # "onnx" or "torch" -- see this module's docstring.
+    backend: str = "onnx"
 
     @classmethod
     def from_env(cls) -> "EmbeddingConfig":
         return cls(
             model=os.getenv("ML_SVC_TEXT_EMBEDDING_MODEL", "intfloat/multilingual-e5-base"),
             device=os.getenv("ML_SVC_TEXT_EMBEDDING_DEVICE") or None,
+            backend=os.getenv("ML_SVC_TEXT_EMBEDDING_BACKEND", "onnx"),
         )
 
 
