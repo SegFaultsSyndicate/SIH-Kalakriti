@@ -6,8 +6,8 @@
   authentic typography, and first-class GI tag status.
 -->
 <script lang="ts">
-  import { locale, type MessageKey } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon, type IconName } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -112,27 +112,32 @@
   <!-- Belt Selector Navigation Tabs -->
   <div class="belt-nav-strip" role="tablist">
     {#each BELTS as belt (belt.id)}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={selectedBeltId === belt.id}
-        class="belt-nav-item"
-        class:active={selectedBeltId === belt.id}
-        onclick={() => (selectedBeltId = belt.id)}
-      >
-        <Icon name={belt.icon} size="1.1rem" />
-        <span class="nav-text">
-          {belt.id === 'north'
-            ? t('home.belts.north.name')
-            : belt.id === 'west'
-              ? t('home.belts.west.name')
-              : belt.id === 'south'
-                ? t('home.belts.south.name')
-                : belt.id === 'east'
-                  ? t('home.belts.east.name')
-                  : t('home.belts.central.name')}
-        </span>
-      </button>
+      <Tooltip text={tooltip('tooltip.selectBelt')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedBeltId === belt.id}
+            class="belt-nav-item"
+            class:active={selectedBeltId === belt.id}
+            onclick={() => (selectedBeltId = belt.id)}
+            {...tp}
+          >
+            <Icon name={belt.icon} size="1.1rem" />
+            <span class="nav-text">
+              {belt.id === 'north'
+                ? t('home.belts.north.name')
+                : belt.id === 'west'
+                  ? t('home.belts.west.name')
+                  : belt.id === 'south'
+                    ? t('home.belts.south.name')
+                    : belt.id === 'east'
+                      ? t('home.belts.east.name')
+                      : t('home.belts.central.name')}
+            </span>
+          </button>
+        {/snippet}
+      </Tooltip>
     {/each}
   </div>
 

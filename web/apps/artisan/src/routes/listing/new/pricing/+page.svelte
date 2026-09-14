@@ -10,7 +10,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, FieldGroup, Input, NumberStepper, Money } from '@kalakriti/ui';
   import { network } from '@kalakriti/offline';
@@ -170,7 +170,7 @@
             <NumberStepper {id} bind:value={hours} min={0} />
           {/snippet}
         </FieldGroup>
-        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice}>
+        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice} tooltip={tooltip('tooltip.getPriceAdvice')}>
           {t('listing.pricing.adviceButton')}
         </Button>
         {#if advisory}
@@ -183,7 +183,7 @@
     </div>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={priceAmountPaise === undefined} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={priceAmountPaise === undefined} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
   {/snippet}
 </ListingStep>
 

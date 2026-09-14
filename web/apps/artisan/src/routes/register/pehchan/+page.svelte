@@ -1,7 +1,7 @@
 <!-- apps/artisan/src/routes/register/pehchan/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { FieldGroup, Input, Button } from '@kalakriti/ui';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft } from '$lib/registration';
@@ -44,7 +44,7 @@
     </FieldGroup>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" onclick={next}>
+    <Button size="xl" onclick={next} tooltip={tooltip(pehchanId.trim() === '' ? 'tooltip.skip' : 'tooltip.next')}>
       {pehchanId.trim() === '' ? t('action.skip') : t('action.next')}
     </Button>
   {/snippet}

@@ -163,6 +163,17 @@ class LocaleState {
   }
 
   /**
+   * Tooltip resolver getter. Re-derives when code, version, or catalogue changes.
+   */
+  get tooltip(): (key: MessageKey) => string {
+    void this.#code;
+    void this.#catalogue;
+    void this.#hiCatalogue;
+    void this.#version;
+    return (key: MessageKey) => this.#lookup(key);
+  }
+
+  /**
    * Plural-aware translate. `base.one` / `base.other` (etc, per CLDR
    * category) are looked up as ordinary keys through the same active -> hi ->
    * en chain as `t`; `base.other` is the required fallback if the selected
@@ -259,4 +270,13 @@ export function t(key: MessageKey, values?: MessageValues): string {
 /** Convenience for `const tp = $derived(locale.tPlural.bind(locale))`. */
 export function tPlural(base: string, count: number, values?: MessageValues): string {
   return locale.tPlural(base, count, values);
+}
+
+/**
+ * Tooltip text, resolved through the same active catalogue -> Hindi ->
+ * English chain as `t()`, so it reads in the currently selected language.
+ * No endonym or fallback marker is appended. Every key must exist in en.ts.
+ */
+export function tooltip(key: MessageKey): string {
+  return locale.tooltip(key);
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- badge-master (core icon). none — global UI iconography, not a licensed motif. Use: master_craftsperson badge. -->
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z"/>
+  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 8.5 L13.2 11 L16 11.4 L14 13.3 L14.5 16 L12 14.6 L9.5 16 L10 13.3 L8 11.4 L10.8 11 Z"/>
+</svg>

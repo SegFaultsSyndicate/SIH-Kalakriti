@@ -23,7 +23,7 @@
   genuinely per-order complement, not a fabrication.
 -->
 <script lang="ts">
-  import { locale, formatDate } from '@kalakriti/i18n';
+  import { locale, formatDate, tooltip } from '@kalakriti/i18n';
   import { Button, Input, Label, Money, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
@@ -126,6 +126,7 @@
       onclick={onGenerate}
       disabled={!start || !end || !network.online || generating}
       loading={generating}
+      tooltip={tooltip('tooltip.generateStatement')}
     >
       {t('earnings.statement.generate')}
     </Button>

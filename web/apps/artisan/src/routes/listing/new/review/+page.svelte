@@ -14,7 +14,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale, matchesLocale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, matchesLocale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Button, Input, SpeakButton } from '@kalakriti/ui';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields } from '$lib/listing-draft';
@@ -145,7 +145,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={!loaded} onclick={approve}>{t('listing.review.approve')}</Button>
+    <Button size="xl" disabled={!loaded} onclick={approve} tooltip={tooltip('tooltip.approve')}>{t('listing.review.approve')}</Button>
   {/snippet}
 </ListingStep>
 

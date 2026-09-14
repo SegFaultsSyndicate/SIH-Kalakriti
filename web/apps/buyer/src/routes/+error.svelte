@@ -9,7 +9,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { EmptyState, Button } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
@@ -26,7 +26,7 @@
   body={isNotFound ? t('error.404.body') : t('error.500.body')}
 >
   {#snippet action()}
-    <Button onclick={() => goto('/')}>
+    <Button onclick={() => goto('/')} tooltip={tooltip('tooltip.goHome')}>
       {isNotFound ? t('error.404.action') : t('error.500.action')}
     </Button>
   {/snippet}

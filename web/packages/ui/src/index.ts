@@ -20,6 +20,7 @@ export { focusMainHeading } from './focus';
 export { a11y, TEXT_SCALE_STEPS, type TextScale, type Contrast } from './a11y.svelte';
 export { default as AccessibilityControl } from './AccessibilityControl.svelte';
 export { default as LanguageSelector } from './LanguageSelector.svelte';
+export { default as CurrencySelector } from './CurrencySelector.svelte';
 export { default as Chip } from './Chip.svelte';
 export { default as AccessibilityStatement } from './AccessibilityStatement.svelte';
 export { default as CraftTerm } from './CraftTerm.svelte';

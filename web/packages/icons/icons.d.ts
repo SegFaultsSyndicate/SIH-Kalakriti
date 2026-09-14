@@ -26,7 +26,6 @@ export type IconName =
   | 'sort'
   | 'share'
   | 'download'
-  | 'dollar-sign'
   | 'print'
   | 'link'
   | 'external-link'
@@ -64,6 +63,13 @@ export type IconName =
   | 'pause'
   | 'volume'
   | 'speaker'
+  | 'badge-verified'
+  | 'badge-master'
+  | 'badge-award'
+  | 'badge-gi'
+  | 'badge-coordinator'
+  | 'badge-milestone'
+  | 'badge-locked'
   | 'handmade-certified'
   | 'verified-artisan'
   | 'gi-tagged'
@@ -92,20 +98,3 @@ export type IconName =
   | 'bamboo'
   | 'charkha-spinner'
   | 'upload-zone';
-
-import type { Component } from 'svelte';
-
-export interface IconProps {
-  name: IconName;
-  title?: string;
-  size?: string;
-  strokeWidth?: number;
-  class?: string;
-  [key: string]: any;
-}
-
-export declare const Icon: Component<IconProps>;
-export declare const Spinner: Component<{ size?: string; class?: string; [key: string]: any }>;
-export declare const UploadZone: Component<{ [key: string]: any }>;
-export declare const ICONS: readonly IconName[];
-

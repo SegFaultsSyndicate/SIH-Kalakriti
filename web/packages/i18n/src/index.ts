@@ -16,6 +16,7 @@ export {
   locale,
   t,
   tPlural,
+  tooltip,
   hasExplicitLocale,
   type Translate,
   type MessageValues,

@@ -20,7 +20,7 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, FieldGroup, Input, Textarea, NumberStepper, Money, SpeakButton, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
@@ -193,7 +193,7 @@
       {/if}
       {#if listing.state === 'PUBLISHED'}
         <a href="/listings/{listing.id}/provenance">{t('listings.detail.provenanceLink')}</a>
-        <Button size="sm" variant="secondary" onclick={() => (gemOpen = true)}>
+        <Button size="sm" variant="secondary" onclick={() => (gemOpen = true)} tooltip={tooltip('tooltip.viewGem')}>
           <Icon name="external-link" />
           {t('gem.exportButton')}
         </Button>
@@ -204,7 +204,7 @@
       <div class="listing-detail__section-header">
         <h2>{t('listings.detail.copyHeading')}</h2>
         {#if localDraftId}
-          <Button size="sm" variant="ghost" loading={regenerating} onclick={regenerateDescription}>
+          <Button size="sm" variant="ghost" loading={regenerating} onclick={regenerateDescription} tooltip={tooltip('tooltip.regenerate')}>
             <Icon name="refresh" />
             {t('listings.detail.regenerate')}
           </Button>
@@ -249,7 +249,7 @@
         </Card>
       {/each}
 
-      <Button size="sm" loading={savingTranslations} onclick={saveTranslations}>
+      <Button size="sm" loading={savingTranslations} onclick={saveTranslations} tooltip={tooltip('tooltip.saveTranslations')}>
         {t('listings.detail.saveCopy')}
       </Button>
     </section>
@@ -287,7 +287,7 @@
           <Input {id} type="tel" bind:value={priceRupees} placeholder="0" />
         {/snippet}
       </FieldGroup>
-      <Button size="sm" loading={savingPrice} disabled={priceAmountPaise === undefined} onclick={savePrice}>
+      <Button size="sm" loading={savingPrice} disabled={priceAmountPaise === undefined} onclick={savePrice} tooltip={tooltip('tooltip.savePrice')}>
         {t('listings.detail.savePrice')}
       </Button>
 
@@ -304,7 +304,7 @@
             <NumberStepper {id} bind:value={hours} min={0} />
           {/snippet}
         </FieldGroup>
-        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice}>
+        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice} tooltip={tooltip('tooltip.getPriceAdvice')}>
           {t('listing.pricing.adviceButton')}
         </Button>
         {#if advice}

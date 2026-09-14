@@ -12,13 +12,14 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale, type LocaleCode } from '@kalakriti/i18n';
+  import { locale, tooltip, type LocaleCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import {
     Button,
     SpeakButton,
     Skeleton,
     showToast,
+    Tooltip,
     a11y,
   } from '@kalakriti/ui';
   import {
@@ -51,12 +52,12 @@
   const t = $derived(locale.t);
 
   let name = $state('eshaan');
-  let phone = $state('+91 8779279060');
+  let phone = $state('+91 9999999999');
   let avatarUrl = $state<string | undefined>(undefined);
   let rawImageToCrop = $state<string>('');
   let showCropModal = $state(false);
   let showBusinessCardModal = $state(false);
-  let showStallModal = $state(false);
+  let showStallModal = $state(false);  
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
@@ -402,25 +403,33 @@
         </div>
 
         <div class="profile-avatar-btns">
-          <button
-            type="button"
-            class="avatar-ctrl-btn"
-            onclick={() => (cameraInput ?? fileInput)?.click()}
-            title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}
-          >
-            <Icon name="camera" size="0.8rem" />
-            <span>{avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}</span>
-          </button>
+          <Tooltip text={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}>
+            {#snippet trigger(props)}
+              <button
+                type="button"
+                class="avatar-ctrl-btn"
+                onclick={() => (cameraInput ?? fileInput)?.click()}
+                {...props}
+              >
+                <Icon name="camera" size="0.8rem" />
+                <span>{avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
           {#if avatarUrl}
-            <button
-              type="button"
-              class="avatar-ctrl-btn avatar-ctrl-btn--danger"
-              onclick={handleRemoveAvatar}
-              title={t('profile.removePhoto')}
-            >
-              <Icon name="trash" size="0.8rem" />
-              <span>{t('profile.removePhoto')}</span>
-            </button>
+            <Tooltip text={t('profile.removePhoto')}>
+              {#snippet trigger(props)}
+                <button
+                  type="button"
+                  class="avatar-ctrl-btn avatar-ctrl-btn--danger"
+                  onclick={handleRemoveAvatar}
+                  {...props}
+                >
+                  <Icon name="trash" size="0.8rem" />
+                  <span>{t('profile.removePhoto')}</span>
+                </button>
+              {/snippet}
+            </Tooltip>
           {/if}
         </div>
       </div>
@@ -578,7 +587,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.incomeProof')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.incomeProofDesc')}</p>
-          <Button variant="secondary" size="md" onclick={downloadIncomeStatement}>
+          <Button variant="secondary" size="md" onclick={downloadIncomeStatement} tooltip={tooltip('tooltip.generateStatement')}>
             <Icon name="download" size="1rem" />
             {t('profile.tools.generateStatement')}
           </Button>
@@ -592,7 +601,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.businessCard')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.businessCardDesc')}</p>
-          <Button variant="secondary" size="md" onclick={shareVisitingCard}>
+          <Button variant="secondary" size="md" onclick={shareVisitingCard} tooltip={tooltip('tooltip.shareCard')}>
             <Icon name="share" size="1rem" />
             {t('profile.tools.shareWhatsapp')}
           </Button>
@@ -606,7 +615,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.stallCard')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.stallCardDesc')}</p>
-          <Button variant="secondary" size="md" onclick={openStallCard}>
+          <Button variant="secondary" size="md" onclick={openStallCard} tooltip={tooltip('tooltip.print')}>
             <Icon name="print" size="1rem" />
             {t('profile.tools.generateStallCard')}
           </Button>
@@ -639,7 +648,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.addProduct')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.addProductDesc')}</p>
-          <Button variant="primary" size="md" onclick={() => goto('/listing/new/capture')}>
+          <Button variant="primary" size="md" onclick={() => goto('/listing/new/capture')} tooltip={tooltip('tooltip.newListing')}>
             <Icon name="camera" size="1rem" />
             {t('profile.tools.startListing')}
           </Button>
@@ -725,7 +734,7 @@
           bind:value={email}
           aria-label={t('profile.email.ariaLabel')}
         />
-        <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail}>
+        <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail} tooltip={tooltip('tooltip.savePreferences')}>
           {t('profile.email.save')}
         </Button>
       </div>
@@ -750,7 +759,7 @@
       <span class="session-info__badge">{t('profile.session.active')}</span>
     </div>
 
-    <Button variant="danger" size="md" onclick={handleLogout}>
+    <Button variant="danger" size="md" onclick={handleLogout} tooltip={tooltip('tooltip.signout')}>
       <Icon name="lock" size="1rem" />
       {t('profile.session.signOut')}
     </Button>
@@ -812,7 +821,7 @@
               />
             </div>
             <div class="phone-modal-actions">
-              <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)}>
+              <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)} tooltip={tooltip('tooltip.cancel')}>
                 {t('action.cancel')}
               </Button>
               <Button
@@ -821,6 +830,7 @@
                 onclick={requestPhoneChange}
                 loading={phoneLoading}
                 disabled={!newPhoneInput}
+                tooltip={tooltip('tooltip.changePhone')}
               >
                 {t('profile.phoneModal.sendOtp')}
               </Button>
@@ -841,7 +851,7 @@
               maxlength="6"
             />
             <div class="phone-modal-actions">
-              <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')}>
+              <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')} tooltip={tooltip('tooltip.back')}>
                 {t('action.back')}
               </Button>
               <Button
@@ -850,6 +860,7 @@
                 onclick={verifyPhoneChange}
                 loading={phoneLoading}
                 disabled={!phoneOtpInput}
+                tooltip={tooltip('tooltip.verifyPhone')}
               >
                 {t('profile.phoneModal.verifyAndUpdate')}
               </Button>

@@ -11,7 +11,7 @@
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import {
     getArtisanStorefront,
     listListings,
@@ -122,11 +122,11 @@
       </a>
 
       <div class="top-actions">
-        <Button variant="secondary" size="sm" onclick={handleWhatsApp}>
+        <Button variant="secondary" size="sm" onclick={handleWhatsApp} tooltip={tooltip('tooltip.share')}>
           <Icon name="whatsapp" size="0.9rem" />
           {t('shareCard.whatsappButton')}
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint}>
+        <Button variant="primary" size="sm" onclick={handlePrint} tooltip={tooltip('tooltip.print')}>
           <Icon name="print" size="0.9rem" />
           {t('shareCard.printButton')}
         </Button>
@@ -270,7 +270,7 @@
           <!-- Direct Call to Action Footer -->
           <footer class="card-footer">
             <div class="contact-buttons">
-              <Button variant="secondary" size="md" onclick={handleWhatsApp}>
+              <Button variant="secondary" size="md" onclick={handleWhatsApp} tooltip={tooltip('tooltip.share')}>
                 <Icon name="whatsapp" />
                 {t('shareCard.messageWhatsapp')}
               </Button>

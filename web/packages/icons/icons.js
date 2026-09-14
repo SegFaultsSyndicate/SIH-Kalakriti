@@ -28,7 +28,6 @@ import Icon_filter from './src/filter.svg';
 import Icon_sort from './src/sort.svg';
 import Icon_share from './src/share.svg';
 import Icon_download from './src/download.svg';
-import Icon_dollar_sign from './src/dollar-sign.svg';
 import Icon_print from './src/print.svg';
 import Icon_link from './src/link.svg';
 import Icon_external_link from './src/external-link.svg';
@@ -66,6 +65,13 @@ import Icon_play from './src/play.svg';
 import Icon_pause from './src/pause.svg';
 import Icon_volume from './src/volume.svg';
 import Icon_speaker from './src/speaker.svg';
+import Icon_badge_verified from './src/badge-verified.svg';
+import Icon_badge_master from './src/badge-master.svg';
+import Icon_badge_award from './src/badge-award.svg';
+import Icon_badge_gi from './src/badge-gi.svg';
+import Icon_badge_coordinator from './src/badge-coordinator.svg';
+import Icon_badge_milestone from './src/badge-milestone.svg';
+import Icon_badge_locked from './src/badge-locked.svg';
 import Icon_handmade_certified from './src/handmade-certified.svg';
 import Icon_verified_artisan from './src/verified-artisan.svg';
 import Icon_gi_tagged from './src/gi-tagged.svg';
@@ -121,7 +127,6 @@ export const ICON_COMPONENTS = {
   'sort': Icon_sort,
   'share': Icon_share,
   'download': Icon_download,
-  'dollar-sign': Icon_dollar_sign,
   'print': Icon_print,
   'link': Icon_link,
   'external-link': Icon_external_link,
@@ -159,6 +164,13 @@ export const ICON_COMPONENTS = {
   'pause': Icon_pause,
   'volume': Icon_volume,
   'speaker': Icon_speaker,
+  'badge-verified': Icon_badge_verified,
+  'badge-master': Icon_badge_master,
+  'badge-award': Icon_badge_award,
+  'badge-gi': Icon_badge_gi,
+  'badge-coordinator': Icon_badge_coordinator,
+  'badge-milestone': Icon_badge_milestone,
+  'badge-locked': Icon_badge_locked,
   'handmade-certified': Icon_handmade_certified,
   'verified-artisan': Icon_verified_artisan,
   'gi-tagged': Icon_gi_tagged,

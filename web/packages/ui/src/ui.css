@@ -551,6 +551,10 @@
 /* ============================================================= Tooltip */
 
 .k-tooltip-anchor { position: relative; display: inline-block; }
+/* An inline-block anchor shrink-wraps a full-width child button; give the
+   anchor block-level layout when the trigger is a full-row control (e.g.
+   an accordion toggle) so its inline-size: 100% still resolves. */
+.k-tooltip-anchor--fill { display: block; }
 .k-tooltip {
   position: absolute;
   inset-inline-start: 50%;
@@ -562,8 +566,17 @@
   max-inline-size: min(16rem, 90vw);
   padding: var(--k-space-2) var(--k-space-3);
   border-radius: var(--k-radius-sm);
-  background: var(--k-surface-inverse);
-  color: var(--k-text-on-inverse);
+  /* The one deliberately light chip in the system: flows over whatever
+     surface sits below it, so --k-surface-tooltip stays khadi in every
+     theme and the hairlined edge plus a small menu elevation do the
+     separating. Note the tooltip is pointer-transparent -- the trigger
+     (not the chip) owns mouse events -- and the visible text lives in
+     the accessible name of the trigger itself, so a tooltip is always
+     supplementary. */
+  background: var(--k-surface-tooltip);
+  color: var(--k-text-tooltip);
+  border: var(--k-hairline) solid var(--k-border-hairline);
+  box-shadow: var(--k-elevation-menu);
   font-size: var(--k-text-xs);
   opacity: 0;
   visibility: hidden;
@@ -574,6 +587,11 @@
 .k-tooltip--top { inset-block-end: calc(100% + var(--k-space-2)); }
 .k-tooltip--bottom { inset-block-start: calc(100% + var(--k-space-2)); }
 .k-tooltip--visible { opacity: 1; visibility: visible; }
+/* A popover trigger that is open (aria-expanded=true) holds its tooltip
+   chip back -- a chip floating over an open panel would read as part of
+   the panel. Higher specificity than k-tooltip--visible so it wins even
+   while the chip is shown. */
+.k-button[aria-expanded='true'] .k-tooltip { opacity: 0; visibility: hidden; }
 
 /* ============================================================= Popover */
 

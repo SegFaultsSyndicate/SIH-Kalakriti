@@ -15,9 +15,9 @@
   Strictly adheres to Svelte 5 runes ($state, $derived) and GIGW 3.0 accessibility.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -220,9 +220,13 @@
     <section class="profile-banner">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">AS</div>
-        <button type="button" class="avatar-edit-btn" title={t('account.changePhotoTitle')} aria-label={t('account.changePhotoLabel')}>
-          <Icon name="camera" size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.addPhoto')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="avatar-edit-btn" aria-label={t('account.changePhotoLabel')} {...tp}>
+              <Icon name="camera" size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="profile-meta">
@@ -241,7 +245,11 @@
           <span class="contact-item">
             <Icon name="phone" size="0.9rem" />
             {phone}
-            <span class="verified-dot" title={t('account.phoneVerifiedTitle')}>{t('account.phoneVerifiedBadge')}</span>
+            <Tooltip text={t('account.phoneVerifiedTitle')}>
+              {#snippet trigger(tp)}
+                <span class="verified-dot" {...tp}>{t('account.phoneVerifiedBadge')}</span>
+              {/snippet}
+            </Tooltip>
           </span>
         </div>
       </div>
@@ -262,10 +270,14 @@
       </div>
 
       <div class="profile-actions-col">
-        <button type="button" class="banner-signout-btn" onclick={handleSignOut} title={t('account.signOutTitle')}>
-          <Icon name="lock" size="0.85rem" />
-          <span>{t('account.signOut')}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.signout')}>
+        {#snippet trigger(tp)}
+          <button type="button" class="banner-signout-btn" onclick={handleSignOut} {...tp}>
+            <Icon name="lock" size="0.85rem" />
+            <span>{t('account.signOut')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
       </div>
     </section>
 
@@ -284,34 +296,44 @@
         </a>
 
         <!-- Card 2: Login & Security -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <div class="card-icon-box">
-            <Icon name="lock" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">{t('account.hub.security.title')}</h2>
-            <p class="card-desc">{t('account.hub.security.desc')}</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'security')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="lock" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.security.title')}</h2>
+              <p class="card-desc">{t('account.hub.security.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 3: Your Addresses -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <div class="card-icon-box">
-            <Icon name="location" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">{t('account.hub.addresses.title')}</h2>
-            <p class="card-desc">{t('account.hub.addresses.desc')}</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'addresses')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="location" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.addresses.title')}</h2>
+              <p class="card-desc">{t('account.hub.addresses.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 4: Craft Provenance Passports -->
         <a href="/verify" class="hub-card">
@@ -325,19 +347,24 @@
         </a>
 
         <!-- Card 5: Loom Consultations -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <div class="card-icon-box">
-            <Icon name="video" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">{t('account.hub.consultations.title')}</h2>
-            <p class="card-desc">{t('account.hub.consultations.desc')}</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'consultations')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="video" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.consultations.title')}</h2>
+              <p class="card-desc">{t('account.hub.consultations.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 6: Bulk Procurement -->
         <a href="/bulk-order" class="hub-card">
@@ -356,46 +383,71 @@
     <div class="account-details-container">
       <!-- Section Navigation Pills -->
       <nav class="details-nav-pills" aria-label={t('account.page.tabsAriaLabel')}>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'personal')}
-        >
-          <Icon name="user" size="0.95rem" />
-          {t('account.page.tab.personal')}
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <Icon name="location" size="0.95rem" />
-          {t('account.page.tab.addresses', { count: String(savedAddresses.length) })}
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <Icon name="lock" size="0.95rem" />
-          {t('account.page.tab.security')}
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'orders')}
-        >
-          <Icon name="collective-order" size="0.95rem" />
-          {t('account.page.tab.orders', { count: '2' })}
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <Icon name="video" size="0.95rem" />
-          {t('account.page.tab.consultations', { count: '1' })}
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'personal')}
+              {...tp}
+            >
+              <Icon name="user" size="0.95rem" />
+              {t('account.page.tab.personal')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'addresses')}
+              {...tp}
+            >
+              <Icon name="location" size="0.95rem" />
+              {t('account.page.tab.addresses', { count: String(savedAddresses.length) })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'security')}
+              {...tp}
+            >
+              <Icon name="lock" size="0.95rem" />
+              {t('account.page.tab.security')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'orders')}
+              {...tp}
+            >
+              <Icon name="collective-order" size="0.95rem" />
+              {t('account.page.tab.orders', { count: '2' })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'consultations')}
+              {...tp}
+            >
+              <Icon name="video" size="0.95rem" />
+              {t('account.page.tab.consultations', { count: '1' })}
+            </button>
+          {/snippet}
+        </Tooltip>
       </nav>
 
       <!-- Panel 1: Personal Details & Contact -->
@@ -455,13 +507,18 @@
                     value={phone}
                     readonly
                   />
-                  <button
-                    type="button"
-                    class="action-inline-btn"
-                    onclick={() => (isPhoneModalOpen = true)}
-                  >
-                    {t('account.page.personal.changeViaOtp')}
-                  </button>
+                  <Tooltip text={tooltip('tooltip.changePhone')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="action-inline-btn"
+                        onclick={() => (isPhoneModalOpen = true)}
+                        {...tp}
+                      >
+                        {t('account.page.personal.changeViaOtp')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
                 <span class="field-tip">{t('account.page.personal.phoneTip')}</span>
               </div>
@@ -496,9 +553,13 @@
             </div>
 
             <div class="form-submit-row">
-              <button type="submit" class="primary-save-btn">
-                {t('account.page.personal.saveButton')}
-              </button>
+              <Tooltip text={tooltip('tooltip.save')}>
+              {#snippet trigger(tp)}
+                <button type="submit" class="primary-save-btn" {...tp}>
+                  {t('account.page.personal.saveButton')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </form>
         </div>
@@ -511,14 +572,19 @@
               <h2 class="panel-title">{t('account.page.addresses.title')}</h2>
               <p class="panel-desc">{t('account.page.addresses.desc')}</p>
             </div>
-            <button
-              type="button"
-              class="add-addr-btn"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <Icon name="plus" size="0.95rem" />
-              {t('account.page.addresses.addButton')}
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="add-addr-btn"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <Icon name="plus" size="0.95rem" />
+                {t('account.page.addresses.addButton')}
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
 
           <div class="addresses-grid">
@@ -544,38 +610,53 @@
 
                 <div class="addr-actions">
                   {#if !addr.isDefault}
-                    <button
-                      type="button"
-                      class="addr-text-btn"
-                      onclick={() => handleSetDefaultAddress(addr.id)}
-                    >
-                      {t('account.page.addresses.setDefault')}
-                    </button>
+                    <Tooltip text={tooltip('tooltip.setDefault')}>
+                      {#snippet trigger(tp)}
+                        <button
+                          type="button"
+                          class="addr-text-btn"
+                          onclick={() => handleSetDefaultAddress(addr.id)}
+                          {...tp}
+                        >
+                          {t('account.page.addresses.setDefault')}
+                        </button>
+                      {/snippet}
+                    </Tooltip>
                     <span class="btn-divider">|</span>
                   {/if}
-                  <button
-                    type="button"
-                    class="addr-text-btn remove-btn"
-                    onclick={() => handleDeleteAddress(addr.id)}
-                  >
-                    {t('action.remove')}
-                  </button>
+                  <Tooltip text={tooltip('tooltip.removeAddress')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="addr-text-btn remove-btn"
+                        onclick={() => handleDeleteAddress(addr.id)}
+                        {...tp}
+                      >
+                        {t('action.remove')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
               </div>
             {/each}
 
             <!-- Add Address Card Placeholder -->
-            <button
-              type="button"
-              class="new-address-placeholder-card"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <div class="plus-circle">
-                <Icon name="plus" size="1.5rem" />
-              </div>
-              <strong>{t('account.page.addresses.placeholderTitle')}</strong>
-              <small>{t('account.page.addresses.placeholderSub')}</small>
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="new-address-placeholder-card"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <div class="plus-circle">
+                  <Icon name="plus" size="1.5rem" />
+                </div>
+                <strong>{t('account.page.addresses.placeholderTitle')}</strong>
+                <small>{t('account.page.addresses.placeholderSub')}</small>
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
@@ -596,9 +677,13 @@
                 <strong>{t('account.page.security.nameLabel')}</strong>
                 <span>{fullName}</span>
               </div>
-              <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')}>
-                {t('account.page.security.editButton')}
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')} {...tp}>
+                    {t('account.page.security.editButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 2: Mobile Phone Number -->
@@ -607,13 +692,18 @@
                 <strong>{t('account.page.personal.phoneLabel')}</strong>
                 <span>{t('account.page.security.phoneVerifiedSuffix', { phone })}</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => (isPhoneModalOpen = true)}
-              >
-                {t('account.page.security.changeButton')}
-              </button>
+              <Tooltip text={tooltip('tooltip.changePhone')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => (isPhoneModalOpen = true)}
+                    {...tp}
+                  >
+                    {t('account.page.security.changeButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 3: Password -->
@@ -622,13 +712,18 @@
                 <strong>{t('account.page.security.passwordLabel')}</strong>
                 <span>{t('account.page.security.passwordValue')}</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => showToast({ message: t('account.page.toast.passwordResetSent'), variant: 'info' })}
-              >
-                {t('account.page.security.changeButton')}
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => showToast({ message: t('account.page.toast.passwordResetSent'), variant: 'info' })}
+                    {...tp}
+                  >
+                    {t('account.page.security.changeButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 4: Two-Factor Authentication -->
@@ -637,19 +732,24 @@
                 <strong>{t('account.page.security.twoFaLabel')}</strong>
                 <span>{t('account.page.security.twoFaDesc')}</span>
               </div>
-              <button
-                type="button"
-                class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
-                onclick={() => {
-                  twoFactorEnabled = !twoFactorEnabled;
-                  showToast({
-                    message: twoFactorEnabled ? t('account.page.toast.twoFaEnabled') : t('account.page.toast.twoFaDisabled'),
-                    variant: 'info',
-                  });
-                }}
-              >
-                {twoFactorEnabled ? t('account.page.security.enabled') : t('account.page.security.disabled')}
-              </button>
+              <Tooltip text={tooltip('tooltip.toggle2fa')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
+                    onclick={() => {
+                      twoFactorEnabled = !twoFactorEnabled;
+                      showToast({
+                        message: twoFactorEnabled ? t('account.page.toast.twoFaEnabled') : t('account.page.toast.twoFaDisabled'),
+                        variant: 'info',
+                      });
+                    }}
+                    {...tp}
+                  >
+                    {twoFactorEnabled ? t('account.page.security.enabled') : t('account.page.security.disabled')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
 
@@ -660,14 +760,19 @@
                 <h3 class="block-title">{t('account.page.security.sessionsHeading')}</h3>
                 <p class="block-sub">{t('account.page.security.sessionsDesc')}</p>
               </div>
-              <button
-                type="button"
-                class="revoke-all-btn"
-                onclick={handleRevokeOtherSessions}
-              >
-                <Icon name="lock" size="0.85rem" />
-                {t('account.page.security.revokeAll')}
-              </button>
+              <Tooltip text={tooltip('tooltip.revokeSessions')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="revoke-all-btn"
+                  onclick={handleRevokeOtherSessions}
+                  {...tp}
+                >
+                  <Icon name="lock" size="0.85rem" />
+                  {t('account.page.security.revokeAll')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
 
             <div class="sessions-list">
@@ -696,21 +801,31 @@
             <h3 class="block-title">{t('account.page.security.dpdpHeading')}</h3>
             <p class="block-sub">{t('account.page.security.dpdpDesc')}</p>
             <div class="dpdp-actions">
-              <button
-                type="button"
-                class="dpdp-btn"
-                onclick={() => showToast({ message: t('account.page.toast.dataArchiveStarted'), variant: 'success' })}
-              >
-                <Icon name="download" size="0.9rem" />
-                {t('account.page.security.downloadArchive')}
-              </button>
-              <button
-                type="button"
-                class="dpdp-btn danger"
-                onclick={() => showToast({ message: t('account.page.toast.consentWithdrawalLogged'), variant: 'info' })}
-              >
-                {t('account.page.security.manageConsent')}
-              </button>
+              <Tooltip text={tooltip('tooltip.exportData')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn"
+                    onclick={() => showToast({ message: t('account.page.toast.dataArchiveStarted'), variant: 'success' })}
+                    {...tp}
+                  >
+                    <Icon name="download" size="0.9rem" />
+                    {t('account.page.security.downloadArchive')}
+                  </button>
+                {/snippet}
+              </Tooltip>
+              <Tooltip text={tooltip('tooltip.withdrawConsent')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn danger"
+                    onclick={() => showToast({ message: t('account.page.toast.consentWithdrawalLogged'), variant: 'info' })}
+                    {...tp}
+                  >
+                    {t('account.page.security.manageConsent')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -769,13 +884,18 @@
                 <span class="dot-sep">•</span>
                 <a href="/verify" class="rail-action-link">{t('account.page.orders.viewSeal')}</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
-                >
-                  {t('account.page.orders.downloadInvoice')}
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
+                        {...tp}
+                      >
+                        {t('account.page.orders.downloadInvoice')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
 
@@ -817,13 +937,18 @@
                 <span class="dot-sep">•</span>
                 <a href="/verify" class="rail-action-link">{t('account.page.orders.provenanceCertificate')}</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
-                >
-                  {t('account.page.orders.downloadInvoice')}
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
+                        {...tp}
+                      >
+                        {t('account.page.orders.downloadInvoice')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
           </div>
@@ -860,21 +985,31 @@
             </div>
 
             <div class="consult-actions">
-              <button
-                type="button"
-                class="join-room-btn"
-                onclick={() => showToast({ message: t('account.page.toast.videoRoomActivates'), variant: 'info' })}
-              >
-                <Icon name="video" size="1.1rem" />
-                {t('account.page.consultations.joinRoom')}
-              </button>
-              <button
-                type="button"
-                class="reschedule-btn"
-                onclick={() => showToast({ message: t('account.page.toast.rescheduleSent'), variant: 'info' })}
-              >
-                {t('account.page.consultations.reschedule')}
-              </button>
+              <Tooltip text={tooltip('tooltip.joinRoom')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="join-room-btn"
+                  onclick={() => showToast({ message: t('account.page.toast.videoRoomActivates'), variant: 'info' })}
+                  {...tp}
+                >
+                  <Icon name="video" size="1.1rem" />
+                  {t('account.page.consultations.joinRoom')}
+                </button>
+              {/snippet}
+            </Tooltip>
+            <Tooltip text={tooltip('tooltip.reschedule')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="reschedule-btn"
+                  onclick={() => showToast({ message: t('account.page.toast.rescheduleSent'), variant: 'info' })}
+                  {...tp}
+                >
+                  {t('account.page.consultations.reschedule')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </div>
         </div>
@@ -896,14 +1031,19 @@
     >
       <div class="modal-head">
         <h3 class="modal-title">{t('account.page.phoneModal.title')}</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isPhoneModalOpen = false)}
-          aria-label={t('ui.dialog.close')}
-        >
-          ✕
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isPhoneModalOpen = false)}
+              aria-label={t('ui.dialog.close')}
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="modal-body">
@@ -922,13 +1062,18 @@
               bind:value={newPhone}
               maxlength="13"
             />
-            <button
-              type="button"
-              class="action-inline-btn"
-              onclick={handleRequestPhoneOtp}
-            >
-              {phoneOtpSent ? t('account.page.phoneModal.resend') : t('account.page.phoneModal.sendCode')}
-            </button>
+            <Tooltip text={tooltip('tooltip.sendOtp')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="action-inline-btn"
+                onclick={handleRequestPhoneOtp}
+                {...tp}
+              >
+                {phoneOtpSent ? t('account.page.phoneModal.resend') : t('account.page.phoneModal.sendCode')}
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
@@ -949,21 +1094,31 @@
       </div>
 
       <div class="modal-foot">
-        <button
-          type="button"
-          class="modal-cancel-btn"
-          onclick={() => (isPhoneModalOpen = false)}
-        >
-          {t('action.cancel')}
-        </button>
-        <button
-          type="button"
-          class="modal-submit-btn"
-          disabled={!phoneOtpSent || isVerifyingPhone}
-          onclick={handleVerifyPhone}
-        >
-          {isVerifyingPhone ? t('account.page.phoneModal.verifying') : t('account.page.phoneModal.verifyButton')}
-        </button>
+        <Tooltip text={tooltip('tooltip.cancel')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-cancel-btn"
+              onclick={() => (isPhoneModalOpen = false)}
+              {...tp}
+            >
+              {t('action.cancel')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.verifyOtp')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-submit-btn"
+              disabled={!phoneOtpSent || isVerifyingPhone}
+              onclick={handleVerifyPhone}
+              {...tp}
+            >
+              {isVerifyingPhone ? t('account.page.phoneModal.verifying') : t('account.page.phoneModal.verifyButton')}
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </div>
@@ -982,14 +1137,19 @@
     >
       <div class="modal-head">
         <h3 class="modal-title">{t('account.page.addresses.modalTitle')}</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isAddAddressOpen = false)}
-          aria-label={t('ui.dialog.close')}
-        >
-          ✕
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isAddAddressOpen = false)}
+              aria-label={t('ui.dialog.close')}
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <form onsubmit={handleAddAddress}>
@@ -1079,16 +1239,25 @@
         </div>
 
         <div class="modal-foot">
-          <button
-            type="button"
-            class="modal-cancel-btn"
-            onclick={() => (isAddAddressOpen = false)}
-          >
-            {t('action.cancel')}
-          </button>
-          <button type="submit" class="modal-submit-btn">
-            {t('account.page.addresses.saveButton')}
-          </button>
+          <Tooltip text={tooltip('tooltip.cancel')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="modal-cancel-btn"
+                onclick={() => (isAddAddressOpen = false)}
+                {...tp}
+              >
+                {t('action.cancel')}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button type="submit" class="modal-submit-btn" {...tp}>
+                {t('account.page.addresses.saveButton')}
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       </form>
     </div>

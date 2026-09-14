@@ -1,0 +1,27 @@
+{
+  "category_id": "leatherwork",
+  "category_name": "Leatherwork",
+  "hindi_name": "चर्मशिल्प",
+  "description": "Vegetable-tanned leather handcrafted with batik dye embossing and traditional footwear artistry.",
+  "gi_certified_count": 7,
+  "listings_summary": [
+    {
+      "craft_slug": "shantiniketan-leather",
+      "craft_name": "Shantiniketan Leather Goods",
+      "title_en": "Shantiniketan Embossed Batik Vegetable-Tanned Leather Tote Bag",
+      "title_hi": "शांतिनिकेतन एम्बॉस्ड बाटिक लेदर हस्तनिर्मित टोट बैग",
+      "artisan": "Bikash Karmakar",
+      "region": "Bolpur Shantiniketan, West Bengal",
+      "image_filename": "shantiniketan-leather.jpg"
+    },
+    {
+      "craft_slug": "kolhapuri-chappal",
+      "craft_name": "Kolhapuri Chappal",
+      "title_en": "Heritage Hand-Braided Vegetable-Tanned Kolhapuri Chappals",
+      "title_hi": "हाथ से गुंथी पारंपरिक कोल्हापुरी चमड़े की चप्पल",
+      "artisan": "Santosh Satpute",
+      "region": "Shivaji Udyamnagar, Kolhapur, Maharashtra",
+      "image_filename": "kolhapuri-chappal.jpg"
+    }
+  ]
+}

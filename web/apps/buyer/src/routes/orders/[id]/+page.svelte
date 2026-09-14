@@ -24,7 +24,7 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Button, Money, EmptyState, Skeleton, Tabs } from '@kalakriti/ui';
   import { getOrder, getArtisanStorefront, watchOrderEvents, type components } from '@kalakriti/api';
   import {
@@ -155,7 +155,7 @@
     {#if orderState === 'AMENDMENT_PENDING'}
       <p class="alloc-header__amendment" role="status">{t('allocation.amendment.banner')}</p>
     {/if}
-    <Button variant="secondary" onclick={() => (disputeOpen = true)}>{t('orders.dispute.entry')}</Button>
+    <Button variant="secondary" onclick={() => (disputeOpen = true)} tooltip={tooltip('tooltip.dispute')}>{t('orders.dispute.entry')}</Button>
   </header>
 
   <div

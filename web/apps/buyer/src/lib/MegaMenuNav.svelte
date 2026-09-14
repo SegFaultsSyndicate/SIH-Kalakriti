@@ -19,10 +19,10 @@
     8. ODOP (One District One Product directory)
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
-  import { showToast } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
 
@@ -79,15 +79,23 @@
       </div>
 
       <div class="k-gov-right">
-        <a href="/accessibility" class="gov-a11y-link" title={t('nav.a11y.title')}>
-          {t('nav.a11y.label')}
-        </a>
+        <Tooltip text={t('nav.a11y.title')}>
+          {#snippet trigger(tp)}
+            <a href="/accessibility" class="gov-a11y-link" {...tp}>
+              {t('nav.a11y.label')}
+            </a>
+          {/snippet}
+        </Tooltip>
         <span class="gov-divider">|</span>
-        <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label={t('nav.lang.toggle')}>
-          <span class="lang-symbol">Aअ</span>
-          <span class="lang-name">{locale.code === 'hi' ? 'English' : 'हिन्दी'}</span>
-          <Icon name="chevron-down" size="0.75rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.language')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label={t('nav.lang.toggle')} {...tp}>
+              <span class="lang-symbol">Aअ</span>
+              <span class="lang-name">{locale.code === 'hi' ? 'English' : 'हिन्दी'}</span>
+              <Icon name="chevron-down" size="0.75rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </div>
@@ -96,15 +104,20 @@
   <div class="k-main-header">
     <div class="k-main-header-container">
       <!-- Mobile hamburger -->
-      <button
-        type="button"
-        class="mobile-menu-toggle"
-        onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-        aria-label={t('nav.mobileMenu.toggle')}
-        aria-expanded={isMobileMenuOpen}
-      >
-        <Icon name={isMobileMenuOpen ? 'close' : 'menu'} size="1.4rem" />
-      </button>
+      <Tooltip text={tooltip('tooltip.menu')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="mobile-menu-toggle"
+            onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
+            aria-label={t('nav.mobileMenu.toggle')}
+            aria-expanded={isMobileMenuOpen}
+            {...tp}
+          >
+            <Icon name={isMobileMenuOpen ? 'close' : 'menu'} size="1.4rem" />
+          </button>
+        {/snippet}
+      </Tooltip>
 
       <!-- Brand Lockup -->
       <a class="k-brand-lockup" href="/">
@@ -139,17 +152,25 @@
           bind:value={searchQuery}
           aria-label={t('nav.search.ariaLabel')}
         />
-        <button type="submit" class="k-search-submit" aria-label={t('nav.search.submit')}>
-          <Icon name="search" size="1.15rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.search')}>
+          {#snippet trigger(tp)}
+            <button type="submit" class="k-search-submit" aria-label={t('nav.search.submit')} {...tp}>
+              <Icon name="search" size="1.15rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </form>
 
       <!-- Right Action Tools -->
       <div class="k-header-tools">
-        <a href="/gi-tagged" class="k-tool-badge" title={t('nav.tools.giRegistryTitle')}>
-          <span class="gi-pin-dot"></span>
-          <span class="tool-text">{t('nav.tools.giRegistry')}</span>
-        </a>
+        <Tooltip text={t('nav.tools.giRegistryTitle')}>
+          {#snippet trigger(tp)}
+            <a href="/gi-tagged" class="k-tool-badge" {...tp}>
+              <span class="gi-pin-dot"></span>
+              <span class="tool-text">{t('nav.tools.giRegistry')}</span>
+            </a>
+          {/snippet}
+        </Tooltip>
 
         <a href="/orders" class="k-tool-link" aria-label={t('nav.tools.orders')}>
           <Icon name="collective-order" size="1.2rem" />
@@ -174,17 +195,22 @@
           role="none"
           onmouseenter={() => handleMenuHover('home')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'home'}
-            onclick={() => toggleMenu('home')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'home'}
-          >
-            <span>{t('nav.category.home')}</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'home'}
+                onclick={() => toggleMenu('home')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'home'}
+                {...tp}
+              >
+                <span>{t('nav.category.home')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'home'}
             <div class="k-mega-dropdown" role="menu">
@@ -335,17 +361,22 @@
           role="none"
           onmouseenter={() => handleMenuHover('furniture')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'furniture'}
-            onclick={() => toggleMenu('furniture')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'furniture'}
-          >
-            <span>{t('nav.category.furniture')}</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'furniture'}
+                onclick={() => toggleMenu('furniture')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'furniture'}
+                {...tp}
+              >
+                <span>{t('nav.category.furniture')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'furniture'}
             <div class="k-simple-dropdown" role="menu">
@@ -386,17 +417,22 @@
           role="none"
           onmouseenter={() => handleMenuHover('paintings')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'paintings'}
-            onclick={() => toggleMenu('paintings')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'paintings'}
-          >
-            <span>{t('nav.category.paintings')}</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'paintings'}
+                onclick={() => toggleMenu('paintings')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'paintings'}
+                {...tp}
+              >
+                <span>{t('nav.category.paintings')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'paintings'}
             <div class="k-simple-dropdown k-simple-dropdown--compact" role="menu">
@@ -451,9 +487,13 @@
           <img src="/favicon.svg" alt="" width="28" height="28" />
           <span>{t('nav.mobile.brand')}</span>
         </div>
-        <button type="button" class="drawer-close" onclick={() => (isMobileMenuOpen = false)}>
-          &times;
-        </button>
+        <Tooltip text={tooltip('tooltip.closeMenu')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="drawer-close" onclick={() => (isMobileMenuOpen = false)} {...tp}>
+              &times;
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="mobile-drawer-content">

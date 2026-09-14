@@ -138,11 +138,6 @@
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 15 L 4 21 L 20 21 L 20 15"/>
       
     </symbol>
-    <symbol id="k-icon-dollar-sign" viewBox="0 0 24 24">
-      <line x1="12" x2="12" y1="2" y2="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      
-    </symbol>
     <symbol id="k-icon-print" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7 3 L17 3 A1 1 0 0 1 18 4 L18 8 A1 1 0 0 1 17 9 L7 9 A1 1 0 0 1 6 8 L6 4 A1 1 0 0 1 7 3 Z"/>
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 9 L 20 9 L 20 17 L 16 17 L 16 21 L 8 21 L 8 17 L 4 17 Z"/>
@@ -362,6 +357,39 @@
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 9.5 L 3 14.5 L 7.5 14.5 L 12.5 19.5 L 12.5 4.5 L 7.5 9.5 Z"/>
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M14.81 9.24 A3.6 3.6 0 0 1 14.81 14.76"/>
       <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.61 7.1 A6.4 6.4 0 0 1 16.61 16.9"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-verified" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12 L11 14 L15.5 9.5"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-master" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 8.5 L13.2 11 L16 11.4 L14 13.3 L14.5 16 L12 14.6 L9.5 16 L10 13.3 L8 11.4 L10.8 11 Z"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-award" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7 9 A5 5 0 1 0 17 9 A5 5 0 1 0 7 9"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 13.2 L7.5 21 L12 18.5 L16.5 21 L15 13.2"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-gi" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 11.5 A3 3 0 1 0 15 11.5 A3 3 0 1 0 9 11.5"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-coordinator" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 10 A4 4 0 1 0 13 10 A4 4 0 1 0 5 10"/>
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M11 14 A4 4 0 1 0 19 14 A4 4 0 1 0 11 14"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-milestone" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L20 8 V16 L12 21 L4 16 V8 Z"/>
+      
+    </symbol>
+    <symbol id="k-icon-badge-locked" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-dasharray="2.5 2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3 L20 8 V16 L12 21 L4 16 V8 Z"/>
       
     </symbol>
     <symbol id="k-icon-handmade-certified" viewBox="0 0 24 24">

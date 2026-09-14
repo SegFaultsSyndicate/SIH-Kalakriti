@@ -15,8 +15,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
-  import { Stepper, SpeakButton, LanguageSelector } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { LanguageSelector, SpeakButton, Stepper, Tooltip } from '@kalakriti/ui';
 
   interface Props {
     /** 0-indexed. */
@@ -49,13 +49,21 @@
   />
 
   <div class="register-step__top-bar">
-    <button type="button" class="register-step__back" onclick={() => goto(backHref)}>
-      ← {t('action.back')}
-    </button>
+    <Tooltip text={tooltip('tooltip.back')}>
+      {#snippet trigger(props)}
+        <button type="button" class="register-step__back" onclick={() => goto(backHref)} {...props}>
+          ← {t('action.back')}
+        </button>
+      {/snippet}
+    </Tooltip>
 
-    <div class="register-step__lang-wrap" title="Change language / भाषा बदलें">
-      <LanguageSelector />
-    </div>
+    <Tooltip text="Change language / भाषा बदलें">
+      {#snippet trigger(props)}
+        <div class="register-step__lang-wrap" {...props}>
+          <LanguageSelector />
+        </div>
+      {/snippet}
+    </Tooltip>
   </div>
 
   <h1>{heading}</h1>

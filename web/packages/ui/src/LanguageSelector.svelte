@@ -23,6 +23,7 @@
   let { triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
   let open = $state(false);
 
   function select(code: LocaleCode): void {
@@ -33,7 +34,7 @@
 
 <Popover align="end" bind:open>
   {#snippet trigger(props)}
-    <Button icon="language" label={t('language.selector.label')} variant="ghost" size={triggerSize} {...props} />
+    <Button icon="language" label={t('language.selector.label')} variant="ghost" tooltip={tt('tooltip.language')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <ul class="k-lang-panel" role="list">

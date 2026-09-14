@@ -17,7 +17,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale, formatDate } from '@kalakriti/i18n';
+  import { locale, formatDate, tooltip } from '@kalakriti/i18n';
   import { Button, Dialog, Input, Label, Money, SpeakButton, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
@@ -195,8 +195,8 @@
 
     {#if !expired}
       <div class="lot-offer-page__actions">
-        <Button size="xl" onclick={() => (confirmingAccept = true)}>{t('lotOffer.accept')}</Button>
-        <Button size="xl" variant="secondary" onclick={() => (confirmingDecline = true)}>
+        <Button size="xl" onclick={() => (confirmingAccept = true)} tooltip={tooltip('tooltip.accept')}>{t('lotOffer.accept')}</Button>
+        <Button size="xl" variant="secondary" onclick={() => (confirmingDecline = true)} tooltip={tooltip('tooltip.decline')}>
           {t('lotOffer.decline')}
         </Button>
       </div>
@@ -210,10 +210,10 @@
   <Label for="ship-date">{t('lotOffer.shipDateLabel')}</Label>
   <Input id="ship-date" type="date" bind:value={shipDate} />
   <div class="lot-offer-page__dialog-actions">
-    <Button onclick={confirmAccept} disabled={!shipDate || submitting} loading={submitting}>
+    <Button onclick={confirmAccept} disabled={!shipDate || submitting} loading={submitting} tooltip={tooltip('tooltip.confirmAccept')}>
       {t('lotOffer.confirmAccept.confirm')}
     </Button>
-    <Button variant="ghost" onclick={() => (confirmingAccept = false)}>{t('action.cancel')}</Button>
+    <Button variant="ghost" onclick={() => (confirmingAccept = false)} tooltip={tooltip('tooltip.cancelAccept')}>{t('action.cancel')}</Button>
   </div>
 </Dialog>
 
@@ -223,10 +223,10 @@
   <Label for="decline-reason">{t('lotOffer.declineReasonLabel')}</Label>
   <Input id="decline-reason" bind:value={declineReason} />
   <div class="lot-offer-page__dialog-actions">
-    <Button onclick={confirmDecline} disabled={!declineReason || submitting} loading={submitting}>
+    <Button onclick={confirmDecline} disabled={!declineReason || submitting} loading={submitting} tooltip={tooltip('tooltip.confirmDecline')}>
       {t('lotOffer.confirmDecline.confirm')}
     </Button>
-    <Button variant="ghost" onclick={() => (confirmingDecline = false)}>{t('action.cancel')}</Button>
+    <Button variant="ghost" onclick={() => (confirmingDecline = false)} tooltip={tooltip('tooltip.cancelDecline')}>{t('action.cancel')}</Button>
   </div>
 </Dialog>
 

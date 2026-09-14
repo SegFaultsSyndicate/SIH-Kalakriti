@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { requestOtp, ApiError, messageKeyFor } from '@kalakriti/api';
   import { getPref, setPref, network } from '@kalakriti/offline';
   import { Keypad, SpeakButton, Button } from '@kalakriti/ui';
@@ -168,7 +168,7 @@
     </button>
   {/if}
 
-  <Button size="xl" class="login__submit" onclick={submit} loading={sending}>
+  <Button size="xl" class="login__submit" onclick={submit} loading={sending} tooltip={tooltip('tooltip.submit')}>
     {t('login.submit')}
   </Button>
 </div>

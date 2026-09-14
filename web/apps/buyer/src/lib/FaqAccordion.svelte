@@ -11,6 +11,8 @@
 <script lang="ts">
   import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
+  import { tooltip } from '@kalakriti/i18n';
+  import { Tooltip } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
 
@@ -72,21 +74,26 @@
     {#each FAQS as item (item.id)}
       {@const isOpen = openId === item.id}
       <div class="faq-item" class:open={isOpen}>
-        <button
-          type="button"
-          class="faq-trigger"
-          aria-expanded={isOpen}
-          aria-controls={`faq-answer-${item.id}`}
-          onclick={() => toggle(item.id)}
-        >
-          <div class="faq-trigger__content">
-            <span class="faq-tag">{t(item.tagKey)}</span>
-            <span class="faq-question">{t(item.questionKey)}</span>
-          </div>
-          <span class="faq-icon" class:rotate={isOpen} aria-hidden="true">
-            <Icon name="chevron-down" size="1.1rem" />
-          </span>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="faq-trigger"
+              aria-expanded={isOpen}
+              aria-controls={`faq-answer-${item.id}`}
+              onclick={() => toggle(item.id)}
+              {...props}
+            >
+              <div class="faq-trigger__content">
+                <span class="faq-tag">{t(item.tagKey)}</span>
+                <span class="faq-question">{t(item.questionKey)}</span>
+              </div>
+              <span class="faq-icon" class:rotate={isOpen} aria-hidden="true">
+                <Icon name="chevron-down" size="1.1rem" />
+              </span>
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isOpen}
           <div

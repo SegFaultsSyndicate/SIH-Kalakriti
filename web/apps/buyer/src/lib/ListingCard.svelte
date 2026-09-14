@@ -9,8 +9,8 @@
   made-to-order" rule: same badge size, same position, no greyed styling.
 -->
 <script lang="ts">
-  import { locale, matchesLocale } from '@kalakriti/i18n';
-  import { Money, showToast } from '@kalakriti/ui';
+  import { locale, matchesLocale, tooltip } from '@kalakriti/i18n';
+  import { Money, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import type { components } from '@kalakriti/api';
   import { craftIcon } from './craft-icon';
@@ -127,28 +127,38 @@
     {/if}
 
     <div class="listing-card__media-actions">
-      <button
-        type="button"
-        class="listing-card__wishlist-btn"
-        class:is-wishlisted={wishlist.has(listing.id ?? '')}
-        onclick={handleWishlist}
-        title={wishlist.has(listing.id ?? '') ? t('listingCard.savedToWishlist') : t('listingCard.addToWishlist')}
-        aria-label={t('listingCard.wishlistAriaLabel')}
-      >
-        <svg viewBox="0 0 24 24" width="15" height="15" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : '#ffffff'} stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-      </button>
+      <Tooltip text={tooltip('tooltip.wishlist')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="listing-card__wishlist-btn"
+            class:is-wishlisted={wishlist.has(listing.id ?? '')}
+            onclick={handleWishlist}
+            title={wishlist.has(listing.id ?? '') ? t('listingCard.savedToWishlist') : t('listingCard.addToWishlist')}
+            aria-label={t('listingCard.wishlistAriaLabel')}
+            {...tp}
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : '#ffffff'} stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+        {/snippet}
+      </Tooltip>
 
-      <button
-        type="button"
-        class="listing-card__share-btn"
-        onclick={handleShare}
-        title={copied ? t('listingCard.linkCopiedTitle') : t('listingCard.shareArtisanPiece')}
-        aria-label={copied ? t('listingCard.linkCopiedAriaLabel') : t('listingCard.shareArtisanPiece')}
-      >
-        <Icon name={copied ? 'check' : 'share'} size="0.9rem" />
-      </button>
+      <Tooltip text={tooltip('tooltip.share')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="listing-card__share-btn"
+            onclick={handleShare}
+            title={copied ? t('listingCard.linkCopiedTitle') : t('listingCard.shareArtisanPiece')}
+            aria-label={copied ? t('listingCard.linkCopiedAriaLabel') : t('listingCard.shareArtisanPiece')}
+            {...tp}
+          >
+            <Icon name={copied ? 'check' : 'share'} size="0.9rem" />
+          </button>
+        {/snippet}
+      </Tooltip>
     </div>
 
     <span class="listing-card__badges">
@@ -180,7 +190,11 @@
           {/if}
           <span class="listing-card__artisan-name">{listing.artisan_name}</span>
           <span class="listing-card__artisan-verified" title={t('listingCard.verifiedArtisanTitle')}>
-            <Icon name="verified-artisan" />
+            <Tooltip text={tooltip('tooltip.verifiedArtisan')}>
+              {#snippet trigger(tp)}
+                <span {...tp}><Icon name="verified-artisan" /></span>
+              {/snippet}
+            </Tooltip>
           </span>
         </span>
       </span>
@@ -199,18 +213,23 @@
         <span>{t('listingCard.orderCta')}</span>
         <Icon name="arrow-right" size="0.75rem" />
       </span>
-      <button
-        type="button"
-        class="listing-card__wishlist-cta"
-        class:is-wishlisted={wishlist.has(listing.id ?? '')}
-        onclick={handleWishlist}
-        title={wishlist.has(listing.id ?? '') ? t('listingCard.removeFromWishlist') : t('listingCard.saveToWishlist')}
-      >
-        <svg viewBox="0 0 24 24" width="13" height="13" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : 'currentColor'} stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-        <span>{wishlist.has(listing.id ?? '') ? t('listingCard.saved') : t('listingCard.wishlist')}</span>
-      </button>
+      <Tooltip text={tooltip('tooltip.wishlist')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="listing-card__wishlist-cta"
+            class:is-wishlisted={wishlist.has(listing.id ?? '')}
+            onclick={handleWishlist}
+            title={wishlist.has(listing.id ?? '') ? t('listingCard.removeFromWishlist') : t('listingCard.saveToWishlist')}
+            {...tp}
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : 'currentColor'} stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span>{wishlist.has(listing.id ?? '') ? t('listingCard.saved') : t('listingCard.wishlist')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
     </span>
 
     {#if crossLingual}

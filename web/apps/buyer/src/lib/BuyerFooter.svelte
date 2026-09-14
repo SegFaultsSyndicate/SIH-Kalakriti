@@ -12,8 +12,8 @@
   - Official Copyright & Attribution to Ministry of Social Justice & Empowerment & Digital India Corporation (DIC)
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { LanguageSelector, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { LanguageSelector, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -285,15 +285,19 @@
                 </svg>
                 <span>{t('footer.app.googlePlay')}</span>
               </div>
-              <button
-                type="button"
-                class="app-share-btn"
-                onclick={() => copyAppShareLink('buyer')}
-                title={t('footer.app.shareBuyerLink')}
-              >
-                <Icon name="share" size="0.85rem" />
-                <span>{t('footer.app.share')}</span>
-              </button>
+              <Tooltip text={tooltip('tooltip.share')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="app-share-btn"
+                    onclick={() => copyAppShareLink('buyer')}
+                    {...tp}
+                  >
+                    <Icon name="share" size="0.85rem" />
+                    <span>{t('footer.app.share')}</span>
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
             <!-- Scalable Crisp Vector QR Code -->
             <div class="qr-preview-box">
@@ -350,15 +354,19 @@
                 </svg>
                 <span>{t('footer.app.googlePlay')}</span>
               </div>
-              <button
-                type="button"
-                class="app-share-btn"
-                onclick={() => copyAppShareLink('artisan')}
-                title={t('footer.app.shareSellerLink')}
-              >
-                <Icon name="share" size="0.85rem" />
-                <span>{t('footer.app.share')}</span>
-              </button>
+              <Tooltip text={tooltip('tooltip.share')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="app-share-btn"
+                    onclick={() => copyAppShareLink('artisan')}
+                    {...tp}
+                  >
+                    <Icon name="share" size="0.85rem" />
+                    <span>{t('footer.app.share')}</span>
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
             <!-- Scalable Crisp Vector QR Code -->
             <div class="qr-preview-box">

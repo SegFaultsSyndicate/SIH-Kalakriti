@@ -31,6 +31,7 @@
   let { statementHref, triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
 
   const stepIndex = $derived(TEXT_SCALE_STEPS.indexOf(a11y.textScale));
   const canDecrease = $derived(stepIndex > 0);
@@ -92,7 +93,7 @@
 
 <Popover align="end">
   {#snippet trigger(props)}
-    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" size={triggerSize} {...props} />
+    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" tooltip={tt('tooltip.accessibility')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <div class="k-a11y-panel">
@@ -105,7 +106,6 @@
           type="button"
           class="k-a11y-panel__reset-btn"
           onclick={() => void a11y.resetAll()}
-          title={t('a11y.reset')}
         >
           <Icon name="refresh" size="0.85rem" />
           {t('a11y.reset')}

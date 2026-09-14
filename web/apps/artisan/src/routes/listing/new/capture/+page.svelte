@@ -12,7 +12,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
@@ -155,7 +155,7 @@
       <div class="photo-issue" role="alert">
         <Icon name="warning" />
         <p>{t(issue.messageKey)}</p>
-        <Button size="sm" onclick={retake}>{t('listing.capture.retake')}</Button>
+        <Button size="sm" onclick={retake} tooltip={tooltip('tooltip.retakePhoto')}>{t('listing.capture.retake')}</Button>
       </div>
     {/if}
 
@@ -170,7 +170,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={photos.length === 0} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={photos.length === 0} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
   {/snippet}
 </ListingStep>
 

@@ -48,6 +48,7 @@ const rrect = (x, y, w, h, r) =>
   ' L' + pt(x, y + r) + ' A' + n(r) + ' ' + n(r) + ' 0 0 1 ' + pt(x + r, y) + ' Z';
 
 const S = (d) => ({ d, fill: 'none', stroke: true });
+const SD = (d, dash) => ({ d, fill: 'none', stroke: true, dash });
 const F = (d) => ({ d, fill: 'currentColor', stroke: false });
 
 /* ================================================================ CORE UI
@@ -122,6 +123,32 @@ const CORE = {
   pause: () => [S(rrect(6, 4.5, 4.5, 15, 1)), S(rrect(13.5, 4.5, 4.5, 15, 1))],
   volume: () => [S(poly([[3, 9.5], [3, 14.5], [7.5, 14.5], [12.5, 19.5], [12.5, 4.5], [7.5, 9.5]], true)), S(arc(12.5, 12, 5, -45, 45))],
   speaker: () => [S(poly([[3, 9.5], [3, 14.5], [7.5, 14.5], [12.5, 19.5], [12.5, 4.5], [7.5, 9.5]], true)), S(arc(12.5, 12, 3.6, -50, 50)), S(arc(12.5, 12, 6.4, -50, 50))],
+  'badge-verified': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S('M9 12 L11 14 L15.5 9.5'),
+  ],
+  'badge-master': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S('M12 8.5 L13.2 11 L16 11.4 L14 13.3 L14.5 16 L12 14.6 L9.5 16 L10 13.3 L8 11.4 L10.8 11 Z'),
+  ],
+  'badge-award': () => [
+    S(circ(12, 9, 5)),
+    S('M9 13.2 L7.5 21 L12 18.5 L16.5 21 L15 13.2'),
+  ],
+  'badge-gi': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S(circ(12, 11.5, 3)),
+  ],
+  'badge-coordinator': () => [
+    S(circ(9, 10, 4)),
+    S(circ(15, 14, 4)),
+  ],
+  'badge-milestone': () => [
+    S('M12 3 L20 8 V16 L12 21 L4 16 V8 Z'),
+  ],
+  'badge-locked': () => [
+    SD('M12 3 L20 8 V16 L12 21 L4 16 V8 Z', '2.5 2'),
+  ],
 };
 
 /* ============================================================ DOMAIN ICONS
@@ -181,6 +208,16 @@ const DOMAIN_TRADITION = {
   'fair-price': 'none — balance scale with a thread',
 };
 
+const BADGE_USE = {
+  'badge-verified': 'verified_artisan badge',
+  'badge-master': 'master_craftsperson badge',
+  'badge-award': 'national_awardee badge',
+  'badge-gi': 'gi_practitioner badge',
+  'badge-coordinator': 'cluster_coordinator badge',
+  'badge-milestone': 'earned tiered badges (catalog_builder, provenance_keeper, order_fulfiller, first_listing)',
+  'badge-locked': 'any not-yet-earned badge slot',
+};
+
 /* --------------------------------------------------------------- emit */
 
 const icons = []; // { name, svg, category }
@@ -188,15 +225,17 @@ const icons = []; // { name, svg, category }
 function buildIcon(name, category, elements) {
   const body = elements.map((el) => {
     if (el.stroke) {
-      return '<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="' + el.d + '"/>';
+      const extra = el.dash ? ' stroke-dasharray="' + el.dash + '"' : '';
+      return '<path fill="none" stroke="currentColor"' + extra + ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="' + el.d + '"/>';
     }
     return '<path fill="currentColor" d="' + el.d + '"/>';
   }).join('\n  ');
   const meta = CATMETA[category];
   const tradition = DOMAIN_TRADITION[name] || meta.tradition;
+  const use = BADGE_USE[name] || meta.use;
   const comment = category === 'domain'
-    ? name + ' (domain icon). Tradition: ' + tradition + '. Use: ' + meta.use + '.'
-    : name + ' (' + category + ' icon). ' + tradition + '. Use: ' + meta.use + '.';
+    ? name + ' (domain icon). Tradition: ' + tradition + '. Use: ' + use + '.'
+    : name + ' (' + category + ' icon). ' + tradition + '. Use: ' + use + '.';
   const svg =
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">\n' +

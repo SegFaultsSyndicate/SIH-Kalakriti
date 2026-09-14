@@ -6,7 +6,7 @@
   10-minute live video meeting with master weavers at their active looms.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Dialog, Button } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
@@ -111,7 +111,7 @@
         </div>
 
         <div class="form-actions">
-          <Button variant="primary" type="submit">
+          <Button variant="primary" type="submit" tooltip={tooltip('tooltip.submit')}>
             <Icon name="calendar" />
             <span>{t('home.concierge.submit')}</span>
           </Button>

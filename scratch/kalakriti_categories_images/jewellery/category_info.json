@@ -1,0 +1,27 @@
+{
+  "category_id": "jewellery",
+  "category_name": "Jewellery",
+  "hindi_name": "आभूषण व तारकशी",
+  "description": "Hair-thin silver wires woven into ethereal ornaments and Jaipur vitreous enamel work.",
+  "gi_certified_count": 12,
+  "listings_summary": [
+    {
+      "craft_slug": "cuttack-silver-filigree",
+      "craft_name": "Cuttack Silver Filigree",
+      "title_en": "925 Sterling Silver Hand-Woven Tarakasi Filigree Peacock Brooch",
+      "title_hi": "कटक की पारंपरिक 925 चांदी की तारकशी मयूर ब्रोच",
+      "artisan": "Pankaj Kumar Sahoo",
+      "region": "Nayasarak, Cuttack, Odisha",
+      "image_filename": "cuttack-silver-filigree.jpg"
+    },
+    {
+      "craft_slug": "jaipur-meenakari",
+      "craft_name": "Jaipur Meenakari Jewellery",
+      "title_en": "Jaipur Vitreous Champlevé Enamel & Kundan Chandbali Earrings",
+      "title_hi": "जयपुर की पारंपरिक मीनाकारी एवं कुंदन चांदबाली झुमके",
+      "artisan": "Mahesh Soni",
+      "region": "Johari Bazaar, Jaipur, Rajasthan",
+      "image_filename": "jaipur-meenakari.jpg"
+    }
+  ]
+}

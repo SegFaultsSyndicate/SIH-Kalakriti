@@ -6,8 +6,8 @@
   and traditional techniques across India.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -161,54 +161,84 @@
         </div>
 
         <div class="belt-chips" role="tablist" aria-label={t('catalog.beltFilterAriaLabel')}>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'all'}
-            onclick={() => (selectedBelt = 'all')}
-          >
-            {t('catalog.belt.all', { count: String(FALLBACK_CRAFTS.length) })}
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'north'}
-            onclick={() => (selectedBelt = 'north')}
-          >
-            {t('catalog.belt.north')}
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'west'}
-            onclick={() => (selectedBelt = 'west')}
-          >
-            {t('catalog.belt.west')}
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'south'}
-            onclick={() => (selectedBelt = 'south')}
-          >
-            {t('catalog.belt.south')}
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'east'}
-            onclick={() => (selectedBelt = 'east')}
-          >
-            {t('catalog.belt.east')}
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'central'}
-            onclick={() => (selectedBelt = 'central')}
-          >
-            {t('catalog.belt.central')}
-          </button>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'all'}
+              onclick={() => (selectedBelt = 'all')}
+              {...tp}
+            >
+              {t('catalog.belt.all', { count: String(FALLBACK_CRAFTS.length) })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'north'}
+              onclick={() => (selectedBelt = 'north')}
+              {...tp}
+            >
+              {t('catalog.belt.north')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'west'}
+              onclick={() => (selectedBelt = 'west')}
+              {...tp}
+            >
+              {t('catalog.belt.west')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'south'}
+              onclick={() => (selectedBelt = 'south')}
+              {...tp}
+            >
+              {t('catalog.belt.south')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'east'}
+              onclick={() => (selectedBelt = 'east')}
+              {...tp}
+            >
+              {t('catalog.belt.east')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'central'}
+              onclick={() => (selectedBelt = 'central')}
+              {...tp}
+            >
+              {t('catalog.belt.central')}
+            </button>
+          {/snippet}
+        </Tooltip>
         </div>
       </div>
     </header>

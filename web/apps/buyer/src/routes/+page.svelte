@@ -13,8 +13,8 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale, type MessageKey } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Section } from '@kalakriti/patterns';
   import { Divider } from '@kalakriti/ornament';
   import { Icon } from '@kalakriti/icons';
@@ -507,14 +507,19 @@
       </li>
     </ul>
 
-    <button
-      type="button"
-      class="k-concierge-pill"
-      onclick={() => (isConciergeOpen = true)}
-    >
-      <Icon name="video" size="0.9rem" />
-      <span>{t('home.concierge.bookButton')}</span>
-    </button>
+    <Tooltip text={tooltip('tooltip.openConcierge')}>
+    {#snippet trigger(tp)}
+      <button
+        type="button"
+        class="k-concierge-pill"
+        onclick={() => (isConciergeOpen = true)}
+        {...tp}
+      >
+        <Icon name="video" size="0.9rem" />
+        <span>{t('home.concierge.bookButton')}</span>
+      </button>
+    {/snippet}
+  </Tooltip>
   </div>
 </div>
 
@@ -578,29 +583,39 @@
           <Icon name="arrow-right" size="1rem" />
         </a>
 
-        <button
-          type="button"
-          class="hero-secondary-btn"
-          onclick={() => (isConciergeOpen = true)}
-        >
-          <Icon name="video" size="1rem" />
-          <span>{t('home.concierge.title')}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.concierge')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hero-secondary-btn"
+            onclick={() => (isConciergeOpen = true)}
+            {...tp}
+          >
+            <Icon name="video" size="1rem" />
+            <span>{t('home.concierge.title')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
       </div>
 
       <!-- Slide tabs -->
       <div class="hero-tab-selectors" role="tablist">
         {#each HERO_SLIDES as slide, idx}
-          <button
-            type="button"
-            class="slide-tab-btn"
-            class:active={activeHeroIndex === idx}
-            onclick={() => (activeHeroIndex = idx)}
-            aria-label={t('home.hero.switchSlideAriaLabel', { n: String(idx + 1), theme: slide.theme })}
-          >
-            <span class="tab-indicator"></span>
-            <span class="tab-text">{slide.theme.split(' ')[0]}</span>
-          </button>
+          <Tooltip text={tooltip('tooltip.slideTab')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="slide-tab-btn"
+                class:active={activeHeroIndex === idx}
+                onclick={() => (activeHeroIndex = idx)}
+                aria-label={t('home.hero.switchSlideAriaLabel', { n: String(idx + 1), theme: slide.theme })}
+                {...tp}
+              >
+                <span class="tab-indicator"></span>
+                <span class="tab-text">{slide.theme.split(' ')[0]}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
         {/each}
       </div>
     </div>

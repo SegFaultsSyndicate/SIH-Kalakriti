@@ -1,0 +1,27 @@
+{
+  "category_id": "embroidery",
+  "category_name": "Embroidery",
+  "hindi_name": "कशीदाकारी व जरदोजी",
+  "description": "Zardozi, Chikankari, Kantha, and Phulkari hand-needlework traditions.",
+  "gi_certified_count": 21,
+  "listings_summary": [
+    {
+      "craft_slug": "lucknow-chikankari",
+      "craft_name": "Lucknow Zardozi & Chikankari",
+      "title_en": "Lucknow Hand-Embroidered Pure Chiffon 32-Stitch Chikankari Kurta",
+      "title_hi": "लखनऊ की 32-टांकों वाली हाथ से कढ़ी शुद्ध शिफॉन चिकनकारी कुर्ती",
+      "artisan": "Shabnam Bano",
+      "region": "Chowk, Lucknow, Uttar Pradesh",
+      "image_filename": "lucknow-chikankari.jpg"
+    },
+    {
+      "craft_slug": "kutch-embroidery",
+      "craft_name": "Kutch Embroidery & Mirror Work",
+      "title_en": "Kutch Rabari Tribe Hand-Embroidered Abhala Mirror-Work Cushion Cover Set",
+      "title_hi": "कच्छ की रबारी जनजाति द्वारा हाथ से काढ़े गए शीशा-वर्क कुशन कवर",
+      "artisan": "Geeta Patel",
+      "region": "Bhujodi, Kutch, Gujarat",
+      "image_filename": "kutch-embroidery.jpg"
+    }
+  ]
+}

@@ -165,13 +165,24 @@
   --k-accent-danger-strong:var(--k-madder-800);  /* on surface-base: 11.38:1 */
   --k-accent-success-muted:var(--k-neem-600);    /* on surface-base: 5.84:1 */
 
-  /* A small chip (tooltip) or a scrim behind a modal/sheet stays dark in
-     every theme, including light -- there is no "light tooltip" in this
-     system, and a scrim that flipped pale in dark mode would stop reading
-     as an overlay. Same three values in every theme block on purpose. */
+  /* A scrim behind a modal/sheet -- and any banner-sized "inverse" chip
+     (footer call-outs, tutorial cards) -- stays dark in every theme,
+     including light, so it reads as an overlay no matter the theme. The
+     small floating tooltip chip is the deliberate exception: see
+     --k-surface-tooltip below. The same three values sit in every theme
+     block on purpose. */
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);   /* opacity applied by the component, not here */
+
+  /* Tooltips float over whatever surface happens to be under them (a
+     header row, a card, a photograph) and must separate from it in every
+     theme, so the chip stays a light khadi with ink text in dark and
+     high-contrast too -- the inverse of surface-inverse above. The same
+     two values sit in every theme block on purpose; the chip's hairlined
+     edge (--k-border-hairline) and small menu elevation do the separating. */
+  --k-surface-tooltip:     var(--k-khadi-100); /* ink-900 on this: ~12:1 (AAA) */
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 [data-theme="dark"] {
@@ -224,6 +235,10 @@
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);
+
+  /* Tooltip chip: light in every theme, like the light block above. */
+  --k-surface-tooltip:     var(--k-khadi-100);
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 [data-theme="high-contrast"] {
@@ -270,6 +285,10 @@
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);
+
+  /* Tooltip chip: light in every theme, like the light block above. */
+  --k-surface-tooltip:     var(--k-khadi-100);
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 /*

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { API_BASE } from '@kalakriti/api';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Button } from '@kalakriti/ui';
   import Seal from '@kalakriti/identity/src/seal.svg';
   import Crest from '@kalakriti/identity/src/heritage-crest-coarse.svg';
@@ -109,7 +109,7 @@
     <section class="verify__status verify__status--invalid" role="alert">
       <h2>{t('buyer.verify.error.title')}</h2>
       <p>{t('buyer.verify.error.body')}</p>
-      <Button variant="secondary" onclick={() => load()}>{t('state.error.retry')}</Button>
+      <Button variant="secondary" onclick={() => load()} tooltip={tooltip('tooltip.retry')}>{t('state.error.retry')}</Button>
     </section>
   {:else if record}
     <section

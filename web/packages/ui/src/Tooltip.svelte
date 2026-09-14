@@ -31,16 +31,42 @@
   interface Props {
     text: string;
     placement?: 'top' | 'bottom';
+    /* Stretch the anchor to block-level layout so a full-row trigger
+       (accordion toggle etc.) keeps its inline-size: 100%. */
+    fill?: boolean;
     trigger: Snippet<[TriggerProps]>;
   }
 
-  let { text, placement = 'top', trigger }: Props = $props();
+  let { text, placement = 'top', fill = false, trigger }: Props = $props();
 
   const uid = $props.id();
   const id = uid + '-tooltip';
   let visible = $state(false);
+  /* `placement` is the caller's preference; the chip flips to the other
+     side when the preferred side would hang off the viewport (a header
+     icon near the top of the page has no room above it, for example).
+     Measured against the anchor's live rect, so it reacts to scroll. */
+  let resolvedPlacement = $state<'top' | 'bottom'>('top');
+  let anchor = $state<HTMLSpanElement>();
+  let chip = $state<HTMLSpanElement>();
+
+  const VIEWPORT_MARGIN = 8;
+
+  function roomFor(side: 'top' | 'bottom'): boolean {
+    if (!anchor || !chip) return true;
+    const bounds = anchor.getBoundingClientRect();
+    /* The floating gap under the chip is --k-space-2, which the chip's own
+       block padding resolves to; reading it from computed style keeps the
+       measurement honest without reimplementing the token. */
+    const gap = parseFloat(getComputedStyle(chip).paddingTop) || 8;
+    const height = chip.offsetHeight;
+    return side === 'top'
+      ? bounds.top - gap - height >= VIEWPORT_MARGIN
+      : bounds.bottom + gap + height <= window.innerHeight - VIEWPORT_MARGIN;
+  }
 
   function show(): void {
+    resolvedPlacement = roomFor(placement) ? placement : placement === 'top' ? 'bottom' : 'top';
     visible = true;
   }
   function hide(): void {
@@ -60,9 +86,15 @@
   };
 </script>
 
-<span class="k-tooltip-anchor">
+<span class="k-tooltip-anchor" class:k-tooltip-anchor--fill={fill} bind:this={anchor}>
   {@render trigger(triggerProps)}
-  <span class="k-tooltip k-tooltip--{placement}" id={id} role="tooltip" class:k-tooltip--visible={visible}>
+  <span
+    class="k-tooltip k-tooltip--{resolvedPlacement}"
+    id={id}
+    role="tooltip"
+    bind:this={chip}
+    class:k-tooltip--visible={visible}
+  >
     {text}
   </span>
 </span>

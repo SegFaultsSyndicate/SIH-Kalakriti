@@ -1,0 +1,48 @@
+# docker-compose.gpu.yml
+#
+# Optional override that reserves the host's NVIDIA GPU for ml-svc. Not
+# merged into docker-compose.yml on purpose: a hard device reservation makes
+# `docker compose up` fail outright (not degrade) on any host without an
+# NVIDIA GPU + nvidia-container-toolkit -- most CI runners, prod boxes, and
+# teammates' laptops. app/model_loading.py's resolve_device() already
+# degrades from CUDA to CPU/float32 gracefully on its own; this file is only
+# needed to make the GPU visible to the container in the first place, on a
+# host that actually has one.
+#
+# Prerequisites on the host (see services/ml-svc/CLAUDE.md and this
+# session's chat for how they were diagnosed):
+#   - NVIDIA driver loaded and `nvidia-smi` working outside any container.
+#   - `nvidia-container-toolkit` installed (`pacman -S nvidia-container-toolkit`
+#     on Arch) and `nvidia-ctk runtime configure --runtime=docker` run once,
+#     then `docker` restarted -- this registers the `nvidia` runtime.
+#   - Verify with: docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d ml-svc
+#
+# On a laptop with switchable graphics (Optimus/ASUS supergfxctl etc.), the
+# dGPU must be in a mode where it's actually bound and visible to `nvidia-smi`
+# on the host first -- this override can't do anything about that layer.
+#
+# ML_SVC_TEXT_EMBEDDING_DEVICE/ML_SVC_TEXT_RERANKING_DEVICE pin those two
+# components to CPU: on a small (e.g. 4GB) card, all three real models
+# (embedding, reranker, the VLM) auto-placing onto the GPU leaves the VLM's
+# 4-bit quantization no room -- confirmed by an actual near-miss CUDA OOM
+# (10MiB short) on an RTX 2050 with all three competing for the same pool.
+# The reranker alone (bge-reranker-v2-m3, ~568M params) is the bigger of the
+# two and was the main offender. Both run fine on CPU; only the VLM actually
+# needs the GPU's throughput. Remove these two lines on a card with more
+# headroom (8GB+) to let all three share the GPU instead.
+
+services:
+  ml-svc:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      ML_SVC_TEXT_EMBEDDING_DEVICE: "cpu"
+      ML_SVC_TEXT_RERANKING_DEVICE: "cpu"

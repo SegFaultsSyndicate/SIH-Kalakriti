@@ -7,7 +7,7 @@
   editorial rhythm, and wage-floor transparency.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { SectionHeader, Button } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
@@ -85,7 +85,7 @@
       <Icon name="fair-price" size="1.1rem" />
       <span>100% Direct Payout to Master Weaver • Zero Platform Fee Below ₹1.5L Floor</span>
     </div>
-    <Button variant="primary" onclick={onOpenConcierge}>
+    <Button variant="primary" onclick={onOpenConcierge} tooltip={tooltip('tooltip.openConcierge')}>
       <span>{t('home.atelier.cta')}</span>
       <Icon name="arrow-right" />
     </Button>

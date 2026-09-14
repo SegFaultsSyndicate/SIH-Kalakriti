@@ -1,6 +1,6 @@
 """services/ml-svc/app/models/vlm/real.py
 
-Qwen2-VL-backed. `torch`/`transformers`/`PIL`/`cv2` are imported here, not at
+Qwen2.5-VL-backed. `torch`/`transformers`/`PIL`/`cv2` are imported here, not at
 module scope in `__init__.py`, so mock mode never needs them installed.
 
 One process loads exactly one VLM checkpoint today, from
@@ -62,13 +62,42 @@ class RealVisionLanguageModel:
         if self._model is not None:
             return
 
-        from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
+        from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
         from app.model_loading import local_files_only_kwargs, resolve_device
 
-        _, dtype = resolve_device()
-        self._model = Qwen2VLForConditionalGeneration.from_pretrained(
-            self._repo_id, torch_dtype=dtype, device_map="auto", **local_files_only_kwargs(self._repo_id)
+        device, dtype = resolve_device()
+        # device_map="auto" lets accelerate plan across multiple accelerators --
+        # a fit for a genuinely multi-GPU host, not this component, which loads
+        # exactly one checkpoint on one process (see this module's docstring).
+        # On a CPU-only host it can still decide to offload layers to disk under
+        # memory pressure, which hits a known accelerate bug for tied-weight
+        # models (KeyError: 'cpu' in the tied_params_map hook cleanup -- Qwen2.5-VL
+        # ties embed_tokens/lm_head). Passing the resolved device directly avoids
+        # that path entirely.
+        quantization_config = None
+        if device == "cuda":
+            # The 3B checkpoint in bf16 (~6GB) doesn't fit an 8GB-or-smaller
+            # card (e.g. a 4GB laptop GPU has under 3.7GB usable after driver
+            # overhead -- confirmed by an actual CUDA OOM on an RTX 2050).
+            # 4-bit NF4 shrinks it to ~2GB, comfortably alongside the much
+            # smaller embedding/reranker models sharing the same card. Not
+            # applied on CPU: bitsandbytes' CPU int8/4-bit path is a different,
+            # much slower code path than its CUDA kernels, and CPU hosts don't
+            # have this VRAM ceiling to work around in the first place.
+            from transformers import BitsAndBytesConfig
+
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=dtype,
+            )
+        self._model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            self._repo_id,
+            torch_dtype=dtype,
+            device_map=device,
+            quantization_config=quantization_config,
+            **local_files_only_kwargs(self._repo_id),
         )
         self._processor = AutoProcessor.from_pretrained(
             self._repo_id, **local_files_only_kwargs(self._repo_id)
@@ -80,7 +109,11 @@ class RealVisionLanguageModel:
         text = self._processor.apply_chat_template(
             [{"role": "user", "content": content}], add_generation_prompt=True
         )
-        inputs = self._processor(text=[text], images=images, return_tensors="pt").to(self._model.device)
+        # An empty list (the text-only `polish()` call) must become None, not
+        # `[]` -- the processor treats `images=[]` as "process zero images"
+        # rather than "no images", still driving the vision tower's
+        # rot_pos_emb into torch.cat() on an empty tensor list.
+        inputs = self._processor(text=[text], images=images or None, return_tensors="pt").to(self._model.device)
         generated = self._model.generate(**inputs, max_new_tokens=max_new_tokens, do_sample=False)
         return self._processor.batch_decode(
             generated[:, inputs.input_ids.shape[1]:], skip_special_tokens=True

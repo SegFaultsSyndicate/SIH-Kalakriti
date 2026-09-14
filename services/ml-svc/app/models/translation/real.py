@@ -87,8 +87,11 @@ class RealTranslationModel:
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
         from IndicTransToolkit.processor import IndicProcessor
 
-        self._tokenizer = AutoTokenizer.from_pretrained(self._cfg.model, trust_remote_code=True)
-        self._model = AutoModelForSeq2SeqLM.from_pretrained(self._cfg.model, trust_remote_code=True)
+        token = self._cfg.hf_token or None
+        self._tokenizer = AutoTokenizer.from_pretrained(self._cfg.model, trust_remote_code=True, token=token)
+        self._model = AutoModelForSeq2SeqLM.from_pretrained(
+            self._cfg.model, trust_remote_code=True, token=token
+        )
         self._model.eval()
         self._processor = IndicProcessor(inference=True)
 

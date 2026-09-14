@@ -17,8 +17,8 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
-  import { Button, Select, NumberStepper, Textarea, Stepper, EmptyState, Skeleton, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Button, Select, NumberStepper, Textarea, Stepper, EmptyState, Skeleton, showToast, Tooltip } from '@kalakriti/ui';
   import { createBulkOrder, listCrafts, getCraft, listListings, getListingSummary, session, type components } from '@kalakriti/api';
   import { rememberOrder } from '$lib/order-store';
 
@@ -137,9 +137,13 @@
       {:else}
         <div class="bulk-order__craft-grid">
           {#each crafts as craft (craft.id)}
-            <button type="button" class="bulk-order__craft" onclick={() => void chooseCraft(craft.slug ?? '')}>
-              {craft.display_name}
-            </button>
+            <Tooltip text={tooltip('tooltip.selectCraft')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="bulk-order__craft" onclick={() => void chooseCraft(craft.slug ?? '')} {...tp}>
+                {craft.display_name}
+              </button>
+            {/snippet}
+          </Tooltip>
           {/each}
         </div>
       {/if}
@@ -165,13 +169,17 @@
       {:else}
         <div class="bulk-order__listing-grid">
           {#each listings as listing (listing.id)}
-            <button type="button" class="bulk-order__listing" onclick={() => chooseListing(listing.id ?? '')}>
-              {listing.translations?.[0]?.title}
-            </button>
+            <Tooltip text={tooltip('tooltip.viewListing')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="bulk-order__listing" onclick={() => chooseListing(listing.id ?? '')} {...tp}>
+                {listing.translations?.[0]?.title}
+              </button>
+            {/snippet}
+          </Tooltip>
           {/each}
         </div>
       {/if}
-      <Button variant="secondary" onclick={() => (current = 0)}>{t('bulkOrder.back')}</Button>
+      <Button variant="secondary" onclick={() => (current = 0)} tooltip={tooltip('tooltip.back')}>{t('bulkOrder.back')}</Button>
     </section>
   {:else if current === 2 && selectedListing}
     <section class="bulk-order__form">
@@ -201,8 +209,8 @@
         <Textarea bind:value={delivery} rows={3} />
       </label>
       <div class="bulk-order__actions">
-        <Button variant="secondary" onclick={() => (current = 1)}>{t('bulkOrder.back')}</Button>
-        <Button onclick={() => (current = 3)}>{t('bulkOrder.next')}</Button>
+        <Button variant="secondary" onclick={() => (current = 1)} tooltip={tooltip('tooltip.back')}>{t('bulkOrder.back')}</Button>
+        <Button onclick={() => (current = 3)} tooltip={tooltip('tooltip.next')}>{t('bulkOrder.next')}</Button>
       </div>
     </section>
   {:else if current === 3 && selectedListing}
@@ -214,8 +222,8 @@
         <div><dt>{t('bulkOrder.deadline')}</dt><dd>{deadline}</dd></div>
       </dl>
       <div class="bulk-order__actions">
-        <Button variant="secondary" onclick={() => (current = 2)}>{t('bulkOrder.back')}</Button>
-        <Button onclick={() => void submit()} loading={submitting}>{t('bulkOrder.submit')}</Button>
+        <Button variant="secondary" onclick={() => (current = 2)} tooltip={tooltip('tooltip.back')}>{t('bulkOrder.back')}</Button>
+        <Button onclick={() => void submit()} loading={submitting} tooltip={tooltip('tooltip.submit')}>{t('bulkOrder.submit')}</Button>
       </div>
     </section>
   {/if}

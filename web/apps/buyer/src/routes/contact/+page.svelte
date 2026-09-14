@@ -10,8 +10,8 @@
   - Direct WhatsApp & Video Loom Assistance Connectors
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -119,7 +119,11 @@
           <div class="alert-body">
             <h4>{t('contact.form.successHeading')}</h4>
             <p>{t('contact.form.successBody', { email })}</p>
-            <button type="button" class="btn-reset" onclick={() => (submitted = false)}>{t('contact.form.resetButton')}</button>
+            <Tooltip text={tooltip('tooltip.reset')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="btn-reset" onclick={() => (submitted = false)} {...tp}>{t('contact.form.resetButton')}</button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
       {:else}
@@ -158,10 +162,14 @@
             <textarea id="message" bind:value={message} required rows="4" placeholder={t('contact.form.messagePlaceholder')} class="form-textarea"></textarea>
           </div>
 
-          <button type="submit" class="submit-btn">
-            <span>{t('contact.form.submitButton')}</span>
-            <Icon name="arrow-right" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.submit')}>
+            {#snippet trigger(tp)}
+              <button type="submit" class="submit-btn" {...tp}>
+                <span>{t('contact.form.submitButton')}</span>
+                <Icon name="arrow-right" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
         </form>
       {/if}
     </div>

@@ -34,6 +34,7 @@
   let { children }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
 
   // Gates {@render children()} below: locale.init() is async (it awaits a
   // dynamic catalogue import), so without this a page's first paint runs
@@ -142,6 +143,7 @@
       aria-expanded={mobileNavOpen}
       aria-controls="shell-mobile-nav"
       aria-label={mobileNavOpen ? t('nav.shell.closeMenu') : t('nav.shell.openMenu')}
+      title={tt('tooltip.mobileNav')}
     >
       <Icon name="menu" size="1.25rem" />
     </button>
@@ -169,7 +171,7 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
-      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')}>
+      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')} title={tt('tooltip.search')}>
         <Icon name="search" size="1.1rem" />
       </a>
       <!-- AccountMenu last: its popover anchors flush to *its own* right

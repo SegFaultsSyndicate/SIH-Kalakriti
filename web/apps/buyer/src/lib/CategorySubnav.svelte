@@ -13,8 +13,9 @@
   - Svelte 5 runes ($state, $derived, $effect)
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
+import { Tooltip } from '@kalakriti/ui';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
 
   const t = $derived(locale.t);
@@ -110,17 +111,21 @@
           <Icon name="cluster" size="0.85rem" />
           <span>{t('subnav.allCrafts')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
-          aria-expanded={activeMenu === 'all-crafts'}
-          aria-haspopup="true"
-          aria-label={t('subnav.allCraftsToggle')}
-          title={t('subnav.allCraftsTitle')}
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
+              aria-expanded={activeMenu === 'all-crafts'}
+              aria-haspopup="true"
+              aria-label={t('subnav.allCraftsToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'all-crafts'}
@@ -210,17 +215,21 @@
         >
           <span>{t('subnav.home')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
-          aria-expanded={activeMenu === 'home'}
-          aria-haspopup="true"
-          aria-label={t('subnav.homeToggle')}
-          title={t('subnav.homeTitle')}
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
+              aria-expanded={activeMenu === 'home'}
+              aria-haspopup="true"
+              aria-label={t('subnav.homeToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'home'}
@@ -320,17 +329,21 @@
         >
           <span>{t('subnav.furniture')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
-          aria-expanded={activeMenu === 'furniture'}
-          aria-haspopup="true"
-          aria-label={t('subnav.furnitureToggle')}
-          title={t('subnav.furnitureTitle')}
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
+              aria-expanded={activeMenu === 'furniture'}
+              aria-haspopup="true"
+              aria-label={t('subnav.furnitureToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'furniture'}
@@ -387,17 +400,21 @@
         >
           <span>{t('subnav.paintings')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
-          aria-expanded={activeMenu === 'paintings'}
-          aria-haspopup="true"
-          aria-label={t('subnav.paintingsToggle')}
-          title={t('subnav.paintingsTitle')}
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
+              aria-expanded={activeMenu === 'paintings'}
+              aria-haspopup="true"
+              aria-label={t('subnav.paintingsToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'paintings'}

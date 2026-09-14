@@ -1,0 +1,27 @@
+{
+  "category_id": "home_and_living",
+  "category_name": "Home & Living",
+  "hindi_name": "गृह सज्जा व जीवनशैली",
+  "description": "Artisan rugs, hand-hammered cookware, bell metal lamps, and heritage textiles for the contemporary home.",
+  "gi_certified_count": 22,
+  "listings_summary": [
+    {
+      "craft_slug": "bhadohi-carpet",
+      "craft_name": "Bhadohi Hand-Knotted Carpet",
+      "title_en": "Bhadohi Master-Knotted Pure Bikaner Wool Area Rug (4x6 ft)",
+      "title_hi": "भदोही का शुद्ध बीकानेरी ऊन से बना हाथ से बुना कालीन (4x6 फीट)",
+      "artisan": "Mohammad Yasin Ansari",
+      "region": "Gopiganj, Bhadohi, Uttar Pradesh",
+      "image_filename": "bhadohi-carpet.jpg"
+    },
+    {
+      "craft_slug": "moradabad-metal",
+      "craft_name": "Moradabad Metal Craft",
+      "title_en": "Ayurvedic Hand-Hammered Pure Copper Water Carafe & Glass Set",
+      "title_hi": "मुरादाबाद का हाथ से ठोककर बनाया गया शुद्ध तांबे का जग व ग्लास सेट",
+      "artisan": "Rameshwar Prasad Verma",
+      "region": "Peetal Nagari, Moradabad, Uttar Pradesh",
+      "image_filename": "moradabad-metal.jpg"
+    }
+  ]
+}

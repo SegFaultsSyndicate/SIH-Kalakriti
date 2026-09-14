@@ -6,9 +6,9 @@
   tutorial designed specifically for artisans with low digital literacy.
 -->
 <script lang="ts">
-  import { locale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Icon, type IconName } from '@kalakriti/icons';
-  import { Button, SpeakButton } from '@kalakriti/ui';
+  import { Button, SpeakButton, Tooltip } from '@kalakriti/ui';
   import { setPref } from '@kalakriti/offline';
 
   interface Props {
@@ -113,9 +113,13 @@
         <div class="sahayak-badge">
           <span>{t('literacy.tutorial.sahayakBadge')}</span>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
-          <Icon name="close" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+              <Icon name="close" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </header>
 
       <!-- Step Card Hero. Keyed on the step so every part of it is torn down
@@ -145,13 +149,18 @@
       <!-- Step Dots Indicator -->
       <div class="dots-row">
         {#each STEPS as _, i}
-          <button
-            type="button"
-            class="dot-btn"
-            class:dot-btn--active={i === currentStep}
-            onclick={() => (currentStep = i)}
-            aria-label={t('literacy.tutorial.dotAriaLabel', { step: String(i + 1) })}
-          ></button>
+          <Tooltip text={tooltip('tooltip.selectTab')}>
+            {#snippet trigger(props)}
+              <button
+                type="button"
+                class="dot-btn"
+                class:dot-btn--active={i === currentStep}
+                onclick={() => (currentStep = i)}
+                aria-label={t('literacy.tutorial.dotAriaLabel', { step: String(i + 1) })}
+                {...props}
+              ></button>
+            {/snippet}
+          </Tooltip>
         {/each}
       </div>
 
@@ -166,6 +175,7 @@
                 onclose();
                 onstartDemo();
               }}
+              tooltip={tooltip('tooltip.startDemo')}
             >
               <Icon name="play" size="0.85rem" />
               {t('literacy.demo.start')}
@@ -175,12 +185,12 @@
 
         <div class="right-actions">
           {#if currentStep > 0}
-            <Button variant="secondary" size="md" onclick={handlePrev}>
+            <Button variant="secondary" size="md" onclick={handlePrev} tooltip={tooltip('tooltip.prevStep')}>
               {t('action.back')}
             </Button>
           {/if}
 
-          <Button variant="primary" size="md" onclick={handleNext}>
+          <Button variant="primary" size="md" onclick={handleNext} tooltip={tooltip('tooltip.nextStep')}>
             {currentStep === STEPS.length - 1 ? t('literacy.tutorial.close') : t('action.next')}
           </Button>
         </div>

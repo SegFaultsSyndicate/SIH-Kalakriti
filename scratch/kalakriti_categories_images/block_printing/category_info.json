@@ -1,0 +1,27 @@
+{
+  "category_id": "block_printing",
+  "category_name": "Block Printing",
+  "hindi_name": "ठप्पा छपाई",
+  "description": "Hand woodblock printed textiles using natural botanical and mineral resist dyes.",
+  "gi_certified_count": 14,
+  "listings_summary": [
+    {
+      "craft_slug": "ajrakh-block-printing",
+      "craft_name": "Ajrakh Block Printing",
+      "title_en": "16-Stage Natural Living Indigo & Harde Riverbed Ajrakh Stole",
+      "title_hi": "16-चरणीय प्राकृतिक नील और हरड़े से रंगा पारम्परिक अजरख स्टोल",
+      "artisan": "Dr. Ismail Mohammed Khatri",
+      "region": "Ajrakhpur, Kutch, Gujarat",
+      "image_filename": "ajrakh-block-printing.jpg"
+    },
+    {
+      "craft_slug": "sanganeri-block-printing",
+      "craft_name": "Sanganeri Hand Block Printing",
+      "title_en": "Sanganeri Hand Block Print Mulberry Silk Chanderi Dupatta",
+      "title_hi": "सांगानेरी हाथ की ठप्पा छपाई वाली चंदेरी सिल्क दुपट्टा",
+      "artisan": "Mohan Lal Chhipa",
+      "region": "Sanganer, Jaipur, Rajasthan",
+      "image_filename": "sanganeri-block-printing.jpg"
+    }
+  ]
+}

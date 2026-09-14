@@ -288,15 +288,38 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ml-svc
+      args:
+        EXTRAS: real
     environment:
       ML_SVC_GRPC_PORT: "50055"
       ML_SVC_METRICS_PORT: "9095"
       ML_SVC_MOCK_MODE: "true"
+      ML_SVC_OBJECT_STORAGE_ENDPOINT: "minio:9000"
+      ML_SVC_OBJECT_STORAGE_ACCESS_KEY: "minioadmin"
+      ML_SVC_OBJECT_STORAGE_SECRET_KEY: "minioadmin"
+      ML_SVC_OBJECT_STORAGE_BUCKET: "kalakriti"
+      # Generic, vendor-agnostic: app/registry.py's load_all() translates
+      # this into whatever env var each component's underlying library
+      # actually reads (HF_HOME, U2NET_HOME, ...) -- see its docstring. Keeps
+      # every real component's downloaded weights persisted across container
+      # recreates via the one hf-cache volume below, without this file or any
+      # single component needing to know a vendor's own env var name.
+      ML_SVC_MODEL_CACHE_DIR: /root/.cache/huggingface
+      # Needed only for Translate: IndicTrans2's whole org gates on a
+      # license/contact-info agreement, regardless of checkpoint size. Scoped
+      # to that one component (app/models/translation), not a global var --
+      # read from the host shell/.env; other RPCs work fine with this unset.
+      ML_SVC_TRANSLATION_HF_TOKEN: "${HF_TOKEN:-}"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
     ports:
       - "50055:50055"
       # host 9097, not 9095: bff's k8s manifest reserves 9095 for its own
       # (currently unimplemented) metrics endpoint; this avoids the clash.
       - "9097:9095"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   # Observability
@@ -322,3 +345,4 @@ volumes:
   pg_data:
   minio_data:
   prometheus_data:
+  hf-cache:
