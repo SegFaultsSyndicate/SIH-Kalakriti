@@ -478,6 +478,10 @@
 
     <div class="profile-hero__actions">
       <SpeakButton text={spokenProfileText} label={t('action.speak')} />
+      <a class="profile-btn-ghost" href="/badges">
+        <Icon name="badge-verified" size="1rem" />
+        {t('nav.badges')}
+      </a>
       <a class="profile-btn-ghost" href="/accessibility">
         <Icon name="accessibility" size="1rem" />
         {t('profile.a11ySettings')}
