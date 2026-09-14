@@ -32,10 +32,10 @@ Every RPC below that takes a `MediaRef` needs the file already sitting in MinIO 
 
 **No install needed** — web console: open `http://localhost:9001` (`minioadmin`/`minioadmin`), open the `kalakriti` bucket, drag your file in.
 
-**CLI**: `sudo pacman -S minio-client`, then:
+**CLI**: `sudo pacman -S minio-client` — installs the binary as **`mcli`**, not `mc` (Arch's package avoids clashing with Midnight Commander's `mc`). Then:
 ```sh
-mc alias set local http://localhost:9000 minioadmin minioadmin
-mc cp your-image.jpg local/kalakriti/test/your-image.jpg
+mcli alias set local http://localhost:9000 minioadmin minioadmin
+mcli cp your-image.jpg local/kalakriti/test/your-image.jpg
 ```
 
 **Via the container itself** (already has the `minio` Python package in real mode, nothing extra to install):
