@@ -20,4 +20,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/moderation', labelKey: 'nav.moderation', icon: 'warning' },
   { href: '/crafts', labelKey: 'nav.crafts', icon: 'weaving' },
   { href: '/companies', labelKey: 'nav.companies', icon: 'package' },
+  { href: '/artisans', labelKey: 'nav.badges', icon: 'badge-verified', role: 'MINISTRY' },
 ];
