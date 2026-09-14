@@ -54,7 +54,20 @@ def resolve_device() -> tuple[str, torch.dtype]:
 
 @lru_cache(maxsize=128)
 def is_cached_locally(repo_id: str) -> bool:
-    """Whether `repo_id` already has a complete snapshot in the local HF cache."""
+    """Whether `repo_id` already has a complete snapshot in the local HF cache.
+
+    A repo entry in `scan_cache_dir()` appears the moment *any* file for it
+    has downloaded -- e.g. just `config.json`/tokenizer files, which finish in
+    milliseconds even when the multi-GB weight shards behind them never did
+    (an interrupted load, a crash between resolving the repo and finishing the
+    download). Treating that as "cached" forces `local_files_only=True` on a
+    snapshot that's missing its weights, and transformers' file-resolution
+    doesn't raise a clean error for that -- it hands back `None` for the
+    resolved archive path, which crashes deeper in `from_pretrained` with a
+    confusing `AttributeError: 'NoneType' object has no attribute 'endswith'`
+    instead of the expected `OSError`. So this checks for an actual weight
+    file, not just repo presence.
+    """
     from huggingface_hub import scan_cache_dir
 
     try:
@@ -62,7 +75,15 @@ def is_cached_locally(repo_id: str) -> bool:
     except Exception:
         log.exception("failed to scan local HF cache for %r; assuming not cached", repo_id)
         return False
-    return any(repo.repo_id == repo_id for repo in cache_info.repos)
+    return any(
+        repo.repo_id == repo_id
+        and any(
+            file.file_name.endswith((".safetensors", ".bin"))
+            for revision in repo.revisions
+            for file in revision.files
+        )
+        for repo in cache_info.repos
+    )
 
 
 def local_files_only_kwargs(repo_id: str) -> dict[str, bool]:

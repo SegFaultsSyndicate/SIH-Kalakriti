@@ -288,15 +288,32 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ml-svc
+      args:
+        EXTRAS: real
     environment:
       ML_SVC_GRPC_PORT: "50055"
       ML_SVC_METRICS_PORT: "9095"
-      ML_SVC_MOCK_MODE: "true"
+      ML_SVC_MOCK_MODE: "false"
+      ML_SVC_OBJECT_STORAGE_ENDPOINT: "minio:9000"
+      ML_SVC_OBJECT_STORAGE_ACCESS_KEY: "minioadmin"
+      ML_SVC_OBJECT_STORAGE_SECRET_KEY: "minioadmin"
+      ML_SVC_OBJECT_STORAGE_BUCKET: "kalakriti"
+      HF_HOME: /root/.cache/huggingface
+      # Needed only for Translate: IndicTrans2's whole org gates on a
+      # license/contact-info agreement, regardless of checkpoint size.
+      # Read from the host shell/.env, never hardcoded here; other RPCs
+      # work fine with this unset.
+      HF_TOKEN: "${HF_TOKEN:-}"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
     ports:
       - "50055:50055"
       # host 9097, not 9095: bff's k8s manifest reserves 9095 for its own
       # (currently unimplemented) metrics endpoint; this avoids the clash.
       - "9097:9095"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   # Observability
@@ -322,3 +339,4 @@ volumes:
   pg_data:
   minio_data:
   prometheus_data:
+  hf-cache:
