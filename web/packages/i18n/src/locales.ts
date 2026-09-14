@@ -35,9 +35,14 @@ export interface LocaleMeta {
    * or full translation. 'machine': messages/<code>.ts exists but was
    * produced by translation rather than a human reviewer -- correct enough to
    * ship, but not yet verified the way 'complete' catalogues are. 'fallback':
-   * no catalogue yet; resolves through the hi -> en chain. Intl-driven
-   * formatting (numbers, dates) still works for every locale regardless of
-   * this value -- it only describes the message catalogue.
+   * messages/<code>.ts may exist, but catalogue-audit.ts finds it incomplete
+   * (missing keys, untranslated pasted-Hindi values, or wrong script) --
+   * lookups fall through the hi -> en chain for whatever it's missing.
+   * catalogue-audit.ts is what actually gates 'complete'/'machine' vs
+   * 'fallback' (see locales.test.ts); this field must never claim better
+   * than the audit measures. Intl-driven formatting (numbers, dates) still
+   * works for every locale regardless of this value -- it only describes the
+   * message catalogue.
    */
   readonly coverage: 'complete' | 'machine' | 'fallback';
 }
@@ -59,7 +64,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'hi-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   as: {
     tag: 'as-IN',
@@ -77,7 +82,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Beng',
     numberLocale: 'bn-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   brx: {
     tag: 'brx-IN',
@@ -104,7 +109,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Gujr',
     numberLocale: 'gu-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   kn: {
     tag: 'kn-IN',
@@ -158,7 +163,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'mr-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ne: {
     tag: 'ne-IN',
@@ -176,7 +181,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Orya',
     numberLocale: 'or-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   pa: {
     tag: 'pa-IN',
@@ -185,7 +190,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Guru',
     numberLocale: 'pa-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   sa: {
     tag: 'sa-IN',
@@ -203,7 +208,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'sd-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ta: {
     tag: 'ta-IN',
@@ -212,7 +217,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Taml',
     numberLocale: 'ta-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   te: {
     tag: 'te-IN',
@@ -221,7 +226,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Telu',
     numberLocale: 'te-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ur: {
     tag: 'ur-IN',
@@ -230,7 +235,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'ur-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
 } as const satisfies Record<string, LocaleMeta>;
 

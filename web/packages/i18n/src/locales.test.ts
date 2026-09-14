@@ -1,6 +1,25 @@
 // packages/i18n/src/locales.test.ts
-import { describe, expect, it } from 'vitest';
-import { LOCALES, LOCALE_CODES, SUPPORTED_LOCALES, isLocaleCode, resolveLocale } from './locales';
+import { beforeAll, describe, expect, it } from 'vitest';
+import {
+  LOCALES,
+  LOCALE_CODES,
+  SUPPORTED_LOCALES,
+  isLocaleCode,
+  resolveLocale,
+  type LocaleCode,
+} from './locales';
+import { en } from './messages/en';
+import { auditCatalogue } from './catalogue-audit';
+
+const NON_EN: LocaleCode[] = LOCALE_CODES.filter((code) => code !== 'en');
+const catalogues = new Map<LocaleCode, Record<string, string>>();
+
+beforeAll(async () => {
+  const loaded = await Promise.all(
+    NON_EN.map((code) => import(`./messages/${code}.ts`) as Promise<Record<string, unknown>>),
+  );
+  NON_EN.forEach((code, i) => catalogues.set(code, loaded[i][code] as Record<string, string>));
+});
 
 describe('LOCALES', () => {
   it('lists 20 of the 22 Eighth Schedule languages, plus English', () => {
@@ -22,11 +41,23 @@ describe('LOCALES', () => {
     }
   });
 
-  it('reports complete coverage for translated languages; the rest report fallback', () => {
-    const complete = new Set(['en', 'hi', 'bn', 'gu', 'mr', 'or', 'pa', 'sd', 'ta', 'te', 'ur']);
-    for (const code of LOCALE_CODES) {
-      const expected = complete.has(code) ? 'complete' : 'fallback';
-      expect(LOCALES[code].coverage).toBe(expected);
+  it('never declares complete/machine coverage for a catalogue the audit finds broken', () => {
+    // Regression guard for the exact bug this test used to have: it asserted
+    // a hardcoded list of "complete" locales without ever reading a
+    // catalogue file, so 9 locales that were ~90% pasted Hindi stayed
+    // labelled 'complete' indefinitely. See catalogue-audit.ts and
+    // I18N_PLAN.md's Phase 1 for the real measurement; a locale may only
+    // claim 'complete' or 'machine' once auditCatalogue reports zero issues
+    // against it.
+    expect(LOCALES.en.coverage).toBe('complete');
+    const hi = catalogues.get('hi') ?? {};
+    for (const code of NON_EN) {
+      const issues = auditCatalogue(code, catalogues.get(code)!, en, hi);
+      if (issues.length === 0) {
+        expect(['complete', 'machine']).toContain(LOCALES[code].coverage);
+      } else {
+        expect(LOCALES[code].coverage).toBe('fallback');
+      }
     }
   });
 

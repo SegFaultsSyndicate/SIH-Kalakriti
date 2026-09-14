@@ -1,0 +1,23 @@
+{
+  "_comment": "Ratchet ceiling per locale, from catalogue-audit.ts. A locale's issue count must never exceed its number here -- see catalogue-audit.test.ts. Lower a number (and commit) as a translation batch actually fixes issues; raise one only when Phase 3 adds new keys to en.ts, which every untranslated locale is then 'missing' until its own batch lands. Never raise a number to make a red test pass.",
+  "hi": 319,
+  "as": 1943,
+  "bn": 1943,
+  "brx": 1319,
+  "doi": 1324,
+  "gu": 1943,
+  "kn": 1943,
+  "ks": 2035,
+  "kok": 1320,
+  "mai": 1323,
+  "ml": 1943,
+  "mr": 1277,
+  "ne": 1319,
+  "or": 1943,
+  "pa": 1943,
+  "sa": 1319,
+  "sd": 2035,
+  "ta": 1943,
+  "te": 1943,
+  "ur": 1943
+}
