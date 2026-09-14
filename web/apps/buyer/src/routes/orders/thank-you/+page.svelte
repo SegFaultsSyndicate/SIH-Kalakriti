@@ -15,7 +15,7 @@
 
   const breadcrumbs = $derived([
     { label: t('nav.orders') || 'Orders', href: '/orders' },
-    { label: 'Order Confirmed' },
+    { label: t('orderConfirmation.breadcrumbLabel') },
   ]);
 
   // Derive mock or passed order parameters
@@ -26,8 +26,8 @@
 </script>
 
 <svelte:head>
-  <title>Order Confirmed — {t('app.name')}</title>
-  <meta name="description" content="Thank you for supporting India's master artisans. Your order has been placed and cryptographically sealed on Kalakriti." />
+  <title>{t('orderConfirmation.headTitle', { appName: t('app.name') })}</title>
+  <meta name="description" content={t('orderConfirmation.metaDescription')} />
 </svelte:head>
 
 <div class="thank-you-page">
@@ -41,10 +41,10 @@
         </svg>
       </div>
 
-      <span class="conf-kicker">Order Cryptographically Sealed</span>
-      <h1 class="conf-title">Thank You For Your Patronage</h1>
+      <span class="conf-kicker">{t('orderConfirmation.kicker')}</span>
+      <h1 class="conf-title">{t('orderConfirmation.title')}</h1>
       <p class="conf-sub">
-        Your order <strong>#{orderId}</strong> has been secured and dispatched to the loom. 100% of your payment is held in statutory escrow and will be transferred directly to the artisan upon dispatch.
+        {t('orderConfirmation.subtitlePrefix')} <strong>#{orderId}</strong> {t('orderConfirmation.subtitleSuffix')}
       </p>
 
       <!-- Verification Seal Box -->
@@ -53,8 +53,8 @@
           <Icon name="verified-artisan" size="1.4rem" />
         </div>
         <div class="seal-meta">
-          <span class="seal-tag">Ed25519 Ministry Proof</span>
-          <span class="seal-hash">SHA-256: 4e8f9b2c...a719d308</span>
+          <span class="seal-tag">{t('orderConfirmation.sealTag')}</span>
+          <span class="seal-hash">{t('orderConfirmation.sealHash')}</span>
           <span class="seal-cluster">{craftName} • {cluster}</span>
         </div>
       </div>
@@ -62,46 +62,46 @@
       <!-- Artisan Guild Commitment Card -->
       <div class="guild-pledge-card">
         <div class="pledge-header">
-          <span class="guild-badge"><Icon name="gi-tagged" size="0.9rem" /> Master Guild Assignment</span>
-          <span class="pledge-time">Guaranteed Response within 24 Hours</span>
+          <span class="guild-badge"><Icon name="gi-tagged" size="0.9rem" /> {t('orderConfirmation.guildBadge')}</span>
+          <span class="pledge-time">{t('orderConfirmation.pledgeTime')}</span>
         </div>
         <div class="pledge-body">
           <p>
-            Master artisan <strong>{artisanName}</strong> and their weaving family have received your allocation. You will receive photo and video progress updates directly from the loom as raw silk warp tensioning begins.
+            {t('orderConfirmation.pledgeBodyPrefix')} <strong>{artisanName}</strong> {t('orderConfirmation.pledgeBodySuffix')}
           </p>
         </div>
       </div>
 
       <!-- 4-Stage Loom Progress Roadmap -->
       <div class="progress-roadmap">
-        <h2 class="roadmap-title">Fulfillment & Provenance Journey</h2>
+        <h2 class="roadmap-title">{t('orderConfirmation.roadmapTitle')}</h2>
         <ol class="roadmap-steps" role="list">
           <li class="step step--complete">
             <span class="step-bullet"><Icon name="check" size="0.75rem" /></span>
             <div class="step-meta">
-              <strong>Order Placed & Escrowed</strong>
-              <span>Ministry digital ledger record created</span>
+              <strong>{t('orderConfirmation.step1.title')}</strong>
+              <span>{t('orderConfirmation.step1.detail')}</span>
             </div>
           </li>
           <li class="step step--active">
             <span class="step-bullet">2</span>
             <div class="step-meta">
-              <strong>Yarn Tensioning & Dyeing</strong>
-              <span>Loom setup and botanical immersion</span>
+              <strong>{t('orderConfirmation.step2.title')}</strong>
+              <span>{t('orderConfirmation.step2.detail')}</span>
             </div>
           </li>
           <li class="step">
             <span class="step-bullet">3</span>
             <div class="step-meta">
-              <strong>GI Inspection & Provenance Seal</strong>
-              <span>Physical weave density & motif check</span>
+              <strong>{t('orderConfirmation.step3.title')}</strong>
+              <span>{t('orderConfirmation.step3.detail')}</span>
             </div>
           </li>
           <li class="step">
             <span class="step-bullet">4</span>
             <div class="step-meta">
-              <strong>Archival Khadi Dispatch</strong>
-              <span>Insured postal handloom delivery</span>
+              <strong>{t('orderConfirmation.step4.title')}</strong>
+              <span>{t('orderConfirmation.step4.detail')}</span>
             </div>
           </li>
         </ol>
@@ -110,11 +110,11 @@
       <!-- Actions -->
       <div class="conf-actions">
         <a href="/orders" class="k-button k-button--primary">
-          <span>View Order Timeline</span>
+          <span>{t('orderConfirmation.viewTimeline')}</span>
           <Icon name="arrow-right" size="1rem" />
         </a>
         <a href="/search" class="k-button k-button--secondary">
-          <span>Explore More Heritage Crafts</span>
+          <span>{t('orderConfirmation.exploreMore')}</span>
         </a>
       </div>
     </div>

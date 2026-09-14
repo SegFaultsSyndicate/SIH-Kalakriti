@@ -986,6 +986,45 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       not a ratchet failure. The real gate is `npx vitest run`'s
       `catalogue-audit.test.ts`, which reads the baseline and passed clean
       at 46/46). `apps/buyer` svelte-check also clean (767 files, 0 errors).
+  - [x] **3.6** `apps/buyer` routes M-Z (`listing/[slug]`, `login`, `orders`,
+        `orders/[id]`, `orders/thank-you`, `privacy`, `profile`, `search`,
+        `terms`, `verify/[code]`) -- lighter batch: two full legal documents
+        and one entirely-unwired multi-portal gateway page accounted for
+        most of the new keys; several route files were already fully wired
+        from earlier phases and needed zero changes.
+    - Fixed: `privacy/+page.svelte` (23 new `privacy.*` keys -- the complete
+      DPDP Act 2023 policy document, all 6 sections), `terms/+page.svelte`
+      (17 new `terms.*` keys -- the complete Terms of Service document, all
+      6 sections), `login/+page.svelte` (52 new `login.*` keys -- the
+      entire 3-portal sign-in gateway: toast messages, brand header, portal
+      tabs, buyer auth form incl. OTP/password modes, and both artisan/admin
+      portal-redirect panels with their feature lists), `orders/thank-you/
+      +page.svelte` (26 new `orderConfirmation.*` keys -- kicker, seal box,
+      guild pledge card, all 4 roadmap steps, both CTA buttons; the prefix/
+      suffix split pattern from 3.5's `account.page.orders.craftedByLabel`
+      reused twice here to keep `<strong>{orderId}</strong>` and
+      `<strong>{artisanName}</strong>` inline within their sentences -- the
+      URL-param demo fallback values for order id/craft/artisan/cluster
+      left as data), `orders/+page.svelte` and `orders/[id]/+page.svelte`
+      (reused the existing `orders.units` key for two `{quantity} units`
+      spans that had been left as raw string concatenation), `listing/
+      [slug]/+page.svelte` (9 new `listing.*` keys for the share button,
+      response-guarantee promise card, artisan-profile link title, and
+      quick-order-dock aria-label -- reused `listing.by` and
+      `profile.verifiedBadgeTitle` rather than duplicating), `profile/
+      +page.svelte` (1 new key for the redirect-notice text).
+    - Confirmed false positives / no fix needed: `search/+page.svelte` and
+      `verify/[code]/+page.svelte` -- both already fully wired through
+      `t()`.
+    - Found and fixed one duplicate-key regression during this batch: a new
+      `login.heading` collided with a pre-existing key of the same name
+      (artisan-app phone-login flow, `'Enter your phone number'`) --
+      svelte-check caught it as a TS object-literal error immediately.
+      Renamed the new key to `login.gatewayHeading` rather than touching
+      the pre-existing one.
+    - en.ts grew 1988 -> 2111 keys. `i18n-baseline.json` ceilings raised to
+      match. `npx vitest run` (46/46) and `apps/buyer` svelte-check (767
+      files, 0 errors) both clean.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.

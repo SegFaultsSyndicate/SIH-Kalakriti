@@ -189,7 +189,7 @@
             <li class="alloc-lot" class:alloc-lot--reallocated={lot.state === 'REALLOCATED'}>
               <p class="alloc-lot__artisan">{names[lot.artisan_id] || t('allocation.lot.unknownArtisan')}</p>
               {#if districts[lot.artisan_id]}<p class="alloc-lot__district">{districts[lot.artisan_id]}</p>{/if}
-              <p class="alloc-lot__quantity">{lot.quantity} units</p>
+              <p class="alloc-lot__quantity">{t('orders.units', { count: String(lot.quantity) })}</p>
               <p class="alloc-lot__state">{lot.state}</p>
               {#if lot.progress_pct > 0}
                 <p class="alloc-lot__progress">{t('allocation.lot.progress', { pct: String(lot.progress_pct) })}</p>

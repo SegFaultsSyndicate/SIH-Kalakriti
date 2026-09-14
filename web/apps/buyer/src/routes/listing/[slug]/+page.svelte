@@ -236,11 +236,11 @@
           type="button"
           class="listing__share-btn"
           onclick={handleShare}
-          title="Share this authentic craft piece"
-          aria-label="Share this listing"
+          title={t('listing.shareTitle')}
+          aria-label={t('listing.shareAriaLabel')}
         >
           <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
-          <span>{copied ? 'Copied!' : 'Share'}</span>
+          <span>{copied ? t('listing.shareCopied') : t('listing.shareButton')}</span>
         </button>
       </div>
 
@@ -250,19 +250,19 @@
       <div class="listing__promise-card">
         <Icon name="verified-artisan" size="1.25rem" />
         <div class="listing__promise-copy">
-          <strong>24-Hour Artisan Response Guarantee</strong>
-          <span>Direct weaver communication • No middlemen • Verified GI Registry</span>
+          <strong>{t('listing.responseGuarantee')}</strong>
+          <span>{t('listing.responseGuaranteeSub')}</span>
         </div>
       </div>
       {#if listing.artisan_name}
-        <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title="View artisan profile">
+        <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title={t('listing.viewArtisanProfileTitle')}>
           <div class="listing__artisan-avatar">
             {#if artisanAvatar}
               <img src={artisanAvatar} alt={listing.artisan_name} class="listing__artisan-avatar-img" />
             {:else}
               <span class="listing__artisan-avatar-initial">{listing.artisan_name.charAt(0).toUpperCase()}</span>
             {/if}
-            <span class="listing__artisan-verified" title="Govt & AI Verified Artisan">
+            <span class="listing__artisan-verified" title={t('profile.verifiedBadgeTitle')}>
               <Icon name="verified-artisan" />
             </span>
           </div>
@@ -270,7 +270,7 @@
             <span class="listing__artisan-name">{t('listing.by', { name: listing.artisan_name })}</span>
             <span class="listing__artisan-sub">
               {#if listing.artisan_district}<span>{listing.artisan_district}</span> • {/if}
-              <span class="listing__artisan-view">View artisan storefront →</span>
+              <span class="listing__artisan-view">{t('listing.viewArtisanStorefront')}</span>
             </span>
           </div>
         </a>
@@ -346,7 +346,7 @@
   </div>
 
   <!-- Sticky Mobile CTA Dock -->
-  <aside class="sticky-mobile-dock" aria-label="Quick order dock">
+  <aside class="sticky-mobile-dock" aria-label={t('listing.quickOrderDockAriaLabel')}>
     <div class="sticky-mobile-dock__price">
       <span class="dock-label">{madeToOrder ? 'Advance Split' : 'Direct Price'}</span>
       <span class="dock-amount"><Money paise={listing.price?.amount_paise ?? 0} /></span>

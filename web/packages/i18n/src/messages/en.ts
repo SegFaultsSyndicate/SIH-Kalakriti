@@ -1831,6 +1831,160 @@ export const en = {
   'exhibition.fairs.craftsLabel': 'Featured GI Craft Traditions:',
   'exhibition.fairs.artisansExhibitingSuffix': 'Master Artisans Exhibiting',
 
+  // Profile redirect page (/profile)
+  'profile.redirecting': 'Redirecting to your account dashboard...',
+
+  // Privacy Policy page (/privacy)
+  'privacy.breadcrumbLabel': 'Privacy Policy',
+  'privacy.headTitle': 'Privacy Policy — {appName}',
+  'privacy.metaDescription':
+    "Official Privacy Policy compliant with India's Digital Personal Data Protection (DPDP) Act 2023, outlining artisan digital identity security and buyer data rights.",
+  'privacy.kicker': 'DPDP Act 2023 Statutory Compliance',
+  'privacy.title': 'Privacy Policy',
+  'privacy.lastUpdated': 'Last Updated: September 2026 • Government of India National Digital Infrastructure',
+  'privacy.section1.heading': '1. Statutory Commitment & Scope',
+  'privacy.section1.body':
+    'Kalakriti is dedicated to the highest standards of data fiduciary responsibility in compliance with the Digital Personal Data Protection Act, 2023 (DPDP Act). This policy explains how we collect, handle, safeguard, and process personal data across our Artisan PWA, Buyer Marketplace, and Admin portals.',
+  'privacy.section2.heading': '2. Data We Collect (Principle of Data Minimisation)',
+  'privacy.section2.body':
+    'We adhere strictly to the statutory principle of data minimisation. For buyers, we collect only the contact information and shipping address strictly necessary to deliver artisanal orders. For artisans, we collect verified mobile credentials, Ministry Pehchan card numbers, and cluster geographical coordinates necessary to certify Geographical Indication (GI) authenticity.',
+  'privacy.section3.heading': '3. Purpose of Processing & Direct Payouts',
+  'privacy.section3.intro': 'Data collected is processed solely for the following explicit purposes:',
+  'privacy.section3.bullet1': 'Facilitating direct DBT bank payments to artisan guilds with 0% platform deductions.',
+  'privacy.section3.bullet2': 'Minting tamper-proof cryptographic Ed25519 digital provenance certificates.',
+  'privacy.section3.bullet3':
+    'Scheduling optional 10-minute live loom video consultations between collectors and weavers.',
+  'privacy.section3.bullet4': 'Ensuring fulfillment and delivery status notifications via SMS and email.',
+  'privacy.section4.heading': '4. Absolute Ban on Third-Party Data Selling',
+  'privacy.section4.body':
+    'As a public national initiative, Kalakriti will never sell, rent, monetize, or disclose your personal or commercial transaction data to third-party advertisers, data brokers, or commercial tracking syndicates.',
+  'privacy.section5.heading': '5. Cryptographic Security & Cookie Policy',
+  'privacy.section5.body':
+    'All network transmissions utilize TLS 1.3 enforced by HTTP Strict Transport Security (HSTS). Authentication tokens are maintained with strict HttpOnly, Secure, SameSite=Strict cookies. We do not deploy invasive tracking pixels or cross-site tracking beacons.',
+  'privacy.section6.heading': '6. Data Subject Rights & Grievance Redressal',
+  'privacy.section6.body':
+    'You possess statutory rights to access, review, correct, or request the erasure of your personal data under the DPDP Act 2023. For inquiries or data deletion requests, contact the designated Data Protection Grievance Officer at',
+
+  // Terms of Service page (/terms)
+  'terms.breadcrumbLabel': 'Terms of Service',
+  'terms.headTitle': 'Terms of Service — {appName}',
+  'terms.metaDescription':
+    'Official terms of service governing artisan protection, direct payouts, GI cryptographic certification, and institutional collective fulfillment on Kalakriti.',
+  'terms.kicker': 'Government Governance & Guild Mandate',
+  'terms.title': 'Terms of Service',
+  'terms.lastUpdated': 'Last Updated: September 2026 • Ministry of Social Justice & Empowerment, Govt of India',
+  'terms.section1.heading': '1. Platform Mandate & Public Infrastructure',
+  'terms.section1.body':
+    'Kalakriti is a public digital goods infrastructure established to safeguard, preserve, and commercially empower traditional Indian craft communities, scheduled caste, tribal, and marginalized artisans across all recognized 28 States and Union Territories. Access to this platform is governed by the rules and guidelines issued by the Ministry of Social Justice & Empowerment.',
+  'terms.section2.heading': '2. Geographical Indications (GI) & Authenticity Standard',
+  'terms.section2.body':
+    'All listings carrying the "GI Certified" distinction must correspond to authentic clusters registered under the Geographical Indications of Goods (Registration and Protection) Act, 1999. Every approved product is sealed with an immutable Ed25519 digital signature and public ledger entry verifiable via our cryptographic terminal.',
+  'terms.section3.heading': '3. 100% Direct Payouts & 0% Platform Deductions',
+  'terms.section3.body':
+    'Unlike commercial brokerages, Kalakriti operates with zero commission. 100% of the item purchase price (excluding mandatory statutory GST and logistics tariffs) is transferred directly to the verified DBT bank account of the registered artisan or Self-Help Group (SHG) upon dispatch confirmation.',
+  'terms.section4.heading': '4. Made-to-Order & Institutional Fulfillment',
+  'terms.section4.body':
+    'Purchases designated as Made-to-Order involve custom weaving, hand block-printing, or lost-wax casting. Buyers acknowledge that production lead times (typically 2 to 6 weeks) represent authentic handcrafted labor cycles. Cancellations requested after warp tensioning or raw alloy casting has commenced are subject to reimbursement for artisan material inputs.',
+  'terms.section5.heading': '5. Intellectual Property of Traditional Cultural Expressions',
+  'terms.section5.body':
+    'Traditional motifs, weaving geometries, and regional craft heritage remain the inalienable intellectual property of the respective artisan guilds and traditional practitioner communities. Commercial replication, unauthorized digital cloning, or industrial imitation of Kalakriti-cataloged motifs is strictly prohibited under Indian law.',
+  'terms.section6.heading': '6. Dispute Resolution & Jurisdiction',
+  'terms.section6.body':
+    'Any dispute arising under these terms shall be referred to the Cluster Grievance Redressal Committee under the Ministry of Social Justice & Empowerment, New Delhi, and shall be governed by the laws of India.',
+
+  // Multi-portal Sign In / Gateway page (/login)
+  'login.toast.enterIdentifier': 'Please enter your mobile number or email',
+  'login.toast.otpSent': 'One-Time Password (OTP) sent to your mobile/email',
+  'login.toast.welcomeBack': 'Welcome back to Kalakriti!',
+  'login.toast.registered': 'Account registered successfully!',
+  'login.headTitle': 'Sign In & Institutional Gateway — {appName}',
+  'login.metaDescription': 'Sign in to your Kalakriti Buyer Account or access the Artisan PWA and Ministry Admin consoles.',
+  'login.homeAriaLabel': 'Kalakriti Home',
+  'login.brandSub': 'Ministry of Social Justice & Empowerment',
+  'login.gatewayHeading': 'Institutional Access Gateway',
+  'login.desc': 'Choose your portal or sign in to your verified customer account',
+  'login.portalSelectionAriaLabel': 'Portal Selection',
+  'login.portal.buyer.title': 'Buyer Account',
+  'login.portal.buyer.sub': 'Orders & Settings',
+  'login.portal.artisan.title': 'Artisan Loom',
+  'login.portal.artisan.sub': 'Voice PWA',
+  'login.portal.admin.title': 'Ministry Admin',
+  'login.portal.admin.sub': 'Cluster Console',
+  'login.signIn': 'Sign In',
+  'login.createAccount': 'Create Account',
+  'login.fullNameLabel': 'Full Name',
+  'login.fullNamePlaceholder': 'e.g. Aarav Sharma',
+  'login.identifierLabel': 'Mobile Number or Government Email',
+  'login.identifierPlaceholder': 'e.g. +91 98765 43210 or name@gov.in',
+  'login.resendOtp': 'Resend OTP',
+  'login.sendOtp': 'Send OTP',
+  'login.identifierHint': 'Secured with GIGW 3.0 & anti-enumeration protection',
+  'login.otpLabel': 'Enter 6-Digit OTP',
+  'login.passwordLabel': 'Password',
+  'login.forgotPassword': 'Forgot password?',
+  'login.rememberMe': 'Keep me signed in',
+  'login.verifying': 'Verifying credentials...',
+  'login.signInSubmit': 'Sign In to Your Account',
+  'login.registerSubmit': 'Register & Continue to Marketplace',
+  'login.termsNoticePrefix': "By continuing, you agree to Kalakriti's",
+  'login.termsOfService': 'Terms of Service',
+  'login.and': 'and',
+  'login.privacyPolicy': 'DPDP Act 2023 Privacy Policy',
+  'login.artisan.heading': 'Artisan Loom & Guild Studio',
+  'login.artisan.subtext':
+    "Designed specifically for India's 74 master artisan corridors and craft collectives. Features voice-first narration, offline-first sync, and multilingual assistance.",
+  'login.artisan.feat1': 'Voice-first craft cataloging in 12 Indian languages',
+  'login.artisan.feat2': 'Ed25519 cryptographic GI provenance stamping',
+  'login.artisan.feat3': 'Direct payments into verified Jan Dhan bank accounts',
+  'login.artisan.launch': 'Launch Artisan PWA (Port 5173)',
+  'login.admin.heading': 'Ministry & Cluster Development Admin',
+  'login.admin.subtext':
+    'Restricted to authorized officials from the Ministry of Social Justice & Empowerment, Cluster Development Officers, and GI verification registrars.',
+  'login.admin.feat1': 'Live telemetry across 74 national craft belts',
+  'login.admin.feat2': 'Cryptographic catalog moderation and GI integrity checks',
+  'login.admin.feat3': 'Institutional escrow settlement and fair-wage audits',
+  'login.admin.launch': 'Launch Ministry Admin Console (Port 5175)',
+
+  // Order confirmation / thank-you page (/orders/thank-you)
+  'orderConfirmation.breadcrumbLabel': 'Order Confirmed',
+  'orderConfirmation.headTitle': 'Order Confirmed — {appName}',
+  'orderConfirmation.metaDescription':
+    "Thank you for supporting India's master artisans. Your order has been placed and cryptographically sealed on Kalakriti.",
+  'orderConfirmation.kicker': 'Order Cryptographically Sealed',
+  'orderConfirmation.title': 'Thank You For Your Patronage',
+  'orderConfirmation.subtitlePrefix': 'Your order',
+  'orderConfirmation.subtitleSuffix':
+    'has been secured and dispatched to the loom. 100% of your payment is held in statutory escrow and will be transferred directly to the artisan upon dispatch.',
+  'orderConfirmation.sealTag': 'Ed25519 Ministry Proof',
+  'orderConfirmation.sealHash': 'SHA-256: 4e8f9b2c...a719d308',
+  'orderConfirmation.guildBadge': 'Master Guild Assignment',
+  'orderConfirmation.pledgeTime': 'Guaranteed Response within 24 Hours',
+  'orderConfirmation.pledgeBodyPrefix': 'Master artisan',
+  'orderConfirmation.pledgeBodySuffix':
+    'and their weaving family have received your allocation. You will receive photo and video progress updates directly from the loom as raw silk warp tensioning begins.',
+  'orderConfirmation.roadmapTitle': 'Fulfillment & Provenance Journey',
+  'orderConfirmation.step1.title': 'Order Placed & Escrowed',
+  'orderConfirmation.step1.detail': 'Ministry digital ledger record created',
+  'orderConfirmation.step2.title': 'Yarn Tensioning & Dyeing',
+  'orderConfirmation.step2.detail': 'Loom setup and botanical immersion',
+  'orderConfirmation.step3.title': 'GI Inspection & Provenance Seal',
+  'orderConfirmation.step3.detail': 'Physical weave density & motif check',
+  'orderConfirmation.step4.title': 'Archival Khadi Dispatch',
+  'orderConfirmation.step4.detail': 'Insured postal handloom delivery',
+  'orderConfirmation.viewTimeline': 'View Order Timeline',
+  'orderConfirmation.exploreMore': 'Explore More Heritage Crafts',
+
+  // Listing detail page (/listing/[slug])
+  'listing.shareTitle': 'Share this authentic craft piece',
+  'listing.shareAriaLabel': 'Share this listing',
+  'listing.shareCopied': 'Copied!',
+  'listing.shareButton': 'Share',
+  'listing.responseGuarantee': '24-Hour Artisan Response Guarantee',
+  'listing.responseGuaranteeSub': 'Direct weaver communication • No middlemen • Verified GI Registry',
+  'listing.viewArtisanProfileTitle': 'View artisan profile',
+  'listing.viewArtisanStorefront': 'View artisan storefront →',
+  'listing.quickOrderDockAriaLabel': 'Quick order dock',
+
   // 9. Category Subnav
   'subnav.ariaLabel': 'Craft Taxonomy & Categories',
   'subnav.allCrafts': 'All Crafts',

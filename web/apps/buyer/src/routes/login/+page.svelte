@@ -47,21 +47,21 @@
   function handleRequestOtp(e: Event): void {
     e.preventDefault();
     if (!identifier.trim()) {
-      showToast({ message: 'Please enter your mobile number or email', variant: 'error' });
+      showToast({ message: t('login.toast.enterIdentifier'), variant: 'error' });
       return;
     }
     isSubmitting = true;
     setTimeout(() => {
       isSubmitting = false;
       otpSent = true;
-      showToast({ message: 'One-Time Password (OTP) sent to your mobile/email', variant: 'success' });
+      showToast({ message: t('login.toast.otpSent'), variant: 'success' });
     }, 600);
   }
 
   function handleBuyerSubmit(e: Event): void {
     e.preventDefault();
     if (!identifier.trim()) {
-      showToast({ message: 'Please enter your mobile number or email', variant: 'error' });
+      showToast({ message: t('login.toast.enterIdentifier'), variant: 'error' });
       return;
     }
 
@@ -75,7 +75,7 @@
       session.establish(mockToken);
 
       showToast({
-        message: authMode === 'signin' ? 'Welcome back to Kalakriti!' : 'Account registered successfully!',
+        message: authMode === 'signin' ? t('login.toast.welcomeBack') : t('login.toast.registered'),
         variant: 'success',
       });
       void goto('/account');
@@ -84,27 +84,27 @@
 </script>
 
 <svelte:head>
-  <title>Sign In & Institutional Gateway — {t('app.name')}</title>
-  <meta name="description" content="Sign in to your Kalakriti Buyer Account or access the Artisan PWA and Ministry Admin consoles." />
+  <title>{t('login.headTitle', { appName: t('app.name') })}</title>
+  <meta name="description" content={t('login.metaDescription')} />
 </svelte:head>
 
 <div class="auth-wrapper">
   <div class="auth-card">
     <!-- Brand Header -->
     <header class="auth-header">
-      <a href="/" class="auth-brand" aria-label="Kalakriti Home">
+      <a href="/" class="auth-brand" aria-label={t('login.homeAriaLabel')}>
         <img src="/favicon.svg" alt="" width="36" height="36" class="auth-emblem" />
         <div class="brand-text">
-          <span class="brand-title">Kalakriti</span>
-          <span class="brand-sub">Ministry of Social Justice & Empowerment</span>
+          <span class="brand-title">{t('app.name')}</span>
+          <span class="brand-sub">{t('login.brandSub')}</span>
         </div>
       </a>
-      <h1 class="auth-heading">Institutional Access Gateway</h1>
-      <p class="auth-desc">Choose your portal or sign in to your verified customer account</p>
+      <h1 class="auth-heading">{t('login.gatewayHeading')}</h1>
+      <p class="auth-desc">{t('login.desc')}</p>
     </header>
 
     <!-- Portal Switcher Tabs -->
-    <div class="portal-tabs" role="tablist" aria-label="Portal Selection">
+    <div class="portal-tabs" role="tablist" aria-label={t('login.portalSelectionAriaLabel')}>
       <button
         type="button"
         role="tab"
@@ -114,8 +114,8 @@
       >
         <span class="portal-icon"><Icon name="package" size="1.5rem" /></span>
         <span class="portal-label">
-          <strong>Buyer Account</strong>
-          <small>Orders & Settings</small>
+          <strong>{t('login.portal.buyer.title')}</strong>
+          <small>{t('login.portal.buyer.sub')}</small>
         </span>
       </button>
 
@@ -128,8 +128,8 @@
       >
         <span class="portal-icon"><Icon name="weaving" size="1.5rem" /></span>
         <span class="portal-label">
-          <strong>Artisan Loom</strong>
-          <small>Voice PWA</small>
+          <strong>{t('login.portal.artisan.title')}</strong>
+          <small>{t('login.portal.artisan.sub')}</small>
         </span>
       </button>
 
@@ -142,8 +142,8 @@
       >
         <span class="portal-icon"><Icon name="cluster" size="1.5rem" /></span>
         <span class="portal-label">
-          <strong>Ministry Admin</strong>
-          <small>Cluster Console</small>
+          <strong>{t('login.portal.admin.title')}</strong>
+          <small>{t('login.portal.admin.sub')}</small>
         </span>
       </button>
     </div>
@@ -157,26 +157,26 @@
             class="mode-btn {authMode === 'signin' ? 'is-selected' : ''}"
             onclick={() => (authMode = 'signin')}
           >
-            Sign In
+            {t('login.signIn')}
           </button>
           <button
             type="button"
             class="mode-btn {authMode === 'register' ? 'is-selected' : ''}"
             onclick={() => (authMode = 'register')}
           >
-            Create Account
+            {t('login.createAccount')}
           </button>
         </div>
 
         <form class="auth-form" onsubmit={handleBuyerSubmit}>
           {#if authMode === 'register'}
             <div class="form-field">
-              <label for="reg-name" class="field-label">Full Name</label>
+              <label for="reg-name" class="field-label">{t('login.fullNameLabel')}</label>
               <input
                 id="reg-name"
                 type="text"
                 class="field-input"
-                placeholder="e.g. Aarav Sharma"
+                placeholder={t('login.fullNamePlaceholder')}
                 bind:value={fullName}
                 required
               />
@@ -185,14 +185,14 @@
 
           <div class="form-field">
             <label for="buyer-id" class="field-label">
-              Mobile Number or Government Email
+              {t('login.identifierLabel')}
             </label>
             <div class="input-with-action">
               <input
                 id="buyer-id"
                 type="text"
                 class="field-input"
-                placeholder="e.g. +91 98765 43210 or name@gov.in"
+                placeholder={t('login.identifierPlaceholder')}
                 bind:value={identifier}
                 required
               />
@@ -202,17 +202,17 @@
                 onclick={handleRequestOtp}
                 disabled={isSubmitting}
               >
-                {otpSent ? 'Resend OTP' : 'Send OTP'}
+                {otpSent ? t('login.resendOtp') : t('login.sendOtp')}
               </button>
             </div>
             <span class="field-hint">
-              Secured with GIGW 3.0 & anti-enumeration protection
+              {t('login.identifierHint')}
             </span>
           </div>
 
           {#if otpSent}
             <div class="form-field">
-              <label for="buyer-otp" class="field-label">Enter 6-Digit OTP</label>
+              <label for="buyer-otp" class="field-label">{t('login.otpLabel')}</label>
               <input
                 id="buyer-otp"
                 type="text"
@@ -226,9 +226,9 @@
           {:else}
             <div class="form-field">
               <div class="label-row">
-                <label for="buyer-pw" class="field-label">Password</label>
+                <label for="buyer-pw" class="field-label">{t('login.passwordLabel')}</label>
                 {#if authMode === 'signin'}
-                  <a href="/login?reset=1" class="forgot-link">Forgot password?</a>
+                  <a href="/login?reset=1" class="forgot-link">{t('login.forgotPassword')}</a>
                 {/if}
               </div>
               <input
@@ -245,7 +245,7 @@
           <div class="form-actions-row">
             <label class="remember-label">
               <input type="checkbox" bind:checked={rememberMe} />
-              <span>Keep me signed in</span>
+              <span>{t('login.rememberMe')}</span>
             </label>
           </div>
 
@@ -256,12 +256,12 @@
           >
             {#if isSubmitting}
               <Icon name="refresh" size="1.1rem" />
-              <span>Verifying credentials...</span>
+              <span>{t('login.verifying')}</span>
             {:else if authMode === 'signin'}
-              <span>Sign In to Your Account</span>
+              <span>{t('login.signInSubmit')}</span>
               <Icon name="arrow-right" size="1rem" />
             {:else}
-              <span>Register & Continue to Marketplace</span>
+              <span>{t('login.registerSubmit')}</span>
               <Icon name="arrow-right" size="1rem" />
             {/if}
           </button>
@@ -269,9 +269,9 @@
 
         <footer class="panel-footer">
           <p class="terms-notice">
-            By continuing, you agree to Kalakriti's 
-            <a href="/terms">Terms of Service</a> and 
-            <a href="/privacy">DPDP Act 2023 Privacy Policy</a>.
+            {t('login.termsNoticePrefix')}
+            <a href="/terms">{t('login.termsOfService')}</a> {t('login.and')}
+            <a href="/privacy">{t('login.privacyPolicy')}</a>.
           </p>
         </footer>
       </div>
@@ -282,24 +282,21 @@
         <div class="portal-illustration">
           <Icon name="weaving" size="3rem" />
         </div>
-        <h2 class="portal-heading">Artisan Loom & Guild Studio</h2>
-        <p class="portal-subtext">
-          Designed specifically for India's 74 master artisan corridors and craft collectives.
-          Features voice-first narration, offline-first sync, and multilingual assistance.
-        </p>
+        <h2 class="portal-heading">{t('login.artisan.heading')}</h2>
+        <p class="portal-subtext">{t('login.artisan.subtext')}</p>
 
         <div class="portal-features-list">
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Voice-first craft cataloging in 12 Indian languages</span>
+            <span>{t('login.artisan.feat1')}</span>
           </div>
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Ed25519 cryptographic GI provenance stamping</span>
+            <span>{t('login.artisan.feat2')}</span>
           </div>
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Direct payments into verified Jan Dhan bank accounts</span>
+            <span>{t('login.artisan.feat3')}</span>
           </div>
         </div>
 
@@ -309,7 +306,7 @@
           rel="noopener noreferrer"
           class="portal-launch-btn artisan-launch"
         >
-          <span>Launch Artisan PWA (Port 5173)</span>
+          <span>{t('login.artisan.launch')}</span>
           <Icon name="external-link" size="1.1rem" />
         </a>
       </div>
@@ -320,24 +317,21 @@
         <div class="portal-illustration">
           <Icon name="cluster" size="3rem" />
         </div>
-        <h2 class="portal-heading">Ministry & Cluster Development Admin</h2>
-        <p class="portal-subtext">
-          Restricted to authorized officials from the Ministry of Social Justice & Empowerment,
-          Cluster Development Officers, and GI verification registrars.
-        </p>
+        <h2 class="portal-heading">{t('login.admin.heading')}</h2>
+        <p class="portal-subtext">{t('login.admin.subtext')}</p>
 
         <div class="portal-features-list">
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Live telemetry across 74 national craft belts</span>
+            <span>{t('login.admin.feat1')}</span>
           </div>
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Cryptographic catalog moderation and GI integrity checks</span>
+            <span>{t('login.admin.feat2')}</span>
           </div>
           <div class="feat-item">
             <Icon name="check" size="1rem" />
-            <span>Institutional escrow settlement and fair-wage audits</span>
+            <span>{t('login.admin.feat3')}</span>
           </div>
         </div>
 
@@ -347,7 +341,7 @@
           rel="noopener noreferrer"
           class="portal-launch-btn admin-launch"
         >
-          <span>Launch Ministry Admin Console (Port 5175)</span>
+          <span>{t('login.admin.launch')}</span>
           <Icon name="external-link" size="1.1rem" />
         </a>
       </div>
