@@ -234,13 +234,13 @@
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.home.decor')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=candle" onclick={closeMenu}>Artistic Candles</a></li>
-                <li><a href="/search?q=clock" onclick={closeMenu}>Ethnic Wall Clocks</a></li>
-                <li><a href="/search?q=metalware" onclick={closeMenu}>Metal Wares & Bell Metal</a></li>
-                <li><a href="/search?q=mirror" onclick={closeMenu}>Handcrafted Mirrors</a></li>
-                <li><a href="/search?q=papier+mache" onclick={closeMenu}>Kashmir Paper Mache</a></li>
-                <li><a href="/search?q=stoneware" onclick={closeMenu}>Agra Inlaid Stone Wares</a></li>
-                <li><a href="/search?q=tapestry" onclick={closeMenu}>Tapestries & Wall Hangings</a></li>
+                <li><a href="/search?q=candle" onclick={closeMenu}>{t('subnav.home.decor.candles')}</a></li>
+                <li><a href="/search?q=clock" onclick={closeMenu}>{t('subnav.home.decor.clocks')}</a></li>
+                <li><a href="/search?q=metalware" onclick={closeMenu}>{t('subnav.home.decor.metalware')}</a></li>
+                <li><a href="/search?q=mirror" onclick={closeMenu}>{t('subnav.home.decor.mirrors')}</a></li>
+                <li><a href="/search?q=papier+mache" onclick={closeMenu}>{t('subnav.home.decor.papierMache')}</a></li>
+                <li><a href="/search?q=stoneware" onclick={closeMenu}>{t('subnav.home.decor.stoneware')}</a></li>
+                <li><a href="/search?q=tapestry" onclick={closeMenu}>{t('subnav.home.decor.tapestry')}</a></li>
               </ul>
             </div>
 
@@ -248,17 +248,17 @@
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.home.kitchen')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=placemat" onclick={closeMenu}>Woven Place Mats</a></li>
-                <li><a href="/search?q=copper" onclick={closeMenu}>Hand-Hammered Copper Bottles</a></li>
-                <li><a href="/search?q=table+mat" onclick={closeMenu}>Natural Grass Table Mats</a></li>
-                <li><a href="/search?q=kitchen" onclick={closeMenu}>Traditional Brass Cookware</a></li>
+                <li><a href="/search?q=placemat" onclick={closeMenu}>{t('subnav.home.kitchen.placemats')}</a></li>
+                <li><a href="/search?q=copper" onclick={closeMenu}>{t('subnav.home.kitchen.copper')}</a></li>
+                <li><a href="/search?q=table+mat" onclick={closeMenu}>{t('subnav.home.kitchen.tableMats')}</a></li>
+                <li><a href="/search?q=kitchen" onclick={closeMenu}>{t('subnav.home.kitchen.cookware')}</a></li>
               </ul>
 
               <h4 class="col-title sub-title-margin">{t('subnav.home.furnishings')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=bedsheet" onclick={closeMenu}>Hand-Block Bedsheets</a></li>
-                <li><a href="/search?q=quilt" onclick={closeMenu}>Jaipuri Razai & Throws</a></li>
-                <li><a href="/search?q=cushion" onclick={closeMenu}>Kantha Cushion Covers</a></li>
+                <li><a href="/search?q=bedsheet" onclick={closeMenu}>{t('subnav.home.furnishings.bedsheets')}</a></li>
+                <li><a href="/search?q=quilt" onclick={closeMenu}>{t('subnav.home.furnishings.quilts')}</a></li>
+                <li><a href="/search?q=cushion" onclick={closeMenu}>{t('subnav.home.furnishings.cushions')}</a></li>
               </ul>
             </div>
 
@@ -266,18 +266,18 @@
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.home.floorCoverings')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=carpet" onclick={closeMenu}>Bhadohi Hand-Knotted Carpets</a></li>
-                <li><a href="/search?q=durrie" onclick={closeMenu}>Panipat Cotton Durries</a></li>
-                <li><a href="/search?q=rug" onclick={closeMenu}>Jute & Wool Area Rugs</a></li>
-                <li><a href="/search?q=yoga+mat" onclick={closeMenu}>Organic Grass Yoga Mats</a></li>
+                <li><a href="/search?q=carpet" onclick={closeMenu}>{t('subnav.home.floorCoverings.carpets')}</a></li>
+                <li><a href="/search?q=durrie" onclick={closeMenu}>{t('subnav.home.floorCoverings.durries')}</a></li>
+                <li><a href="/search?q=rug" onclick={closeMenu}>{t('subnav.home.floorCoverings.rugs')}</a></li>
+                <li><a href="/search?q=yoga+mat" onclick={closeMenu}>{t('subnav.home.floorCoverings.yogaMats')}</a></li>
               </ul>
 
               <h4 class="col-title sub-title-margin">{t('subnav.home.musical')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=flute" onclick={closeMenu}>Bamboo Flutes (Bansuri)</a></li>
-                <li><a href="/search?q=tabla" onclick={closeMenu}>Handcrafted Tabla Sets</a></li>
-                <li><a href="/search?q=sitar" onclick={closeMenu}>Miraj Classical Sitars</a></li>
-                <li><a href="/search?q=dholak" onclick={closeMenu}>Folk Dholaks & Percussions</a></li>
+                <li><a href="/search?q=flute" onclick={closeMenu}>{t('subnav.home.musical.flutes')}</a></li>
+                <li><a href="/search?q=tabla" onclick={closeMenu}>{t('subnav.home.musical.tabla')}</a></li>
+                <li><a href="/search?q=sitar" onclick={closeMenu}>{t('subnav.home.musical.sitars')}</a></li>
+                <li><a href="/search?q=dholak" onclick={closeMenu}>{t('subnav.home.musical.dholaks')}</a></li>
               </ul>
             </div>
 
@@ -285,11 +285,11 @@
             <div class="dropdown-col highlight-col">
               <h4 class="col-title">{t('subnav.home.templeWellness')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=pooja" onclick={closeMenu}>Hand-Cast Brass Pooja Kalash</a></li>
-                <li><a href="/search?q=incense" onclick={closeMenu}>Natural Flora Incense Sticks</a></li>
-                <li><a href="/search?q=tulsi" onclick={closeMenu}>Hand-Carved Tulsi Kanthi</a></li>
-                <li><a href="/search?q=towel" onclick={closeMenu}>Loom Khadi Towels & Gamchas</a></li>
-                <li><a href="/search?q=meditation" onclick={closeMenu}>Handloom Meditation Asanas</a></li>
+                <li><a href="/search?q=pooja" onclick={closeMenu}>{t('subnav.home.templeWellness.kalash')}</a></li>
+                <li><a href="/search?q=incense" onclick={closeMenu}>{t('subnav.home.templeWellness.incense')}</a></li>
+                <li><a href="/search?q=tulsi" onclick={closeMenu}>{t('subnav.home.templeWellness.tulsiKanthi')}</a></li>
+                <li><a href="/search?q=towel" onclick={closeMenu}>{t('subnav.home.templeWellness.towels')}</a></li>
+                <li><a href="/search?q=meditation" onclick={closeMenu}>{t('subnav.home.templeWellness.meditationAsanas')}</a></li>
               </ul>
 
               <div class="direct-gi-callout">
@@ -343,28 +343,28 @@
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.furniture.outdoors')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=patio+chair" onclick={closeMenu}>Cane & Wicker Patio Chairs</a></li>
-                <li><a href="/search?q=patio+sofa" onclick={closeMenu}>Handcrafted Bamboo Loungers</a></li>
-                <li><a href="/search?q=swing" onclick={closeMenu}>Traditional Wood & Brass Swings (Jhula)</a></li>
+                <li><a href="/search?q=patio+chair" onclick={closeMenu}>{t('subnav.furniture.outdoors.patioChairs')}</a></li>
+                <li><a href="/search?q=patio+sofa" onclick={closeMenu}>{t('subnav.furniture.outdoors.loungers')}</a></li>
+                <li><a href="/search?q=swing" onclick={closeMenu}>{t('subnav.furniture.outdoors.swings')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.furniture.indoor')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=table" onclick={closeMenu}>Saharanpur Carved Bedside Tables</a></li>
-                <li><a href="/search?q=dining" onclick={closeMenu}>Solid Sheesham Dining Tables</a></li>
-                <li><a href="/search?q=stool" onclick={closeMenu}>Jodhpur Inlaid Stools & Moodas</a></li>
+                <li><a href="/search?q=table" onclick={closeMenu}>{t('subnav.furniture.indoor.bedsideTables')}</a></li>
+                <li><a href="/search?q=dining" onclick={closeMenu}>{t('subnav.furniture.indoor.diningTables')}</a></li>
+                <li><a href="/search?q=stool" onclick={closeMenu}>{t('subnav.furniture.indoor.stools')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.furniture.office')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=cabinet" onclick={closeMenu}>Brass-Fitted Wood Cabinets</a></li>
-                <li><a href="/search?q=chair" onclick={closeMenu}>Hand-Carved Accent Chairs</a></li>
-                <li><a href="/search?q=rack" onclick={closeMenu}>Hand-Bent Cane Magazine Racks</a></li>
-                <li><a href="/search?q=sofa" onclick={closeMenu}>Solid Teakwood Sofa Sets</a></li>
+                <li><a href="/search?q=cabinet" onclick={closeMenu}>{t('subnav.furniture.office.cabinets')}</a></li>
+                <li><a href="/search?q=chair" onclick={closeMenu}>{t('subnav.furniture.office.accentChairs')}</a></li>
+                <li><a href="/search?q=rack" onclick={closeMenu}>{t('subnav.furniture.office.magazineRacks')}</a></li>
+                <li><a href="/search?q=sofa" onclick={closeMenu}>{t('subnav.furniture.office.sofaSets')}</a></li>
               </ul>
             </div>
           </div>
@@ -410,21 +410,21 @@
             <div class="dropdown-col">
               <h4 class="col-title">{t('subnav.paintings.traditional')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=madhubani" onclick={closeMenu}>Mithila Madhubani Paintings (GI-105)</a></li>
-                <li><a href="/search?q=pattachitra" onclick={closeMenu}>Raghurajpur Palm Leaf Pattachitra (GI-220)</a></li>
-                <li><a href="/search?q=warli" onclick={closeMenu}>Maharashtra Warli Tribal Art (GI-183)</a></li>
-                <li><a href="/search?q=aipan" onclick={closeMenu}>Kumaon Aipan Floor & Wall Art (GI-696)</a></li>
-                <li><a href="/search?q=pichwai" onclick={closeMenu}>Nathdwara Gold Leaf Pichwai (GI-753)</a></li>
-                <li><a href="/search?q=thangka" onclick={closeMenu}>Himalayan Buddhist Thangkas</a></li>
+                <li><a href="/search?q=madhubani" onclick={closeMenu}>{t('subnav.paintings.traditional.madhubani')}</a></li>
+                <li><a href="/search?q=pattachitra" onclick={closeMenu}>{t('subnav.paintings.traditional.pattachitra')}</a></li>
+                <li><a href="/search?q=warli" onclick={closeMenu}>{t('subnav.paintings.traditional.warli')}</a></li>
+                <li><a href="/search?q=aipan" onclick={closeMenu}>{t('subnav.paintings.traditional.aipan')}</a></li>
+                <li><a href="/search?q=pichwai" onclick={closeMenu}>{t('subnav.paintings.traditional.pichwai')}</a></li>
+                <li><a href="/search?q=thangka" onclick={closeMenu}>{t('subnav.paintings.traditional.thangka')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col highlight-col">
               <h4 class="col-title">{t('subnav.paintings.modern')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=modern+folk" onclick={closeMenu}>Contemporary Natural Pigment Abstracts</a></li>
-                <li><a href="/search?q=canvas" onclick={closeMenu}>Botanical Dye Hand-Painted Canvases</a></li>
-                <li><a href="/search?q=framed" onclick={closeMenu}>Archival Framed Masterpiece Editions</a></li>
+                <li><a href="/search?q=modern+folk" onclick={closeMenu}>{t('subnav.paintings.modern.abstracts')}</a></li>
+                <li><a href="/search?q=canvas" onclick={closeMenu}>{t('subnav.paintings.modern.canvases')}</a></li>
+                <li><a href="/search?q=framed" onclick={closeMenu}>{t('subnav.paintings.modern.framedEditions')}</a></li>
               </ul>
 
               <div class="direct-gi-callout">

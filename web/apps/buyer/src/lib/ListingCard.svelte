@@ -78,10 +78,10 @@
           setTimeout(() => {
             copied = false;
           }, 2000);
-          showToast({ message: 'Craft listing link copied to clipboard!', variant: 'success' });
+          showToast({ message: t('listingCard.linkCopiedToast'), variant: 'success' });
         })
         .catch(() => {
-          showToast({ message: 'Unable to copy link', variant: 'error' });
+          showToast({ message: t('listingCard.copyFailedToast'), variant: 'error' });
         });
     }
   }
@@ -100,7 +100,9 @@
     {#if listing.image_url}
       <img
         src={listing.image_url}
-        alt={title ? `${title} — Authentic handcrafted ${listing.craft_name ?? 'artisan piece'}` : 'Handcrafted artisan listing'}
+        alt={title
+          ? t('listingCard.altWithTitle', { title, craft: listing.craft_name ?? t('listingCard.artisanPiece') })
+          : t('listingCard.altPlaceholder')}
         loading="lazy"
         width="400"
         height="400"
@@ -112,7 +114,7 @@
     {/if}
 
     {#if listing.gi_certified}
-      <span class="listing-card__gi-pin" title="Registered Geographical Indication (GI) Certified">
+      <span class="listing-card__gi-pin" title={t('listingCard.giPinTitle')}>
         <svg width="22" height="26" viewBox="0 0 24 30" fill="none">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" fill="#ffffff" stroke="#c2b6a5" stroke-width="1"/>
           <circle cx="12" cy="11" r="7.5" fill="#fcfbf7"/>
@@ -130,8 +132,8 @@
         class="listing-card__wishlist-btn"
         class:is-wishlisted={wishlist.has(listing.id ?? '')}
         onclick={handleWishlist}
-        title={wishlist.has(listing.id ?? '') ? 'Saved to Wishlist' : 'Add to Wishlist'}
-        aria-label="Wishlist"
+        title={wishlist.has(listing.id ?? '') ? t('listingCard.savedToWishlist') : t('listingCard.addToWishlist')}
+        aria-label={t('listingCard.wishlistAriaLabel')}
       >
         <svg viewBox="0 0 24 24" width="15" height="15" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : '#ffffff'} stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -142,8 +144,8 @@
         type="button"
         class="listing-card__share-btn"
         onclick={handleShare}
-        title={copied ? 'Link copied!' : 'Share artisan piece'}
-        aria-label={copied ? 'Link copied to clipboard' : 'Share artisan piece'}
+        title={copied ? t('listingCard.linkCopiedTitle') : t('listingCard.shareArtisanPiece')}
+        aria-label={copied ? t('listingCard.linkCopiedAriaLabel') : t('listingCard.shareArtisanPiece')}
       >
         <Icon name={copied ? 'check' : 'share'} size="0.9rem" />
       </button>
@@ -168,14 +170,16 @@
           {#if artisanAvatar}
             <img
               src={artisanAvatar}
-              alt={listing.artisan_name ? `Portrait of master craftsperson ${listing.artisan_name}` : 'Artisan portrait'}
+              alt={listing.artisan_name
+                ? t('listingCard.artisanPortraitAlt', { name: listing.artisan_name })
+                : t('listingCard.artisanPortraitAltPlaceholder')}
               class="listing-card__artisan-avatar"
             />
           {:else}
             <span class="listing-card__artisan-initial">{listing.artisan_name.charAt(0).toUpperCase()}</span>
           {/if}
           <span class="listing-card__artisan-name">{listing.artisan_name}</span>
-          <span class="listing-card__artisan-verified" title="Verified Artisan">
+          <span class="listing-card__artisan-verified" title={t('listingCard.verifiedArtisanTitle')}>
             <Icon name="verified-artisan" />
           </span>
         </span>
@@ -185,14 +189,14 @@
       <span class="listing-card__price"><Money paise={convertedPaise} currency={selectedCurrency} /></span>
       {#if paise > 0}
         <span class="listing-card__mrp"><Money paise={Math.round(convertedPaise * 1.25)} currency={selectedCurrency} /></span>
-        <span class="listing-card__discount">(20% OFF)</span>
+        <span class="listing-card__discount">{t('listingCard.discountPercent', { percent: '20' })}</span>
       {/if}
     </span>
 
     <!-- Action row: Order & Wishlist -->
     <span class="listing-card__action-row">
       <span class="listing-card__order-btn">
-        <span>Order</span>
+        <span>{t('listingCard.orderCta')}</span>
         <Icon name="arrow-right" size="0.75rem" />
       </span>
       <button
@@ -200,12 +204,12 @@
         class="listing-card__wishlist-cta"
         class:is-wishlisted={wishlist.has(listing.id ?? '')}
         onclick={handleWishlist}
-        title={wishlist.has(listing.id ?? '') ? 'Remove from Wishlist' : 'Save to Wishlist'}
+        title={wishlist.has(listing.id ?? '') ? t('listingCard.removeFromWishlist') : t('listingCard.saveToWishlist')}
       >
         <svg viewBox="0 0 24 24" width="13" height="13" fill={wishlist.has(listing.id ?? '') ? '#e11d48' : 'none'} stroke={wishlist.has(listing.id ?? '') ? '#e11d48' : 'currentColor'} stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
         </svg>
-        <span>{wishlist.has(listing.id ?? '') ? 'Saved' : 'Wishlist'}</span>
+        <span>{wishlist.has(listing.id ?? '') ? t('listingCard.saved') : t('listingCard.wishlist')}</span>
       </button>
     </span>
 

@@ -10,24 +10,27 @@
   - Svelte 5 runes
 -->
 <script lang="ts">
+  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
+
+  const t = $derived(locale.t);
 </script>
 
 <section class="craft-categories-section" aria-labelledby="craft-categories-heading">
   <div class="craft-section-header">
     <div class="header-text-group">
-      <span class="section-kicker">Indigenous Craft Taxonomy</span>
+      <span class="section-kicker">{t('craftGrid.kicker')}</span>
       <h2 id="craft-categories-heading" class="section-title">
-        Browse by Artisan Craft Discipline
+        {t('craftGrid.title')}
       </h2>
       <p class="section-subtitle">
-        Direct from verified guild looms, foundry forges, and carving studios across 74 registered GI clusters.
+        {t('craftGrid.subtitle')}
       </p>
     </div>
 
     <a href="/catalog" class="catalog-all-link">
-      <span>View Cluster Directory</span>
+      <span>{t('craftGrid.viewDirectory')}</span>
       <Icon name="arrow-right" size="0.85rem" />
     </a>
   </div>
@@ -43,7 +46,7 @@
             <Icon name={craft.icon} size="1.4rem" />
           </div>
           <span class="craft-card__gi-pill">
-            {craft.giCount} GI Hubs
+            {t('craftGrid.giHubs', { count: String(craft.giCount) })}
           </span>
         </div>
 
@@ -63,7 +66,7 @@
             <span>{craft.regions.slice(0, 2).join(' · ')}</span>
           </div>
           <span class="craft-card__cta">
-            Explore ➔
+            {t('craftGrid.explore')}
           </span>
         </div>
       </a>

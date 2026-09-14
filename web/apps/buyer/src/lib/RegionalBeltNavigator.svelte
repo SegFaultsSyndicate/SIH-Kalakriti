@@ -169,7 +169,7 @@
       </p>
 
       <div class="gi-craft-register">
-        <p class="register-label">GI Certified Geographical Specialities:</p>
+        <p class="register-label">{t('home.belts.registerLabel')}</p>
         <ul class="register-list" role="list">
           {#each selectedBelt.featuredCrafts as craft}
             <li class="register-item">
@@ -186,21 +186,20 @@
 
     <div class="corridor-sidebar">
       <div class="sidebar-block">
-        <p class="sidebar-header">Cluster Architecture</p>
+        <p class="sidebar-header">{t('home.belts.sidebarHeader')}</p>
         <p class="sidebar-detail">
-          Every master piece from this corridor is cross-verified against the Geographical
-          Indications Registry of India with guaranteed direct-to-artisan payouts.
+          {t('home.belts.sidebarDetail')}
         </p>
       </div>
 
       <div class="sidebar-metrics">
         <div class="metric-cell">
           <span class="metric-val">100%</span>
-          <span class="metric-lbl">Direct Bank Floor</span>
+          <span class="metric-lbl">{t('home.belts.metric.directBankFloor')}</span>
         </div>
         <div class="metric-cell">
           <span class="metric-val">GI</span>
-          <span class="metric-lbl">Pehchan Verified</span>
+          <span class="metric-lbl">{t('home.belts.metric.pehchanVerified')}</span>
         </div>
       </div>
 

@@ -7,9 +7,12 @@
 -->
 <script lang="ts">
   import { session, getAccessToken, setAccessToken, setRefreshToken } from '@kalakriti/api';
+  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
   import { showToast } from '@kalakriti/ui';
+
+  const t = $derived(locale.t);
 
   let isOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
@@ -45,7 +48,7 @@
     setRefreshToken(undefined);
     session.clear();
     isOpen = false;
-    showToast({ message: 'Signed out successfully', variant: 'info' });
+    showToast({ message: t('accountMenu.signedOutToast'), variant: 'info' });
     void goto('/');
   }
 
@@ -97,7 +100,7 @@
     onclick={toggleMenu}
     aria-expanded={isOpen}
     aria-haspopup="true"
-    aria-label="Account and multi-portal menu"
+    aria-label={t('accountMenu.ariaLabel')}
   >
     <div class="account-avatar">
       {#if isAuthenticated}
@@ -108,10 +111,10 @@
     </div>
     <div class="account-label">
       <span class="account-greeting">
-        {isAuthenticated ? 'Hello, Aarav' : 'Sign In'}
+        {isAuthenticated ? t('accountMenu.greetingSignedIn') : t('accountMenu.signIn')}
       </span>
       <span class="account-title">
-        Account & Lists
+        {t('accountMenu.accountAndLists')}
         <Icon name="chevron-down" size="0.75rem" />
       </span>
     </div>
@@ -129,31 +132,31 @@
         {#if isAuthenticated}
           <div class="user-badge-row">
             <span class="user-name">{userName}</span>
-            <span class="patron-badge">Verified Patron</span>
+            <span class="patron-badge">{t('account.patronTier')}</span>
           </div>
           <span class="user-email">{userEmail}</span>
         {:else}
           <a href="/login" class="signin-primary-btn" onclick={closeMenu}>
-            Sign In
+            {t('accountMenu.signIn')}
           </a>
           <p class="signup-prompt">
-            New customer? <a href="/login?tab=register" class="signup-link" onclick={closeMenu}>Start here.</a>
+            {t('accountMenu.newCustomerPrefix')} <a href="/login?tab=register" class="signup-link" onclick={closeMenu}>{t('accountMenu.startHere')}</a>
           </p>
         {/if}
       </div>
 
       <div class="popover-grid" role="none">
         <!-- Row 1: Headings -->
-        <h3 class="col-heading col-left">Your Account</h3>
-        <h3 class="col-heading col-right">Institutional Portals</h3>
+        <h3 class="col-heading col-left">{t('account.breadcrumb')}</h3>
+        <h3 class="col-heading col-right">{t('accountMenu.institutionalPortals')}</h3>
 
         <!-- Row 2: Account vs Artisan Studio -->
         <div class="grid-cell cell-left">
           <a href="/account" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="user" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Account</strong>
-              <small>Profile, contact & security</small>
+              <strong>{t('account.breadcrumb')}</strong>
+              <small>{t('accountMenu.yourAccountDesc')}</small>
             </span>
           </a>
         </div>
@@ -166,10 +169,10 @@
             role="menuitem"
             onclick={closeMenu}
           >
-            <span class="portal-badge artisan-badge">Artisan</span>
+            <span class="portal-badge artisan-badge">{t('accountMenu.badgeArtisan')}</span>
             <span class="menu-link__text">
-              <strong>Artisan Studio (PWA)</strong>
-              <small>Voice-first loom portal</small>
+              <strong>{t('accountMenu.artisanStudioTitle')}</strong>
+              <small>{t('accountMenu.artisanStudioDesc')}</small>
             </span>
             <span class="portal-link__ext"><Icon name="external-link" size="0.75rem" /></span>
           </a>
@@ -180,8 +183,8 @@
           <a href="/orders" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="collective-order" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Orders</strong>
-              <small>Track, cancel & invoices</small>
+              <strong>{t('accountMenu.yourOrders')}</strong>
+              <small>{t('accountMenu.ordersDesc')}</small>
             </span>
           </a>
         </div>
@@ -194,10 +197,10 @@
             role="menuitem"
             onclick={closeMenu}
           >
-            <span class="portal-badge admin-badge">Ministry</span>
+            <span class="portal-badge admin-badge">{t('accountMenu.badgeMinistry')}</span>
             <span class="menu-link__text">
-              <strong>Ministry Admin Console</strong>
-              <small>Cluster governance & audits</small>
+              <strong>{t('accountMenu.ministryConsoleTitle')}</strong>
+              <small>{t('accountMenu.ministryConsoleDesc')}</small>
             </span>
             <span class="portal-link__ext"><Icon name="external-link" size="0.75rem" /></span>
           </a>
@@ -208,8 +211,8 @@
           <a href="/verify" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="provenance" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Craft Provenance</strong>
-              <small>Ed25519 digital seals</small>
+              <strong>{t('accountMenu.provenanceTitle')}</strong>
+              <small>{t('accountMenu.provenanceDesc')}</small>
             </span>
           </a>
         </div>
@@ -217,8 +220,8 @@
           <a href="/bulk-order" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="cluster" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Institutional Procurement</strong>
-              <small>Tenders & bulk guild orders</small>
+              <strong>{t('accountMenu.procurementTitle')}</strong>
+              <small>{t('accountMenu.procurementDesc')}</small>
             </span>
           </a>
         </div>
@@ -228,8 +231,8 @@
           <a href="/account#addresses" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="location" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Addresses</strong>
-              <small>Shipping & institutional GST</small>
+              <strong>{t('accountMenu.addressesTitle')}</strong>
+              <small>{t('accountMenu.addressesDesc')}</small>
             </span>
           </a>
         </div>
@@ -237,8 +240,8 @@
           <a href="/contact" class="menu-link contact-menu-item" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="phone" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Contact Us & Support</strong>
-              <small>Tollfree helpline & grievance</small>
+              <strong>{t('accountMenu.contactTitle')}</strong>
+              <small>{t('accountMenu.contactDesc')}</small>
             </span>
           </a>
         </div>
@@ -248,7 +251,7 @@
         <div class="popover-footer">
           <button type="button" class="signout-btn" onclick={handleSignOut}>
             <Icon name="lock" size="0.9rem" />
-            Sign Out of Kalakriti
+            {t('account.signOutTitle')}
           </button>
         </div>
       {/if}

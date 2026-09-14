@@ -47,10 +47,10 @@
   <!-- 1. Become a Seller Hero Banner -->
   <div class="seller-cta-banner">
     <div class="seller-cta-content">
-      <span class="seller-kicker">Empowering Master Craftspersons</span>
-      <h2 class="seller-title">Sell Hassle Free • Become a {t('app.name')} Seller</h2>
+      <span class="seller-kicker">{t('sellerShowcase.kicker')}</span>
+      <h2 class="seller-title">{t('sellerShowcase.title', { appName: t('app.name') })}</h2>
       <p class="seller-subtitle">
-        Join over 12,000 verified rural artisans, weavers, and self-help guilds across 74 national craft corridors.
+        {t('sellerShowcase.subtitle')}
       </p>
 
       <!-- 3 Key Value Props -->
@@ -64,8 +64,8 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Zero Commission</strong>
-            <span>100% fair-trade proceeds directly to you</span>
+            <strong>{t('sellerShowcase.perk.commissionTitle')}</strong>
+            <span>{t('sellerShowcase.perk.commissionDesc')}</span>
           </div>
         </div>
 
@@ -79,8 +79,8 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Easy Pickup &amp; Delivery</strong>
-            <span>Doorstep postal dispatch from your village</span>
+            <strong>{t('sellerShowcase.perk.pickupTitle')}</strong>
+            <span>{t('sellerShowcase.perk.pickupDesc')}</span>
           </div>
         </div>
 
@@ -92,24 +92,24 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Direct DBT Bank Payments</strong>
-            <span>Immediate escrow settlement upon delivery</span>
+            <strong>{t('sellerShowcase.perk.dbtTitle')}</strong>
+            <span>{t('sellerShowcase.perk.dbtDesc')}</span>
           </div>
         </div>
       </div>
 
       <!-- Action Button -->
       <div class="seller-cta-action">
-        <a 
-          href="http://localhost:5173/onboarding" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+        <a
+          href="http://localhost:5173/onboarding"
+          target="_blank"
+          rel="noopener noreferrer"
           class="seller-register-btn"
         >
-          <span>Register Now as Master Artisan</span>
+          <span>{t('sellerShowcase.registerCta')}</span>
           <Icon name="arrow-right" size="1.1rem" />
         </a>
-        <span class="seller-helper-text">Supports Voice Onboarding in 11 Indian Languages</span>
+        <span class="seller-helper-text">{t('sellerShowcase.registerHelper')}</span>
       </div>
     </div>
   </div>
@@ -117,8 +117,8 @@
   <!-- 2. Hear from our Happy Sellers / Testimonials -->
   <div class="sellers-testimonials-section">
     <div class="testimonials-header">
-      <span class="testimonials-kicker">Voices of Guild Transformation</span>
-      <h3 class="testimonials-title">Hear from our Happy Sellers</h3>
+      <span class="testimonials-kicker">{t('sellerShowcase.testimonialsKicker')}</span>
+      <h3 class="testimonials-title">{t('sellerShowcase.testimonialsTitle')}</h3>
     </div>
 
     <div class="testimonials-grid">
@@ -145,24 +145,24 @@
   </div>
 
   <!-- 3. Official Government Accreditation & Partner Logos Strip -->
-  <div class="official-accreditation-strip" aria-label="Official Government Partners">
+  <div class="official-accreditation-strip" aria-label={t('sellerShowcase.accreditationAriaLabel')}>
     <div class="accreditation-item">
-      <span class="emblem-text">MAKE IN INDIA</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.makeInIndia')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">DIGITAL INDIA</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.digitalIndia')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">INDIA.GOV.IN</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.indiaGov')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">MINISTRY OF SOCIAL JUSTICE &amp; EMPOWERMENT</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.ministry')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">GEOGRAPHICAL INDICATIONS REGISTRY</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.giRegistry')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">ONDC COMPLIANT</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.ondc')}</span>
     </div>
   </div>
 </div>

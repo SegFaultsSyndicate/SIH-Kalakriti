@@ -138,7 +138,7 @@
     <ul class="reels-list" role="list">
       {#each clips as clip, i (clip.listing_id || i)}
         {@const thumb = (clip as StoryItem).thumbnail_url}
-        {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : 'Craft')}
+        {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : t('home.voices.craftFallback'))}
         <li>
           <button
             type="button"
@@ -158,7 +158,7 @@
               </span>
             </div>
             <div class="reel-meta">
-              <span class="artisan-name">{clip.artisan_name || 'Master Artisan'}</span>
+              <span class="artisan-name">{clip.artisan_name || t('home.voices.masterArtisanFallback')}</span>
               <span class="craft-discipline">{discipline}</span>
             </div>
           </button>
@@ -170,7 +170,7 @@
 
 <!-- Accessible Dialog for Process Video -->
 {#if activeClip}
-  <Dialog bind:open={isStoryOpen} title={activeClip.title ?? 'Artisan Story'}>
+  <Dialog bind:open={isStoryOpen} title={activeClip.title ?? t('home.voices.artisanStoryFallback')}>
     <div class="story-dialog-body">
       <div class="video-wrapper">
         <video
@@ -189,7 +189,7 @@
         <div class="artisan-headline">
           <div>
             <p class="artisan-title">{activeClip.artisan_name}</p>
-            <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> Verified Master Guild Loom</p>
+            <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> {t('home.voices.verifiedMasterGuildLoom')}</p>
           </div>
           <button
             type="button"
@@ -197,7 +197,7 @@
             onclick={() => (isAudioMuted = !isAudioMuted)}
           >
             <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
-            <span>{isAudioMuted ? t('home.voices.listenAudio') : 'Mute Voice'}</span>
+            <span>{isAudioMuted ? t('home.voices.listenAudio') : t('home.voices.muteVoice')}</span>
           </button>
         </div>
 
@@ -205,7 +205,7 @@
           {#if activeIndex !== null && activeIndex > 0}
             <Button variant="secondary" onclick={prevStory}>
               <Icon name="chevron-left" />
-              <span>Previous</span>
+              <span>{t('action.previous')}</span>
             </Button>
           {/if}
 
@@ -218,7 +218,7 @@
 
           {#if activeIndex !== null && activeIndex < clips.length - 1}
             <Button variant="secondary" onclick={nextStory}>
-              <span>Next</span>
+              <span>{t('action.next')}</span>
               <Icon name="chevron-right" />
             </Button>
           {/if}

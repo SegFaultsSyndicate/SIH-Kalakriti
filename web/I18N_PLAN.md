@@ -876,6 +876,54 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
         (b2b/trends feature) and out of scope, per the session's standing
         rule on pre-existing uncommitted work. No commit for this batch --
         nothing changed.
+  - [x] **3.4** `apps/buyer/src/lib` (17 components) -- real hit rate was
+        much higher here than in `.ts` files or already-audited routes;
+        several components had **no `locale`/`t` import at all** and were
+        entirely hardcoded English.
+    - Fixed: `CategorySubnav.svelte` (46 hardcoded mega-menu link labels
+      across the Home & Living / Furniture / Paintings dropdowns, pulled
+      into 46 new `subnav.*` leaf keys -- craft names/hindiNames from
+      `ARTISAN_CRAFT_CATEGORIES` left as data), `AccountMenu.svelte`
+      (imported `locale` for the first time; 25 new/reused `accountMenu.*`
+      keys covering the entire header popover -- greeting, sign-in, both
+      portal-grid columns, sign-out), `SellerShowcaseBanner.svelte` (kicker/
+      title/subtitle, 3 perk cards, CTA, testimonials header, 6 government
+      accreditation strip labels -- the 3 testimonial quotes/bios left as
+      data), `ListingCard.svelte` (21 new keys: alt text, GI-pin and
+      wishlist/share titles+aria-labels, toasts, artisan portrait alt,
+      verified-artisan title, discount badge, Order/Wishlist CTA labels),
+      `ArtisanConciergeModal.svelte` (14 new keys: success note
+      parametrized with `{name}`, both input placeholders, 6 craft-option
+      labels, window label + 3 time-slot options), `FaqAccordion.svelte`
+      (imported `locale` for the first time; all 5 Q&A pairs plus header
+      chrome moved from a hardcoded array to `MessageKey` references -- 19
+      new `faq.*` keys, the longest-prose fix in this batch), `VoicesRe
+      elCarousel.svelte` (6 new keys: dialog title/name/badge fallbacks,
+      Mute Voice, Previous, Next -- the `FALLBACK_STORIES` demo array left
+      as data), `RegionalBeltNavigator.svelte` (5 new keys: register label,
+      sidebar header/detail, both metric labels -- the `BELTS` array's
+      state names and featured-craft names/GI-years left as data),
+      `InstitutionalProcurementBanner.svelte` (9 new keys: 3 tier-tag
+      labels via one parametrized key, and the entire downloadable
+      `.txt` catalogue content -- title, ministry line, heading, 3 tier
+      lines, provenance/GST lines -- mirroring the `t()`-per-line pattern
+      already used in `GemExportPreview.svelte`'s plain-text export),
+      `ArtisanCraftGrid.svelte` (imported `locale` for the first time; 6
+      new keys: kicker, title, subtitle, directory link, parametrized GI-
+      hub count, Explore CTA).
+    - Confirmed false positives / no fix needed: `BuyerFooter.svelte`
+      (already fully wired -- the flagged hits were proper-noun aria-labels
+      like "Facebook"/"LinkedIn" and literal phone/email contact data, both
+      correctly left untranslated), `PurchaseForm.svelte`,
+      `ProvenanceTerminal.svelte`, `DisputeDialog.svelte`,
+      `CurrencySelector.svelte`, `AtelierCommissionCard.svelte`.
+    - Skipped: `MegaMenuNav.svelte` -- confirmed dead code (zero import
+      sites) in an earlier phase; not worth localizing code nothing
+      renders.
+    - en.ts grew 1501 -> 1671 keys. `i18n-baseline.json` ceilings raised to
+      match (`pnpm --filter @kalakriti/i18n run audit` re-run before
+      writing each number). `npx vitest run` and `apps/buyer` svelte-check
+      both clean.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.
