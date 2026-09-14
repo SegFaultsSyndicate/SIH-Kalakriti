@@ -860,6 +860,22 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       every new key until its own Phase 4 translation batch lands) --
       verified via `pnpm --filter @kalakriti/i18n run audit`, no ceiling
       raised without a matching real key increase in `en.ts`.
+  - [x] **3.3** `apps/admin` -- **zero fixes needed.** Manually read every
+        route (`+layout`, dashboard, accessibility, clusters, crafts,
+        insights, moderation, login, login/verify, +error) and every `lib/`
+        component (`BarChart`, `Breadcrumb`, `CommandPalette`, `nav.ts`,
+        `demo.ts`, `bulk-onboard.ts`, `csv.ts`, `onboard-validation.ts`).
+        F-1's `localeReady` gate was already in place on `+layout.svelte`
+        from Phase 2. Every visible string already routes through `t()`;
+        the plan's ~134-string estimate for this app doesn't hold up under
+        manual review -- the only literal-string hits were a placeholder
+        example (`"IN-GJ"`, a state-code format hint, not prose) and a
+        doc-comment usage example on `BarChart.svelte`, whose real
+        suppressed-value string is correctly `t('insights.suppressed')`.
+        `apps/admin/src/routes/companies/` is untracked concurrent WIP
+        (b2b/trends feature) and out of scope, per the session's standing
+        rule on pre-existing uncommitted work. No commit for this batch --
+        nothing changed.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.
