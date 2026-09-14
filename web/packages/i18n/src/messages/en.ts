@@ -1,8 +1,17 @@
 // packages/i18n/src/messages/en.ts
+//
+// The English catalogue is the source of truth for the message KEY SET: every
+// other language's catalogue is typed as Partial<Messages> against it, so a
+// key that exists nowhere else still type-checks, and a key that exists ONLY
+// in a translation is a compile error (it is a typo, every time).
+//
+// Missing translations fall back to English at lookup time rather than
+// throwing. A half-translated screen is usable; a crashed one is not.
+//
+// Keys are dotted and grouped by surface. `{name}` placeholders are filled by
+// t()'s second argument.
 
-import type { Messages } from './en';
-
-export const en: Messages = {
+export const en = {
   'app.name': 'Kalakriti',
   'app.tagline': 'Craft, recorded truthfully',
   'app.ministry': 'Ministry of Social Justice and Empowerment, Government of India',
@@ -1359,6 +1368,45 @@ export const en: Messages = {
   'trends.field.craft': 'Target Craft Category',
   'trends.action.save': 'Publish Trend Link',
   'trends.empty': 'No market trends curated yet.',
+  'nav.badges': 'Badges',
+  'badges.title': 'Badges',
+  'badges.subtitle': 'Recognition for your craft and your work on the platform.',
+  'badges.empty': 'No badges yet. Publish your first listing to earn one.',
+  'badges.inProgress': 'In progress',
+  'badges.locked': 'Not yet earned',
+  'badges.progressLabel': '{current} of {total}',
+  'badges.grantedOn': 'Earned on {date}',
+  'badges.readAloud': 'Read this badge aloud',
+  'badges.tier.bronze': 'Bronze',
+  'badges.tier.silver': 'Silver',
+  'badges.tier.gold': 'Gold',
+  'badge.verified_artisan.name': 'Verified Artisan',
+  'badge.verified_artisan.desc': 'Identity and craft confirmed by the Ministry.',
+  'badge.verified_artisan.criteria': 'Granted by a Ministry or cluster officer after verification.',
+  'badge.master_craftsperson.name': 'Master Craftsperson',
+  'badge.master_craftsperson.desc': 'Recognised for exceptional skill in their craft.',
+  'badge.master_craftsperson.criteria': 'Granted by a Ministry or cluster officer.',
+  'badge.national_awardee.name': 'National Awardee',
+  'badge.national_awardee.desc': 'Recipient of a national craft award.',
+  'badge.national_awardee.criteria': 'Granted by a Ministry officer with award evidence on file.',
+  'badge.gi_practitioner.name': 'GI Practitioner',
+  'badge.gi_practitioner.desc': 'Practises a Geographical Indication registered craft.',
+  'badge.gi_practitioner.criteria': 'Granted by a Ministry or cluster officer.',
+  'badge.cluster_coordinator.name': 'Cluster Coordinator',
+  'badge.cluster_coordinator.desc': 'Coordinates artisans within their cluster.',
+  'badge.cluster_coordinator.criteria': 'Granted by a Ministry officer.',
+  'badge.first_listing.name': 'First Listing',
+  'badge.first_listing.desc': 'Published their first catalog listing.',
+  'badge.first_listing.criteria': 'Publish 1 listing.',
+  'badge.catalog_builder.name': 'Catalog Builder',
+  'badge.catalog_builder.desc': 'Built a growing catalog of published listings.',
+  'badge.catalog_builder.criteria': 'Publish {threshold} listings.',
+  'badge.provenance_keeper.name': 'Provenance Keeper',
+  'badge.provenance_keeper.desc': 'Seals provenance records for their work.',
+  'badge.provenance_keeper.criteria': 'Seal provenance on {threshold} listings.',
+  'badge.order_fulfiller.name': 'Order Fulfiller',
+  'badge.order_fulfiller.desc': 'Completes bulk order lots reliably.',
+  'badge.order_fulfiller.criteria': 'Complete {threshold} order lots.',
   'listingCard.altWithTitle': '{title} — Authentic handcrafted {craft}',
   'listingCard.altPlaceholder': 'Handcrafted artisan listing',
   'listingCard.artisanPiece': 'artisan piece',
@@ -2511,3 +2559,4 @@ export const en: Messages = {
 } as const;
 
 export type MessageKey = keyof typeof en;
+export type Messages = Record<MessageKey, string>;

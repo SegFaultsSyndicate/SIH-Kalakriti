@@ -128,6 +128,11 @@ export const ICONS = [
     "file": "src/download.svg"
   },
   {
+    "name": "dollar-sign",
+    "category": "core",
+    "file": "src/dollar-sign.svg"
+  },
+  {
     "name": "print",
     "category": "core",
     "file": "src/print.svg"
@@ -311,41 +316,6 @@ export const ICONS = [
     "name": "speaker",
     "category": "core",
     "file": "src/speaker.svg"
-  },
-  {
-    "name": "badge-verified",
-    "category": "core",
-    "file": "src/badge-verified.svg"
-  },
-  {
-    "name": "badge-master",
-    "category": "core",
-    "file": "src/badge-master.svg"
-  },
-  {
-    "name": "badge-award",
-    "category": "core",
-    "file": "src/badge-award.svg"
-  },
-  {
-    "name": "badge-gi",
-    "category": "core",
-    "file": "src/badge-gi.svg"
-  },
-  {
-    "name": "badge-coordinator",
-    "category": "core",
-    "file": "src/badge-coordinator.svg"
-  },
-  {
-    "name": "badge-milestone",
-    "category": "core",
-    "file": "src/badge-milestone.svg"
-  },
-  {
-    "name": "badge-locked",
-    "category": "core",
-    "file": "src/badge-locked.svg"
   },
   {
     "name": "handmade-certified",
