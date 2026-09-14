@@ -124,6 +124,11 @@ export {
   createTrendLink,
   deleteTrendLink,
   pinTrendLink,
+  listBadgeCatalog,
+  listArtisanBadges,
+  getBadgeProgress,
+  grantBadge,
+  revokeBadge,
   type Company,
   type RegisterCompanyBody,
   type CompanyListResponse,
@@ -142,6 +147,10 @@ export {
   type TrendLink,
   type CreateTrendLinkBody,
   type TrendLinksResponse,
+  type Badge,
+  type ArtisanBadgesResponse,
+  type BadgeProgressResponse,
+  type GrantBadgeBody,
 } from './operations';
 export { watchOrderEvents, type SseStatus } from './sse.svelte';
 export type { SseEvent } from './sse-parse';

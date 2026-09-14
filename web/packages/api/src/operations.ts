@@ -766,3 +766,29 @@ export function pinTrendLink(id: string, pinned: boolean, options?: CallOptions)
   }) as Promise<TrendLink>;
 }
 
+// --- Badge Operations ---
+
+export type Badge = Json<paths['/badges']['get']['responses'][200]>['badges'][number];
+export type ArtisanBadgesResponse = Json<paths['/artisans/{id}/badges']['get']['responses'][200]>;
+export type BadgeProgressResponse = Json<paths['/badges/me/progress']['get']['responses'][200]>;
+export type GrantBadgeBody = Json<paths['/artisans/{id}/badges']['post']['requestBody']>;
+
+export function listBadgeCatalog(options?: CallOptions): Promise<{ badges: Badge[] }> {
+  return call('/badges', { ...options, method: 'GET' }) as Promise<{ badges: Badge[] }>;
+}
+
+export function listArtisanBadges(artisanId: string, options?: CallOptions): Promise<ArtisanBadgesResponse> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'GET' }) as Promise<ArtisanBadgesResponse>;
+}
+
+export function getBadgeProgress(options?: CallOptions): Promise<BadgeProgressResponse> {
+  return call('/badges/me/progress', { ...options, method: 'GET' }) as Promise<BadgeProgressResponse>;
+}
+
+export function grantBadge(artisanId: string, body: GrantBadgeBody, options?: CallOptions): Promise<unknown> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'POST', body });
+}
+
+export function revokeBadge(artisanId: string, code: string, body: { reason: string }, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges/${encodeURIComponent(code)}`, { ...options, method: 'DELETE', body }) as Promise<{ status?: string }>;
+}

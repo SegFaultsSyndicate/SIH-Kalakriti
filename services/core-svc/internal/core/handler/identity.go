@@ -52,6 +52,8 @@ func PublicMethods() auth.PublicMethods {
 		"/trends.v1.TrendService/ListTrendLinks",
 		"/b2b.v1.B2BService/ListNearbyBoutiques",
 		"/b2b.v1.B2BService/ListCompanies",
+		"/badges.v1.BadgeService/ListBadgeCatalog",
+		"/badges.v1.BadgeService/ListArtisanBadges",
 	)
 }
 

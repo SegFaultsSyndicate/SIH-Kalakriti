@@ -37,6 +37,7 @@ type APIHandler struct {
 	catalogSvc    CatalogService
 	b2bSvc        B2BService
 	trendSvc      TrendService
+	badgeSvc      BadgeService
 	redis         *redis.Client
 	logger        *slog.Logger
 	webhookSecret string
@@ -182,6 +183,17 @@ type B2BService interface {
 }
 
 // TrendService is the trend gRPC client interface for market trend links.
+
+// BadgeService is the badge gRPC client interface.
+type BadgeService interface {
+	ListBadgeCatalog(ctx context.Context) ([]map[string]any, error)
+	ListArtisanBadges(ctx context.Context, artisanID string) ([]map[string]any, error)
+	GetBadgeProgress(ctx context.Context, artisanID string) ([]map[string]any, error)
+	GrantBadge(ctx context.Context, artisanID string, fields map[string]any) (map[string]any, error)
+	RevokeBadge(ctx context.Context, artisanID, badgeID string, fields map[string]any) error
+	GetBadgeByCode(ctx context.Context, code string) (map[string]any, error)
+}
+
 type TrendService interface {
 	CreateTrendLink(ctx context.Context, idempotencyKey string, fields map[string]any) (map[string]any, error)
 	ListTrendLinks(ctx context.Context, filters map[string]any) ([]map[string]any, error)
@@ -204,6 +216,7 @@ func NewAPIHandler(
 	catalogSvc CatalogService,
 	b2bSvc B2BService,
 	trendSvc TrendService,
+	badgeSvc BadgeService,
 ) *APIHandler {
 	return &APIHandler{
 		authSvc:    authSvc,
@@ -219,6 +232,7 @@ func NewAPIHandler(
 		catalogSvc: catalogSvc,
 		b2bSvc:     b2bSvc,
 		trendSvc:   trendSvc,
+		badgeSvc:   badgeSvc,
 	}
 }
 
@@ -1811,4 +1825,73 @@ func parseQueryFloat(r *http.Request, key string) (float64, error) {
 	return f, err
 }
 
+// --- Badges Handlers ---
 
+func (h *APIHandler) ListBadgeCatalog(w http.ResponseWriter, r *http.Request) {
+	badges, err := h.badgeSvc.ListBadgeCatalog(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"badges": badges})
+}
+
+func (h *APIHandler) ListArtisanBadges(w http.ResponseWriter, r *http.Request) {
+	artisanID := httpx.URLParam(r, "id")
+	badges, err := h.badgeSvc.ListArtisanBadges(r.Context(), artisanID)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"artisan_badges": badges})
+}
+
+func (h *APIHandler) GetBadgeProgress(w http.ResponseWriter, r *http.Request) {
+	principal, ok := auth.PrincipalFrom(r.Context())
+	if !ok {
+		httpx.Error(w, domain.Unauthenticated("missing principal"))
+		return
+	}
+	progress, err := h.badgeSvc.GetBadgeProgress(r.Context(), principal.Subject)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"progress": progress})
+}
+
+func (h *APIHandler) GrantBadge(w http.ResponseWriter, r *http.Request) {
+	artisanID := httpx.URLParam(r, "id")
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	grant, err := h.badgeSvc.GrantBadge(r.Context(), artisanID, body)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, grant)
+}
+
+func (h *APIHandler) RevokeBadge(w http.ResponseWriter, r *http.Request) {
+	artisanID := httpx.URLParam(r, "id")
+	badgeCode := httpx.URLParam(r, "code")
+	badge, err := h.badgeSvc.GetBadgeByCode(r.Context(), badgeCode)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	badgeID, _ := badge["id"].(string)
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	if err := h.badgeSvc.RevokeBadge(r.Context(), artisanID, badgeID, body); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"status": "revoked"})
+}

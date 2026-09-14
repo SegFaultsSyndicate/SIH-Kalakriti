@@ -3770,6 +3770,176 @@
           }
         }
       }
+    },
+    "/badges": {
+      "get": {
+        "summary": "List active badge catalog",
+        "responses": {
+          "200": {
+            "description": "Badge catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "badges": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Badge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/badges": {
+      "get": {
+        "summary": "List an artisan's active badges",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artisan badges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "artisan_badges": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ArtisanBadge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Confer badge on an artisan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantBadgeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Badge granted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtisanBadge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/badges/me/progress": {
+      "get": {
+        "summary": "Get authenticated artisan's badge progress",
+        "responses": {
+          "200": {
+            "description": "Badge progress entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "progress": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BadgeProgressEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/badges/{code}": {
+      "delete": {
+        "summary": "Revoke an artisan's badge",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeBadgeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Badge revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5389,6 +5559,123 @@
           },
           "auto_fetch_embed": {
             "type": "boolean"
+          }
+        }
+      },
+      "Badge": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "kind",
+          "icon_name",
+          "sort_order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "EARNED",
+              "CONFERRED"
+            ]
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "BRONZE",
+              "SILVER",
+              "GOLD"
+            ]
+          },
+          "icon_name": {
+            "type": "string"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "LISTINGS_PUBLISHED",
+              "PROVENANCE_SEALED",
+              "LOTS_ACCEPTED",
+              "LOTS_COMPLETED"
+            ]
+          },
+          "threshold": {
+            "type": "integer"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "ArtisanBadge": {
+        "type": "object",
+        "required": [
+          "badge",
+          "granted_at",
+          "granted_by"
+        ],
+        "properties": {
+          "badge": {
+            "$ref": "#/components/schemas/Badge"
+          },
+          "granted_at": {
+            "type": "string"
+          },
+          "granted_by": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      },
+      "BadgeProgressEntry": {
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "updated_at"
+        ],
+        "properties": {
+          "metric": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "GrantBadgeRequest": {
+        "type": "object",
+        "required": [
+          "badge_id"
+        ],
+        "properties": {
+          "badge_id": {
+            "type": "string"
+          },
+          "evidence_json": {
+            "type": "string"
+          }
+        }
+      },
+      "RevokeBadgeRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         }
       }

@@ -3437,6 +3437,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active badge catalog */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Badge catalog */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            badges?: components["schemas"]["Badge"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/{id}/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List an artisan's active badges */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Artisan badges */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            artisan_badges?: components["schemas"]["ArtisanBadge"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Confer badge on an artisan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GrantBadgeRequest"];
+                };
+            };
+            responses: {
+                /** @description Badge granted */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArtisanBadge"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/badges/me/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get authenticated artisan's badge progress */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Badge progress entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            progress?: components["schemas"]["BadgeProgressEntry"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/{id}/badges/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an artisan's badge */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RevokeBadgeRequest"];
+                };
+            };
+            responses: {
+                /** @description Badge revoked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3949,6 +4136,37 @@ export interface components {
             craft_id?: string;
             thumbnail_url?: string;
             auto_fetch_embed?: boolean;
+        };
+        Badge: {
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "EARNED" | "CONFERRED";
+            /** @enum {string} */
+            tier?: "BRONZE" | "SILVER" | "GOLD";
+            icon_name: string;
+            /** @enum {string} */
+            metric?: "LISTINGS_PUBLISHED" | "PROVENANCE_SEALED" | "LOTS_ACCEPTED" | "LOTS_COMPLETED";
+            threshold?: number;
+            sort_order: number;
+        };
+        ArtisanBadge: {
+            badge: components["schemas"]["Badge"];
+            granted_at: string;
+            granted_by: string;
+            evidence?: string;
+        };
+        BadgeProgressEntry: {
+            metric: string;
+            value: number;
+            updated_at: string;
+        };
+        GrantBadgeRequest: {
+            badge_id: string;
+            evidence_json?: string;
+        };
+        RevokeBadgeRequest: {
+            reason: string;
         };
     };
     responses: never;

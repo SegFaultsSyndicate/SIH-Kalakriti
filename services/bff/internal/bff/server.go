@@ -53,6 +53,7 @@ type Config struct {
 	CatalogSvc handler.CatalogService
 	B2BSvc     handler.B2BService
 	TrendSvc   handler.TrendService
+	BadgeSvc   handler.BadgeService
 
 	// Rate limiting.
 	RateLimitPerIP        int
@@ -100,7 +101,7 @@ func (s *Server) mountRoutes() {
 		cfg.AuthSvc, cfg.ArtisanSvc, cfg.MediaSvc, cfg.ListingSvc,
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
 		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
-		cfg.B2BSvc, cfg.TrendSvc,
+		cfg.B2BSvc, cfg.TrendSvc, cfg.BadgeSvc,
 	)
 	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
 
@@ -157,6 +158,8 @@ func (s *Server) mountRoutes() {
 	api.GET("/companies", httpx.WrapHandler(apiH.ListCompanies))
 	api.GET("/companies/:id", httpx.WrapHandler(apiH.GetCompany))
 	api.GET("/trends", httpx.WrapHandler(apiH.ListTrendLinks))
+	api.GET("/badges", httpx.WrapHandler(apiH.ListBadgeCatalog))
+	api.GET("/artisans/:id/badges", httpx.WrapHandler(apiH.ListArtisanBadges))
 	api.GET("/boutiques/nearby", httpx.WrapHandler(apiH.ListNearbyBoutiques))
 
 	// Protected routes group (JWT required).
@@ -178,6 +181,9 @@ func (s *Server) mountRoutes() {
 	authed.POST("/trends", httpx.WrapHandler(withIdempotency(apiH.CreateTrendLink, cfg.IdempStore)))
 	authed.DELETE("/trends/:id", httpx.WrapHandler(apiH.DeleteTrendLink))
 	authed.POST("/trends/:id/pin", httpx.WrapHandler(apiH.PinTrendLink))
+	authed.GET("/badges/me/progress", httpx.WrapHandler(apiH.GetBadgeProgress))
+	authed.POST("/artisans/:id/badges", httpx.WrapHandler(withIdempotency(apiH.GrantBadge, cfg.IdempStore)))
+	authed.DELETE("/artisans/:id/badges/:code", httpx.WrapHandler(apiH.RevokeBadge))
 
 	// Artisan endpoints.
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))

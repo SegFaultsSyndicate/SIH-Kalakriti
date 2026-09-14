@@ -140,6 +140,7 @@ func run() error {
 		CatalogSvc: client.NewCatalog(coreConn),
 		B2BSvc:     client.NewB2B(coreConn),
 		TrendSvc:   client.NewTrends(coreConn),
+		BadgeSvc:   client.NewBadges(coreConn),
 	})
 	if err != nil {
 		return err

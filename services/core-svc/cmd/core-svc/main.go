@@ -36,6 +36,7 @@ import (
 	b2bv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/b2b/v1"
 	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
 	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
+	badgesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1"
 	trendsv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
@@ -226,6 +227,8 @@ func run() error {
 	trendsSvc := service.NewTrends(repository, log)
 	b2bHandler := handler.NewB2B(b2bSvc)
 	trendsHandler := handler.NewTrends(trendsSvc)
+	badgesSvc := service.NewBadges(repository, log)
+	badgesHandler := handler.NewBadges(badgesSvc)
 	healthHandler := handler.NewHealth(pool, rdb)
 
 	// --- gRPC server ---------------------------------------------------------
@@ -247,6 +250,7 @@ func run() error {
 	pricingv1.RegisterPricingServiceServer(grpcServer, pricingHandler)
 	b2bv1.RegisterB2BServiceServer(grpcServer, b2bHandler)
 	trendsv1.RegisterTrendServiceServer(grpcServer, trendsHandler)
+	badgesv1.RegisterBadgeServiceServer(grpcServer, badgesHandler)
 
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)
@@ -310,6 +314,30 @@ func run() error {
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".translation",
 	}, log)
 
+	badgeListingConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.CatalogListingPublished,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.listing",
+	}, log)
+
+	badgeProvenanceConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.CatalogProvenanceSealed,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.provenance",
+	}, log)
+
+	badgeLotAcceptedConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.OrderLotAccepted,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-accepted",
+	}, log)
+
+	badgeLotCompletedConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.OrderLotCompleted,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-completed",
+	}, log)
+
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)
 
@@ -345,6 +373,42 @@ func run() error {
 		log.Info("translation fan-out started", "topic", topics.CatalogListingPublished)
 		if err := translationConsumer.Run(bgCtx, handler.ListingPublishedHandler(pipelineSvc, log)); err != nil {
 			log.Error("translation fan-out stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge listing-published consumer started", "topic", topics.CatalogListingPublished)
+		if err := badgeListingConsumer.Run(bgCtx, handler.CatalogListingPublishedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge listing-published consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge provenance-sealed consumer started", "topic", topics.CatalogProvenanceSealed)
+		if err := badgeProvenanceConsumer.Run(bgCtx, handler.CatalogProvenanceSealedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge provenance-sealed consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge lot-accepted consumer started", "topic", topics.OrderLotAccepted)
+		if err := badgeLotAcceptedConsumer.Run(bgCtx, handler.OrderLotAcceptedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge lot-accepted consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge lot-completed consumer started", "topic", topics.OrderLotCompleted)
+		if err := badgeLotCompletedConsumer.Run(bgCtx, handler.OrderLotCompletedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge lot-completed consumer stopped", "error", err)
 		}
 	}()
 

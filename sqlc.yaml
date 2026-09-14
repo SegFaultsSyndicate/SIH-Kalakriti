@@ -18,6 +18,7 @@ sql:
       - "migrations/queries/idempotency.sql"
       - "migrations/queries/b2b.sql"
       - "migrations/queries/trends.sql"
+      - "migrations/queries/badges.sql"
     gen:
       go:
         package: "db"

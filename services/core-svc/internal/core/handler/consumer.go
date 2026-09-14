@@ -12,6 +12,7 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
 
@@ -179,4 +180,104 @@ func decodeAggregate(msg segmentio.Message, payload any) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("aggregate_id %q is not a uuid: %w", env.Header.AggregateID, err)
 	}
 	return id, nil
+}
+
+// provenanceSealed mirrors events.v1.CatalogProvenanceSealed's payload fields
+// needed by the badge tracker.
+type provenanceSealed struct {
+	ProvenanceID string `json:"provenance_id"`
+	ListingID    string `json:"listing_id"`
+	ArtisanID    string `json:"artisan_id"`
+}
+
+// lotEvent mirrors the lot event payload shape emitted by collab-svc for
+// OrderLotAccepted and OrderLotCompleted (see
+// services/collab-svc/internal/collab/service/fulfilment.go's
+// lotEventPayload) -- only the fields the badge tracker needs are decoded.
+type lotEvent struct {
+	LotID       string `json:"lot_id"`
+	BulkOrderID string `json:"bulk_order_id"`
+	ArtisanID   string `json:"artisan_id"`
+}
+
+// badgeTracker is the subset of *service.Badges the badge consumer handlers
+// need, seamed as an interface so they are testable without a database.
+type badgeTracker interface {
+	TrackListingPublished(ctx context.Context, artisanID uuid.UUID) ([]domain.Badge, error)
+	TrackProvenanceSealed(ctx context.Context, artisanID uuid.UUID) ([]domain.Badge, error)
+	TrackLotAccepted(ctx context.Context, artisanID uuid.UUID) ([]domain.Badge, error)
+	TrackLotCompleted(ctx context.Context, artisanID uuid.UUID) ([]domain.Badge, error)
+}
+
+// CatalogListingPublishedBadgeHandler recomputes the LISTINGS_PUBLISHED
+// badge metric whenever a listing is published.
+func CatalogListingPublishedBadgeHandler(tracker badgeTracker, log *slog.Logger) kafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		var payload listingPublished
+		if _, err := decodeAggregate(msg, &payload); err != nil {
+			return err
+		}
+		artisanID, err := uuid.Parse(payload.ArtisanID)
+		if err != nil {
+			return fmt.Errorf("artisan_id %q is not a uuid: %w", payload.ArtisanID, err)
+		}
+		if _, err := tracker.TrackListingPublished(ctx, artisanID); err != nil {
+			return fmt.Errorf("tracking listing-published badge for artisan %s: %w", artisanID, err)
+		}
+		return nil
+	}
+}
+
+// CatalogProvenanceSealedBadgeHandler recomputes PROVENANCE_SEALED.
+func CatalogProvenanceSealedBadgeHandler(tracker badgeTracker, log *slog.Logger) kafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		var payload provenanceSealed
+		if _, err := decodeAggregate(msg, &payload); err != nil {
+			return err
+		}
+		artisanID, err := uuid.Parse(payload.ArtisanID)
+		if err != nil {
+			return fmt.Errorf("artisan_id %q is not a uuid: %w", payload.ArtisanID, err)
+		}
+		if _, err := tracker.TrackProvenanceSealed(ctx, artisanID); err != nil {
+			return fmt.Errorf("tracking provenance-sealed badge for artisan %s: %w", artisanID, err)
+		}
+		return nil
+	}
+}
+
+// OrderLotAcceptedBadgeHandler recomputes LOTS_ACCEPTED.
+func OrderLotAcceptedBadgeHandler(tracker badgeTracker, log *slog.Logger) kafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		var payload lotEvent
+		if _, err := decodeAggregate(msg, &payload); err != nil {
+			return err
+		}
+		artisanID, err := uuid.Parse(payload.ArtisanID)
+		if err != nil {
+			return fmt.Errorf("artisan_id %q is not a uuid: %w", payload.ArtisanID, err)
+		}
+		if _, err := tracker.TrackLotAccepted(ctx, artisanID); err != nil {
+			return fmt.Errorf("tracking lot-accepted badge for artisan %s: %w", artisanID, err)
+		}
+		return nil
+	}
+}
+
+// OrderLotCompletedBadgeHandler recomputes LOTS_COMPLETED.
+func OrderLotCompletedBadgeHandler(tracker badgeTracker, log *slog.Logger) kafka.HandlerFunc {
+	return func(ctx context.Context, msg segmentio.Message) error {
+		var payload lotEvent
+		if _, err := decodeAggregate(msg, &payload); err != nil {
+			return err
+		}
+		artisanID, err := uuid.Parse(payload.ArtisanID)
+		if err != nil {
+			return fmt.Errorf("artisan_id %q is not a uuid: %w", payload.ArtisanID, err)
+		}
+		if _, err := tracker.TrackLotCompleted(ctx, artisanID); err != nil {
+			return fmt.Errorf("tracking lot-completed badge for artisan %s: %w", artisanID, err)
+		}
+		return nil
+	}
 }
