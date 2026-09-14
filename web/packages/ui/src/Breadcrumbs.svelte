@@ -6,6 +6,8 @@
   and clean typography with zero AI fluff.
 -->
 <script lang="ts">
+  import { locale } from '@kalakriti/i18n';
+
   export interface BreadcrumbItem {
     label: string;
     href?: string;
@@ -16,10 +18,13 @@
     homeLabel?: string;
   }
 
-  let { items, homeLabel = 'Home' }: Props = $props();
+  let { items, homeLabel }: Props = $props();
+
+  const t = $derived(locale.t);
+  const resolvedHomeLabel = $derived(homeLabel ?? t('nav.home'));
 </script>
 
-<nav class="k-breadcrumbs" aria-label="Breadcrumb">
+<nav class="k-breadcrumbs" aria-label={t('breadcrumb.label')}>
   <ol class="k-breadcrumbs__list">
     <li class="k-breadcrumbs__item">
       <a href="/" class="k-breadcrumbs__link">
@@ -27,7 +32,7 @@
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
-        <span>{homeLabel}</span>
+        <span>{resolvedHomeLabel}</span>
       </a>
     </li>
 

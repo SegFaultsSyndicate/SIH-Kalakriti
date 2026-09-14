@@ -765,6 +765,47 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       tampering with the network layer -- code-reviewed instead: the
       try/catch is unconditional around the one `await loader()` call).
 - [ ] **P3** Batches 3.1 → 3.7, `pnpm i18n:lint` = 0 after each.
+  - [x] **3.1** `packages/{ui,offline,voice}` -- **one real fix, everything
+        else was scanner noise.** Manually read all ~17 flagged files
+        (the automated scan's "44 strings" estimate for this batch was
+        ~98% false positives: CSS class-name template literals, `event.key`
+        comparisons, IndexedDB schema strings, doc-comment usage examples,
+        and internal `Error()` messages that are caught and swallowed with
+        a bare `catch {}` everywhere they're used -- never rendered to a
+        user). This recalibrates the plan's global 2,226-string estimate
+        downward for `.ts` files specifically; markup-heavy `.svelte` route
+        files (batches 3.2-3.6) had a much higher real-hit ratio in the
+        original scan and are the actual long pole.
+    - Fixed: `Breadcrumbs.svelte` hardcoded `aria-label="Breadcrumb"` and
+      defaulted `homeLabel = 'Home'` in the component itself -- both now
+      use `t('breadcrumb.label')` / `t('nav.home')`, keys that already
+      existed in `en.ts` unused. Verified live (buyer dev server): the
+      aria-label now correctly falls through the hi->en chain today (no
+      `breadcrumb.label` in `hi.ts` yet) and will pick up the real
+      translation the moment Phase 4 adds it -- no code change needed then.
+    - Confirmed false positives, no fix needed: `commands.ts`'s per-locale
+      voice-command grammar (`GRAMMAR.en`/`GRAMMAR.hi`) is not UI text, it's
+      speech-recognition match phrases -- `t()` doesn't apply to it at all.
+      It already follows the same "en+hi built, rest fall back to en"
+      pattern as the message catalogues; expanding it to more locales is
+      real translation work but a *different* artifact from a catalogue key
+      and needs its own pass, not folded into Phase 4. `listen.ts`/
+      `speak.ts`'s `Error('... is not available')` messages are internal,
+      never reach a user (every call site swallows them in a bare `catch`).
+      `SpeakButton.svelte`'s actual user-facing unavailability message
+      already correctly uses `t('voice.unavailable', {...})`.
+    - **New finding, out of this batch's scope, flagged for 3.4-3.6**: six+
+      buyer routes (`privacy`, `terms`, `case-studies`, `catalog`, `fairs`,
+      `journal/[slug]`) build their own `{ label: t('nav.home') || 'Home',
+      href: '/' }` as `items[0]` *and* pass `homeLabel="Marketplace"` to
+      `<Breadcrumbs>` -- which already renders its own leading home link
+      unconditionally. Result: two "home" links in every one of these
+      breadcrumb trails (confirmed live: `/privacy` renders "Marketplace"
+      then a second link "मुख्य पृष्ठ" pointing at `/` again). Pre-existing,
+      not caused by this batch's fix. Also note the dead `t(key) || 'X'`
+      fallback idiom repeated at every one of these call sites -- `t()`
+      never returns falsy for a real key, so the `|| 'X'` never fires; harmless
+      but worth deleting when these files are touched for real in 3.4-3.6.
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.
