@@ -53,7 +53,7 @@
   // Backend has no real listings yet (see CLAUDE.md); a category click from
   // ArtisanCraftGrid or a q= search that comes back empty falls back to the
   // real photographed pieces in stub-listings.ts instead of a blank page.
-  const fallbackResults = $derived(!loading && hits.length === 0 ? stubListingsForQuery(q) : []);
+  const fallbackResults = $derived(!loading && hits.length === 0 ? stubListingsForQuery(q, t) : []);
 
   $effect(() => {
     const trimmed = q.trim();

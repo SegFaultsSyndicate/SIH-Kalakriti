@@ -151,10 +151,10 @@
                 </span>
                 <span class="craft-mega-card__info">
                   <span class="craft-mega-card__name">
-                    <strong>{craft.name}</strong>
-                    <span class="craft-mega-card__hindi">{craft.hindiName}</span>
+                    <strong>{t(craft.nameKey)}</strong>
+                    <span class="craft-mega-card__hindi">{t(craft.nativeNameKey)}</span>
                   </span>
-                  <small>{craft.subtitle}</small>
+                  <small>{t(craft.subtitleKey)}</small>
                 </span>
               </a>
             {/each}

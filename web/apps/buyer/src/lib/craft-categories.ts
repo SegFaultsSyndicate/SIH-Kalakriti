@@ -3,17 +3,25 @@
  *
  * The 12 authentic National Artisan Craft Categories of Kalakriti.
  * Aligned 1:1 with the artisan onboarding ontology and @kalakriti/icons.
+ *
+ * `name` stays a plain, stable English string -- it is the identifier
+ * matched against `/search?category=` and stub-listings.ts's `category`
+ * field, never rendered directly. Display text goes through `nameKey`/
+ * `nativeNameKey`/`subtitleKey`/`taglineKey` (see I18N_PLAN.md §4.1(c) for
+ * why `nativeNameKey` replaced the old hardcoded-Hindi `hindiName` field).
  */
 
 import type { IconName } from '@kalakriti/icons';
+import type { MessageKey } from '@kalakriti/i18n';
 
 export interface CraftCategory {
   id: string;
   name: string;
-  hindiName: string;
+  nameKey: MessageKey;
+  nativeNameKey: MessageKey;
   icon: IconName;
-  subtitle: string;
-  tagline: string;
+  subtitleKey: MessageKey;
+  taglineKey: MessageKey;
   query: string;
   sampleImage: string;
   regions: string[];
@@ -24,10 +32,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'weaving',
     name: 'Weaving',
-    hindiName: 'बुनाई',
+    nameKey: 'craft.weaving.name',
+    nativeNameKey: 'craft.weaving.nativeName',
     icon: 'weaving',
-    subtitle: 'Handlooms, Brocades & Sarees',
-    tagline: 'Pit-loom and jacquard traditions woven with pure silk, khadi, and fine cotton threads.',
+    subtitleKey: 'craft.weaving.subtitle',
+    taglineKey: 'craft.weaving.tagline',
     query: 'weaving',
     sampleImage: '/craft-images/weaving_and_looms/category_cover.jpg',
     regions: ['Varanasi (UP)', 'Chanderi (MP)', 'Kanchipuram (TN)', 'Patan (Gujarat)'],
@@ -36,10 +45,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'block-printing',
     name: 'Block printing',
-    hindiName: 'ठप्पा छपाई',
+    nameKey: 'craft.block-printing.name',
+    nativeNameKey: 'craft.block-printing.nativeName',
     icon: 'block-printing',
-    subtitle: 'Natural Dyes & Hand Woodblocks',
-    tagline: 'Multi-stage river-washed mud resist (Dabu) and ancient geometric Ajrakh block prints.',
+    subtitleKey: 'craft.block-printing.subtitle',
+    taglineKey: 'craft.block-printing.tagline',
     query: 'block printing',
     sampleImage: '/craft-images/block_printing/category_cover.jpg',
     regions: ['Kutch (Gujarat)', 'Bagru (Rajasthan)', 'Machilipatnam (AP)'],
@@ -48,10 +58,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'pottery',
     name: 'Pottery',
-    hindiName: 'कुम्हारी व मृत्तिका',
+    nameKey: 'craft.pottery.name',
+    nativeNameKey: 'craft.pottery.nativeName',
     icon: 'pottery',
-    subtitle: 'Terracotta & Studio Ceramics',
-    tagline: 'Clay pottery fired with smoke, lead-free glazes, and Khurja/Jaipur blue pottery techniques.',
+    subtitleKey: 'craft.pottery.subtitle',
+    taglineKey: 'craft.pottery.tagline',
     query: 'pottery',
     sampleImage: '/craft-images/pottery/category_cover.jpg',
     regions: ['Khurja (UP)', 'Nizamabad (UP)', 'Jaipur (Rajasthan)', 'Bankura (WB)'],
@@ -60,10 +71,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'metalwork',
     name: 'Metalwork',
-    hindiName: 'धातुकर्म व ढोकरा',
+    nameKey: 'craft.metalwork.name',
+    nativeNameKey: 'craft.metalwork.nativeName',
     icon: 'metalwork',
-    subtitle: 'Bell Metal, Brass & Lost-Wax',
-    tagline: 'Ancient cire-perdue lost-wax Dhokra bronze metallurgy and Moradabad hammered brassware.',
+    subtitleKey: 'craft.metalwork.subtitle',
+    taglineKey: 'craft.metalwork.tagline',
     query: 'metalwork',
     sampleImage: '/craft-images/metalwork/category_cover.jpg',
     regions: ['Bastar (Chhattisgarh)', 'Moradabad (UP)', 'Bidar (Karnataka)', 'Thanjavur (TN)'],
@@ -72,10 +84,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'woodwork',
     name: 'Woodwork',
-    hindiName: 'काष्ठकला व नक्काशी',
+    nameKey: 'craft.woodwork.name',
+    nativeNameKey: 'craft.woodwork.nativeName',
     icon: 'woodwork',
-    subtitle: 'Carved Sheesham & Rosewood',
-    tagline: 'Hand-chiselled brass inlay woodwork, Kashmiri walnut carving, and Channapatna lac-turnery.',
+    subtitleKey: 'craft.woodwork.subtitle',
+    taglineKey: 'craft.woodwork.tagline',
     query: 'woodwork',
     sampleImage: '/craft-images/woodwork/category_cover.jpg',
     regions: ['Saharanpur (UP)', 'Srinagar (J&K)', 'Channapatna (Karnataka)', 'Jodhpur (RJ)'],
@@ -84,10 +97,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'embroidery',
     name: 'Embroidery',
-    hindiName: 'कशीदाकारी व जरदोजी',
+    nameKey: 'craft.embroidery.name',
+    nativeNameKey: 'craft.embroidery.nativeName',
     icon: 'embroidery',
-    subtitle: 'Zardozi, Kantha & Chikankari',
-    tagline: 'Intricate needle-and-thread needlework using metallic coils, silk floss, and running stitch patterns.',
+    subtitleKey: 'craft.embroidery.subtitle',
+    taglineKey: 'craft.embroidery.tagline',
     query: 'embroidery',
     sampleImage: '/craft-images/embroidery/category_cover.jpg',
     regions: ['Lucknow (UP)', 'Shantiniketan (WB)', 'Kashmir', 'Kutch (Gujarat)'],
@@ -96,10 +110,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'painting',
     name: 'Painting',
-    hindiName: 'चित्रकला व लोक कला',
+    nameKey: 'craft.painting.name',
+    nativeNameKey: 'craft.painting.nativeName',
     icon: 'painting',
-    subtitle: 'Folk Art & Natural Pigments',
-    tagline: 'Centuries-old canvas and scroll folk art using stone, vermillion, indigo, and organic mineral colors.',
+    subtitleKey: 'craft.painting.subtitle',
+    taglineKey: 'craft.painting.tagline',
     query: 'painting',
     sampleImage: '/craft-images/paintings/category_cover.jpg',
     regions: ['Madhubani (Bihar)', 'Raghurajpur (Odisha)', 'Nathdwara (RJ)', 'Warli (MH)'],
@@ -108,10 +123,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'basketry',
     name: 'Basketry',
-    hindiName: 'टोकरी व घास शिल्प',
+    nameKey: 'craft.basketry.name',
+    nativeNameKey: 'craft.basketry.nativeName',
     icon: 'basketry',
-    subtitle: 'Sabai, Moonj & Sikki Grass',
-    tagline: 'Eco-friendly natural plant fibers platted by women-led self-help groups into durable lifestyle wares.',
+    subtitleKey: 'craft.basketry.subtitle',
+    taglineKey: 'craft.basketry.tagline',
     query: 'basketry',
     sampleImage: '/craft-images/basketry/category_cover.jpg',
     regions: ['Mayurbhanj (Odisha)', 'Madhubani (Bihar)', 'Prayagraj (UP)'],
@@ -120,10 +136,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'jewellery',
     name: 'Jewellery',
-    hindiName: 'आभूषण व तारकशी',
+    nameKey: 'craft.jewellery.name',
+    nativeNameKey: 'craft.jewellery.nativeName',
     icon: 'jewellery',
-    subtitle: 'Silver Filigree & Meenakari',
-    tagline: 'Hair-thin silver wires woven into ethereal ornaments and Jaipur vitreous enamel work.',
+    subtitleKey: 'craft.jewellery.subtitle',
+    taglineKey: 'craft.jewellery.tagline',
     query: 'jewellery',
     sampleImage: '/craft-images/jewellery/category_cover.jpg',
     regions: ['Cuttack (Odisha)', 'Karimnagar (Telangana)', 'Jaipur (Rajasthan)'],
@@ -132,10 +149,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'leather',
     name: 'Leatherwork',
-    hindiName: 'चर्मशिल्प',
+    nameKey: 'craft.leather.name',
+    nativeNameKey: 'craft.leather.nativeName',
     icon: 'leather',
-    subtitle: 'Embossed Leather & Footwear',
-    tagline: 'Vegetable-tanned leather handcrafted with batik dye embossing and traditional footwear artistry.',
+    subtitleKey: 'craft.leather.subtitle',
+    taglineKey: 'craft.leather.tagline',
     query: 'leatherwork',
     sampleImage: '/craft-images/leatherwork/category_cover.jpg',
     regions: ['Shantiniketan (WB)', 'Kolhapur (MH)', 'Indore (MP)'],
@@ -144,10 +162,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'stone',
     name: 'Stone carving',
-    hindiName: 'प्रस्तर शिल्प व पच्चीकारी',
+    nameKey: 'craft.stone.name',
+    nativeNameKey: 'craft.stone.nativeName',
     icon: 'stone',
-    subtitle: 'Marble Inlay & Soapstone',
-    tagline: 'Imperial Pietra Dura marble inlay with semi-precious gems and soft chlorite stone sculptures.',
+    subtitleKey: 'craft.stone.subtitle',
+    taglineKey: 'craft.stone.tagline',
     query: 'stone carving',
     sampleImage: '/craft-images/stone_carving/category_cover.jpg',
     regions: ['Agra (UP)', 'Puri (Odisha)', 'Varanasi (UP)', 'Mamallapuram (TN)'],
@@ -156,10 +175,11 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
   {
     id: 'bamboo',
     name: 'Bamboo craft',
-    hindiName: 'बांस व बेंत शिल्प',
+    nameKey: 'craft.bamboo.name',
+    nativeNameKey: 'craft.bamboo.nativeName',
     icon: 'bamboo',
-    subtitle: 'North-East Cane & Bamboo',
-    tagline: 'Sustainable split bamboo furniture, wicker screens, and tribal lattice craftsmanship.',
+    subtitleKey: 'craft.bamboo.subtitle',
+    taglineKey: 'craft.bamboo.tagline',
     query: 'bamboo craft',
     sampleImage: '/craft-images/bamboo_craft/category_cover.jpg',
     regions: ['Assam', 'Tripura', 'Nagaland', 'Kerala'],

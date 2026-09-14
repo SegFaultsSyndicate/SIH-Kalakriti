@@ -52,12 +52,12 @@
 
         <div class="craft-card__body">
           <div class="craft-card__name-row">
-            <h3 class="craft-card__name">{craft.name}</h3>
-            <span class="craft-card__hindi">{craft.hindiName}</span>
+            <h3 class="craft-card__name">{t(craft.nameKey)}</h3>
+            <span class="craft-card__hindi">{t(craft.nativeNameKey)}</span>
           </div>
 
-          <p class="craft-card__subtitle">{craft.subtitle}</p>
-          <p class="craft-card__tagline">{craft.tagline}</p>
+          <p class="craft-card__subtitle">{t(craft.subtitleKey)}</p>
+          <p class="craft-card__tagline">{t(craft.taglineKey)}</p>
         </div>
 
         <div class="craft-card__footer">
