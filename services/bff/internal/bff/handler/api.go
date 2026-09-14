@@ -38,6 +38,7 @@ type APIHandler struct {
 	b2bSvc        B2BService
 	trendSvc      TrendService
 	badgeSvc      BadgeService
+	schemeSvc     SchemeService
 	redis         *redis.Client
 	logger        *slog.Logger
 	webhookSecret string
@@ -201,6 +202,14 @@ type TrendService interface {
 	PinTrendLink(ctx context.Context, trendLinkID string, pinned bool) (map[string]any, error)
 }
 
+// SchemeService is the government scheme gRPC client interface.
+type SchemeService interface {
+	ListSchemes(ctx context.Context) ([]map[string]any, error)
+	MatchSchemes(ctx context.Context) ([]map[string]any, error)
+	UpsertScheme(ctx context.Context, fields map[string]any) (map[string]any, error)
+	DeleteScheme(ctx context.Context, id string) error
+}
+
 // NewAPIHandler constructs the handler with all service clients.
 func NewAPIHandler(
 	authSvc AuthService,
@@ -217,6 +226,7 @@ func NewAPIHandler(
 	b2bSvc B2BService,
 	trendSvc TrendService,
 	badgeSvc BadgeService,
+	schemeSvc SchemeService,
 ) *APIHandler {
 	return &APIHandler{
 		authSvc:    authSvc,
@@ -233,6 +243,7 @@ func NewAPIHandler(
 		b2bSvc:     b2bSvc,
 		trendSvc:   trendSvc,
 		badgeSvc:   badgeSvc,
+		schemeSvc:  schemeSvc,
 	}
 }
 
@@ -1894,4 +1905,48 @@ func (h *APIHandler) RevokeBadge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, map[string]any{"status": "revoked"})
+}
+
+func (h *APIHandler) ListSchemes(w http.ResponseWriter, r *http.Request) {
+	schemes, err := h.schemeSvc.ListSchemes(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"schemes": schemes})
+}
+
+func (h *APIHandler) MatchSchemes(w http.ResponseWriter, r *http.Request) {
+	matches, err := h.schemeSvc.MatchSchemes(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"matches": matches})
+}
+
+func (h *APIHandler) UpsertScheme(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	if id := httpx.URLParam(r, "id"); id != "" {
+		body["id"] = id
+	}
+	scheme, err := h.schemeSvc.UpsertScheme(r.Context(), body)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, scheme)
+}
+
+func (h *APIHandler) DeleteScheme(w http.ResponseWriter, r *http.Request) {
+	id := httpx.URLParam(r, "id")
+	if err := h.schemeSvc.DeleteScheme(r.Context(), id); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"status": "deleted"})
 }
