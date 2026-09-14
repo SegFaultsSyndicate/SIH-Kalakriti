@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -69,7 +70,25 @@ async def load(component_module: Any, cfg: Config) -> Any:
     return await asyncio.to_thread(component_module.build, cfg)
 
 
+def _apply_model_cache_dir(cfg: Config) -> None:
+    """Translates the one generic `Config.model_cache_dir` into whatever env
+    var each vendor library underneath a component actually reads -- the only
+    place in this service that needs to know those vendor-specific names
+    (`HF_HOME` for the four huggingface_hub-backed components: embedding,
+    reranking, vlm, translation; `U2NET_HOME` for rembg, behind
+    image_background). Keeping this translation here, not in docker-compose.yml
+    or any one component, is what lets the deployment-facing env surface and
+    every component's own config stay vendor-agnostic. `setdefault` so an
+    operator who already set one of these directly is never overridden.
+    """
+    if not cfg.model_cache_dir:
+        return
+    os.environ.setdefault("HF_HOME", cfg.model_cache_dir)
+    os.environ.setdefault("U2NET_HOME", os.path.join(cfg.model_cache_dir, "rembg"))
+
+
 async def load_all(cfg: Config) -> Registry:
+    _apply_model_cache_dir(cfg)
     (
         storage_backend,
         background,

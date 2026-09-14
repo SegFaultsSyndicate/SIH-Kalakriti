@@ -14,7 +14,7 @@ class RealTextReranker:
     def __init__(self, cfg: RerankingConfig) -> None:
         from sentence_transformers import CrossEncoder
 
-        device, _ = resolve_device()
+        device = cfg.device or resolve_device()[0]
         self._model = CrossEncoder(cfg.model, device=device, **local_files_only_kwargs(cfg.model))
 
     def score(self, query: str, texts: list[str]) -> list[float]:

@@ -298,12 +298,18 @@ services:
       ML_SVC_OBJECT_STORAGE_ACCESS_KEY: "minioadmin"
       ML_SVC_OBJECT_STORAGE_SECRET_KEY: "minioadmin"
       ML_SVC_OBJECT_STORAGE_BUCKET: "kalakriti"
-      HF_HOME: /root/.cache/huggingface
+      # Generic, vendor-agnostic: app/registry.py's load_all() translates
+      # this into whatever env var each component's underlying library
+      # actually reads (HF_HOME, U2NET_HOME, ...) -- see its docstring. Keeps
+      # every real component's downloaded weights persisted across container
+      # recreates via the one hf-cache volume below, without this file or any
+      # single component needing to know a vendor's own env var name.
+      ML_SVC_MODEL_CACHE_DIR: /root/.cache/huggingface
       # Needed only for Translate: IndicTrans2's whole org gates on a
-      # license/contact-info agreement, regardless of checkpoint size.
-      # Read from the host shell/.env, never hardcoded here; other RPCs
-      # work fine with this unset.
-      HF_TOKEN: "${HF_TOKEN:-}"
+      # license/contact-info agreement, regardless of checkpoint size. Scoped
+      # to that one component (app/models/translation), not a global var --
+      # read from the host shell/.env; other RPCs work fine with this unset.
+      ML_SVC_TRANSLATION_HF_TOKEN: "${HF_TOKEN:-}"
     volumes:
       - hf-cache:/root/.cache/huggingface
     ports:

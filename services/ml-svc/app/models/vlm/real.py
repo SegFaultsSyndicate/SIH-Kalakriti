@@ -75,8 +75,29 @@ class RealVisionLanguageModel:
         # models (KeyError: 'cpu' in the tied_params_map hook cleanup -- Qwen2.5-VL
         # ties embed_tokens/lm_head). Passing the resolved device directly avoids
         # that path entirely.
+        quantization_config = None
+        if device == "cuda":
+            # The 3B checkpoint in bf16 (~6GB) doesn't fit an 8GB-or-smaller
+            # card (e.g. a 4GB laptop GPU has under 3.7GB usable after driver
+            # overhead -- confirmed by an actual CUDA OOM on an RTX 2050).
+            # 4-bit NF4 shrinks it to ~2GB, comfortably alongside the much
+            # smaller embedding/reranker models sharing the same card. Not
+            # applied on CPU: bitsandbytes' CPU int8/4-bit path is a different,
+            # much slower code path than its CUDA kernels, and CPU hosts don't
+            # have this VRAM ceiling to work around in the first place.
+            from transformers import BitsAndBytesConfig
+
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=dtype,
+            )
         self._model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            self._repo_id, torch_dtype=dtype, device_map=device, **local_files_only_kwargs(self._repo_id)
+            self._repo_id,
+            torch_dtype=dtype,
+            device_map=device,
+            quantization_config=quantization_config,
+            **local_files_only_kwargs(self._repo_id),
         )
         self._processor = AutoProcessor.from_pretrained(
             self._repo_id, **local_files_only_kwargs(self._repo_id)

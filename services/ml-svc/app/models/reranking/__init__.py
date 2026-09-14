@@ -21,10 +21,17 @@ class TextReranker(Protocol):
 @dataclass(frozen=True)
 class RerankingConfig:
     model: str = "BAAI/bge-reranker-v2-m3"
+    # See EmbeddingConfig.device's docstring -- same override, same reason:
+    # this ~568M-param cross-encoder is the single biggest consumer of a
+    # small GPU's VRAM after the VLM, and runs fine on CPU.
+    device: str | None = None
 
     @classmethod
     def from_env(cls) -> "RerankingConfig":
-        return cls(model=os.getenv("ML_SVC_TEXT_RERANKING_MODEL", "BAAI/bge-reranker-v2-m3"))
+        return cls(
+            model=os.getenv("ML_SVC_TEXT_RERANKING_MODEL", "BAAI/bge-reranker-v2-m3"),
+            device=os.getenv("ML_SVC_TEXT_RERANKING_DEVICE") or None,
+        )
 
 
 def build(cfg: Config) -> TextReranker:

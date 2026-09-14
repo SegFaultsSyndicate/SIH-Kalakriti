@@ -69,6 +69,16 @@ class Config:
     model_version: str = "mock-v1"
     craft_allowlist_path: Path = _DEFAULT_ALLOWLIST
     media_bucket: str = "kalakriti-media"
+    # Where every real component's downloaded weights are cached, regardless
+    # of which vendor library backs it. Empty means "let each library use its
+    # own default location" (unpersisted across container recreates, but
+    # never wrong). Deliberately generic, not named after any one vendor
+    # (e.g. not HF_HOME) -- app/registry.py's load_all() is the one place
+    # that translates this into whatever env var each library actually reads
+    # (HF_HOME for the four huggingface_hub-backed components, U2NET_HOME for
+    # rembg), so no vendor-specific name needs to leak out to docker-compose.yml
+    # or into any single component's own config.
+    model_cache_dir: str = ""
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -83,6 +93,7 @@ class Config:
             model_version=os.getenv("ML_SVC_MODEL_VERSION", "mock-v1" if mock else "kalakriti-2026.09"),
             craft_allowlist_path=Path(os.getenv("ML_SVC_CRAFT_ALLOWLIST", str(_DEFAULT_ALLOWLIST))),
             media_bucket=os.getenv("ML_SVC_OBJECT_STORAGE_BUCKET", "kalakriti-media"),
+            model_cache_dir=os.getenv("ML_SVC_MODEL_CACHE_DIR", ""),
         )
 
 
