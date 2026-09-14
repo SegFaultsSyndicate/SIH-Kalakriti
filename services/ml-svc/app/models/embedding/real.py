@@ -14,7 +14,7 @@ class RealTextEmbedder:
     def __init__(self, cfg: EmbeddingConfig) -> None:
         from sentence_transformers import SentenceTransformer
 
-        device, _ = resolve_device()
+        device = cfg.device or resolve_device()[0]
         # local_files_only_kwargs avoids a Hub network round-trip on every
         # restart once this repo id is actually cached: it is pinned, not
         # floating, so there is never a newer revision to check for.

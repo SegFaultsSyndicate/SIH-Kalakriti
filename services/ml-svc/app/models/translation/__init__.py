@@ -42,10 +42,20 @@ class TranslationConfig:
     cost, no new external dependency."""
 
     model: str = "ai4bharat/indictrans2-en-indic-1B"
+    # Every ai4bharat/indictrans2-* repo gates on a license/contact-info
+    # agreement regardless of checkpoint size, so a real deployment needs an
+    # HF token that has accepted it. Scoped to this component, not a global
+    # env var: no other component here hits a gated repo today, and a
+    # credential is exactly the kind of thing that belongs to the one feature
+    # that needs it rather than the shared deployment env surface.
+    hf_token: str = ""
 
     @classmethod
     def from_env(cls) -> "TranslationConfig":
-        return cls(model=os.getenv("ML_SVC_TRANSLATION_MODEL", cls.model))
+        return cls(
+            model=os.getenv("ML_SVC_TRANSLATION_MODEL", cls.model),
+            hf_token=os.getenv("ML_SVC_TRANSLATION_HF_TOKEN", ""),
+        )
 
 
 def build(cfg: Config) -> TranslationModel:

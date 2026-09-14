@@ -25,10 +25,18 @@ class TextEmbedder(Protocol):
 @dataclass(frozen=True)
 class EmbeddingConfig:
     model: str = "intfloat/multilingual-e5-base"
+    # Overrides app.model_loading.resolve_device()'s auto-detected device.
+    # Unset (the default) keeps auto-detection; set to "cpu" to free a small
+    # GPU's VRAM for a component that needs it more (see vlm's 4-bit
+    # quantization) -- this model is small enough to run fine on CPU.
+    device: str | None = None
 
     @classmethod
     def from_env(cls) -> "EmbeddingConfig":
-        return cls(model=os.getenv("ML_SVC_TEXT_EMBEDDING_MODEL", "intfloat/multilingual-e5-base"))
+        return cls(
+            model=os.getenv("ML_SVC_TEXT_EMBEDDING_MODEL", "intfloat/multilingual-e5-base"),
+            device=os.getenv("ML_SVC_TEXT_EMBEDDING_DEVICE") or None,
+        )
 
 
 def build(cfg: Config) -> TextEmbedder:
