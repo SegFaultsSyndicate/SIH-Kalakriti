@@ -235,10 +235,10 @@ export function tPlural(base: string, count: number, values?: MessageValues): st
 }
 
 /**
- * Tooltip text: translated English + current language endonym in brackets.
- * "Go back [हिन्दी]" when Hindi is selected, "Go back [English]" for English.
- * Uses the same lookup chain as `t()`, so every key must exist in en.ts.
+ * Tooltip text, resolved through the same active catalogue -> Hindi ->
+ * English chain as `t()`, so it reads in the currently selected language.
+ * No endonym or fallback marker is appended. Every key must exist in en.ts.
  */
 export function tooltip(key: MessageKey): string {
-  return `${locale.t(key)} [${LOCALES[locale.code].endonym}]`;
+  return locale.t(key);
 }
