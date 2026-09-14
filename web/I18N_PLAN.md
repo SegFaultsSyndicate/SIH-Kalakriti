@@ -924,6 +924,68 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       match (`pnpm --filter @kalakriti/i18n run audit` re-run before
       writing each number). `npx vitest run` and `apps/buyer` svelte-check
       both clean.
+  - [x] **3.5** `apps/buyer` routes A-L (`account`, `gi-tagged`, `contact`,
+        `card/[slug]`, root home `+page.svelte`, `case-studies`, `+layout`,
+        `catalog`, `journal/[slug]`, `fairs`, `artisan/[slug]`, `craft/[slug]`)
+        -- same pattern as 3.4: several route files had zero `locale`/`t`
+        import at all despite being almost entirely hardcoded English.
+    - Fixed: `account/+page.svelte` (2346-line file, ~90 new
+      `account.page.*`/`account.hub.*` keys -- svelte:head, 6 hub cards, tab
+      nav, and all 5 panels: personal details, addresses, security, orders
+      chrome, consultations chrome, plus the phone-change and add-address
+      modals; the two seed order/consultation cards' product/artisan/date/
+      price content and the state/native-language `<option>` lists left as
+      data), `gi-tagged/+page.svelte` (24 new `giTagged.*` keys -- view
+      switchers, items counter, state/sort selects, no-results panel,
+      registration-number title, share/copy actions, plus reused
+      `listingCard.discountPercent`/`removeFromWishlist`/`saveToWishlist`/
+      `wishlistAriaLabel`/`saved`/`wishlist` from 3.4 for the product-card
+      action row -- `GI_PRODUCTS` and the filter-option arrays left as
+      data), `contact/+page.svelte` (imported `locale` for the first time
+      -- wait, it already had `t`, but nearly the entire page was
+      unwired; ~55 new `contact.*` keys covering the 3 help cards, the
+      full inquiry form incl. all 6 select options, and the ministry
+      office panel -- the physical address and toll-free/email contact
+      literals left untranslated per the established proper-noun-contact-
+      data rule), `card/[slug]/+page.svelte` (imported `locale` for the
+      first time; 24 new `shareCard.*` keys for the standalone shareable
+      business-card route, reusing `card.idLabel` and
+      `account.page.addresses.country` -- the 3 fallback sample catalogue
+      pieces and the catch-block demo artisan bio left as data), root
+      `+page.svelte` (10 new keys: hero edition/slide aria-labels, sr-only
+      loading text, 3 journal cluster-tags + leads, and the entire 3-column
+      directory/case-studies banner under `home.directory.*`),
+      `case-studies/+page.svelte` (19 new `caseStudies.*` keys for all
+      chrome around the `CASE_STUDIES` data array -- kicker, income-bar
+      labels, comparison-table headers, 3 narrative headings, 2 action
+      links -- the case-study content itself, quotes, and artisan names
+      left as data), `+layout.svelte` (10 new keys: hamburger aria-labels,
+      both nav lists' 5 link labels reused across desktop+mobile, meta
+      description -- the `ld+json` structured-data block left untouched as
+      non-visible SEO data), `catalog/+page.svelte` (17 new `catalog.*`
+      keys -- kicker/title/subhead, search box, 6 belt-filter chips,
+      certified-lots link -- `FALLBACK_CRAFTS` left as data),
+      `journal/[slug]/+page.svelte` (9 new `journal.*` keys for the
+      breadcrumb/head-title/kicker/not-found/back-link chrome around the
+      `ESSAYS` data array -- essay bodies, quotes, and bylines left as
+      data), `fairs/+page.svelte` (11 new `exhibition.fairs.*` keys --
+      breadcrumb, gov badges, 3 filter-tab labels, live/upcoming status
+      badges, crafts label, artisan-count suffix -- the `FAIRS` array left
+      as data), `artisan/[slug]/+page.svelte` (6 new `artisanStorefront.*`
+      keys for the fair/stall welcome banner's parametrized copy).
+    - Confirmed false positive / no fix needed: `craft/[slug]/+page.svelte`
+      -- already fully wired through `t()`; every string the scanner
+      flagged was either already a `t()` call or live API data.
+    - Spot-checked zero-hit files for false negatives: `feed/+page.svelte`,
+      `bulk-order/+page.svelte`, `assets/+page.svelte`,
+      `accessibility/+page.svelte`, `+error.svelte` -- all clean.
+    - en.ts grew 1671 -> 1988 keys. `i18n-baseline.json` ceilings raised to
+      match (`pnpm --filter @kalakriti/i18n run audit` re-run before
+      writing each number; the CLI's own exit code is always 1 whenever any
+      locale has outstanding issues -- that's expected pre-Phase-4 noise,
+      not a ratchet failure. The real gate is `npx vitest run`'s
+      `catalogue-audit.test.ts`, which reads the baseline and passed clean
+      at 46/46). `apps/buyer` svelte-check also clean (767 files, 0 errors).
 - [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.

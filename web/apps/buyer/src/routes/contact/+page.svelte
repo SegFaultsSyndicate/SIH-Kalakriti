@@ -18,7 +18,7 @@
 
   const breadcrumbs = $derived<BreadcrumbItem[]>([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Contact Us & Support' },
+    { label: t('contact.breadcrumbLabel') },
   ]);
 
   let inquiryType = $state('order_tracking');
@@ -32,18 +32,15 @@
     e.preventDefault();
     submitted = true;
     showToast({
-      message: `Inquiry Docket Registered: Your ticket #KLK-${Math.floor(100000 + Math.random() * 900000)} has been created. Our cluster officer will respond within 24 hours.`,
+      message: t('contact.form.toast', { ticket: String(Math.floor(100000 + Math.random() * 900000)) }),
       variant: 'success',
     });
   }
 </script>
 
 <svelte:head>
-  <title>Contact Us & Support — Kalakriti</title>
-  <meta
-    name="description"
-    content="Official customer care, artisan guild support, and statutory grievance redressal desk for the Kalakriti craft platform."
-  />
+  <title>{t('contact.headTitle')}</title>
+  <meta name="description" content={t('contact.metaDescription')} />
 </svelte:head>
 
 <div class="contact-page-container">
@@ -53,11 +50,9 @@
 
   <!-- Header Banner -->
   <header class="contact-header">
-    <span class="contact-kicker">Ministry of Social Justice &amp; Empowerment</span>
-    <h1 class="contact-title">Contact Us &amp; Support Desk</h1>
-    <p class="contact-subtitle">
-      Connect directly with our central buyer concierge, artisan cluster coordinators, or statutory grievance redressal officer.
-    </p>
+    <span class="contact-kicker">{t('contact.kicker')}</span>
+    <h1 class="contact-title">{t('contact.title')}</h1>
+    <p class="contact-subtitle">{t('contact.subtitle')}</p>
   </header>
 
   <!-- Fast Help Grid (3 Cards) -->
@@ -68,13 +63,11 @@
         <Icon name="phone" size="1.4rem" />
       </div>
       <div class="help-card__content">
-        <span class="help-card__tag">Toll-Free National Helpline</span>
+        <span class="help-card__tag">{t('contact.cards.tollfree.tag')}</span>
         <h3 class="help-card__title">1800-11-2026</h3>
-        <p class="help-card__desc">
-          Available Monday to Saturday, 9:00 AM to 7:00 PM IST in Hindi, English &amp; 9 regional languages.
-        </p>
+        <p class="help-card__desc">{t('contact.cards.tollfree.desc')}</p>
         <a href="tel:1800112026" class="help-card__action">
-          <span>Call Tollfree Now</span>
+          <span>{t('contact.cards.tollfree.cta')}</span>
           <Icon name="arrow-right" size="0.85rem" />
         </a>
       </div>
@@ -89,13 +82,11 @@
         </svg>
       </div>
       <div class="help-card__content">
-        <span class="help-card__tag">Direct Email Support</span>
+        <span class="help-card__tag">{t('contact.cards.email.tag')}</span>
         <h3 class="help-card__title">care@kalakriti.gov.in</h3>
-        <p class="help-card__desc">
-          For order inquiries, bulk tenders, provenance passport verification, or artisan empanelment.
-        </p>
+        <p class="help-card__desc">{t('contact.cards.email.desc')}</p>
         <a href="mailto:care@kalakriti.gov.in" class="help-card__action">
-          <span>Send Formal Email</span>
+          <span>{t('contact.cards.email.cta')}</span>
           <Icon name="arrow-right" size="0.85rem" />
         </a>
       </div>
@@ -107,13 +98,11 @@
         <Icon name="lock" size="1.4rem" />
       </div>
       <div class="help-card__content">
-        <span class="help-card__tag">Statutory Grievance Officer</span>
+        <span class="help-card__tag">{t('contact.cards.grievance.tag')}</span>
         <h3 class="help-card__title">Dr. S. K. Verma</h3>
-        <p class="help-card__desc">
-          Designated under DPDP Act 2023 and Consumer Protection E-Commerce Rules. Response within 48h.
-        </p>
+        <p class="help-card__desc">{t('contact.cards.grievance.desc')}</p>
         <a href="#inquiry-form" class="help-card__action">
-          <span>File Official Grievance</span>
+          <span>{t('contact.cards.grievance.cta')}</span>
           <Icon name="arrow-right" size="0.85rem" />
         </a>
       </div>
@@ -124,56 +113,56 @@
   <div class="contact-main-grid">
     <!-- Left: Inquiry Form -->
     <div class="form-card" id="inquiry-form">
-      <h2 class="form-heading">Send an Official Inquiry or Request</h2>
-      <p class="form-subtext">Fill out the details below. A dedicated cluster officer will be assigned to your ticket.</p>
+      <h2 class="form-heading">{t('contact.form.heading')}</h2>
+      <p class="form-subtext">{t('contact.form.subtext')}</p>
 
       {#if submitted}
         <div class="form-success-alert">
           <div class="alert-icon">✓</div>
           <div class="alert-body">
-            <h4>Inquiry Received Successfully!</h4>
-            <p>Your request has been routed to the relevant cluster development officer. Confirmation sent to {email}.</p>
-            <button type="button" class="btn-reset" onclick={() => (submitted = false)}>Submit Another Request</button>
+            <h4>{t('contact.form.successHeading')}</h4>
+            <p>{t('contact.form.successBody', { email })}</p>
+            <button type="button" class="btn-reset" onclick={() => (submitted = false)}>{t('contact.form.resetButton')}</button>
           </div>
         </div>
       {:else}
         <form onsubmit={handleSubmit} class="inquiry-form">
           <div class="form-group">
-            <label for="inquiryType" class="form-label">Nature of Inquiry</label>
+            <label for="inquiryType" class="form-label">{t('contact.form.inquiryTypeLabel')}</label>
             <select id="inquiryType" bind:value={inquiryType} class="form-select">
-              <option value="order_tracking">Order Tracking &amp; Delivery Update</option>
-              <option value="bulk_procurement">Bulk Institutional Procurement &amp; Tenders</option>
-              <option value="provenance_verify">GI &amp; Ed25519 Provenance Verification</option>
-              <option value="artisan_consultancy">Artisan 1-on-1 Loom Video Call Scheduling</option>
-              <option value="grievance">Statutory DPDP / Fair-Trade Grievance</option>
-              <option value="other">General Feedback &amp; Suggestions</option>
+              <option value="order_tracking">{t('contact.form.inquiryType.orderTracking')}</option>
+              <option value="bulk_procurement">{t('contact.form.inquiryType.bulkProcurement')}</option>
+              <option value="provenance_verify">{t('contact.form.inquiryType.provenanceVerify')}</option>
+              <option value="artisan_consultancy">{t('contact.form.inquiryType.artisanConsultancy')}</option>
+              <option value="grievance">{t('contact.form.inquiryType.grievance')}</option>
+              <option value="other">{t('contact.form.inquiryType.other')}</option>
             </select>
           </div>
 
           <div class="form-row-2">
             <div class="form-group">
-              <label for="fullName" class="form-label">Your Legal / Full Name *</label>
-              <input type="text" id="fullName" bind:value={fullName} required placeholder="e.g. Aarav Sharma" class="form-input" />
+              <label for="fullName" class="form-label">{t('contact.form.fullNameLabel')}</label>
+              <input type="text" id="fullName" bind:value={fullName} required placeholder={t('contact.form.fullNamePlaceholder')} class="form-input" />
             </div>
 
             <div class="form-group">
-              <label for="email" class="form-label">Email Address *</label>
-              <input type="email" id="email" bind:value={email} required placeholder="e.g. aarav.sharma@example.gov.in" class="form-input" />
+              <label for="email" class="form-label">{t('contact.form.emailLabel')}</label>
+              <input type="email" id="email" bind:value={email} required placeholder={t('contact.form.emailPlaceholder')} class="form-input" />
             </div>
           </div>
 
           <div class="form-group">
-            <label for="phone" class="form-label">Mobile Number (Optional for SMS Docket Alert)</label>
+            <label for="phone" class="form-label">{t('contact.form.phoneLabel')}</label>
             <input type="tel" id="phone" bind:value={phone} placeholder="+91 98765 43210" class="form-input" />
           </div>
 
           <div class="form-group">
-            <label for="message" class="form-label">Description of Inquiry / Order ID *</label>
-            <textarea id="message" bind:value={message} required rows="4" placeholder="Please provide order number, craft title, or details of your query..." class="form-textarea"></textarea>
+            <label for="message" class="form-label">{t('contact.form.messageLabel')}</label>
+            <textarea id="message" bind:value={message} required rows="4" placeholder={t('contact.form.messagePlaceholder')} class="form-textarea"></textarea>
           </div>
 
           <button type="submit" class="submit-btn">
-            <span>Submit Official Inquiry</span>
+            <span>{t('contact.form.submitButton')}</span>
             <Icon name="arrow-right" size="1rem" />
           </button>
         </form>
@@ -182,12 +171,12 @@
 
     <!-- Right: Office & Ministry Info -->
     <div class="office-info-card">
-      <h3 class="office-heading">Ministry Head Office</h3>
-      
+      <h3 class="office-heading">{t('contact.office.heading')}</h3>
+
       <div class="address-block">
         <Icon name="location" size="1.2rem" />
         <div>
-          <strong>Department of Social Justice &amp; Empowerment</strong>
+          <strong>{t('contact.office.department')}</strong>
           <p>
             Shastri Bhawan, Dr. Rajendra Prasad Road,<br />
             New Delhi, Delhi — 110001, India
@@ -197,27 +186,25 @@
 
       <div class="divider"></div>
 
-      <h4 class="sub-heading">Operational Timings</h4>
+      <h4 class="sub-heading">{t('contact.office.timingsHeading')}</h4>
       <ul class="timings-list" role="list">
-        <li><span>Working Days:</span> <strong>Monday – Saturday</strong></li>
-        <li><span>Help Desk Hours:</span> <strong>09:00 – 19:00 IST</strong></li>
-        <li><span>Response Time:</span> <strong>Within 24 Hours</strong></li>
+        <li><span>{t('contact.office.workingDaysLabel')}</span> <strong>{t('contact.office.workingDaysValue')}</strong></li>
+        <li><span>{t('contact.office.hoursLabel')}</span> <strong>{t('contact.office.hoursValue')}</strong></li>
+        <li><span>{t('contact.office.responseLabel')}</span> <strong>{t('contact.office.responseValue')}</strong></li>
       </ul>
 
       <div class="divider"></div>
 
-      <h4 class="sub-heading">Live WhatsApp Craft Connect</h4>
-      <p class="whatsapp-desc">
-        Chat directly with verified cluster coordinators for immediate status updates and order assistance.
-      </p>
-      <a 
-        href="https://wa.me/911800112026?text=Namaste%20Kalakriti%20Team" 
-        target="_blank" 
-        rel="noopener noreferrer" 
+      <h4 class="sub-heading">{t('contact.office.whatsappHeading')}</h4>
+      <p class="whatsapp-desc">{t('contact.office.whatsappDesc')}</p>
+      <a
+        href="https://wa.me/911800112026?text=Namaste%20Kalakriti%20Team"
+        target="_blank"
+        rel="noopener noreferrer"
         class="whatsapp-btn"
       >
         <Icon name="whatsapp" size="1.1rem" />
-        <span>Connect on WhatsApp</span>
+        <span>{t('contact.office.whatsappButton')}</span>
       </a>
     </div>
   </div>

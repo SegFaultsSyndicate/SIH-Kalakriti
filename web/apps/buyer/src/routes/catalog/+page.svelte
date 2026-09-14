@@ -14,7 +14,7 @@
 
   const breadcrumbs = $derived([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'All GI Craft Clusters' },
+    { label: t('catalog.breadcrumbLabel') },
   ]);
 
   let searchQuery = $state('');
@@ -137,8 +137,8 @@
 </script>
 
 <svelte:head>
-  <title>National GI Craft & Cluster Catalog - Kalakriti</title>
-  <meta name="description" content="Explore India's complete national registry of Geographical Indication (GI) handlooms, tribal metallurgy, and authentic handicraft traditions." />
+  <title>{t('catalog.headTitle')}</title>
+  <meta name="description" content={t('catalog.metaDescription')} />
 </svelte:head>
 
 <div class="catalog-page">
@@ -146,11 +146,9 @@
     <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
 
     <header class="catalog-header">
-      <span class="catalog-kicker">Geographical Indications Registry of India</span>
-      <h1 class="catalog-title">National Craft & Cluster Catalog</h1>
-      <p class="catalog-subhead">
-        Explore 74 certified Geographical Indication (GI) craft clusters across India. Every tradition is cataloged with statutory registration numbers, master techniques, and verifiable loom provenance.
-      </p>
+      <span class="catalog-kicker">{t('catalog.kicker')}</span>
+      <h1 class="catalog-title">{t('catalog.title')}</h1>
+      <p class="catalog-subhead">{t('catalog.subhead')}</p>
 
       <!-- Filter Controls -->
       <div class="filter-controls">
@@ -158,21 +156,21 @@
           <Icon name="search" size="1rem" />
           <input
             type="search"
-            placeholder="Search by craft, GI tag, or state..."
+            placeholder={t('catalog.searchPlaceholder')}
             bind:value={searchQuery}
             class="catalog-search"
-            aria-label="Search craft catalog"
+            aria-label={t('catalog.searchAriaLabel')}
           />
         </div>
 
-        <div class="belt-chips" role="tablist" aria-label="Craft Belt Filter">
+        <div class="belt-chips" role="tablist" aria-label={t('catalog.beltFilterAriaLabel')}>
           <button
             type="button"
             class="belt-chip"
             class:active={selectedBelt === 'all'}
             onclick={() => (selectedBelt = 'all')}
           >
-            All Belts ({FALLBACK_CRAFTS.length})
+            {t('catalog.belt.all', { count: String(FALLBACK_CRAFTS.length) })}
           </button>
           <button
             type="button"
@@ -180,7 +178,7 @@
             class:active={selectedBelt === 'north'}
             onclick={() => (selectedBelt = 'north')}
           >
-            Northern Plains
+            {t('catalog.belt.north')}
           </button>
           <button
             type="button"
@@ -188,7 +186,7 @@
             class:active={selectedBelt === 'west'}
             onclick={() => (selectedBelt = 'west')}
           >
-            Western Deserts
+            {t('catalog.belt.west')}
           </button>
           <button
             type="button"
@@ -196,7 +194,7 @@
             class:active={selectedBelt === 'south'}
             onclick={() => (selectedBelt = 'south')}
           >
-            Deccan & South
+            {t('catalog.belt.south')}
           </button>
           <button
             type="button"
@@ -204,7 +202,7 @@
             class:active={selectedBelt === 'east'}
             onclick={() => (selectedBelt = 'east')}
           >
-            Eastern Loomlands
+            {t('catalog.belt.east')}
           </button>
           <button
             type="button"
@@ -212,7 +210,7 @@
             class:active={selectedBelt === 'central'}
             onclick={() => (selectedBelt = 'central')}
           >
-            Central Heartland
+            {t('catalog.belt.central')}
           </button>
         </div>
       </div>
@@ -241,7 +239,7 @@
 
           <div class="cluster-card__footer">
             <a href={`/search?craft=${craft.slug}`} class="cluster-card__link">
-              <span>View Certified Lots</span>
+              <span>{t('catalog.viewCertifiedLots')}</span>
               <Icon name="arrow-right" size="0.85rem" />
             </a>
           </div>

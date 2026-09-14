@@ -14,7 +14,7 @@
 
   const breadcrumbs = $derived([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Exhibition Calendar' },
+    { label: t('exhibition.fairs.breadcrumbLabel') },
   ]);
 
   interface Fair {
@@ -138,8 +138,8 @@
     <!-- Header Section -->
     <header class="fairs-header">
       <div class="gov-badge-strip">
-        <span class="gov-badge">GOVERNMENT OF INDIA • EXHIBITION CORRIDOR</span>
-        <span class="gov-badge-sub">PHYSICAL-TO-DIGITAL FAIR BRIDGE</span>
+        <span class="gov-badge">{t('exhibition.fairs.govBadge')}</span>
+        <span class="gov-badge-sub">{t('exhibition.fairs.govBadgeSub')}</span>
       </div>
       <h1 class="fairs-title">{t('exhibition.fairs.title')}</h1>
       <p class="fairs-subhead">
@@ -154,7 +154,7 @@
           class:filter-btn--active={selectedFilter === 'all'}
           onclick={() => (selectedFilter = 'all')}
         >
-          All Exhibitions ({FAIRS.length})
+          {t('exhibition.fairs.filterAll', { count: String(FAIRS.length) })}
         </button>
         <button
           type="button"
@@ -162,7 +162,7 @@
           class:filter-btn--active={selectedFilter === 'active'}
           onclick={() => (selectedFilter = 'active')}
         >
-          <Icon name="calendar" size="1rem" /> Happening Now (2)
+          <Icon name="calendar" size="1rem" /> {t('exhibition.fairs.filterActive', { count: '2' })}
         </button>
         <button
           type="button"
@@ -170,7 +170,7 @@
           class:filter-btn--active={selectedFilter === 'upcoming'}
           onclick={() => (selectedFilter = 'upcoming')}
         >
-          <Icon name="clock" size="1rem" /> Upcoming Fairs (3)
+          <Icon name="clock" size="1rem" /> {t('exhibition.fairs.filterUpcoming', { count: '3' })}
         </button>
       </div>
     </header>
@@ -183,9 +183,9 @@
             <img src={fair.bannerUrl} alt={fair.title} loading="lazy" />
             <div class="fair-status-badge" class:fair-status-badge--live={fair.status === 'active'}>
               {#if fair.status === 'active'}
-                <span class="pulse-dot"></span> HAPPENING NOW
+                <span class="pulse-dot"></span> {t('exhibition.fairs.statusLive')}
               {:else}
-                UPCOMING
+                {t('exhibition.fairs.statusUpcoming')}
               {/if}
             </div>
           </div>
@@ -213,7 +213,7 @@
             <p class="fair-card__desc">{fair.description}</p>
 
             <div class="fair-crafts-section">
-              <span class="crafts-label">Featured GI Craft Traditions:</span>
+              <span class="crafts-label">{t('exhibition.fairs.craftsLabel')}</span>
               <div class="crafts-tags">
                 {#each fair.crafts as craft}
                   <span class="craft-tag">{craft}</span>
@@ -223,7 +223,7 @@
 
             <div class="fair-card__footer">
               <div class="artisan-count-badge">
-                <strong>{fair.artisanCount}+</strong> Master Artisans Exhibiting
+                <strong>{fair.artisanCount}+</strong> {t('exhibition.fairs.artisansExhibitingSuffix')}
               </div>
               <a
                 href="/search?q={encodeURIComponent(fair.crafts[0])}"

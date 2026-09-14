@@ -129,16 +129,16 @@
       <div class="fair-welcome-banner__content">
         <strong>
           {#if stallParam}
-            Visiting Stall #{stallParam} at {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+            {t('artisanStorefront.visitingStall', { stall: stallParam, fair: fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : t('artisanStorefront.fairFallback') })}
           {:else}
-            Visiting from {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+            {t('artisanStorefront.visitingFrom', { fair: fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : t('artisanStorefront.fairFallback') })}
           {/if}
-          Welcome!
+          {t('artisanStorefront.welcome')}
         </strong>
-        <p>Reorder authentic handcrafted pieces directly from this master artisan year-round with cluster-direct delivery and GI certification.</p>
+        <p>{t('artisanStorefront.reorderDesc')}</p>
       </div>
       <a href="/card/{slug}" class="fair-welcome-banner__card-btn">
-        <Icon name="verified-artisan" size="0.85rem" /> Visiting Card
+        <Icon name="verified-artisan" size="0.85rem" /> {t('artisanStorefront.visitingCard')}
       </a>
     </aside>
   {/if}

@@ -106,7 +106,7 @@
 
 <svelte:head>
   <title>{t('app.name')}</title>
-  <meta name="description" content="Kalakriti is India's national AI cataloging, cryptographic GI provenance, and collective fulfillment marketplace for master artisans and heritage looms." />
+  <meta name="description" content={t('app.metaDescription')} />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -140,7 +140,7 @@
       onclick={toggleMobileNav}
       aria-expanded={mobileNavOpen}
       aria-controls="shell-mobile-nav"
-      aria-label={mobileNavOpen ? 'Close main navigation' : 'Open main navigation'}
+      aria-label={mobileNavOpen ? t('nav.shell.closeMenu') : t('nav.shell.openMenu')}
     >
       <Icon name="menu" size="1.25rem" />
     </button>
@@ -152,12 +152,12 @@
       </span>
     </a>
 
-    <nav class="shell__nav" aria-label="Main Navigation">
-      <a class="shell__nav-link" href="/catalog">Craft Directory</a>
-      <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
-      <a class="shell__nav-link" href="/fairs">Exhibitions & Melas</a>
-      <a class="shell__nav-link" href="/company/register">Enterprise &amp; Boutiques</a>
-      <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
+    <nav class="shell__nav" aria-label={t('nav.shell.mainAriaLabel')}>
+      <a class="shell__nav-link" href="/catalog">{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__nav-link" href="/gi-tagged">{t('nav.shell.giHeritage')}</a>
+      <a class="shell__nav-link" href="/fairs">{t('nav.shell.exhibitions')}</a>
+      <a class="shell__nav-link" href="/company/register">{t('nav.shell.enterprise')}</a>
+      <a class="shell__nav-link" href="/case-studies">{t('nav.shell.impactStudies')}</a>
     </nav>
 
     <div class="shell__actions">
@@ -179,10 +179,10 @@
   </header>
 
   {#if mobileNavOpen}
-    <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label="Main Navigation (mobile)">
-      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>Craft Directory</a>
-      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>GI Heritage</a>
-      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>Impact Studies</a>
+    <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label={t('nav.shell.mainMobileAriaLabel')}>
+      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>{t('nav.shell.giHeritage')}</a>
+      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>{t('nav.shell.impactStudies')}</a>
     </nav>
   {/if}
 

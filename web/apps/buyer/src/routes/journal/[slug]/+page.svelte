@@ -99,13 +99,13 @@
 
   const breadcrumbs = $derived([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'The Virasat Journal', href: '/#journal' },
-    { label: essay?.title ?? 'Essay' },
+    { label: t('journal.breadcrumbLabel'), href: '/#journal' },
+    { label: essay?.title ?? t('journal.breadcrumbEssayFallback') },
   ]);
 </script>
 
 <svelte:head>
-  <title>{essay ? `${essay.title} — Kalakriti Journal` : 'Essay — Kalakriti Journal'}</title>
+  <title>{essay ? t('journal.headTitleSuffix', { title: essay.title }) : t('journal.headTitleFallback')}</title>
   {#if essay}
     <meta name="description" content={essay.lead} />
   {/if}
@@ -114,9 +114,9 @@
 {#if !essay}
   <div class="essay-page">
     <div class="essay-container">
-      <Breadcrumbs items={[{ label: t('nav.home') || 'Home', href: '/' }, { label: 'Essay not found' }]} />
-      <h1>Essay not found</h1>
-      <p><a href="/">Return home</a></p>
+      <Breadcrumbs items={[{ label: t('nav.home') || 'Home', href: '/' }, { label: t('journal.notFoundBreadcrumb') }]} />
+      <h1>{t('journal.notFoundHeading')}</h1>
+      <p><a href="/">{t('journal.returnHome')}</a></p>
     </div>
   </div>
 {:else}
@@ -125,7 +125,7 @@
       <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
 
       <header class="essay-header">
-        <span class="essay-kicker">THE VIRASAT JOURNAL · {essay.cluster.toUpperCase()}</span>
+        <span class="essay-kicker">{t('journal.kickerPrefix', { cluster: essay.cluster.toUpperCase() })}</span>
         <h1 class="essay-title">{essay.title}</h1>
         <p class="essay-lead">{essay.lead}</p>
         <div class="essay-meta">
@@ -155,7 +155,7 @@
       <div class="essay-actions">
         <a href="/" class="essay-back-link">
           <Icon name="arrow-right" size="0.85rem" />
-          <span>Back to Kalakriti Home</span>
+          <span>{t('journal.backToHome')}</span>
         </a>
       </div>
     </div>

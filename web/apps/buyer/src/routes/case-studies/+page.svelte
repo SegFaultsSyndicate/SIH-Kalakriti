@@ -15,7 +15,7 @@
 
   const breadcrumbs = $derived([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Guild Case Studies' },
+    { label: t('caseStudies.breadcrumbLabel') },
   ]);
 
   interface BeforeAfterRow {
@@ -210,11 +210,8 @@
 </script>
 
 <svelte:head>
-  <title>Guild Impact Case Studies — Kalakriti</title>
-  <meta
-    name="description"
-    content="Empirical field documentation and Before/After metrics showing how Kalakriti converts temporary exhibition sales into year-round digital prosperity."
-  />
+  <title>{t('caseStudies.headTitle')}</title>
+  <meta name="description" content={t('caseStudies.metaDescription')} />
 </svelte:head>
 
 <div class="studies-page">
@@ -224,8 +221,8 @@
     <!-- Header Section -->
     <header class="studies-header">
       <div class="kicker-wrap">
-        <span class="studies-kicker">GOVERNMENT OF INDIA • EMPIRICAL FIELD RESEARCH</span>
-        <span class="kicker-sub">SOCIO-ECONOMIC IMPACT & UPLIFT</span>
+        <span class="studies-kicker">{t('caseStudies.kicker')}</span>
+        <span class="kicker-sub">{t('caseStudies.kickerSub')}</span>
       </div>
       <h1 class="studies-title">{t('caseStudies.pageTitle')}</h1>
       <p class="studies-subhead">
@@ -242,7 +239,7 @@
             <span class="study-gi-badge"><Icon name="gi-tagged" size="0.9rem" /> {study.giTag}</span>
             <div class="artisan-portrait-badge">
               <span class="portrait-name">{study.artisanName}</span>
-              <span class="portrait-role">Master Lineage</span>
+              <span class="portrait-role">{t('caseStudies.masterLineage')}</span>
             </div>
           </div>
 
@@ -269,15 +266,15 @@
             <!-- Visual Income Growth Bar Comparison -->
             <div class="income-comparison-bar-wrap">
               <div class="bar-header">
-                <span class="bar-title">Monthly Income Transformation (Before vs. After)</span>
+                <span class="bar-title">{t('caseStudies.incomeChartTitle')}</span>
                 <span class="bar-uplift-badge">
-                  +{Math.round(((study.afterMonthlyInr - study.beforeMonthlyInr) / study.beforeMonthlyInr) * 100)}% Surge
+                  {t('caseStudies.upliftSurge', { percent: String(Math.round(((study.afterMonthlyInr - study.beforeMonthlyInr) / study.beforeMonthlyInr) * 100)) })}
                 </span>
               </div>
 
               <div class="dual-progress-bar">
                 <div class="bar-item bar-item--before">
-                  <span class="bar-item__label">Before Kalakriti: ₹{study.beforeMonthlyInr.toLocaleString('en-IN')}</span>
+                  <span class="bar-item__label">{t('caseStudies.beforeAmountLabel', { amount: study.beforeMonthlyInr.toLocaleString('en-IN') })}</span>
                   <div class="bar-track">
                     <div
                       class="bar-fill bar-fill--red"
@@ -287,7 +284,7 @@
                 </div>
 
                 <div class="bar-item bar-item--after">
-                  <span class="bar-item__label">With Kalakriti: ₹{study.afterMonthlyInr.toLocaleString('en-IN')}/mo</span>
+                  <span class="bar-item__label">{t('caseStudies.afterAmountLabel', { amount: study.afterMonthlyInr.toLocaleString('en-IN') })}</span>
                   <div class="bar-track">
                     <div class="bar-fill bar-fill--green" style:inline-size="100%"></div>
                   </div>
@@ -297,14 +294,14 @@
 
             <!-- Before vs. After Structured Comparison Table -->
             <div class="before-after-section">
-              <h3 class="comparison-heading">Comparative Field Audit</h3>
+              <h3 class="comparison-heading">{t('caseStudies.comparisonHeading')}</h3>
               <div class="table-responsive">
                 <table class="comparison-table">
                   <thead>
                     <tr>
-                      <th scope="col">Evaluation Dimension</th>
-                      <th scope="col" class="th-before">Before Kalakriti (Traditional Exploitation)</th>
-                      <th scope="col" class="th-after">With Kalakriti (Digital Infrastructure)</th>
+                      <th scope="col">{t('caseStudies.tableDimensionHeader')}</th>
+                      <th scope="col" class="th-before">{t('caseStudies.tableBeforeHeader')}</th>
+                      <th scope="col" class="th-after">{t('caseStudies.tableAfterHeader')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -329,17 +326,17 @@
             <!-- Narrative Blocks -->
             <div class="study-narrative">
               <div class="narrative-block">
-                <h3>The Structural Bottleneck</h3>
+                <h3>{t('caseStudies.narrative.problemHeading')}</h3>
                 <p>{study.problem}</p>
               </div>
 
               <div class="narrative-block">
-                <h3>The Kalakriti Public Intervention</h3>
+                <h3>{t('caseStudies.narrative.interventionHeading')}</h3>
                 <p>{study.intervention}</p>
               </div>
 
               <div class="narrative-block">
-                <h3>Socio-Economic & Generational Impact</h3>
+                <h3>{t('caseStudies.narrative.impactHeading')}</h3>
                 <p>{study.impact}</p>
               </div>
             </div>
@@ -357,10 +354,10 @@
             <div class="study-actions">
               <a href="/card/{study.artisanSlug}" class="action-btn action-btn--card">
                 <Icon name="verified-artisan" size="0.9rem" />
-                <span>View Digital Visiting Card</span>
+                <span>{t('caseStudies.viewCardAction')}</span>
               </a>
               <a href="/artisan/{study.artisanSlug}" class="action-btn action-btn--store">
-                <span>Explore Artisan Storefront</span>
+                <span>{t('caseStudies.exploreStorefrontAction')}</span>
                 <Icon name="arrow-right" size="0.9rem" />
               </a>
             </div>

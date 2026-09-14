@@ -481,7 +481,7 @@
 </div>
 
 <!-- 2. EDITORIAL ASYMMETRIC HERITAGE HERO -->
-<section class="k-editorial-hero" aria-label="Curated Craft Edition">
+<section class="k-editorial-hero" aria-label={t('home.hero.editionAriaLabel')}>
   <div class="hero-asymmetric-grid">
     <!-- Image showcase: Product-Forward -->
     <div class="hero-photo-frame">
@@ -558,7 +558,7 @@
             class="slide-tab-btn"
             class:active={activeHeroIndex === idx}
             onclick={() => (activeHeroIndex = idx)}
-            aria-label={`Switch to slide ${idx + 1}: ${slide.theme}`}
+            aria-label={t('home.hero.switchSlideAriaLabel', { n: String(idx + 1), theme: slide.theme })}
           >
             <span class="tab-indicator"></span>
             <span class="tab-text">{slide.theme.split(' ')[0]}</span>
@@ -596,7 +596,7 @@
 <!-- 4. 12 INDIGENOUS ARTISAN CRAFT DISCIPLINES -->
 <Section variant="khadi-plain">
   {#if loading}
-    <span class="sr-only">Loading verified artisan catalog...</span>
+    <span class="sr-only">{t('home.loadingCatalog')}</span>
   {/if}
   <ArtisanCraftGrid />
 </Section>
@@ -652,14 +652,12 @@
   <div class="journal-editorial-grid">
     <article class="journal-entry">
       <div class="journal-metadata">
-        <span class="journal-cluster-tag">Dhamadka Cluster</span>
+        <span class="journal-cluster-tag">{t('home.journal.article1.clusterTag')}</span>
         <span class="journal-time">{t('home.journal.article1.readTime')}</span>
       </div>
       <h3 class="journal-headline">{t('home.journal.article1.title')}</h3>
       <p class="journal-byline">{t('home.journal.article1.author')}</p>
-      <p class="journal-lead">
-        How the Khatri master dyers of Kutch sustain 16 chemical-free natural resist phases along the seasonal riverbanks of Dhamadka.
-      </p>
+      <p class="journal-lead">{t('home.journal.article1.lead')}</p>
       <a href="/journal/ajrakh" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
@@ -668,14 +666,12 @@
 
     <article class="journal-entry">
       <div class="journal-metadata">
-        <span class="journal-cluster-tag">Patan Guild</span>
+        <span class="journal-cluster-tag">{t('home.journal.article2.clusterTag')}</span>
         <span class="journal-time">{t('home.journal.article2.readTime')}</span>
       </div>
       <h3 class="journal-headline">{t('home.journal.article2.title')}</h3>
       <p class="journal-byline">{t('home.journal.article2.author')}</p>
-      <p class="journal-lead">
-        Decoding the sacred geometric algorithms and double-resist warp alignments of Gujarat’s legendary 800-year Patan guild.
-      </p>
+      <p class="journal-lead">{t('home.journal.article2.lead')}</p>
       <a href="/journal/patola" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
@@ -684,14 +680,12 @@
 
     <article class="journal-entry">
       <div class="journal-metadata">
-        <span class="journal-cluster-tag">Bastar Ghadwa</span>
+        <span class="journal-cluster-tag">{t('home.journal.article3.clusterTag')}</span>
         <span class="journal-time">{t('home.journal.article3.readTime')}</span>
       </div>
       <h3 class="journal-headline">{t('home.journal.article3.title')}</h3>
       <p class="journal-byline">{t('home.journal.article3.author')}</p>
-      <p class="journal-lead">
-        Inside the forest furnaces of Bastar where Ghadwa metalsmiths transform wild honey wax, red clay, and scrap bronze into animist deities.
-      </p>
+      <p class="journal-lead">{t('home.journal.article3.lead')}</p>
       <a href="/journal/dhokra" class="journal-read-link">
         <span>{t('home.journal.readArticle')}</span>
         <Icon name="arrow-right" size="0.9rem" />
@@ -771,31 +765,31 @@
 <Section variant="khadi-weft">
   <div class="directory-case-studies-banner">
     <div class="banner-col">
-      <p class="banner-kicker">Digital Master Register</p>
-      <h3 class="banner-title">74 National Geographic Indication Clusters</h3>
-      <p class="banner-desc">Explore our comprehensive public directory of registered craft corridors, artisan cooperatives, and verified master craftspersons across all 28 states and 8 union territories.</p>
+      <p class="banner-kicker">{t('home.directory.craftRegister.kicker')}</p>
+      <h3 class="banner-title">{t('home.directory.craftRegister.title')}</h3>
+      <p class="banner-desc">{t('home.directory.craftRegister.desc')}</p>
       <a href="/catalog" class="banner-action-link">
-        <span>Browse Complete Craft Catalog</span>
+        <span>{t('home.directory.craftRegister.cta')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
     </div>
     <div class="banner-divider" aria-hidden="true"></div>
     <div class="banner-col">
-      <p class="banner-kicker">Exhibition-to-Digital Bridge</p>
-      <h3 class="banner-title">National Craft Fairs Calendar</h3>
-      <p class="banner-desc">Connect directly with authentic GI master artisans exhibiting at Surajkund Mela, Shilp Samagam, and Dilli Haat. Scan stall QR cards to reorder handcrafted treasures year-round.</p>
+      <p class="banner-kicker">{t('home.directory.fairsCalendar.kicker')}</p>
+      <h3 class="banner-title">{t('home.directory.fairsCalendar.title')}</h3>
+      <p class="banner-desc">{t('home.directory.fairsCalendar.desc')}</p>
       <a href="/fairs" class="banner-action-link">
-        <span>View Exhibition Calendar</span>
+        <span>{t('home.directory.fairsCalendar.cta')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
     </div>
     <div class="banner-divider" aria-hidden="true"></div>
     <div class="banner-col">
-      <p class="banner-kicker">Guild Economics & Provenance</p>
-      <h3 class="banner-title">Empirical Field Case Studies (+337% Uplift)</h3>
-      <p class="banner-desc">Concrete Before vs. After field research showing how zero-broker direct DBT payouts and cryptographic provenance seals transformed incomes across Kutch, Varanasi, and Bastar.</p>
+      <p class="banner-kicker">{t('home.directory.caseStudies.kicker')}</p>
+      <h3 class="banner-title">{t('home.directory.caseStudies.title')}</h3>
+      <p class="banner-desc">{t('home.directory.caseStudies.desc')}</p>
       <a href="/case-studies" class="banner-action-link">
-        <span>Read Impact Case Studies</span>
+        <span>{t('home.directory.caseStudies.cta')}</span>
         <Icon name="arrow-right" size="0.9rem" />
       </a>
     </div>

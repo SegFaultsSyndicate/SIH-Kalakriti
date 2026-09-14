@@ -116,21 +116,21 @@
 
   function handleSaveProfile(e: Event): void {
     e.preventDefault();
-    showToast({ message: 'Personal details updated successfully', variant: 'success' });
+    showToast({ message: t('account.page.toast.profileSaved'), variant: 'success' });
   }
 
   function handleRequestPhoneOtp(): void {
     if (!newPhone.trim()) {
-      showToast({ message: 'Please enter a valid 10-digit mobile number', variant: 'error' });
+      showToast({ message: t('account.page.toast.invalidPhone'), variant: 'error' });
       return;
     }
     phoneOtpSent = true;
-    showToast({ message: `Verification code sent to ${newPhone}`, variant: 'info' });
+    showToast({ message: t('account.page.toast.otpSent', { phone: newPhone }), variant: 'info' });
   }
 
   function handleVerifyPhone(): void {
     if (!phoneOtp.trim()) {
-      showToast({ message: 'Please enter the 6-digit OTP', variant: 'error' });
+      showToast({ message: t('account.page.toast.invalidOtp'), variant: 'error' });
       return;
     }
     isVerifyingPhone = true;
@@ -141,20 +141,20 @@
       phoneOtpSent = false;
       newPhone = '';
       phoneOtp = '';
-      showToast({ message: 'Mobile number updated and verified!', variant: 'success' });
+      showToast({ message: t('account.page.toast.phoneUpdated'), variant: 'success' });
     }, 600);
   }
 
   function handleAddAddress(e: Event): void {
     e.preventDefault();
     if (!newAddressLine.trim() || !newAddressCity.trim() || !newAddressPin.trim()) {
-      showToast({ message: 'Please fill in all mandatory address fields', variant: 'error' });
+      showToast({ message: t('account.page.toast.addressFieldsRequired'), variant: 'error' });
       return;
     }
 
     const newAddr = {
       id: `addr-${Date.now()}`,
-      type: newAddressGstin ? 'Institutional' : 'Home',
+      type: newAddressGstin ? t('account.page.addresses.typeInstitutional') : t('account.page.addresses.typeHome'),
       isDefault: newAddressIsDefault,
       name: newAddressFullName || fullName,
       lines: newAddressLine,
@@ -177,7 +177,7 @@
     newAddressPin = '';
     newAddressGstin = '';
     newAddressIsDefault = false;
-    showToast({ message: 'Address saved to your address book', variant: 'success' });
+    showToast({ message: t('account.page.toast.addressSaved'), variant: 'success' });
   }
 
   function handleSetDefaultAddress(id: string): void {
@@ -185,31 +185,31 @@
       ...a,
       isDefault: a.id === id,
     }));
-    showToast({ message: 'Default shipping address updated', variant: 'success' });
+    showToast({ message: t('account.page.toast.defaultAddressUpdated'), variant: 'success' });
   }
 
   function handleDeleteAddress(id: string): void {
     savedAddresses = savedAddresses.filter((a) => a.id !== id);
-    showToast({ message: 'Address removed from address book', variant: 'info' });
+    showToast({ message: t('account.page.toast.addressRemoved'), variant: 'info' });
   }
 
   function handleRevokeOtherSessions(): void {
     activeSessions = activeSessions.filter((s) => s.isCurrent);
-    showToast({ message: 'All other device sessions have been revoked.', variant: 'success' });
+    showToast({ message: t('account.page.toast.sessionsRevoked'), variant: 'success' });
   }
 
   function handleSignOut(): void {
     setAccessToken(undefined);
     setRefreshToken(undefined);
     session.clear();
-    showToast({ message: 'Signed out of your account', variant: 'info' });
+    showToast({ message: t('account.page.toast.signedOut'), variant: 'info' });
     void goto('/');
   }
 </script>
 
 <svelte:head>
-  <title>Your Account & Details - Kalakriti</title>
-  <meta name="description" content="Manage your Kalakriti buyer profile, orders, delivery addresses, login & security settings, and craft provenance passports." />
+  <title>{t('account.page.title')}</title>
+  <meta name="description" content={t('account.page.metaDescription')} />
 </svelte:head>
 
 <div class="account-page">
@@ -278,8 +278,8 @@
             <Icon name="collective-order" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Your Orders</h2>
-            <p class="card-desc">Track packages, download GST invoices, return or buy again</p>
+            <h2 class="card-title">{t('account.hub.orders.title')}</h2>
+            <p class="card-desc">{t('account.hub.orders.desc')}</p>
           </div>
         </a>
 
@@ -293,8 +293,8 @@
             <Icon name="lock" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Login & Security</h2>
-            <p class="card-desc">Edit name, mobile number, password, 2FA, and active sessions</p>
+            <h2 class="card-title">{t('account.hub.security.title')}</h2>
+            <p class="card-desc">{t('account.hub.security.desc')}</p>
           </div>
         </button>
 
@@ -308,8 +308,8 @@
             <Icon name="location" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Your Addresses</h2>
-            <p class="card-desc">Edit addresses and institutional GSTIN delivery preferences</p>
+            <h2 class="card-title">{t('account.hub.addresses.title')}</h2>
+            <p class="card-desc">{t('account.hub.addresses.desc')}</p>
           </div>
         </button>
 
@@ -319,8 +319,8 @@
             <Icon name="provenance" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Craft Provenance</h2>
-            <p class="card-desc">Ed25519 digital certificates of authenticity for your pieces</p>
+            <h2 class="card-title">{t('account.hub.provenance.title')}</h2>
+            <p class="card-desc">{t('account.hub.provenance.desc')}</p>
           </div>
         </a>
 
@@ -334,8 +334,8 @@
             <Icon name="video" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Loom Consultations</h2>
-            <p class="card-desc">Scheduled 1-on-1 video calls with master weavers & inquiries</p>
+            <h2 class="card-title">{t('account.hub.consultations.title')}</h2>
+            <p class="card-desc">{t('account.hub.consultations.desc')}</p>
           </div>
         </button>
 
@@ -345,8 +345,8 @@
             <Icon name="cluster" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Bulk Procurement</h2>
-            <p class="card-desc">Manage institutional RFQs, tender allocations, and guild bids</p>
+            <h2 class="card-title">{t('account.hub.procurement.title')}</h2>
+            <p class="card-desc">{t('account.hub.procurement.desc')}</p>
           </div>
         </a>
       </div>
@@ -355,14 +355,14 @@
     <!-- Sub-Panels Tabbed Details Section -->
     <div class="account-details-container">
       <!-- Section Navigation Pills -->
-      <nav class="details-nav-pills" aria-label="Account Settings Tabs">
+      <nav class="details-nav-pills" aria-label={t('account.page.tabsAriaLabel')}>
         <button
           type="button"
           class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
           onclick={() => (activeTab = 'personal')}
         >
           <Icon name="user" size="0.95rem" />
-          Personal Details
+          {t('account.page.tab.personal')}
         </button>
         <button
           type="button"
@@ -370,7 +370,7 @@
           onclick={() => (activeTab = 'addresses')}
         >
           <Icon name="location" size="0.95rem" />
-          Saved Addresses ({savedAddresses.length})
+          {t('account.page.tab.addresses', { count: String(savedAddresses.length) })}
         </button>
         <button
           type="button"
@@ -378,7 +378,7 @@
           onclick={() => (activeTab = 'security')}
         >
           <Icon name="lock" size="0.95rem" />
-          Login & Security
+          {t('account.page.tab.security')}
         </button>
         <button
           type="button"
@@ -386,7 +386,7 @@
           onclick={() => (activeTab = 'orders')}
         >
           <Icon name="collective-order" size="0.95rem" />
-          Recent Orders (2)
+          {t('account.page.tab.orders', { count: '2' })}
         </button>
         <button
           type="button"
@@ -394,7 +394,7 @@
           onclick={() => (activeTab = 'consultations')}
         >
           <Icon name="video" size="0.95rem" />
-          Loom Video Calls (1)
+          {t('account.page.tab.consultations', { count: '1' })}
         </button>
       </nav>
 
@@ -403,15 +403,15 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Personal Information</h2>
-              <p class="panel-desc">Manage your identity, communications, and verified credentials</p>
+              <h2 class="panel-title">{t('account.page.personal.title')}</h2>
+              <p class="panel-desc">{t('account.page.personal.desc')}</p>
             </div>
           </div>
 
           <form class="details-form" onsubmit={handleSaveProfile}>
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-fullname" class="form-label">Full Legal Name</label>
+                <label for="prof-fullname" class="form-label">{t('account.page.personal.fullNameLabel')}</label>
                 <input
                   id="prof-fullname"
                   type="text"
@@ -422,7 +422,7 @@
               </div>
 
               <div class="form-field">
-                <label for="prof-dispname" class="form-label">Display Name / Preferred Name</label>
+                <label for="prof-dispname" class="form-label">{t('account.page.personal.displayNameLabel')}</label>
                 <input
                   id="prof-dispname"
                   type="text"
@@ -434,7 +434,7 @@
 
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-email" class="form-label">Primary Email Address</label>
+                <label for="prof-email" class="form-label">{t('account.page.personal.emailLabel')}</label>
                 <input
                   id="prof-email"
                   type="email"
@@ -442,11 +442,11 @@
                   bind:value={email}
                   required
                 />
-                <span class="field-tip">Used for order receipts and cryptographic provenance certificates</span>
+                <span class="field-tip">{t('account.page.personal.emailTip')}</span>
               </div>
 
               <div class="form-field">
-                <label for="prof-phone" class="form-label">Mobile Phone Number</label>
+                <label for="prof-phone" class="form-label">{t('account.page.personal.phoneLabel')}</label>
                 <div class="input-with-action">
                   <input
                     id="prof-phone"
@@ -460,16 +460,16 @@
                     class="action-inline-btn"
                     onclick={() => (isPhoneModalOpen = true)}
                   >
-                    Change via OTP
+                    {t('account.page.personal.changeViaOtp')}
                   </button>
                 </div>
-                <span class="field-tip">Verified with 2-Factor Authentication</span>
+                <span class="field-tip">{t('account.page.personal.phoneTip')}</span>
               </div>
             </div>
 
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-lang" class="form-label">Preferred Platform Language</label>
+                <label for="prof-lang" class="form-label">{t('account.page.personal.languageLabel')}</label>
                 <select id="prof-lang" class="form-input" bind:value={preferredLanguage}>
                   <option value="en">English (India)</option>
                   <option value="hi">हिन्दी (Hindi)</option>
@@ -481,15 +481,15 @@
               </div>
 
               <div class="form-field">
-                <span class="form-label">Notification Channels</span>
+                <span class="form-label">{t('account.page.personal.notificationChannels')}</span>
                 <div class="toggle-row">
                   <label class="checkbox-label">
                     <input type="checkbox" bind:checked={emailAlerts} />
-                    <span>Email Order & Invoice Updates</span>
+                    <span>{t('account.page.personal.emailAlertsLabel')}</span>
                   </label>
                   <label class="checkbox-label">
                     <input type="checkbox" bind:checked={whatsappAlerts} />
-                    <span>WhatsApp Loom Dispatch Alerts</span>
+                    <span>{t('account.page.personal.whatsappAlertsLabel')}</span>
                   </label>
                 </div>
               </div>
@@ -497,7 +497,7 @@
 
             <div class="form-submit-row">
               <button type="submit" class="primary-save-btn">
-                Save Profile Changes
+                {t('account.page.personal.saveButton')}
               </button>
             </div>
           </form>
@@ -508,8 +508,8 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Your Delivery Addresses</h2>
-              <p class="panel-desc">Manage shipping destinations and corporate institutional addresses</p>
+              <h2 class="panel-title">{t('account.page.addresses.title')}</h2>
+              <p class="panel-desc">{t('account.page.addresses.desc')}</p>
             </div>
             <button
               type="button"
@@ -517,7 +517,7 @@
               onclick={() => (isAddAddressOpen = true)}
             >
               <Icon name="plus" size="0.95rem" />
-              Add a New Address
+              {t('account.page.addresses.addButton')}
             </button>
           </div>
 
@@ -527,7 +527,7 @@
                 <div class="addr-header-row">
                   <span class="addr-type-tag">{addr.type}</span>
                   {#if addr.isDefault}
-                    <span class="default-badge">Default Delivery Address</span>
+                    <span class="default-badge">{t('account.page.addresses.defaultBadge')}</span>
                   {/if}
                 </div>
 
@@ -535,11 +535,11 @@
                 <p class="addr-text">
                   {addr.lines}<br />
                   {addr.city}, {addr.state} - <strong>{addr.pin}</strong><br />
-                  India
+                  {t('account.page.addresses.country')}
                 </p>
-                <p class="addr-phone">Phone: {addr.phone}</p>
+                <p class="addr-phone">{t('account.page.addresses.phoneLabel', { phone: addr.phone })}</p>
                 {#if addr.gstin}
-                  <p class="addr-gstin">GSTIN: <code>{addr.gstin}</code></p>
+                  <p class="addr-gstin">{t('account.page.addresses.gstinLabel')} <code>{addr.gstin}</code></p>
                 {/if}
 
                 <div class="addr-actions">
@@ -549,7 +549,7 @@
                       class="addr-text-btn"
                       onclick={() => handleSetDefaultAddress(addr.id)}
                     >
-                      Set as Default
+                      {t('account.page.addresses.setDefault')}
                     </button>
                     <span class="btn-divider">|</span>
                   {/if}
@@ -558,7 +558,7 @@
                     class="addr-text-btn remove-btn"
                     onclick={() => handleDeleteAddress(addr.id)}
                   >
-                    Remove
+                    {t('action.remove')}
                   </button>
                 </div>
               </div>
@@ -573,8 +573,8 @@
               <div class="plus-circle">
                 <Icon name="plus" size="1.5rem" />
               </div>
-              <strong>Add Delivery Address</strong>
-              <small>Home, atelier, or corporate ministry office</small>
+              <strong>{t('account.page.addresses.placeholderTitle')}</strong>
+              <small>{t('account.page.addresses.placeholderSub')}</small>
             </button>
           </div>
         </div>
@@ -584,8 +584,8 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Login & Security Settings</h2>
-              <p class="panel-desc">Manage your password, 2-factor authentication, active devices, and DPDP consent</p>
+              <h2 class="panel-title">{t('account.page.security.title')}</h2>
+              <p class="panel-desc">{t('account.page.security.desc')}</p>
             </div>
           </div>
 
@@ -593,49 +593,49 @@
             <!-- Row 1: Name & Email -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Name</strong>
+                <strong>{t('account.page.security.nameLabel')}</strong>
                 <span>{fullName}</span>
               </div>
               <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')}>
-                Edit
+                {t('account.page.security.editButton')}
               </button>
             </div>
 
             <!-- Row 2: Mobile Phone Number -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Mobile Phone Number</strong>
-                <span>{phone} (Verified)</span>
+                <strong>{t('account.page.personal.phoneLabel')}</strong>
+                <span>{t('account.page.security.phoneVerifiedSuffix', { phone })}</span>
               </div>
               <button
                 type="button"
                 class="sec-edit-btn"
                 onclick={() => (isPhoneModalOpen = true)}
               >
-                Change
+                {t('account.page.security.changeButton')}
               </button>
             </div>
 
             <!-- Row 3: Password -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Password</strong>
-                <span>•••••••••••• (Last changed 14 days ago)</span>
+                <strong>{t('account.page.security.passwordLabel')}</strong>
+                <span>{t('account.page.security.passwordValue')}</span>
               </div>
               <button
                 type="button"
                 class="sec-edit-btn"
-                onclick={() => showToast({ message: 'Password reset link sent to your verified email', variant: 'info' })}
+                onclick={() => showToast({ message: t('account.page.toast.passwordResetSent'), variant: 'info' })}
               >
-                Change
+                {t('account.page.security.changeButton')}
               </button>
             </div>
 
             <!-- Row 4: Two-Factor Authentication -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Two-Factor Authentication (2FA)</strong>
-                <span>Receive a one-time passcode on your phone upon login</span>
+                <strong>{t('account.page.security.twoFaLabel')}</strong>
+                <span>{t('account.page.security.twoFaDesc')}</span>
               </div>
               <button
                 type="button"
@@ -643,12 +643,12 @@
                 onclick={() => {
                   twoFactorEnabled = !twoFactorEnabled;
                   showToast({
-                    message: twoFactorEnabled ? '2FA enabled' : '2FA disabled',
+                    message: twoFactorEnabled ? t('account.page.toast.twoFaEnabled') : t('account.page.toast.twoFaDisabled'),
                     variant: 'info',
                   });
                 }}
               >
-                {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                {twoFactorEnabled ? t('account.page.security.enabled') : t('account.page.security.disabled')}
               </button>
             </div>
           </div>
@@ -657,8 +657,8 @@
           <div class="active-sessions-block">
             <div class="sessions-header">
               <div>
-                <h3 class="block-title">Active Devices & Sessions</h3>
-                <p class="block-sub">Signed-in web browsers and mobile PWAs connected to your account</p>
+                <h3 class="block-title">{t('account.page.security.sessionsHeading')}</h3>
+                <p class="block-sub">{t('account.page.security.sessionsDesc')}</p>
               </div>
               <button
                 type="button"
@@ -666,7 +666,7 @@
                 onclick={handleRevokeOtherSessions}
               >
                 <Icon name="lock" size="0.85rem" />
-                Sign Out of All Other Devices
+                {t('account.page.security.revokeAll')}
               </button>
             </div>
 
@@ -680,10 +680,10 @@
                     <div class="sess-title-row">
                       <strong>{sess.device}</strong>
                       {#if sess.isCurrent}
-                        <span class="current-badge">This Device</span>
+                        <span class="current-badge">{t('account.page.security.thisDevice')}</span>
                       {/if}
                     </div>
-                    <span class="sess-loc">{sess.location} • IP: {sess.ip}</span>
+                    <span class="sess-loc">{t('account.page.security.sessionLocationLine', { location: sess.location, ip: sess.ip })}</span>
                     <span class="sess-time">{sess.lastActive}</span>
                   </div>
                 </div>
@@ -693,23 +693,23 @@
 
           <!-- DPDP Act 2023 Data Controls -->
           <div class="dpdp-privacy-block">
-            <h3 class="block-title">DPDP Act 2023 Data Sovereignty</h3>
-            <p class="block-sub">Under India's Digital Personal Data Protection Act 2023, you retain absolute ownership over your account data.</p>
+            <h3 class="block-title">{t('account.page.security.dpdpHeading')}</h3>
+            <p class="block-sub">{t('account.page.security.dpdpDesc')}</p>
             <div class="dpdp-actions">
               <button
                 type="button"
                 class="dpdp-btn"
-                onclick={() => showToast({ message: 'Personal data archive download started (JSON)', variant: 'success' })}
+                onclick={() => showToast({ message: t('account.page.toast.dataArchiveStarted'), variant: 'success' })}
               >
                 <Icon name="download" size="0.9rem" />
-                Download Personal Data Archive
+                {t('account.page.security.downloadArchive')}
               </button>
               <button
                 type="button"
                 class="dpdp-btn danger"
-                onclick={() => showToast({ message: 'Consent withdrawal request logged. An officer will confirm via SMS.', variant: 'info' })}
+                onclick={() => showToast({ message: t('account.page.toast.consentWithdrawalLogged'), variant: 'info' })}
               >
-                Manage Privacy Consent
+                {t('account.page.security.manageConsent')}
               </button>
             </div>
           </div>
@@ -720,11 +720,11 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Your Recent Heritage Acquisitions</h2>
-              <p class="panel-desc">Directly fulfilling master artisans across 74 national craft belts</p>
+              <h2 class="panel-title">{t('account.page.orders.title')}</h2>
+              <p class="panel-desc">{t('account.page.orders.desc')}</p>
             </div>
             <a href="/orders" class="view-all-orders-btn">
-              View All Orders
+              {t('account.page.orders.viewAll')}
               <Icon name="arrow-right" size="0.85rem" />
             </a>
           </div>
@@ -751,30 +751,30 @@
                 />
                 <div class="rail-prod-info">
                   <h3 class="rail-prod-title">Dhamadka Natural Indigo Block-Printed Silk Saree</h3>
-                  <p class="rail-artisan">Crafted by: <strong>Master Artisan Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
+                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Master Artisan Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
                   <span class="rail-gi-tag">Certified GI Registered Craft (GI-184)</span>
 
                   <!-- 4-Stage Loom Progress Bar -->
                   <div class="rail-progress-track">
-                    <div class="track-step step-done"><span>Ordered</span></div>
-                    <div class="track-step step-done"><span>Loom Woven</span></div>
-                    <div class="track-step step-done"><span>GI Sealed</span></div>
-                    <div class="track-step step-active"><span>En Route</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.ordered')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.loomWoven')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.giSealed')}</span></div>
+                    <div class="track-step step-active"><span>{t('account.page.orders.step.enRoute')}</span></div>
                   </div>
                 </div>
               </div>
 
               <div class="rail-card-foot">
-                <a href="/orders/ord-1" class="rail-action-link">Track Package</a>
+                <a href="/orders/ord-1" class="rail-action-link">{t('account.page.orders.trackPackage')}</a>
                 <span class="dot-sep">•</span>
-                <a href="/verify" class="rail-action-link">View Cryptographic Seal</a>
+                <a href="/verify" class="rail-action-link">{t('account.page.orders.viewSeal')}</a>
                 <span class="dot-sep">•</span>
                 <button
                   type="button"
                   class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                  onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
                 >
-                  Download Tax Invoice
+                  {t('account.page.orders.downloadInvoice')}
                 </button>
               </div>
             </div>
@@ -800,29 +800,29 @@
                 />
                 <div class="rail-prod-info">
                   <h3 class="rail-prod-title">Bastar Hand-Cast Lost-Wax Bell Metal Dhokra Nandi</h3>
-                  <p class="rail-artisan">Crafted by: <strong>Sukchand Ghadwa</strong> • Bastar Tribal Collective, Chhattisgarh</p>
+                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Sukchand Ghadwa</strong> • Bastar Tribal Collective, Chhattisgarh</p>
                   <span class="rail-gi-tag">Certified GI Registered Craft (GI-83)</span>
 
                   <div class="rail-progress-track">
-                    <div class="track-step step-done"><span>Ordered</span></div>
-                    <div class="track-step step-done"><span>Cast in Wax</span></div>
-                    <div class="track-step step-done"><span>GI Sealed</span></div>
-                    <div class="track-step step-done"><span>Delivered</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.ordered')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.castInWax')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.giSealed')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.delivered')}</span></div>
                   </div>
                 </div>
               </div>
 
               <div class="rail-card-foot">
-                <a href="/orders/ord-2" class="rail-action-link">Order Details</a>
+                <a href="/orders/ord-2" class="rail-action-link">{t('account.page.orders.orderDetails')}</a>
                 <span class="dot-sep">•</span>
-                <a href="/verify" class="rail-action-link">Ed25519 Provenance Certificate</a>
+                <a href="/verify" class="rail-action-link">{t('account.page.orders.provenanceCertificate')}</a>
                 <span class="dot-sep">•</span>
                 <button
                   type="button"
                   class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                  onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
                 >
-                  Download Tax Invoice
+                  {t('account.page.orders.downloadInvoice')}
                 </button>
               </div>
             </div>
@@ -834,8 +834,8 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Loom Video Consultations & Direct Inquiries</h2>
-              <p class="panel-desc">1-on-1 scheduled sessions with master weavers and tribal cluster leads</p>
+              <h2 class="panel-title">{t('account.page.consultations.title')}</h2>
+              <p class="panel-desc">{t('account.page.consultations.desc')}</p>
             </div>
           </div>
 
@@ -855,7 +855,7 @@
               </div>
 
               <p class="consult-topic">
-                <strong>Topic:</strong> Custom Katan Silk weaving motif selection and gold zari thread selection for upcoming ceremonial attire.
+                <strong>{t('account.page.consultations.topicLabel')}</strong> Custom Katan Silk weaving motif selection and gold zari thread selection for upcoming ceremonial attire.
               </p>
             </div>
 
@@ -863,17 +863,17 @@
               <button
                 type="button"
                 class="join-room-btn"
-                onclick={() => showToast({ message: 'Loom Video Room will activate 10 minutes prior to session', variant: 'info' })}
+                onclick={() => showToast({ message: t('account.page.toast.videoRoomActivates'), variant: 'info' })}
               >
                 <Icon name="video" size="1.1rem" />
-                Join Video Consultation Room
+                {t('account.page.consultations.joinRoom')}
               </button>
               <button
                 type="button"
                 class="reschedule-btn"
-                onclick={() => showToast({ message: 'Reschedule request sent to artisan guild coordinator', variant: 'info' })}
+                onclick={() => showToast({ message: t('account.page.toast.rescheduleSent'), variant: 'info' })}
               >
-                Reschedule Session
+                {t('account.page.consultations.reschedule')}
               </button>
             </div>
           </div>
@@ -892,15 +892,15 @@
       onkeydown={(e) => { if (e.key === 'Escape') isPhoneModalOpen = false; }}
       role="dialog"
       tabindex="-1"
-      aria-label="Change Phone Number Modal"
+      aria-label={t('account.page.phoneModal.ariaLabel')}
     >
       <div class="modal-head">
-        <h3 class="modal-title">Change Mobile Number via OTP</h3>
+        <h3 class="modal-title">{t('account.page.phoneModal.title')}</h3>
         <button
           type="button"
           class="modal-close"
           onclick={() => (isPhoneModalOpen = false)}
-          aria-label="Close modal"
+          aria-label={t('ui.dialog.close')}
         >
           ✕
         </button>
@@ -908,11 +908,11 @@
 
       <div class="modal-body">
         <p class="modal-desc">
-          To maintain security, we will dispatch a 6-digit verification passcode to your new mobile number.
+          {t('account.page.phoneModal.desc')}
         </p>
 
         <div class="form-field">
-          <label for="new-phone-input" class="form-label">New 10-Digit Mobile Number</label>
+          <label for="new-phone-input" class="form-label">{t('account.page.phoneModal.newPhoneLabel')}</label>
           <div class="input-with-action">
             <input
               id="new-phone-input"
@@ -927,14 +927,14 @@
               class="action-inline-btn"
               onclick={handleRequestPhoneOtp}
             >
-              {phoneOtpSent ? 'Resend' : 'Send Code'}
+              {phoneOtpSent ? t('account.page.phoneModal.resend') : t('account.page.phoneModal.sendCode')}
             </button>
           </div>
         </div>
 
         {#if phoneOtpSent}
           <div class="form-field">
-            <label for="phone-otp-input" class="form-label">Enter 6-Digit OTP</label>
+            <label for="phone-otp-input" class="form-label">{t('account.page.phoneModal.otpLabel')}</label>
             <input
               id="phone-otp-input"
               type="text"
@@ -943,7 +943,7 @@
               maxlength="6"
               bind:value={phoneOtp}
             />
-            <span class="field-tip">Verification provided by Go BFF `/auth/phone/change/*`</span>
+            <span class="field-tip">{t('account.page.phoneModal.verificationNote')}</span>
           </div>
         {/if}
       </div>
@@ -954,7 +954,7 @@
           class="modal-cancel-btn"
           onclick={() => (isPhoneModalOpen = false)}
         >
-          Cancel
+          {t('action.cancel')}
         </button>
         <button
           type="button"
@@ -962,7 +962,7 @@
           disabled={!phoneOtpSent || isVerifyingPhone}
           onclick={handleVerifyPhone}
         >
-          {isVerifyingPhone ? 'Verifying...' : 'Verify & Update Number'}
+          {isVerifyingPhone ? t('account.page.phoneModal.verifying') : t('account.page.phoneModal.verifyButton')}
         </button>
       </div>
     </div>
@@ -978,15 +978,15 @@
       onkeydown={(e) => { if (e.key === 'Escape') isAddAddressOpen = false; }}
       role="dialog"
       tabindex="-1"
-      aria-label="Add Address Modal"
+      aria-label={t('account.page.addresses.modalAriaLabel')}
     >
       <div class="modal-head">
-        <h3 class="modal-title">Add a New Delivery Address</h3>
+        <h3 class="modal-title">{t('account.page.addresses.modalTitle')}</h3>
         <button
           type="button"
           class="modal-close"
           onclick={() => (isAddAddressOpen = false)}
-          aria-label="Close modal"
+          aria-label={t('ui.dialog.close')}
         >
           ✕
         </button>
@@ -995,24 +995,24 @@
       <form onsubmit={handleAddAddress}>
         <div class="modal-body">
           <div class="form-field">
-            <label for="addr-fullname" class="form-label">Full Name</label>
+            <label for="addr-fullname" class="form-label">{t('account.page.addresses.fullNameLabel')}</label>
             <input
               id="addr-fullname"
               type="text"
               class="form-input"
-              placeholder="e.g. Aarav Sharma"
+              placeholder={t('account.page.addresses.fullNamePlaceholder')}
               bind:value={newAddressFullName}
               required
             />
           </div>
 
           <div class="form-field">
-            <label for="addr-lines" class="form-label">Flat, House no., Building, Street</label>
+            <label for="addr-lines" class="form-label">{t('account.page.addresses.lineLabel')}</label>
             <input
               id="addr-lines"
               type="text"
               class="form-input"
-              placeholder="e.g. B-42 Defence Colony, Near Flyover"
+              placeholder={t('account.page.addresses.linePlaceholder')}
               bind:value={newAddressLine}
               required
             />
@@ -1020,19 +1020,19 @@
 
           <div class="form-grid-2">
             <div class="form-field">
-              <label for="addr-city" class="form-label">City / District</label>
+              <label for="addr-city" class="form-label">{t('account.page.addresses.cityLabel')}</label>
               <input
                 id="addr-city"
                 type="text"
                 class="form-input"
-                placeholder="e.g. New Delhi"
+                placeholder={t('account.page.addresses.cityPlaceholder')}
                 bind:value={newAddressCity}
                 required
               />
             </div>
 
             <div class="form-field">
-              <label for="addr-state" class="form-label">State</label>
+              <label for="addr-state" class="form-label">{t('account.page.addresses.stateLabel')}</label>
               <select id="addr-state" class="form-input" bind:value={newAddressState}>
                 <option value="Delhi">Delhi</option>
                 <option value="Maharashtra">Maharashtra</option>
@@ -1048,7 +1048,7 @@
 
           <div class="form-grid-2">
             <div class="form-field">
-              <label for="addr-pin" class="form-label">PIN Code (6 digits)</label>
+              <label for="addr-pin" class="form-label">{t('account.page.addresses.pinLabel')}</label>
               <input
                 id="addr-pin"
                 type="text"
@@ -1061,12 +1061,12 @@
             </div>
 
             <div class="form-field">
-              <label for="addr-gstin" class="form-label">Institutional GSTIN (Optional)</label>
+              <label for="addr-gstin" class="form-label">{t('account.page.addresses.gstinInputLabel')}</label>
               <input
                 id="addr-gstin"
                 type="text"
                 class="form-input"
-                placeholder="e.g. 07AAACM1234F1Z5"
+                placeholder={t('account.page.addresses.gstinPlaceholder')}
                 bind:value={newAddressGstin}
               />
             </div>
@@ -1074,7 +1074,7 @@
 
           <label class="checkbox-label" style="margin-block-start: 0.5rem;">
             <input type="checkbox" bind:checked={newAddressIsDefault} />
-            <span>Set as my default delivery address</span>
+            <span>{t('account.page.addresses.setDefaultCheckbox')}</span>
           </label>
         </div>
 
@@ -1084,10 +1084,10 @@
             class="modal-cancel-btn"
             onclick={() => (isAddAddressOpen = false)}
           >
-            Cancel
+            {t('action.cancel')}
           </button>
           <button type="submit" class="modal-submit-btn">
-            Save Address
+            {t('account.page.addresses.saveButton')}
           </button>
         </div>
       </form>

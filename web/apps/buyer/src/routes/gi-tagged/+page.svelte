@@ -341,7 +341,7 @@
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
         showToast({
-          message: `Direct link for "${prod.title}" copied!`,
+          message: t('giTagged.linkCopiedToast', { title: prod.title }),
           variant: 'success',
         });
       });
@@ -362,10 +362,10 @@
 </script>
 
 <svelte:head>
-  <title>GI Tagged Product Directory — Ministry of Social Justice & Empowerment</title>
+  <title>{t('giTagged.headTitle')}</title>
   <meta
     name="description"
-    content="Official National Geographical Indications catalog for authentic certified Indian crafts directly from master artisan looms."
+    content={t('giTagged.metaDescription')}
   />
 </svelte:head>
 
@@ -622,13 +622,13 @@
       <div class="gi-toolbar">
         <div class="toolbar-left">
           <!-- View switcher -->
-          <div class="view-switchers" role="group" aria-label="View format">
+          <div class="view-switchers" role="group" aria-label={t('giTagged.viewFormatAriaLabel')}>
             <button
               type="button"
               class="view-btn"
               class:active={viewMode === 'grid'}
               onclick={() => (viewMode = 'grid')}
-              aria-label="Grid view"
+              aria-label={t('giTagged.gridView')}
             >
               <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="1" y="1" width="6" height="6" rx="1" />
@@ -642,7 +642,7 @@
               class="view-btn"
               class:active={viewMode === 'list'}
               onclick={() => (viewMode = 'list')}
-              aria-label="List view"
+              aria-label={t('giTagged.listView')}
             >
               <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="1" y="2" width="14" height="2" rx="0.5" />
@@ -653,15 +653,15 @@
           </div>
 
           <span class="items-counter">
-            Items 1-{filteredProducts.length} of {GI_PRODUCTS.length}
+            {t('giTagged.itemsCounter', { shown: String(filteredProducts.length), total: String(GI_PRODUCTS.length) })}
           </span>
         </div>
 
         <div class="toolbar-right">
           <!-- State Filter Dropdown -->
           <div class="toolbar-select-wrap">
-            <select bind:value={selectedState} aria-label="Select State">
-              <option value="all">Select State</option>
+            <select bind:value={selectedState} aria-label={t('giTagged.selectStateAriaLabel')}>
+              <option value="all">{t('giTagged.selectStateOption')}</option>
               <option value="Uttarakhand">Uttarakhand</option>
               <option value="Gujarat">Gujarat</option>
               <option value="Uttar Pradesh">Uttar Pradesh</option>
@@ -675,18 +675,18 @@
 
           <!-- Active Filter Pill -->
           <span class="active-filter-pill">
-            <span>GI Craft</span>
+            <span>{t('giTagged.giCraftPill')}</span>
             <Icon name="check" size="0.75rem" />
           </span>
 
           <!-- Sort By Dropdown -->
           <div class="toolbar-select-wrap">
-            <label for="sort-select" class="sort-label">Sort By</label>
-            <select id="sort-select" bind:value={sortBy} aria-label="Sort products">
-              <option value="name_asc">Product Name</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="discount">Highest Discount %</option>
+            <label for="sort-select" class="sort-label">{t('giTagged.sortByLabel')}</label>
+            <select id="sort-select" bind:value={sortBy} aria-label={t('giTagged.sortProductsAriaLabel')}>
+              <option value="name_asc">{t('giTagged.sort.productName')}</option>
+              <option value="price_asc">{t('giTagged.sort.priceLowHigh')}</option>
+              <option value="price_desc">{t('giTagged.sort.priceHighLow')}</option>
+              <option value="discount">{t('giTagged.sort.highestDiscount')}</option>
             </select>
           </div>
         </div>
@@ -696,9 +696,9 @@
       {#if filteredProducts.length === 0}
         <div class="no-results-panel">
           <Icon name="info" size="2rem" />
-          <h3>No GI Products Match Selected Filters</h3>
-          <p>Try clearing your price, color, or state filter to view more registered crafts.</p>
-          <button type="button" class="reset-btn" onclick={resetAllFilters}>Reset Filters</button>
+          <h3>{t('giTagged.noResults.heading')}</h3>
+          <p>{t('giTagged.noResults.body')}</p>
+          <button type="button" class="reset-btn" onclick={resetAllFilters}>{t('giTagged.noResults.resetButton')}</button>
         </div>
       {:else}
         <div class={viewMode === 'grid' ? 'gi-products-grid' : 'gi-products-list'}>
@@ -715,7 +715,7 @@
                 </a>
 
                 <!-- Official India GI Tricolor Map Pin Emblem (Image 3) -->
-                <div class="gi-official-pin-emblem" title={`Registered ${prod.giRegNo}`}>
+                <div class="gi-official-pin-emblem" title={t('giTagged.registeredTitle', { regNo: prod.giRegNo })}>
                   <svg viewBox="0 0 32 38" width="28" height="34" fill="none" class="gi-pin-svg">
                     <!-- Pin outer shape -->
                     <path
@@ -746,8 +746,8 @@
                   type="button"
                   class="gi-quick-share-btn"
                   onclick={() => copyProductShare(prod)}
-                  title="Copy artisan piece link"
-                  aria-label="Share listing"
+                  title={t('giTagged.copyLinkTitle')}
+                  aria-label={t('giTagged.shareAriaLabel')}
                 >
                   <Icon name="share" size="0.85rem" />
                 </button>
@@ -765,7 +765,7 @@
                 </h3>
 
                 <p class="artisan-byline">
-                  <span>By master artisan</span> <strong>{prod.artisanName}</strong>
+                  <span>{t('giTagged.byMasterArtisan')}</span> <strong>{prod.artisanName}</strong>
                 </p>
 
                 <!-- Pricing with strike-through MRP and discount (Image 3) -->
@@ -777,13 +777,13 @@
                     <Money paise={prod.mrp} />
                   </span>
                   <span class="gi-discount-tag">
-                    ({prod.discountPct}% OFF)
+                    {t('listingCard.discountPercent', { percent: String(prod.discountPct) })}
                   </span>
                 </div>
 
                 <div class="gi-card-actions">
                   <a href={`/listing/${prod.id}`} class="gi-acquire-btn">
-                    <span>Direct Order</span>
+                    <span>{t('giTagged.directOrder')}</span>
                     <Icon name="arrow-right" size="0.85rem" />
                   </a>
                   <button
@@ -791,13 +791,13 @@
                     class="gi-wishlist-btn"
                     class:is-wishlisted={wishlist.has(prod.id)}
                     onclick={(e) => { e.preventDefault(); wishlist.toggle(prod.id, prod.title); }}
-                    title={wishlist.has(prod.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                    aria-label="Wishlist"
+                    title={wishlist.has(prod.id) ? t('listingCard.removeFromWishlist') : t('listingCard.addToWishlist')}
+                    aria-label={t('listingCard.wishlistAriaLabel')}
                   >
                     <svg viewBox="0 0 24 24" width="16" height="16" fill={wishlist.has(prod.id) ? '#e11d48' : 'none'} stroke={wishlist.has(prod.id) ? '#e11d48' : 'currentColor'} stroke-width="2">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
-                    <span>{wishlist.has(prod.id) ? 'Saved' : 'Wishlist'}</span>
+                    <span>{wishlist.has(prod.id) ? t('listingCard.saved') : t('listingCard.wishlist')}</span>
                   </button>
                 </div>
               </div>

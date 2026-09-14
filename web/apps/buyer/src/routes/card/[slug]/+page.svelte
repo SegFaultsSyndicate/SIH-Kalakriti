@@ -11,6 +11,7 @@
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
+  import { locale } from '@kalakriti/i18n';
   import {
     getArtisanStorefront,
     listListings,
@@ -20,6 +21,8 @@
 
   type ArtisanStorefront = components['schemas']['ArtisanStorefront'];
   type ListingSummary = components['schemas']['ListingSummary'];
+
+  const t = $derived(locale.t);
 
   const slug = $derived(page.params.slug ?? 'master-artisan');
 
@@ -87,10 +90,10 @@
     })();
   });
 
-  const displayName = $derived(artisan?.display_name || 'Master Artisan');
-  const craftTitle = $derived(artisan?.craft_name || 'Traditional Handcrafted Art');
+  const displayName = $derived(artisan?.display_name || t('shareCard.fallbackName'));
+  const craftTitle = $derived(artisan?.craft_name || t('shareCard.fallbackCraft'));
   const locationText = $derived(
-    [artisan?.district, artisan?.state_code || 'India'].filter(Boolean).join(', '),
+    [artisan?.district, artisan?.state_code || t('account.page.addresses.country')].filter(Boolean).join(', '),
   );
   const avatarImage = $derived(artisan?.image_url || devAvatar);
 
@@ -105,11 +108,8 @@
 </script>
 
 <svelte:head>
-  <title>{displayName} — Digital Business Card | Kalakriti</title>
-  <meta
-    name="description"
-    content="Official digital business card and mini-storefront for master artisan {displayName}. Verified PM Vishwakarma and GI-Tagged craft."
-  />
+  <title>{t('shareCard.headTitle', { name: displayName })}</title>
+  <meta name="description" content={t('shareCard.metaDescription', { name: displayName })} />
 </svelte:head>
 
 <div class="card-page">
@@ -118,17 +118,17 @@
     <div class="card-top-bar">
       <a href="/artisan/{slug}" class="back-link">
         <Icon name="arrow-left" size="0.9rem" />
-        <span>View Full Storefront</span>
+        <span>{t('shareCard.viewFullStorefront')}</span>
       </a>
 
       <div class="top-actions">
         <Button variant="secondary" size="sm" onclick={handleWhatsApp}>
           <Icon name="whatsapp" size="0.9rem" />
-          WhatsApp
+          {t('shareCard.whatsappButton')}
         </Button>
         <Button variant="primary" size="sm" onclick={handlePrint}>
           <Icon name="print" size="0.9rem" />
-          Print Visiting Card
+          {t('shareCard.printButton')}
         </Button>
       </div>
     </div>
@@ -146,12 +146,12 @@
           <!-- Government Header Strip -->
           <header class="card-header">
             <div class="gov-lockup">
-              <span class="gov-title">MINISTRY OF TEXTILES • GOVERNMENT OF INDIA</span>
-              <span class="gov-sub">OFFICIAL ARTISAN DIGITAL IDENTITY & MINI-STOREFRONT</span>
+              <span class="gov-title">{t('shareCard.govTitle')}</span>
+              <span class="gov-sub">{t('shareCard.govSub')}</span>
             </div>
             <div class="gi-pill">
               <Icon name="verified-artisan" size="0.85rem" />
-              <span>GI-TAGGED MASTER LINEAGE</span>
+              <span>{t('shareCard.giPill')}</span>
             </div>
           </header>
 
@@ -180,12 +180,12 @@
             <div class="qr-side">
               <div class="qr-frame">
                 {#if qrDataUrl}
-                  <img src={qrDataUrl} alt="Scan QR Code" class="qr-img" />
+                  <img src={qrDataUrl} alt={t('shareCard.qrAlt')} class="qr-img" />
                 {:else}
-                  <div class="qr-placeholder">QR Code</div>
+                  <div class="qr-placeholder">{t('shareCard.qrPlaceholder')}</div>
                 {/if}
               </div>
-              <span class="qr-hint">Scan to Buy & Reorder</span>
+              <span class="qr-hint">{t('shareCard.qrHint')}</span>
             </div>
           </div>
 
@@ -194,31 +194,31 @@
             <div class="trust-badge">
               <span class="badge-icon"><Icon name="verified-artisan" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>PM Vishwakarma</strong>
-                <small>ID: UP-VNS-2024-0982</small>
+                <strong>{t('shareCard.badge.pmVishwakarma')}</strong>
+                <small>{t('card.idLabel', { id: 'UP-VNS-2024-0982' })}</small>
               </div>
             </div>
 
             <div class="trust-badge">
               <span class="badge-icon"><Icon name="cluster" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>Weaver Guild CFC</strong>
-                <small>Varanasi Silk Cluster</small>
+                <strong>{t('shareCard.badge.weaverGuild')}</strong>
+                <small>{t('shareCard.badge.weaverGuildSub')}</small>
               </div>
             </div>
 
             <div class="trust-badge">
               <span class="badge-icon"><Icon name="provenance" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>Cryptographic Seal</strong>
-                <small>Ed25519 Provenance</small>
+                <strong>{t('shareCard.badge.cryptoSeal')}</strong>
+                <small>{t('shareCard.badge.cryptoSealSub')}</small>
               </div>
             </div>
           </div>
 
           <!-- Mini Catalog Showcase (Featured Work) -->
           <div class="card-catalog-section">
-            <h2 class="catalog-heading">Signature Handcrafted Pieces</h2>
+            <h2 class="catalog-heading">{t('shareCard.catalogHeading')}</h2>
 
             <div class="mini-catalog-grid">
               {#if listings.length > 0}
@@ -235,7 +235,7 @@
                     <div class="mini-info">
                       <span class="mini-title">{itemTitle}</span>
                       <strong class="mini-price">
-                        {item.price?.amount_paise ? `₹${(item.price.amount_paise / 100).toLocaleString('en-IN')}` : 'Request Price'}
+                        {item.price?.amount_paise ? `₹${(item.price.amount_paise / 100).toLocaleString('en-IN')}` : t('shareCard.priceRequest')}
                       </strong>
                     </div>
                   </a>
@@ -272,21 +272,21 @@
             <div class="contact-buttons">
               <Button variant="secondary" size="md" onclick={handleWhatsApp}>
                 <Icon name="whatsapp" />
-                Message on WhatsApp
+                {t('shareCard.messageWhatsapp')}
               </Button>
               <a href="tel:+918779279060" class="call-btn">
                 <Icon name="phone" size="0.95rem" />
-                Direct Call
+                {t('shareCard.directCall')}
               </a>
               <a href="/artisan/{slug}" class="storefront-cta">
-                <span>View Full Catalog & Buy</span>
+                <span>{t('shareCard.viewCatalogCta')}</span>
                 <Icon name="arrow-right" size="0.9rem" />
               </a>
             </div>
 
             <div class="verified-seal-strip">
               <Icon name="verified-artisan" size="0.8rem" />
-              <span>Public Digital Infrastructure for Indian Handicrafts & Handlooms • Kalakriti Platform</span>
+              <span>{t('shareCard.footerSeal')}</span>
             </div>
           </footer>
         </div>
