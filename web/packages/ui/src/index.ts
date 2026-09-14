@@ -63,3 +63,6 @@ export { default as Keypad } from './Keypad.svelte';
 export { default as OtpInput } from './OtpInput.svelte';
 export { default as Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs.svelte';
 
+
+export { default as BadgeChip } from './BadgeChip.svelte';
+export { default as BadgeGrid } from './BadgeGrid.svelte';
