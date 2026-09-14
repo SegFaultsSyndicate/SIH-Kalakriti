@@ -64,9 +64,14 @@
   // Genuine side effects: resolve the startup language, restore the session,
   // subscribe to connectivity/registration/sync. None of these compute a
   // value the template reads directly.
-  $effect(() => {
-    void locale.init();
-  });
+  //
+  // locale.init() is awaited in the same Promise.all as the session/
+  // registration restore below (not its own fire-and-forget effect) so
+  // `booted` -- which already gates every route's first paint -- doesn't
+  // flip true until the real catalogue has loaded. Without that, a page's
+  // first paint runs with an empty catalogue and every t() call falls
+  // through to English, then re-renders in the real language a tick later.
+  // See I18N_PLAN.md's F-1.
 
   $effect(() => {
     setAcceptLanguage(locale.meta.tag);
@@ -91,7 +96,11 @@
   $effect(() => {
     let disposeWatch: (() => void) | undefined;
     void (async () => {
-      const [token, initialId] = await Promise.all([restoreAccessToken(), getArtisanId()]);
+      const [token, initialId] = await Promise.all([
+        restoreAccessToken(),
+        getArtisanId(),
+        locale.init(),
+      ]);
       if (token) session.establish(token);
       registeredArtisanId = initialId;
       booted = true;

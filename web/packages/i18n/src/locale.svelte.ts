@@ -112,6 +112,12 @@ class LocaleState {
   #hiCataloguePromise: Promise<Partial<Messages>> | null = null;
   #loading = $state(false);
   #version = $state(0);
+  // DEV-only, dedupe by "code:key" so a re-rendered component doesn't
+  // reflood the console for the same fallthrough. See I18N_PLAN.md's F-6:
+  // once a locale's catalogue is genuinely complete this should never fire
+  // for it again, so a fresh entry here during development is a real
+  // regression signal, not noise to be ignored.
+  #warnedFallthrough = new Set<string>();
 
   get code(): LocaleCode {
     return this.#code;
@@ -127,6 +133,13 @@ class LocaleState {
 
   /** Active catalogue -> Hindi -> English -> the raw key itself. */
   #lookup(key: MessageKey): string {
+    if (DEV && this.#code !== 'en' && this.#code !== 'hi' && this.#catalogue[key] === undefined) {
+      const dedupeKey = `${this.#code}:${key}`;
+      if (!this.#warnedFallthrough.has(dedupeKey)) {
+        this.#warnedFallthrough.add(dedupeKey);
+        console.warn(`[i18n] "${key}" not in "${this.#code}" catalogue, falling through to hi/en`);
+      }
+    }
     const found = this.#catalogue[key] ?? this.#hiCatalogue?.[key] ?? en[key];
     if (found === undefined) {
       if (DEV) console.warn(`[i18n] missing key "${key}" for locale "${this.#code}"`);
@@ -182,7 +195,21 @@ class LocaleState {
     this.#loading = true;
     try {
       const loader = CATALOGUE_LOADERS[code] ?? (async () => FALLBACK_CATALOGUES[code] ?? {});
-      this.#catalogue = await loader();
+      try {
+        this.#catalogue = await loader();
+      } catch (err) {
+        // A dynamic import can fail: a stale chunk hash after a redeploy, or
+        // no network before the chunk was ever cached -- exactly the 2G
+        // conditions this app targets. Without this catch, set()'s promise
+        // rejects, #code is never assigned, and a caller doing
+        // `void locale.set(code)` (LanguageSelector.svelte does) gets an
+        // unhandled rejection while the UI does nothing: the artisan taps
+        // their language and nothing happens. Falling back here means the
+        // switch always does *something* -- worst case, the fallback chain
+        // -- rather than silently failing.
+        if (DEV) console.warn(`[i18n] failed to load catalogue for "${code}", using fallback`, err);
+        this.#catalogue = FALLBACK_CATALOGUES[code] ?? {};
+      }
       this.#code = code;
 
       if (code !== 'en' && code !== 'hi') {

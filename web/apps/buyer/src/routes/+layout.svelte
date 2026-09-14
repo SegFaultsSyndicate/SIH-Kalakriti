@@ -24,7 +24,6 @@
   import BuyerFooter from '$lib/BuyerFooter.svelte';
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
-  import CurrencySelector from '$lib/CurrencySelector.svelte';
   import { currency } from '$lib/currency.svelte';
 
   interface Props {
@@ -34,6 +33,14 @@
   let { children }: Props = $props();
 
   const t = $derived(locale.t);
+
+  // Gates {@render children()} below: locale.init() is async (it awaits a
+  // dynamic catalogue import), so without this a page's first paint runs
+  // with an empty catalogue -- every t() call falls through to English --
+  // then re-renders in the real language a tick later. That flash is what
+  // "some things are getting changed their wordings upon changing the
+  // language" was actually describing; see I18N_PLAN.md's F-1.
+  let localeReady = $state(false);
 
   let mobileNavOpen = $state(false);
 
@@ -60,7 +67,9 @@
   });
 
   $effect(() => {
-    void locale.init();
+    void locale.init().then(() => {
+      localeReady = true;
+    });
   });
   $effect(() => {
     void currency.init();
@@ -147,6 +156,7 @@
       <a class="shell__nav-link" href="/catalog">Craft Directory</a>
       <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
       <a class="shell__nav-link" href="/fairs">Exhibitions & Melas</a>
+      <a class="shell__nav-link" href="/company/register">Enterprise &amp; Boutiques</a>
       <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
     </nav>
 
@@ -179,21 +189,31 @@
   <CategorySubnav />
 
   <main class="shell__main" id="main-content" tabindex="-1">
-    <ErrorBoundary
-      source="buyer-shell"
-      dsn={env.PUBLIC_SENTRY_DSN}
-      title={t('error.boundary.title')}
-      body={t('error.boundary.body')}
-      retryLabel={t('error.boundary.retry')}
-    >
-      {@render children()}
-    </ErrorBoundary>
+    {#if localeReady}
+      <ErrorBoundary
+        source="buyer-shell"
+        dsn={env.PUBLIC_SENTRY_DSN}
+        title={t('error.boundary.title')}
+        body={t('error.boundary.body')}
+        retryLabel={t('error.boundary.retry')}
+      >
+        {@render children()}
+      </ErrorBoundary>
+    {:else}
+      <p class="shell__boot" role="status" aria-live="polite">{t('state.loading')}</p>
+    {/if}
   </main>
 
   <BuyerFooter />
 </div>
 
 <style>
+  .shell__boot {
+    padding-block: var(--k-space-6);
+    text-align: center;
+    color: var(--k-text-secondary);
+  }
+
   /* Hamburger: mobile only. */
   .shell__menu-toggle {
     display: none;

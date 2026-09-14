@@ -1,8 +1,15 @@
 // packages/i18n/src/locales.ts
 //
-// The locale set is fixed at build time because the artisan service worker
-// precaches exactly one message bundle -- the one for the selected language --
-// and it cannot precache a language it has never heard of.
+// The locale set is fixed at build time. Each translated locale ships as its
+// own dynamically-imported chunk (see locale.svelte.ts's CATALOGUE_LOADERS),
+// so a phone downloads only the language it actually selects -- that saving
+// holds regardless of the PWA service worker's own precache behaviour. (A
+// generated Workbox worker does exist -- via vite-plugin-pwa, configured in
+// each app's vite.config.ts, not a hand-written file -- but its build-time
+// `globPatterns` glob the whole build output with no runtime notion of "the
+// selected language"; the vite.config.ts comment claiming it precaches only
+// the active locale's chunk has not been verified against an actual build
+// and should not be trusted without checking the generated sw.js.)
 //
 // Scripts are recorded alongside the tag so the font layer can bind a face per
 // script without a second lookup table, and `dir` is carried explicitly rather
