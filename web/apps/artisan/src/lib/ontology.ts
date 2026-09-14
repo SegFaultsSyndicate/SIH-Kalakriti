@@ -130,7 +130,7 @@ export async function loadCrafts(): Promise<Craft[]> {
     return crafts;
   } catch {
     const cached = await getCached<Craft[]>(CRAFTS_CACHE_KEY);
-    return cached ?? OFFLINE_FALLBACK_CRAFTS;
+    return cached ?? [...OFFLINE_FALLBACK_CRAFTS];
   }
 }
 

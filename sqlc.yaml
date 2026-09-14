@@ -16,6 +16,8 @@ sql:
       - "migrations/queries/provenance.sql"
       - "migrations/queries/outbox.sql"
       - "migrations/queries/idempotency.sql"
+      - "migrations/queries/b2b.sql"
+      - "migrations/queries/trends.sql"
     gen:
       go:
         package: "db"

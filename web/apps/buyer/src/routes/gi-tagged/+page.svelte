@@ -50,6 +50,7 @@
     id: string;
     titleKey: MessageKey;
     craftName: string;
+    craftNameKey: MessageKey;
     giRegNo: string;
     state: string;
     category: string;
@@ -58,7 +59,7 @@
     discountPct: number;
     image: string;
     colorHex: string;
-    artisanName: string;
+    artisanNameKey: MessageKey;
     weavingStyle?: string;
     pattern?: string;
     fabric?: string;
@@ -69,6 +70,7 @@
       id: 'gi-1',
       titleKey: 'giTagged.product.gi-1.title',
       craftName: 'Uttarakhand Aipan Art',
+      craftNameKey: 'giTagged.productCraft.aipan',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
       category: 'Paintings',
@@ -77,12 +79,13 @@
       discountPct: 22,
       image: '/craft-images/paintings/category_cover.jpg',
       colorHex: '#8c2323',
-      artisanName: 'Bhawana Bhatt',
+      artisanNameKey: 'giTagged.artisan.bhawanaBhatt',
     },
     {
       id: 'gi-2',
       titleKey: 'giTagged.product.gi-2.title',
       craftName: 'Uttarakhand Aipan Art',
+      craftNameKey: 'giTagged.productCraft.aipan',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
       category: 'Paintings',
@@ -91,12 +94,13 @@
       discountPct: 29,
       image: '/craft-images/paintings/category_cover.jpg',
       colorHex: '#8c2323',
-      artisanName: 'Kamla Devi',
+      artisanNameKey: 'giTagged.artisan.kamlaDevi',
     },
     {
       id: 'gi-3',
       titleKey: 'giTagged.product.gi-3.title',
       craftName: 'Uttarakhand Aipan Art',
+      craftNameKey: 'giTagged.productCraft.aipan',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
       category: 'Paintings',
@@ -105,12 +109,13 @@
       discountPct: 14,
       image: '/craft-images/paintings/category_cover.jpg',
       colorHex: '#c68237',
-      artisanName: 'Deepa Joshi',
+      artisanNameKey: 'giTagged.artisan.deepaJoshi',
     },
     {
       id: 'gi-4',
       titleKey: 'giTagged.product.gi-4.title',
       craftName: 'Uttarakhand Aipan Art',
+      craftNameKey: 'giTagged.productCraft.aipan',
       giRegNo: 'GI-696',
       state: 'Uttarakhand',
       category: 'Paintings',
@@ -119,12 +124,13 @@
       discountPct: 14,
       image: '/craft-images/paintings/category_cover.jpg',
       colorHex: '#c68237',
-      artisanName: 'Deepa Joshi',
+      artisanNameKey: 'giTagged.artisan.deepaJoshi',
     },
     {
       id: 'gi-5',
       titleKey: 'giTagged.product.gi-5.title',
       craftName: 'Ajrakh Block Print',
+      craftNameKey: 'giTagged.productCraft.ajrakh',
       giRegNo: 'GI-384',
       state: 'Gujarat',
       category: 'Home and living',
@@ -133,12 +139,13 @@
       discountPct: 24,
       image: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
       colorHex: '#0033cc',
-      artisanName: 'Ismail Khatri',
+      artisanNameKey: 'giTagged.artisan.ismailKhatri',
     },
     {
       id: 'gi-6',
       titleKey: 'giTagged.product.gi-6.title',
       craftName: 'Banarasi Brocade',
+      craftNameKey: 'giTagged.productCraft.banarasi',
       giRegNo: 'GI-99',
       state: 'Uttar Pradesh',
       category: 'Women',
@@ -147,12 +154,13 @@
       discountPct: 23,
       image: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
       colorHex: '#e60000',
-      artisanName: 'Sita Sharma',
+      artisanNameKey: 'giTagged.artisan.sitaSharma',
     },
     {
       id: 'gi-7',
       titleKey: 'giTagged.product.gi-7.title',
       craftName: 'Kashmir Pashmina',
+      craftNameKey: 'giTagged.productCraft.pashmina',
       giRegNo: 'GI-46',
       state: 'Jammu & Kashmir',
       category: 'Women',
@@ -161,12 +169,13 @@
       discountPct: 19,
       image: '/craft-images/embroidery/kashmir_pashmina_sozni_01.jpeg',
       colorHex: '#fdfcf0',
-      artisanName: 'Ghulam Hassan',
+      artisanNameKey: 'giTagged.artisan.ghulamHassan',
     },
     {
       id: 'gi-8',
       titleKey: 'giTagged.product.gi-8.title',
       craftName: 'Bastar Dhokra',
+      craftNameKey: 'giTagged.productCraft.dhokra',
       giRegNo: 'GI-83',
       state: 'Chhattisgarh',
       category: 'Home and living',
@@ -175,12 +184,13 @@
       discountPct: 20,
       image: '/craft-images/metalwork/dhokra-casting.jpg',
       colorHex: '#f4c430',
-      artisanName: 'Manglu Ghadwa',
+      artisanNameKey: 'giTagged.artisan.mangluGhadwa',
     },
     {
       id: 'gi-9',
       titleKey: 'giTagged.product.gi-9.title',
       craftName: 'Blue Pottery',
+      craftNameKey: 'giTagged.productCraft.bluePottery',
       giRegNo: 'GI-180',
       state: 'Rajasthan',
       category: 'Home and living',
@@ -189,12 +199,13 @@
       discountPct: 25,
       image: '/craft-images/pottery/nizamabad-black-pottery.jpg',
       colorHex: '#007a78',
-      artisanName: 'Kripal Kumbhar',
+      artisanNameKey: 'giTagged.artisan.kripalKumbhar',
     },
     {
       id: 'gi-10',
       titleKey: 'giTagged.product.gi-10.title',
       craftName: 'Madhubani Painting',
+      craftNameKey: 'giTagged.productCraft.madhubani',
       giRegNo: 'GI-105',
       state: 'Bihar',
       category: 'Paintings',
@@ -203,12 +214,13 @@
       discountPct: 20,
       image: '/craft-images/paintings/madhubani-painting.jpg',
       colorHex: '#ffd200',
-      artisanName: 'Lakshmi Devi',
+      artisanNameKey: 'giTagged.artisan.lakshmiDevi',
     },
     {
       id: 'gi-12',
       titleKey: 'giTagged.product.gi-12.title',
       craftName: 'Patan Patola',
+      craftNameKey: 'giTagged.productCraft.patola',
       giRegNo: 'GI-232',
       state: 'Gujarat',
       category: 'Women',
@@ -217,7 +229,7 @@
       discountPct: 19,
       image: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
       colorHex: '#730000',
-      artisanName: 'Rohit Salvi',
+      artisanNameKey: 'giTagged.artisan.rohitSalvi',
     },
   ];
 
@@ -705,7 +717,7 @@
                 <a href={`/listing/${prod.id}`} class="gi-media-link">
                   <img
                     src={prod.image}
-                    alt={`${t(prod.titleKey)} - ${prod.craftName}`}
+                    alt={`${t(prod.titleKey)} - ${t(prod.craftNameKey)}`}
                     loading="lazy"
                     class="gi-product-img"
                   />
@@ -753,7 +765,7 @@
               <!-- Body Info -->
               <div class="gi-card-body">
                 <div class="gi-card-meta">
-                  <span class="craft-chip">{prod.craftName}</span>
+                  <span class="craft-chip">{t(prod.craftNameKey)}</span>
                   <span class="state-chip">{prod.state}</span>
                 </div>
 
@@ -762,7 +774,7 @@
                 </h3>
 
                 <p class="artisan-byline">
-                  <span>{t('giTagged.byMasterArtisan')}</span> <strong>{prod.artisanName}</strong>
+                  <span>{t('giTagged.byMasterArtisan')}</span> <strong>{t(prod.artisanNameKey)}</strong>
                 </p>
 
                 <!-- Pricing with strike-through MRP and discount (Image 3) -->

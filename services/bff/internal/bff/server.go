@@ -51,6 +51,8 @@ type Config struct {
 	StmtSvc    handler.StatementService
 	InsightSvc handler.InsightService
 	CatalogSvc handler.CatalogService
+	B2BSvc     handler.B2BService
+	TrendSvc   handler.TrendService
 
 	// Rate limiting.
 	RateLimitPerIP        int
@@ -98,6 +100,7 @@ func (s *Server) mountRoutes() {
 		cfg.AuthSvc, cfg.ArtisanSvc, cfg.MediaSvc, cfg.ListingSvc,
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
 		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
+		cfg.B2BSvc, cfg.TrendSvc,
 	)
 	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
 
@@ -149,9 +152,32 @@ func (s *Server) mountRoutes() {
 	api.GET("/artisans/:id/follower-count", httpx.WrapHandler(apiH.GetFollowerCount))
 	api.GET("/feed/process", httpx.WrapHandler(apiH.GetProcessFeed))
 
+	// Public company, boutique and trend reads/writes.
+	api.POST("/companies", httpx.WrapHandler(withIdempotency(apiH.RegisterCompany, cfg.IdempStore)))
+	api.GET("/companies", httpx.WrapHandler(apiH.ListCompanies))
+	api.GET("/companies/:id", httpx.WrapHandler(apiH.GetCompany))
+	api.GET("/trends", httpx.WrapHandler(apiH.ListTrendLinks))
+	api.GET("/boutiques/nearby", httpx.WrapHandler(apiH.ListNearbyBoutiques))
+
 	// Protected routes group (JWT required).
 	authed := api.Group("")
 	authed.Use(httpx.Wrap(middleware.Auth(cfg.Issuer)))
+
+	// B2B companies, boutiques, leads, partnerships, and market trends.
+	authed.GET("/companies/me", httpx.WrapHandler(apiH.GetMyCompany))
+	authed.POST("/companies/:id/verify", httpx.WrapHandler(apiH.VerifyCompany))
+	authed.GET("/companies/commission-stats", httpx.WrapHandler(apiH.GetPlatformCommissionStats))
+	authed.POST("/companies/sales/settle", httpx.WrapHandler(withIdempotency(apiH.RecordCompanySale, cfg.IdempStore)))
+	authed.GET("/companies/:id/sales", httpx.WrapHandler(apiH.ListCompanySales))
+	authed.POST("/companies/:id/interest", httpx.WrapHandler(withIdempotency(apiH.ExpressInterest, cfg.IdempStore)))
+	authed.POST("/leads/:id/respond", httpx.WrapHandler(apiH.RespondToInterest))
+	authed.GET("/artisans/me/leads", httpx.WrapHandler(apiH.ListArtisanLeads))
+	authed.GET("/artisans/me/boutique-matches", httpx.WrapHandler(apiH.ListBoutiqueMatches))
+	authed.POST("/partnerships", httpx.WrapHandler(withIdempotency(apiH.CreatePartnership, cfg.IdempStore)))
+	authed.GET("/partnerships", httpx.WrapHandler(apiH.ListPartnerships))
+	authed.POST("/trends", httpx.WrapHandler(withIdempotency(apiH.CreateTrendLink, cfg.IdempStore)))
+	authed.DELETE("/trends/:id", httpx.WrapHandler(apiH.DeleteTrendLink))
+	authed.POST("/trends/:id/pin", httpx.WrapHandler(apiH.PinTrendLink))
 
 	// Artisan endpoints.
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))

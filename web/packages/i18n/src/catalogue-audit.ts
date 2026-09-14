@@ -58,15 +58,33 @@ function setsEqual(a: Set<string>, b: Set<string>): boolean {
 }
 
 function hasLetter(value: string): boolean {
-  return /\p{L}/u.test(value);
+  // Strip placeholders {placeholder} before checking for letters, per I18N_PLAN §2.4:
+  // "values that are 100% placeholder/punctuation/digits" must not be flagged
+  const stripped = value.replace(/\{[a-zA-Z0-9_]+\}/g, '');
+  return /\p{L}/u.test(stripped);
 }
 
-/** Every base that has at least one `.zero`/`.one`/.../`.other` leaf in `en`. */
+/** Every base in en that represents a plural group (having at least .one and .other). */
 function pluralBasesOf(catalogue: Record<string, string>): Set<string> {
   const bases = new Set<string>();
+  const candidates = new Map<string, Set<string>>();
   for (const key of Object.keys(catalogue)) {
     const m = PLURAL_SUFFIX_RE.exec(key);
-    if (m) bases.add(key.slice(0, key.length - m[0].length));
+    if (m) {
+      const base = key.slice(0, key.length - m[0].length);
+      const cat = m[1];
+      let set = candidates.get(base);
+      if (!set) {
+        set = new Set();
+        candidates.set(base, set);
+      }
+      set.add(cat);
+    }
+  }
+  for (const [base, cats] of candidates) {
+    if (cats.has('one') && cats.has('other')) {
+      bases.add(base);
+    }
   }
   return bases;
 }

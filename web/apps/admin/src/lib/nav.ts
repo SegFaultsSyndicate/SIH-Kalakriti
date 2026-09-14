@@ -19,4 +19,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/clusters', labelKey: 'nav.clusters', icon: 'cluster' },
   { href: '/moderation', labelKey: 'nav.moderation', icon: 'warning' },
   { href: '/crafts', labelKey: 'nav.crafts', icon: 'weaving' },
+  { href: '/companies', labelKey: 'nav.companies', icon: 'package' },
 ];

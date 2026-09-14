@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { SectionHeader } from '@kalakriti/ui';
   import { Section } from '@kalakriti/patterns';
   import { Divider } from '@kalakriti/ornament';
@@ -91,16 +91,17 @@
   const currentSlide = $derived(HERO_SLIDES[activeHeroIndex]);
 
   // Curated Geographical Traditions
-  const DISCOVERY_TAGS = [
-    { name: 'Kutch Ajrakh', query: 'ajrakh' },
-    { name: 'Banarasi Kadwa', query: 'banarasi' },
-    { name: 'Kashmir Pashmina', query: 'pashmina' },
-    { name: 'Pochampally Double-Ikat', query: 'pochampally' },
-    { name: 'Bastar Lost-Wax Dhokra', query: 'dhokra' },
-    { name: 'Kanchipuram Temple Silk', query: 'kanchipuram' },
-    { name: 'Chanderi Gossamer', query: 'chanderi' },
-    { name: 'Nizamabad Black Pottery', query: 'pottery' },
+  const RAW_DISCOVERY_TAGS: { nameKey: MessageKey; query: string }[] = [
+    { nameKey: 'home.discoveryTag.ajrakh.name', query: 'ajrakh' },
+    { nameKey: 'home.discoveryTag.banarasi.name', query: 'banarasi' },
+    { nameKey: 'home.discoveryTag.pashmina.name', query: 'pashmina' },
+    { nameKey: 'home.discoveryTag.pochampally.name', query: 'pochampally' },
+    { nameKey: 'home.discoveryTag.dhokra.name', query: 'dhokra' },
+    { nameKey: 'home.discoveryTag.kanchipuram.name', query: 'kanchipuram' },
+    { nameKey: 'home.discoveryTag.chanderi.name', query: 'chanderi' },
+    { nameKey: 'home.discoveryTag.pottery.name', query: 'pottery' },
   ];
+  const DISCOVERY_TAGS = $derived(RAW_DISCOVERY_TAGS.map((tag) => ({ name: t(tag.nameKey), query: tag.query })));
 
   onMount(() => {
     const timer = setInterval(() => {
@@ -115,11 +116,22 @@
     return (summaries ?? []) as ListingSummary[];
   }
 
-  const FALLBACK_CRAFTS: Craft[] = [
+  interface RawFallbackCraft {
+    id: string;
+    slug: string;
+    nameKey: MessageKey;
+    gi_registration_no: string;
+    gi_certified: boolean;
+    regions: string[];
+    techniques: string[];
+    materials: string[];
+  }
+
+  const RAW_FALLBACK_CRAFTS: RawFallbackCraft[] = [
     {
       id: 'craft-banarasi',
       slug: 'banarasi-brocade-weaving',
-      display_name: 'Banarasi Brocade',
+      nameKey: 'home.fallbackCraft.banarasi.name',
       gi_registration_no: 'GI-99',
       gi_certified: true,
       regions: ['Varanasi, Uttar Pradesh'],
@@ -129,7 +141,7 @@
     {
       id: 'craft-pashmina',
       slug: 'pashmina-weaving',
-      display_name: 'Kashmir Pashmina',
+      nameKey: 'home.fallbackCraft.pashmina.name',
       gi_registration_no: 'GI-46',
       gi_certified: true,
       regions: ['Srinagar, Jammu & Kashmir'],
@@ -139,7 +151,7 @@
     {
       id: 'craft-patola',
       slug: 'patan-patola',
-      display_name: 'Patan Patola Ikat',
+      nameKey: 'home.fallbackCraft.patola.name',
       gi_registration_no: 'GI-232',
       gi_certified: true,
       regions: ['Patan, Gujarat'],
@@ -149,7 +161,7 @@
     {
       id: 'craft-chanderi',
       slug: 'chanderi-weaving',
-      display_name: 'Chanderi Gossamer',
+      nameKey: 'home.fallbackCraft.chanderi.name',
       gi_registration_no: 'GI-14',
       gi_certified: true,
       regions: ['Chanderi, Madhya Pradesh'],
@@ -159,7 +171,7 @@
     {
       id: 'craft-dhokra',
       slug: 'dhokra-casting',
-      display_name: 'Dhokra Bell Metal',
+      nameKey: 'home.fallbackCraft.dhokra.name',
       gi_registration_no: 'GI-117',
       gi_certified: true,
       regions: ['Bastar, Chhattisgarh'],
@@ -169,7 +181,7 @@
     {
       id: 'craft-bidriware',
       slug: 'bidriware',
-      display_name: 'Bidriware Silver Inlay',
+      nameKey: 'home.fallbackCraft.bidriware.name',
       gi_registration_no: 'GI-19',
       gi_certified: true,
       regions: ['Bidar, Karnataka'],
@@ -179,7 +191,7 @@
     {
       id: 'craft-madhubani',
       slug: 'madhubani-painting',
-      display_name: 'Mithila / Madhubani',
+      nameKey: 'home.fallbackCraft.madhubani.name',
       gi_registration_no: 'GI-75',
       gi_certified: true,
       regions: ['Madhubani, Bihar'],
@@ -189,7 +201,7 @@
     {
       id: 'craft-kutch-rogan',
       slug: 'kutch-rogan',
-      display_name: 'Kutch Rogan Art',
+      nameKey: 'home.fallbackCraft.kutchRogan.name',
       gi_registration_no: 'GI-312',
       gi_certified: true,
       regions: ['Nirona, Gujarat'],
@@ -198,13 +210,71 @@
     },
   ];
 
-  const FALLBACK_GI_LISTINGS: ListingSummary[] = [
+  const FALLBACK_CRAFTS = $derived<Craft[]>(
+    RAW_FALLBACK_CRAFTS.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      display_name: t(c.nameKey),
+      gi_registration_no: c.gi_registration_no,
+      gi_certified: c.gi_certified,
+      regions: c.regions,
+      techniques: c.techniques,
+      materials: c.materials,
+    }))
+  );
+
+  interface RawFallbackListing {
+    id: string;
+    product_id: string;
+    artisan_id: string;
+    artisanNameKey: MessageKey;
+    craftNameKey: MessageKey;
+    craft_slug: string;
+    craft_gi_registration_no: string;
+    gi_certified: boolean;
+    artisan_verified: boolean;
+    artisan_district: string;
+    artisan_state_code: string;
+    type: string;
+    price: { amount_paise: number; currency_code: string };
+    image_url: string;
+    titleKey: MessageKey;
+    descriptionKey: MessageKey;
+  }
+
+  function toFallbackListing(raw: RawFallbackListing): ListingSummary {
+    return {
+      id: raw.id,
+      product_id: raw.product_id,
+      artisan_id: raw.artisan_id,
+      artisan_name: t(raw.artisanNameKey),
+      craft_name: t(raw.craftNameKey),
+      craft_slug: raw.craft_slug,
+      craft_gi_registration_no: raw.craft_gi_registration_no,
+      gi_certified: raw.gi_certified,
+      artisan_verified: raw.artisan_verified,
+      artisan_district: raw.artisan_district,
+      artisan_state_code: raw.artisan_state_code,
+      type: raw.type,
+      price: raw.price,
+      image_url: raw.image_url,
+      translations: [
+        {
+          language: locale.code,
+          title: t(raw.titleKey),
+          description: t(raw.descriptionKey),
+        },
+      ],
+    };
+  }
+
+  const RAW_FALLBACK_GI_LISTINGS: RawFallbackListing[] = [
     {
       id: 'listing-gi-1',
       product_id: 'prod-banarasi-kadwa',
       artisan_id: 'artisan-kabir',
-      artisan_name: 'Mohammad Kabir Ansari',
-      craft_name: 'Banarasi Brocade Weaving',
+      artisanNameKey: 'home.fallbackListing.gi1.artisanName',
+      craftNameKey: 'home.fallbackListing.gi1.craftName',
       craft_slug: 'banarasi-brocade-weaving',
       craft_gi_registration_no: 'GI-99',
       gi_certified: true,
@@ -214,20 +284,15 @@
       type: 'READY_STOCK',
       price: { amount_paise: 2450000, currency_code: 'INR' },
       image_url: '/craft-images/weaving_and_looms/banarasi_brocade_weaving_02.jpeg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Kashi Kadwa Pure Silver-Gilt Pit-Loom Saree',
-          description: 'Handwoven pure mulberry silk with electroplated real silver zari bootis.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.gi1.title',
+      descriptionKey: 'home.fallbackListing.gi1.description',
     },
     {
       id: 'listing-gi-2',
       product_id: 'prod-pashmina-kani',
       artisan_id: 'artisan-mir',
-      artisan_name: 'Ghulam Nabi Mir',
-      craft_name: 'Kashmir Pashmina Weaving',
+      artisanNameKey: 'home.fallbackListing.gi2.artisanName',
+      craftNameKey: 'home.fallbackListing.gi2.craftName',
       craft_slug: 'pashmina-weaving',
       craft_gi_registration_no: 'GI-46',
       gi_certified: true,
@@ -237,20 +302,15 @@
       type: 'READY_STOCK',
       price: { amount_paise: 3800000, currency_code: 'INR' },
       image_url: '/craft-images/embroidery/kashmir_pashmina_sozni_02.jpeg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Changthangi Micro-Spun Needlework Pashmina Shawl',
-          description: 'Ultra-fine 12-micron grade hand-spun cashmere with needle Sozni flora.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.gi2.title',
+      descriptionKey: 'home.fallbackListing.gi2.description',
     },
     {
       id: 'listing-gi-3',
       product_id: 'prod-patola-shikargah',
       artisan_id: 'artisan-salvi',
-      artisan_name: 'Dinesh Salvi Guild',
-      craft_name: 'Patan Patola',
+      artisanNameKey: 'home.fallbackListing.gi3.artisanName',
+      craftNameKey: 'home.fallbackListing.gi3.craftName',
       craft_slug: 'patan-patola',
       craft_gi_registration_no: 'GI-232',
       gi_certified: true,
@@ -260,20 +320,15 @@
       type: 'MADE_TO_ORDER',
       price: { amount_paise: 12000000, currency_code: 'INR' },
       image_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Patan Double-Ikat Shikargah Royal Heritage Saree',
-          description: 'Sacred mathematical warp and weft double-resist silk handloom.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.gi3.title',
+      descriptionKey: 'home.fallbackListing.gi3.description',
     },
     {
       id: 'listing-gi-4',
       product_id: 'prod-dhokra-nandi',
       artisan_id: 'artisan-budheshwar',
-      artisan_name: 'Budheshwar Ghadwa',
-      craft_name: 'Dhokra Metal Casting',
+      artisanNameKey: 'home.fallbackListing.gi4.artisanName',
+      craftNameKey: 'home.fallbackListing.gi4.craftName',
       craft_slug: 'dhokra-casting',
       craft_gi_registration_no: 'GI-117',
       gi_certified: true,
@@ -283,23 +338,18 @@
       type: 'READY_STOCK',
       price: { amount_paise: 850000, currency_code: 'INR' },
       image_url: '/craft-images/metalwork/dhokra-casting.jpg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Bastar Cire-Perdue Lost-Wax Sacred Bull Figurine',
-          description: 'Unreplicated single-cast bell metal sculpture with beeswax ribbing.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.gi4.title',
+      descriptionKey: 'home.fallbackListing.gi4.description',
     },
   ];
 
-  const FALLBACK_NEW_ARRIVALS: ListingSummary[] = [
+  const RAW_FALLBACK_NEW_ARRIVALS: RawFallbackListing[] = [
     {
       id: 'listing-arr-1',
       product_id: 'prod-ajrakh-stole',
       artisan_id: 'artisan-khatri',
-      artisan_name: 'Dr. Ismail Mohammed Khatri',
-      craft_name: 'Ajrakh Block Printing',
+      artisanNameKey: 'home.fallbackListing.arr1.artisanName',
+      craftNameKey: 'home.fallbackListing.arr1.craftName',
       craft_slug: 'ajrakh-printing',
       craft_gi_registration_no: 'GI-312',
       gi_certified: true,
@@ -309,20 +359,15 @@
       type: 'READY_STOCK',
       price: { amount_paise: 420000, currency_code: 'INR' },
       image_url: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
-      translations: [
-        {
-          language: 'en',
-          title: '16-Stage Natural Indigo & Harde Riverbed Stole',
-          description: 'Double-sided mud resist blocked on handspun indigenous Kala cotton.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.arr1.title',
+      descriptionKey: 'home.fallbackListing.arr1.description',
     },
     {
       id: 'listing-arr-2',
       product_id: 'prod-black-pottery-handi',
       artisan_id: 'artisan-prajapati',
-      artisan_name: 'Ram Prakash Prajapati',
-      craft_name: 'Nizamabad Black Clay Pottery',
+      artisanNameKey: 'home.fallbackListing.arr2.artisanName',
+      craftNameKey: 'home.fallbackListing.arr2.craftName',
       craft_slug: 'nizamabad-black-pottery',
       craft_gi_registration_no: 'GI-264',
       gi_certified: true,
@@ -332,20 +377,15 @@
       type: 'READY_STOCK',
       price: { amount_paise: 320000, currency_code: 'INR' },
       image_url: '/craft-images/pottery/nizamabad-black-pottery.jpg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Nizamabad Mirror-Burnished Black Clay Vedic Handi',
-          description: 'Clay reduction smoked cookware infused with zinc-mercury silvery inlay.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.arr2.title',
+      descriptionKey: 'home.fallbackListing.arr2.description',
     },
     {
       id: 'listing-arr-3',
       product_id: 'prod-bidri-vase',
       artisan_id: 'artisan-rashid',
-      artisan_name: 'Abdul Rashid Guild',
-      craft_name: 'Bidriware Inlay',
+      artisanNameKey: 'home.fallbackListing.arr3.artisanName',
+      craftNameKey: 'home.fallbackListing.arr3.craftName',
       craft_slug: 'bidriware',
       craft_gi_registration_no: 'GI-19',
       gi_certified: true,
@@ -355,15 +395,13 @@
       type: 'READY_STOCK',
       price: { amount_paise: 650000, currency_code: 'INR' },
       image_url: '/craft-images/metalwork/bidriware.jpg',
-      translations: [
-        {
-          language: 'en',
-          title: 'Pure Silver Wire Tarkashi Inlay Flower Vessel',
-          description: 'Oxidized soil blackened alloy with inlaid pure silver geometric creepers.',
-        },
-      ],
+      titleKey: 'home.fallbackListing.arr3.title',
+      descriptionKey: 'home.fallbackListing.arr3.description',
     },
   ];
+
+  const FALLBACK_GI_LISTINGS = $derived(RAW_FALLBACK_GI_LISTINGS.map(toFallbackListing));
+  const FALLBACK_NEW_ARRIVALS = $derived(RAW_FALLBACK_NEW_ARRIVALS.map(toFallbackListing));
 
   const displayCrafts = $derived(crafts.length > 0 ? crafts : FALLBACK_CRAFTS);
   const displayGiListings = $derived(giListings.length > 0 ? giListings : FALLBACK_GI_LISTINGS);

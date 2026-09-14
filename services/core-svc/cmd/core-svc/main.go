@@ -33,8 +33,10 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	b2bv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/b2b/v1"
 	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
 	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
+	trendsv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
@@ -220,6 +222,10 @@ func run() error {
 	ontologyHandler := handler.NewOntology(ontologySvc)
 	mediaHandler := handler.NewMedia(mediaSvc)
 	pricingHandler := handler.NewPricing(pricingSvc)
+	b2bSvc := service.NewB2B(wiring.NewB2BStore(repository), log)
+	trendsSvc := service.NewTrends(repository, log)
+	b2bHandler := handler.NewB2B(b2bSvc)
+	trendsHandler := handler.NewTrends(trendsSvc)
 	healthHandler := handler.NewHealth(pool, rdb)
 
 	// --- gRPC server ---------------------------------------------------------
@@ -239,6 +245,8 @@ func run() error {
 	catalogv1.RegisterOntologyServiceServer(grpcServer, ontologyHandler)
 	catalogv1.RegisterMediaServiceServer(grpcServer, mediaHandler)
 	pricingv1.RegisterPricingServiceServer(grpcServer, pricingHandler)
+	b2bv1.RegisterB2BServiceServer(grpcServer, b2bHandler)
+	trendsv1.RegisterTrendServiceServer(grpcServer, trendsHandler)
 
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)

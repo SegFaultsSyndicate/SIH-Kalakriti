@@ -456,3 +456,25 @@ unless someone runs `pnpm api:gen` after every bff route change.
 `services/bff/internal/bff/middleware/idempotency.go`. (Previously documented
 here as sending the bare `Idempotency-Key` — that entry is superseded by this
 one; the fix has shipped.)
+
+## Internationalization (i18n) verification and ratchet convention
+
+Kalakriti supports 20 Eighth Schedule scheduled Indian languages plus English (21 locales total).
+The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 2,363 keys).
+
+### Audit Command
+Run the audit script to verify catalogue completeness, script correctness, and placeholder consistency:
+```sh
+# Inside web/packages/i18n:
+npm run audit
+# Or audit a specific locale:
+node scripts/audit.mjs --locale <code_or_tag>
+```
+
+### Ratchet Ceiling & Baseline Convention
+- `web/packages/i18n/i18n-baseline.json` defines the ratchet ceiling for allowed issues per locale.
+- Currently, **all 21 locales have reached 0 issues (100% coverage)**.
+- CI and vitest (`catalogue-audit.test.ts`) enforce that a locale's issues must never exceed its baseline count.
+- If you add new keys to `en.ts`, all non-English catalogues must have their translations populated to keep the baseline at 0. Never raise a baseline number to mask missing translations.
+- All non-English catalogues are typed as `export const <code>: Messages = { ... }`, making missing keys a compile-time type error permanently.
+

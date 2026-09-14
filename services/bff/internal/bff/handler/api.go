@@ -35,6 +35,8 @@ type APIHandler struct {
 	stmtSvc       StatementService
 	insightSvc    InsightService
 	catalogSvc    CatalogService
+	b2bSvc        B2BService
+	trendSvc      TrendService
 	redis         *redis.Client
 	logger        *slog.Logger
 	webhookSecret string
@@ -159,6 +161,34 @@ type InsightService interface {
 	RefreshMaterializedViews(ctx context.Context) (map[string]any, error)
 }
 
+// B2BService is the b2b gRPC client interface for company connections.
+type B2BService interface {
+	RegisterCompany(ctx context.Context, idempotencyKey string, fields map[string]any) (map[string]any, error)
+	GetCompany(ctx context.Context, companyID string) (map[string]any, error)
+	GetMyCompany(ctx context.Context, userID string) (map[string]any, error)
+	ListCompanies(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	VerifyCompany(ctx context.Context, companyID, decision, rejectionReason, adminUserID string) (map[string]any, error)
+	GetPlatformCommissionStats(ctx context.Context) (map[string]any, error)
+	RecordCompanySale(ctx context.Context, companyID, orderID, productName, buyerID string, grossAmountPaise int64) (map[string]any, error)
+	ListCompanySales(ctx context.Context, companyID string, pageSize int32, pageToken string) ([]map[string]any, string, error)
+	ExpressInterest(ctx context.Context, companyID, artisanID, idempotencyKey, message string) (map[string]any, error)
+	RespondToInterest(ctx context.Context, interestID, artisanID, decision string) (map[string]any, error)
+	ListArtisanLeads(ctx context.Context, artisanID string, filters map[string]any) ([]map[string]any, error)
+	CreatePartnership(ctx context.Context, idempotencyKey string, fields map[string]any) (map[string]any, error)
+	ListPartnerships(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	ListBoutiqueMatches(ctx context.Context, artisanID string, limit int32) ([]map[string]any, error)
+	ContactBoutique(ctx context.Context, artisanID, companyID, idempotencyKey, message string) (map[string]any, error)
+	ListNearbyBoutiques(ctx context.Context, lat, lng, radiusKm float64, craftID string, limit int32) ([]map[string]any, error)
+}
+
+// TrendService is the trend gRPC client interface for market trend links.
+type TrendService interface {
+	CreateTrendLink(ctx context.Context, idempotencyKey string, fields map[string]any) (map[string]any, error)
+	ListTrendLinks(ctx context.Context, filters map[string]any) ([]map[string]any, error)
+	DeleteTrendLink(ctx context.Context, trendLinkID string) error
+	PinTrendLink(ctx context.Context, trendLinkID string, pinned bool) (map[string]any, error)
+}
+
 // NewAPIHandler constructs the handler with all service clients.
 func NewAPIHandler(
 	authSvc AuthService,
@@ -172,6 +202,8 @@ func NewAPIHandler(
 	stmtSvc StatementService,
 	insightSvc InsightService,
 	catalogSvc CatalogService,
+	b2bSvc B2BService,
+	trendSvc TrendService,
 ) *APIHandler {
 	return &APIHandler{
 		authSvc:    authSvc,
@@ -185,6 +217,8 @@ func NewAPIHandler(
 		stmtSvc:    stmtSvc,
 		insightSvc: insightSvc,
 		catalogSvc: catalogSvc,
+		b2bSvc:     b2bSvc,
+		trendSvc:   trendSvc,
 	}
 }
 
@@ -1464,4 +1498,317 @@ func maskIdentifier(id string) string {
 	}
 	return id[:2] + "****" + id[len(id)-2:]
 }
+
+// --- B2B Company & Boutique Handlers ---
+
+func (h *APIHandler) RegisterCompany(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	idempKey := r.Header.Get("Idempotency-Key")
+	company, err := h.b2bSvc.RegisterCompany(r.Context(), idempKey, body)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, company)
+}
+
+func (h *APIHandler) GetCompany(w http.ResponseWriter, r *http.Request) {
+	id := httpx.URLParam(r, "id")
+	company, err := h.b2bSvc.GetCompany(r.Context(), id)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, company)
+}
+
+func (h *APIHandler) GetMyCompany(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	company, err := h.b2bSvc.GetMyCompany(r.Context(), p.Subject)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, company)
+}
+
+func (h *APIHandler) ListCompanies(w http.ResponseWriter, r *http.Request) {
+	filters := map[string]any{
+		"state_code":          r.URL.Query().Get("state_code"),
+		"type":                r.URL.Query().Get("type"),
+		"verification_status": r.URL.Query().Get("verification_status"),
+		"page_token":          r.URL.Query().Get("page_token"),
+	}
+	if r.URL.Query().Get("verified_only") == "true" {
+		filters["verified_only"] = true
+	}
+	companies, err := h.b2bSvc.ListCompanies(r.Context(), filters)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"companies": companies})
+}
+
+func (h *APIHandler) VerifyCompany(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if p.Role != auth.RoleMinistry && p.Role != auth.RoleClusterOfficer {
+		httpx.Error(w, domain.Forbidden("only ministry or cluster officers may verify companies"))
+		return
+	}
+	id := httpx.URLParam(r, "id")
+	var body struct {
+		Decision        string `json:"decision"`
+		RejectionReason string `json:"rejection_reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	company, err := h.b2bSvc.VerifyCompany(r.Context(), id, body.Decision, body.RejectionReason, p.Subject)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, company)
+}
+
+func (h *APIHandler) GetPlatformCommissionStats(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	if p.Role != auth.RoleMinistry && p.Role != auth.RoleClusterOfficer {
+		httpx.Error(w, domain.Forbidden("only ministry or cluster officers may view commission stats"))
+		return
+	}
+	stats, err := h.b2bSvc.GetPlatformCommissionStats(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, stats)
+}
+
+func (h *APIHandler) RecordCompanySale(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		CompanyID        string `json:"company_id"`
+		OrderID          string `json:"order_id"`
+		ProductName      string `json:"product_name"`
+		BuyerID          string `json:"buyer_id"`
+		GrossAmountPaise int64  `json:"gross_amount_paise"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	settlement, err := h.b2bSvc.RecordCompanySale(r.Context(), body.CompanyID, body.OrderID, body.ProductName, body.BuyerID, body.GrossAmountPaise)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"settlement": settlement})
+}
+
+func (h *APIHandler) ListCompanySales(w http.ResponseWriter, r *http.Request) {
+	id := httpx.URLParam(r, "id")
+	sales, nextPage, err := h.b2bSvc.ListCompanySales(r.Context(), id, 20, r.URL.Query().Get("page_token"))
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"sales": sales, "page": map[string]any{"next_page_token": nextPage}})
+}
+
+func (h *APIHandler) ExpressInterest(w http.ResponseWriter, r *http.Request) {
+	companyID := httpx.URLParam(r, "id")
+	var body struct {
+		ArtisanID string `json:"artisan_id"`
+		Message   string `json:"message"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	idempKey := r.Header.Get("Idempotency-Key")
+	interest, err := h.b2bSvc.ExpressInterest(r.Context(), companyID, body.ArtisanID, idempKey, body.Message)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, interest)
+}
+
+func (h *APIHandler) RespondToInterest(w http.ResponseWriter, r *http.Request) {
+	interestID := httpx.URLParam(r, "id")
+	var body struct {
+		ArtisanID string `json:"artisan_id"`
+		Decision  string `json:"decision"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	res, err := h.b2bSvc.RespondToInterest(r.Context(), interestID, body.ArtisanID, body.Decision)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, res)
+}
+
+func (h *APIHandler) ListArtisanLeads(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	leads, err := h.b2bSvc.ListArtisanLeads(r.Context(), p.Subject, map[string]any{
+		"status": r.URL.Query().Get("status"),
+	})
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"leads": leads})
+}
+
+func (h *APIHandler) ListBoutiqueMatches(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	matches, err := h.b2bSvc.ListBoutiqueMatches(r.Context(), p.Subject, 20)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"matches": matches})
+}
+
+func (h *APIHandler) ListNearbyBoutiques(w http.ResponseWriter, r *http.Request) {
+	lat, _ := parseQueryFloat(r, "latitude")
+	lng, _ := parseQueryFloat(r, "longitude")
+	radiusKm, _ := parseQueryFloat(r, "radius_km")
+	if radiusKm <= 0 {
+		radiusKm = 50
+	}
+	craftID := r.URL.Query().Get("craft_id")
+	boutiques, err := h.b2bSvc.ListNearbyBoutiques(r.Context(), lat, lng, radiusKm, craftID, 30)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"boutiques": boutiques})
+}
+
+func (h *APIHandler) CreatePartnership(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	idempKey := r.Header.Get("Idempotency-Key")
+	p, err := h.b2bSvc.CreatePartnership(r.Context(), idempKey, body)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, p)
+}
+
+func (h *APIHandler) ListPartnerships(w http.ResponseWriter, r *http.Request) {
+	filters := map[string]any{
+		"artisan_id": r.URL.Query().Get("artisan_id"),
+		"company_id": r.URL.Query().Get("company_id"),
+	}
+	partnerships, err := h.b2bSvc.ListPartnerships(r.Context(), filters)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"partnerships": partnerships})
+}
+
+// --- Market Trends Handlers ---
+
+func (h *APIHandler) CreateTrendLink(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	idempKey := r.Header.Get("Idempotency-Key")
+	link, err := h.trendSvc.CreateTrendLink(r.Context(), idempKey, body)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, link)
+}
+
+func (h *APIHandler) ListTrendLinks(w http.ResponseWriter, r *http.Request) {
+	filters := map[string]any{
+		"craft_id":        r.URL.Query().Get("craft_id"),
+		"source_type":     r.URL.Query().Get("source_type"),
+		"exclude_expired": r.URL.Query().Get("exclude_expired") == "true",
+	}
+	links, err := h.trendSvc.ListTrendLinks(r.Context(), filters)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"trend_links": links})
+}
+
+func (h *APIHandler) DeleteTrendLink(w http.ResponseWriter, r *http.Request) {
+	id := httpx.URLParam(r, "id")
+	if err := h.trendSvc.DeleteTrendLink(r.Context(), id); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"status": "deleted"})
+}
+
+func (h *APIHandler) PinTrendLink(w http.ResponseWriter, r *http.Request) {
+	id := httpx.URLParam(r, "id")
+	var body struct {
+		Pinned bool `json:"pinned"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	link, err := h.trendSvc.PinTrendLink(r.Context(), id, body.Pinned)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, link)
+}
+
+func parseQueryFloat(r *http.Request, key string) (float64, error) {
+	val := r.URL.Query().Get(key)
+	if val == "" {
+		return 0, nil
+	}
+	var f float64
+	_, err := fmt.Sscanf(val, "%f", &f)
+	return f, err
+}
+
 

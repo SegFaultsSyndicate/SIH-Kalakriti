@@ -86,7 +86,9 @@ export async function request(path: string, options: RequestOptions = {}): Promi
         Accept: 'application/json',
         'Accept-Language': getAcceptLanguage(),
         ...(body === undefined || isRawBody(body) ? {} : { 'Content-Type': 'application/json' }),
-        ...(idempotencyKey === undefined ? {} : { 'X-Idempotency-Key': idempotencyKey }),
+        ...(idempotencyKey === undefined
+          ? {}
+          : { 'Idempotency-Key': idempotencyKey, 'X-Idempotency-Key': idempotencyKey }),
         ...headers,
       },
       body: body === undefined ? undefined : isRawBody(body) ? body : JSON.stringify(body),

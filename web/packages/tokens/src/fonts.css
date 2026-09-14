@@ -77,10 +77,15 @@
 :lang(mr),
 :lang(ne),
 :lang(sa),
+:lang(mai),
+:lang(doi),
+:lang(kok),
+:lang(brx),
 :lang(bn),
 :lang(as),
 :lang(pa),
-:lang(or) {
+:lang(or),
+:lang(gu) {
   --k-leading-normal: 1.75;
   --k-leading-snug: 1.5;
   --k-leading-tight: 1.35;
@@ -93,4 +98,21 @@
   --k-leading-normal: 1.8;
   --k-leading-snug: 1.55;
   --k-leading-tight: 1.4;
+}
+
+/*
+ * Perso-Arabic scripts (Urdu, Sindhi, Kashmiri).
+ * Nastaliq and Naskh scripts need taller leading for cascading diacritics
+ * and native font fallback preferences.
+ */
+:lang(ur),
+:lang(sd),
+:lang(ks) {
+  --k-font-display:
+    'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Urdu Typesetting', 'Tahoma',
+    system-ui, sans-serif;
+  --k-font-body: var(--k-font-display);
+  --k-leading-normal: 1.85;
+  --k-leading-snug: 1.6;
+  --k-leading-tight: 1.45;
 }

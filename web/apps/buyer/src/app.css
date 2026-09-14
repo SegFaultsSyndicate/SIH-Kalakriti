@@ -117,6 +117,11 @@ body::-webkit-scrollbar {
     line-height: var(--k-leading-tight);
   }
 
+  .shell__wordmark-img {
+    block-size: 1.5rem;
+    inline-size: auto;
+  }
+
   .shell__actions {
     display: flex;
     align-items: center;
@@ -209,7 +214,8 @@ body::-webkit-scrollbar {
        "Kalakriti", and the three action icons all fighting for one row, the
        wordmark was the single biggest thing to give (about 90px), and it's
        the one piece a returning visitor least needs spelled out. */
-    .shell__wordmark {
+    .shell__wordmark,
+    .shell__wordmark-img {
       display: none;
     }
 

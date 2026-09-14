@@ -270,3 +270,21 @@ func (t TechniqueVerifier) Verify(ctx context.Context, listingID uuid.UUID, clai
 	}
 	return strings.EqualFold(observed, claimedTechnique), nil
 }
+
+// B2BStore binds the repository to service.B2BStore.
+type B2BStore struct {
+	*repo.Repo
+}
+
+// NewB2BStore wraps a repository as the B2B service's persistence port.
+func NewB2BStore(r *repo.Repo) B2BStore { return B2BStore{Repo: r} }
+
+// B2BStore satisfies the B2B service's persistence contract.
+var _ service.B2BStore = B2BStore{}
+
+// InTx adapts the repository's concrete transaction type to the B2BTx interface.
+func (s B2BStore) InTx(ctx context.Context, fn func(ctx context.Context, tx service.B2BTx) error) error {
+	return s.Repo.InTx(ctx, func(ctx context.Context, tx *repo.Tx) error {
+		return fn(ctx, tx)
+	})
+}

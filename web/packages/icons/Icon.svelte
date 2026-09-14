@@ -68,6 +68,7 @@
 {#if Component}
   <Component
     class="k-icon {className || ''}"
+    data-icon={name}
     role={title ? 'img' : undefined}
     aria-label={title}
     aria-hidden={title ? undefined : 'true'}

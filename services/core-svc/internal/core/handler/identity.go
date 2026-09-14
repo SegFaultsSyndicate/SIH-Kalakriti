@@ -49,6 +49,9 @@ func PublicMethods() auth.PublicMethods {
 		"/catalog.v1.CatalogService/ListListings",
 		"/catalog.v1.CatalogService/GetListing",
 		"/catalog.v1.CatalogService/GetProvenanceByShortCode",
+		"/trends.v1.TrendService/ListTrendLinks",
+		"/b2b.v1.B2BService/ListNearbyBoutiques",
+		"/b2b.v1.B2BService/ListCompanies",
 	)
 }
 
