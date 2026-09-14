@@ -482,6 +482,10 @@
         <Icon name="badge-verified" size="1rem" />
         {t('nav.badges')}
       </a>
+      <a class="profile-btn-ghost" href="/schemes">
+        <Icon name="verified-artisan" size="1rem" />
+        {t('nav.schemes')}
+      </a>
       <a class="profile-btn-ghost" href="/accessibility">
         <Icon name="accessibility" size="1rem" />
         {t('profile.a11ySettings')}

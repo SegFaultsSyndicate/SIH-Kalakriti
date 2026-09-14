@@ -110,6 +110,10 @@
   <section class="earnings-page__generate">
     <h2>{t('earnings.statement.heading')}</h2>
     <p class="earnings-page__purpose">{t('earnings.statement.purpose')}</p>
+    <p class="earnings-page__scheme-note">
+      {t('earnings.statement.schemeNote')}
+      <a href="/schemes" class="earnings-page__scheme-link">{t('nav.schemes')} →</a>
+    </p>
 
     <div class="earnings-page__range">
       <div>
@@ -238,6 +242,19 @@
     display: flex;
     flex-direction: column;
     gap: var(--k-space-2);
+  }
+
+  .earnings-page__scheme-note {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
+    margin-block-start: var(--k-space-1);
+  }
+
+  .earnings-page__scheme-link {
+    color: var(--k-text-primary);
+    font-weight: 600;
+    text-decoration: underline;
+    margin-inline-start: var(--k-space-1);
   }
 
   .earnings-page__purpose {
