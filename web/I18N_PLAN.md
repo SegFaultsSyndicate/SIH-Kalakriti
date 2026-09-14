@@ -764,7 +764,7 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       to force a mid-flight 404 against a live Vite dev server without
       tampering with the network layer -- code-reviewed instead: the
       try/catch is unconditional around the one `await loader()` call).
-- [ ] **P3** Batches 3.1 → 3.7, `pnpm i18n:lint` = 0 after each.
+- [x] **P3** Batches 3.1 → 3.7, `pnpm i18n:lint` = 0 after each.
   - [x] **3.1** `packages/{ui,offline,voice}` -- **one real fix, everything
         else was scanner noise.** Manually read all ~17 flagged files
         (the automated scan's "44 strings" estimate for this batch was
@@ -1139,7 +1139,7 @@ Work top to bottom. Do not start a phase before its predecessor's exit gate.
       correctly through the fallback path, and `/gi-tagged` rendered its
       full product grid and all 7 filter groups with translated labels and
       zero console errors beyond the expected backend-down proxy noise.
-- [ ] **P3 GATE** `en.ts` frozen. Record the final key count here: ______
+- [x] **P3 GATE** `en.ts` frozen. Final key count: **2363**.
 - [ ] **P4** 20 locales × namespace batches, audit after every batch, type flip
       per locale.
 - [ ] **P4 GATE** `audit` = 0 issues for all 21; `pnpm -r check` clean.
