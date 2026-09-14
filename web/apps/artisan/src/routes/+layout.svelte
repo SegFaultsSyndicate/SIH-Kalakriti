@@ -151,6 +151,7 @@
       </p>
 
       <LanguageSelector />
+      
       <AccessibilityControl statementHref="/accessibility" />
     </header>
   {/if}

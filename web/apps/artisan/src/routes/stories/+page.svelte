@@ -12,7 +12,7 @@
   keyboard-traversal test target it directly (e2e/tests/artisan/stories.spec.ts).
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import {
     Button,
     Card,
@@ -128,7 +128,7 @@
       <Button variant="ghost">Ghost</Button>
       <Button variant="danger">Danger</Button>
       <Button loading>Saving</Button>
-      <Button icon="trash" label="Delete photograph" variant="ghost" />
+      <Button icon="trash" label="Delete photograph" variant="ghost" tooltip={tooltip('tooltip.delete')} />
     </div>
     <div class="stories__row">
       <Button size="sm">Small</Button>
@@ -205,7 +205,7 @@
       <Button variant="danger" onclick={() => fireToast('error')}>Error toast</Button>
       <Popover bind:open={popoverOpen}>
         {#snippet trigger(props)}
-          <Button icon="more-vertical" label="More actions" variant="secondary" {...props} />
+          <Button icon="more-vertical" label="More actions" variant="secondary" {...props} tooltip={tooltip('tooltip.openMenu')} />
         {/snippet}
         {#snippet children()}
           <Button variant="ghost" size="sm">Edit</Button>

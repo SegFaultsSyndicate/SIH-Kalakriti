@@ -6,10 +6,11 @@
   Adheres to Svelte 5 runes ($state, $derived, $effect).
 -->
 <script lang="ts">
+  import { tooltip } from '@kalakriti/i18n';
   import { session, getAccessToken, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
-  import { showToast } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
 
   let isOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
@@ -91,31 +92,36 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="account-menu" bind:this={menuContainer}>
-  <button
-    type="button"
-    class="account-trigger"
-    onclick={toggleMenu}
-    aria-expanded={isOpen}
-    aria-haspopup="true"
-    aria-label="Account and multi-portal menu"
-  >
-    <div class="account-avatar">
-      {#if isAuthenticated}
-        <span class="avatar-initials">AS</span>
-      {:else}
-        <Icon name="user" size="1.1rem" />
-      {/if}
-    </div>
-    <div class="account-label">
-      <span class="account-greeting">
-        {isAuthenticated ? 'Hello, Aarav' : 'Sign In'}
-      </span>
-      <span class="account-title">
-        Account & Lists
-        <Icon name="chevron-down" size="0.75rem" />
-      </span>
-    </div>
-  </button>
+  <Tooltip text={tooltip('tooltip.account')}>
+    {#snippet trigger(props)}
+      <button
+        type="button"
+        class="account-trigger"
+        onclick={toggleMenu}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-label="Account and multi-portal menu"
+        {...props}
+      >
+        <div class="account-avatar">
+          {#if isAuthenticated}
+            <span class="avatar-initials">AS</span>
+          {:else}
+            <Icon name="user" size="1.1rem" />
+          {/if}
+        </div>
+        <div class="account-label">
+          <span class="account-greeting">
+            {isAuthenticated ? 'Hello, Aarav' : 'Sign In'}
+          </span>
+          <span class="account-title">
+            Account & Lists
+            <Icon name="chevron-down" size="0.75rem" />
+          </span>
+        </div>
+      </button>
+    {/snippet}
+  </Tooltip>
 
   {#if isOpen}
     <div
@@ -246,10 +252,14 @@
 
       {#if isAuthenticated}
         <div class="popover-footer">
-          <button type="button" class="signout-btn" onclick={handleSignOut}>
-            <Icon name="lock" size="0.9rem" />
-            Sign Out of Kalakriti
-          </button>
+          <Tooltip text={tooltip('tooltip.signout')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="signout-btn" onclick={handleSignOut} {...tp}>
+                <Icon name="lock" size="0.9rem" />
+                Sign Out of Kalakriti
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       {/if}
     </div>

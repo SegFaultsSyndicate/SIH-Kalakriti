@@ -10,12 +10,12 @@
   Strictly follows GIGW 3.0 government accessibility and Svelte 5 runes ($state, $derived).
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { showToast } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
 
@@ -105,67 +105,92 @@
 
     <!-- Portal Switcher Tabs -->
     <div class="portal-tabs" role="tablist" aria-label="Portal Selection">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activePortal === 'buyer'}
-        class="portal-tab {activePortal === 'buyer' ? 'is-active' : ''}"
-        onclick={() => (activePortal = 'buyer')}
-      >
-        <span class="portal-icon"><Icon name="package" size="1.5rem" /></span>
-        <span class="portal-label">
-          <strong>Buyer Account</strong>
-          <small>Orders & Settings</small>
-        </span>
-      </button>
+      <Tooltip text={tooltip('tooltip.selectPortal')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePortal === 'buyer'}
+            class="portal-tab {activePortal === 'buyer' ? 'is-active' : ''}"
+            onclick={() => (activePortal = 'buyer')}
+            {...tp}
+          >
+            <span class="portal-icon"><Icon name="package" size="1.5rem" /></span>
+            <span class="portal-label">
+              <strong>Buyer Account</strong>
+              <small>Orders & Settings</small>
+            </span>
+          </button>
+        {/snippet}
+      </Tooltip>
 
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activePortal === 'artisan'}
-        class="portal-tab {activePortal === 'artisan' ? 'is-active' : ''}"
-        onclick={() => (activePortal = 'artisan')}
-      >
-        <span class="portal-icon"><Icon name="weaving" size="1.5rem" /></span>
-        <span class="portal-label">
-          <strong>Artisan Loom</strong>
-          <small>Voice PWA</small>
-        </span>
-      </button>
+      <Tooltip text={tooltip('tooltip.selectPortal')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePortal === 'artisan'}
+            class="portal-tab {activePortal === 'artisan' ? 'is-active' : ''}"
+            onclick={() => (activePortal = 'artisan')}
+            {...tp}
+          >
+            <span class="portal-icon"><Icon name="weaving" size="1.5rem" /></span>
+            <span class="portal-label">
+              <strong>Artisan Loom</strong>
+              <small>Voice PWA</small>
+            </span>
+          </button>
+        {/snippet}
+      </Tooltip>
 
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activePortal === 'admin'}
-        class="portal-tab {activePortal === 'admin' ? 'is-active' : ''}"
-        onclick={() => (activePortal = 'admin')}
-      >
-        <span class="portal-icon"><Icon name="cluster" size="1.5rem" /></span>
-        <span class="portal-label">
-          <strong>Ministry Admin</strong>
-          <small>Cluster Console</small>
-        </span>
-      </button>
+      <Tooltip text={tooltip('tooltip.selectPortal')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activePortal === 'admin'}
+            class="portal-tab {activePortal === 'admin' ? 'is-active' : ''}"
+            onclick={() => (activePortal = 'admin')}
+            {...tp}
+          >
+            <span class="portal-icon"><Icon name="cluster" size="1.5rem" /></span>
+            <span class="portal-label">
+              <strong>Ministry Admin</strong>
+              <small>Cluster Console</small>
+            </span>
+          </button>
+        {/snippet}
+      </Tooltip>
     </div>
 
     <!-- Tab 1: Buyer Account Flow -->
     {#if activePortal === 'buyer'}
       <div class="auth-panel" role="tabpanel">
         <div class="auth-mode-toggle">
-          <button
-            type="button"
-            class="mode-btn {authMode === 'signin' ? 'is-selected' : ''}"
-            onclick={() => (authMode = 'signin')}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            class="mode-btn {authMode === 'register' ? 'is-selected' : ''}"
-            onclick={() => (authMode = 'register')}
-          >
-            Create Account
-          </button>
+          <Tooltip text={tooltip('tooltip.authMode')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="mode-btn {authMode === 'signin' ? 'is-selected' : ''}"
+                onclick={() => (authMode = 'signin')}
+                {...tp}
+              >
+                Sign In
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.authMode')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="mode-btn {authMode === 'register' ? 'is-selected' : ''}"
+                onclick={() => (authMode = 'register')}
+                {...tp}
+              >
+                Create Account
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
 
         <form class="auth-form" onsubmit={handleBuyerSubmit}>
@@ -196,14 +221,19 @@
                 bind:value={identifier}
                 required
               />
-              <button
-                type="button"
-                class="otp-send-btn"
-                onclick={handleRequestOtp}
-                disabled={isSubmitting}
-              >
-                {otpSent ? 'Resend OTP' : 'Send OTP'}
-              </button>
+              <Tooltip text={tooltip('tooltip.sendOtp')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="otp-send-btn"
+                  onclick={handleRequestOtp}
+                  disabled={isSubmitting}
+                  {...tp}
+                >
+                  {otpSent ? 'Resend OTP' : 'Send OTP'}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
             <span class="field-hint">
               Secured with GIGW 3.0 & anti-enumeration protection
@@ -249,22 +279,27 @@
             </label>
           </div>
 
-          <button
-            type="submit"
-            class="submit-primary-btn"
-            disabled={isSubmitting}
-          >
-            {#if isSubmitting}
-              <Icon name="refresh" size="1.1rem" />
-              <span>Verifying credentials...</span>
-            {:else if authMode === 'signin'}
-              <span>Sign In to Your Account</span>
-              <Icon name="arrow-right" size="1rem" />
-            {:else}
-              <span>Register & Continue to Marketplace</span>
-              <Icon name="arrow-right" size="1rem" />
-            {/if}
-          </button>
+          <Tooltip text={tooltip('tooltip.signIn')}>
+          {#snippet trigger(tp)}
+            <button
+              type="submit"
+              class="submit-primary-btn"
+              disabled={isSubmitting}
+              {...tp}
+            >
+              {#if isSubmitting}
+                <Icon name="refresh" size="1.1rem" />
+                <span>Verifying credentials...</span>
+              {:else if authMode === 'signin'}
+                <span>Sign In to Your Account</span>
+                <Icon name="arrow-right" size="1rem" />
+              {:else}
+                <span>Register & Continue to Marketplace</span>
+                <Icon name="arrow-right" size="1rem" />
+              {/if}
+            </button>
+          {/snippet}
+        </Tooltip>
         </form>
 
         <footer class="panel-footer">

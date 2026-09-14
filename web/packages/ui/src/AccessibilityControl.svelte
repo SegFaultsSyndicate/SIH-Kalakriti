@@ -11,7 +11,7 @@
   directly -- callers mount this once and never touch the store themselves.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import Popover from './Popover.svelte';
   import Button, { type ButtonSize } from './Button.svelte';
@@ -92,7 +92,7 @@
 
 <Popover align="end">
   {#snippet trigger(props)}
-    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" size={triggerSize} {...props} />
+    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" tooltip={tooltip('tooltip.accessibility')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <div class="k-a11y-panel">
@@ -105,7 +105,6 @@
           type="button"
           class="k-a11y-panel__reset-btn"
           onclick={() => void a11y.resetAll()}
-          title={t('a11y.reset')}
         >
           <Icon name="refresh" size="0.85rem" />
           {t('a11y.reset')}

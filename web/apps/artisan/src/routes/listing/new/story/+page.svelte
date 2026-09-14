@@ -12,7 +12,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Select, Input, FieldGroup, VoiceInput } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
@@ -97,7 +97,7 @@
         <div class="story-voice__done">
           <Icon name="success" />
           <span>{t('listing.story.voiceRecorded')}</span>
-          <Button size="sm" variant="ghost" onclick={removeVoice}>{t('listing.story.voiceRedo')}</Button>
+          <Button size="sm" variant="ghost" onclick={removeVoice} tooltip={tooltip('tooltip.removeVoice')}>{t('listing.story.voiceRedo')}</Button>
         </div>
       {:else}
         <VoiceInput mode="hold" onrecording={onRecording} />
@@ -105,7 +105,7 @@
     </div>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={craftId === ''} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={craftId === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
   {/snippet}
 </ListingStep>
 

@@ -10,7 +10,7 @@
   product name, HSN code, unit price, seller details, and category.
 -->
 <script lang="ts">
-  import { locale, matchesLocale } from '@kalakriti/i18n';
+  import { locale, matchesLocale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Dialog, showToast } from '@kalakriti/ui';
   import type { Listing } from '$lib/listings';
@@ -185,11 +185,11 @@
   </div>
 
   <div class="gem-actions">
-    <Button size="sm" variant="secondary" onclick={printPreview}>
+    <Button size="sm" variant="secondary" onclick={printPreview} tooltip={tooltip('tooltip.printPreview')}>
       <Icon name="print" />
       {t('gem.printButton')}
     </Button>
-    <Button size="sm" variant="secondary" onclick={copyAsText}>
+    <Button size="sm" variant="secondary" onclick={copyAsText} tooltip={tooltip('tooltip.copyText')}>
       <Icon name="share" />
       {t('gem.copyButton')}
     </Button>

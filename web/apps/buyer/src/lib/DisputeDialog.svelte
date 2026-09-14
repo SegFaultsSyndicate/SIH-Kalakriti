@@ -11,7 +11,7 @@
   ml_wiring.md -- a real in-app dispute flow needs a backend RPC first.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Dialog, Button } from '@kalakriti/ui';
 
   interface Props {
@@ -32,7 +32,7 @@
   <p class="dispute-dialog__id">{orderId}</p>
   <div class="dispute-dialog__actions">
     <a class="dispute-dialog__mail-link" href={mailHref}>{t('orders.dispute.mailLink')}</a>
-    <Button variant="secondary" onclick={() => (open = false)}>{t('orders.dispute.close')}</Button>
+    <Button variant="secondary" onclick={() => (open = false)} tooltip={tooltip('tooltip.close')}>{t('orders.dispute.close')}</Button>
   </div>
 </Dialog>
 

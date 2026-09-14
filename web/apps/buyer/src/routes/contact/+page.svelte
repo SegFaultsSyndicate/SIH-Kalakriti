@@ -10,8 +10,8 @@
   - Direct WhatsApp & Video Loom Assistance Connectors
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -133,7 +133,11 @@
           <div class="alert-body">
             <h4>Inquiry Received Successfully!</h4>
             <p>Your request has been routed to the relevant cluster development officer. Confirmation sent to {email}.</p>
-            <button type="button" class="btn-reset" onclick={() => (submitted = false)}>Submit Another Request</button>
+            <Tooltip text={tooltip('tooltip.reset')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="btn-reset" onclick={() => (submitted = false)} {...tp}>Submit Another Request</button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
       {:else}
@@ -172,10 +176,14 @@
             <textarea id="message" bind:value={message} required rows="4" placeholder="Please provide order number, craft title, or details of your query..." class="form-textarea"></textarea>
           </div>
 
-          <button type="submit" class="submit-btn">
-            <span>Submit Official Inquiry</span>
-            <Icon name="arrow-right" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.submit')}>
+            {#snippet trigger(tp)}
+              <button type="submit" class="submit-btn" {...tp}>
+                <span>Submit Official Inquiry</span>
+                <Icon name="arrow-right" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
         </form>
       {/if}
     </div>

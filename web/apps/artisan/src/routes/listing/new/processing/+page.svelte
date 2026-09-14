@@ -13,7 +13,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { PipelineProgress } from '@kalakriti/motion';
@@ -123,7 +123,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={!done} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={!done} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
   {/snippet}
 </ListingStep>
 

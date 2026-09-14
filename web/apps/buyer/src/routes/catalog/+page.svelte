@@ -6,8 +6,8 @@
   and traditional techniques across India.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -166,54 +166,84 @@
         </div>
 
         <div class="belt-chips" role="tablist" aria-label="Craft Belt Filter">
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'all'}
-            onclick={() => (selectedBelt = 'all')}
-          >
-            All Belts ({FALLBACK_CRAFTS.length})
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'north'}
-            onclick={() => (selectedBelt = 'north')}
-          >
-            Northern Plains
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'west'}
-            onclick={() => (selectedBelt = 'west')}
-          >
-            Western Deserts
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'south'}
-            onclick={() => (selectedBelt = 'south')}
-          >
-            Deccan & South
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'east'}
-            onclick={() => (selectedBelt = 'east')}
-          >
-            Eastern Loomlands
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'central'}
-            onclick={() => (selectedBelt = 'central')}
-          >
-            Central Heartland
-          </button>
+<Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'all'}
+              onclick={() => (selectedBelt = 'all')}
+              {...tp}
+            >
+              All Belts ({FALLBACK_CRAFTS.length})
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'north'}
+              onclick={() => (selectedBelt = 'north')}
+              {...tp}
+            >
+              Northern Plains
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'west'}
+              onclick={() => (selectedBelt = 'west')}
+              {...tp}
+            >
+              Western Deserts
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'south'}
+              onclick={() => (selectedBelt = 'south')}
+              {...tp}
+            >
+              Deccan & South
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'east'}
+              onclick={() => (selectedBelt = 'east')}
+              {...tp}
+            >
+              Eastern Loomlands
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'central'}
+              onclick={() => (selectedBelt = 'central')}
+              {...tp}
+            >
+              Central Heartland
+            </button>
+          {/snippet}
+        </Tooltip>
         </div>
       </div>
     </header>

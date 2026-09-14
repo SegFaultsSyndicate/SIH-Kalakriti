@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Illustration, ProcessSequence } from '@kalakriti/illustrations';
   import { SpeakButton, Button } from '@kalakriti/ui';
 
@@ -31,7 +31,7 @@
 
   <SpeakButton text={`${t('welcome.heading')}. ${t('welcome.body')}`} label={t('welcome.listen')} />
 
-  <Button size="xl" class="welcome__cta" onclick={start}>{t('welcome.start')}</Button>
+  <Button size="xl" class="welcome__cta" onclick={start} tooltip={tooltip('tooltip.start')}>{t('welcome.start')}</Button>
 </div>
 
 <style>

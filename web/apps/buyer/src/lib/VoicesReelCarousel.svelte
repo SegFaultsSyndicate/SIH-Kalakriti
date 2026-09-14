@@ -8,8 +8,8 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
-  import { Dialog, Button } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Dialog, Button, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getProcessFeed, type components } from '@kalakriti/api';
 
@@ -140,12 +140,15 @@
         {@const thumb = (clip as StoryItem).thumbnail_url}
         {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : 'Craft')}
         <li>
-          <button
-            type="button"
-            class="reel-card"
-            onclick={() => openStory(i)}
-            aria-label={`${t('home.voices.playStory')}: ${clip.artisan_name ?? clip.title}`}
-          >
+          <Tooltip text={tooltip('tooltip.play')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="reel-card"
+                onclick={() => openStory(i)}
+                aria-label={`${t('home.voices.playStory')}: ${clip.artisan_name ?? clip.title}`}
+                {...tp}
+              >
             <div class="reel-frame">
               {#if thumb}
                 <img src={thumb} alt="" class="reel-thumb" loading="lazy" />
@@ -162,6 +165,8 @@
               <span class="craft-discipline">{discipline}</span>
             </div>
           </button>
+            {/snippet}
+          </Tooltip>
         </li>
       {/each}
     </ul>
@@ -191,19 +196,24 @@
             <p class="artisan-title">{activeClip.artisan_name}</p>
             <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> Verified Master Guild Loom</p>
           </div>
-          <button
-            type="button"
-            class="audio-toggle-btn"
-            onclick={() => (isAudioMuted = !isAudioMuted)}
-          >
-            <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
-            <span>{isAudioMuted ? t('home.voices.listenAudio') : 'Mute Voice'}</span>
-          </button>
+          <Tooltip text={tooltip('tooltip.toggleAudio')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="audio-toggle-btn"
+                onclick={() => (isAudioMuted = !isAudioMuted)}
+                {...tp}
+              >
+                <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
+                <span>{isAudioMuted ? t('home.voices.listenAudio') : 'Mute Voice'}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
 
         <div class="dialog-actions">
           {#if activeIndex !== null && activeIndex > 0}
-            <Button variant="secondary" onclick={prevStory}>
+            <Button variant="secondary" onclick={prevStory} tooltip={tooltip('tooltip.prev')}>
               <Icon name="chevron-left" />
               <span>Previous</span>
             </Button>
@@ -217,7 +227,7 @@
           {/if}
 
           {#if activeIndex !== null && activeIndex < clips.length - 1}
-            <Button variant="secondary" onclick={nextStory}>
+            <Button variant="secondary" onclick={nextStory} tooltip={tooltip('tooltip.next')}>
               <span>Next</span>
               <Icon name="chevron-right" />
             </Button>

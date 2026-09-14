@@ -8,8 +8,8 @@
 <script lang="ts">
   import '../app.css';
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
-  import { SkipLink, RouteAnnouncer, AccessibilityControl, LanguageSelector, a11y } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { SkipLink, RouteAnnouncer, AccessibilityControl, LanguageSelector, CurrencySelector, a11y } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { ErrorBoundary } from '@kalakriti/observability';
   import { env } from '$env/dynamic/public';
@@ -24,7 +24,6 @@
   import BuyerFooter from '$lib/BuyerFooter.svelte';
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
-  import CurrencySelector from '$lib/CurrencySelector.svelte';
   import { currency } from '$lib/currency.svelte';
 
   interface Props {
@@ -132,6 +131,7 @@
       aria-expanded={mobileNavOpen}
       aria-controls="shell-mobile-nav"
       aria-label={mobileNavOpen ? 'Close main navigation' : 'Open main navigation'}
+      title={tooltip('tooltip.mobileNav')}
     >
       <Icon name="menu" size="1.25rem" />
     </button>
@@ -154,7 +154,7 @@
       <form class="shell__search-inline" action="/search" role="search">
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
-      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')}>
+      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')} title={tooltip('tooltip.search')}>
         <Icon name="search" size="1.1rem" />
       </a>
       <!-- AccountMenu last: its popover anchors flush to *its own* right
@@ -163,6 +163,7 @@
            sits to its right pushing it away from the header's true right
            edge. -->
       <LanguageSelector triggerSize="lg" />
+      <CurrencySelector triggerSize="lg" />
       <AccessibilityControl statementHref="/accessibility" triggerSize="lg" />
       <AccountMenu />
     </div>

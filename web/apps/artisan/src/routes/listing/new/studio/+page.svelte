@@ -11,7 +11,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
@@ -329,7 +329,7 @@
   {/snippet}
 
   {#snippet actions()}
-    <Button size="xl" onclick={next} loading={saving} disabled={locked}>{t('listing.studio.apply')}</Button>
+    <Button size="xl" onclick={next} loading={saving} disabled={locked} tooltip={tooltip('tooltip.next')}>{t('listing.studio.apply')}</Button>
   {/snippet}
 </ListingStep>
 

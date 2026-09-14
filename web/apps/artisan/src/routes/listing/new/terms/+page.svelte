@@ -12,7 +12,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, FieldGroup, NumberStepper, Switch, Checkbox, showToast } from '@kalakriti/ui';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields, queueListingUpdate, publishListing, type ListingDraftFields } from '$lib/listing-draft';
@@ -119,6 +119,7 @@
       loading={publishing}
       disabled={!reviewApproved || !termsAccepted}
       onclick={publish}
+      tooltip={tooltip('tooltip.approve')}
     >
       {t('listing.terms.publish')}
     </Button>

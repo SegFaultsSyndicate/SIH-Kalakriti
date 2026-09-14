@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, EmptyState, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import {
@@ -174,7 +174,7 @@
         <p class="storefront-header__followers">{t('artisan.followerCount', { count: String(followerCount) })}</p>
       {/if}
       {#if session.status === 'authenticated'}
-        <Button variant={following ? 'secondary' : 'primary'} onclick={toggleFollow} loading={followBusy}>
+        <Button variant={following ? 'secondary' : 'primary'} onclick={toggleFollow} loading={followBusy} tooltip={tooltip(following ? 'tooltip.unfollow' : 'tooltip.follow')}>
           {following ? t('artisan.following') : t('artisan.follow')}
         </Button>
       {/if}

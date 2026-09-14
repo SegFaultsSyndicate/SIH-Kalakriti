@@ -6,8 +6,8 @@
   Dilli Haat) with year-round digital storefronts and repeat ordering.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -148,30 +148,45 @@
 
       <!-- Filter Tabs -->
       <div class="filter-strip" role="tablist">
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'all'}
-          onclick={() => (selectedFilter = 'all')}
-        >
-          All Exhibitions ({FAIRS.length})
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'active'}
-          onclick={() => (selectedFilter = 'active')}
-        >
-          <Icon name="calendar" size="1rem" /> Happening Now (2)
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'upcoming'}
-          onclick={() => (selectedFilter = 'upcoming')}
-        >
-          <Icon name="clock" size="1rem" /> Upcoming Fairs (3)
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'all'}
+                onclick={() => (selectedFilter = 'all')}
+                {...tp}
+              >
+                All Exhibitions ({FAIRS.length})
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'active'}
+                onclick={() => (selectedFilter = 'active')}
+                {...tp}
+              >
+                <Icon name="calendar" size="1rem" /> Happening Now (2)
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'upcoming'}
+                onclick={() => (selectedFilter = 'upcoming')}
+                {...tp}
+              >
+                <Icon name="clock" size="1rem" /> Upcoming Fairs (3)
+              </button>
+            {/snippet}
+          </Tooltip>
       </div>
     </header>
 

@@ -9,9 +9,9 @@
   - High-resolution HTML5 Canvas render export
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button } from '@kalakriti/ui';
+  import { Button, Tooltip } from '@kalakriti/ui';
 
   interface Props {
     imageSrc: string;
@@ -176,9 +176,13 @@
           </h2>
           <p class="crop-subtitle">{t('profile.crop.instruction')}</p>
         </div>
-        <button type="button" class="crop-close-btn" onclick={oncancel} title={t('imageCrop.close')}>
-          <Icon name="close" size="1.1rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="crop-close-btn" onclick={oncancel} {...props}>
+              <Icon name="close" size="1.1rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <!-- Interactive Viewport -->
@@ -226,9 +230,13 @@
       <!-- Zoom & Adjustment Controls -->
       <div class="crop-controls">
         <div class="crop-zoom-bar">
-          <button type="button" class="crop-tool-btn" onclick={zoomOut} title={t('imageCrop.zoomOut')}>
-            <Icon name="chevron-down" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.zoomOut')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-tool-btn" onclick={zoomOut} {...props}>
+                <Icon name="chevron-down" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
           <input
             type="range"
             min="0.8"
@@ -238,29 +246,41 @@
             class="crop-slider"
             aria-label={t('profile.crop.zoom')}
           />
-          <button type="button" class="crop-tool-btn" onclick={zoomIn} title={t('imageCrop.zoomIn')}>
-            <Icon name="chevron-up" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.zoomIn')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-tool-btn" onclick={zoomIn} {...props}>
+                <Icon name="chevron-up" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
 
         <div class="crop-tool-actions">
-          <button type="button" class="crop-action-btn" onclick={rotateClockwise} title={t('profile.crop.rotate')}>
-            <Icon name="refresh" size="0.9rem" />
-            {t('profile.crop.rotate')}
-          </button>
-          <button type="button" class="crop-action-btn" onclick={resetPosition} title={t('profile.crop.reset')}>
-            <Icon name="refresh" size="0.9rem" />
-            {t('profile.crop.reset')}
-          </button>
+          <Tooltip text={tooltip('profile.crop.rotate')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-action-btn" onclick={rotateClockwise} {...props}>
+                <Icon name="refresh" size="0.9rem" />
+                {t('profile.crop.rotate')}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.resetPosition')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-action-btn" onclick={resetPosition} {...props}>
+                <Icon name="refresh" size="0.9rem" />
+                {t('profile.crop.reset')}
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       </div>
 
       <!-- Footer Buttons -->
       <div class="crop-footer">
-        <Button variant="secondary" size="md" onclick={oncancel}>
+        <Button variant="secondary" size="md" onclick={oncancel} tooltip={tooltip('tooltip.cancel')}>
           {t('profile.crop.cancel')}
         </Button>
-        <Button variant="primary" size="md" onclick={applyCrop}>
+        <Button variant="primary" size="md" onclick={applyCrop} tooltip={tooltip('tooltip.applyCrop')}>
           <Icon name="check" size="1rem" />
           {t('profile.crop.apply')}
         </Button>

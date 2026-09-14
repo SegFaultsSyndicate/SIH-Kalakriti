@@ -6,8 +6,8 @@
   transparent lead-time math, and direct handoff to /bulk-order.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -101,14 +101,19 @@
           <Icon name="arrow-right" size="1rem" />
         </a>
 
-        <button
-          type="button"
-          class="k-deck-btn"
-          onclick={downloadCatalog}
-        >
-          <Icon name="download" size="0.95rem" />
-          <span>{t('home.b2b.downloadDeck')}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.downloadCatalog')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="k-deck-btn"
+              onclick={downloadCatalog}
+              {...tp}
+            >
+              <Icon name="download" size="0.95rem" />
+              <span>{t('home.b2b.downloadDeck')}</span>
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
 

@@ -8,7 +8,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
@@ -105,7 +105,7 @@
         <!-- svelte-ignore a11y_media_has_caption -->
         <video src={videoUrl} controls></video>
         {#if !locked}
-          <Button size="sm" variant="ghost" onclick={remove}>{t('listing.video.remove')}</Button>
+          <Button size="sm" variant="ghost" onclick={remove} tooltip={tooltip('tooltip.removeVideo')}>{t('listing.video.remove')}</Button>
         {/if}
       </div>
     {:else if !locked}
@@ -122,7 +122,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" onclick={next}>{video ? t('action.next') : t('action.skip')}</Button>
+    <Button size="xl" onclick={next} tooltip={tooltip(video ? 'tooltip.next' : 'tooltip.skip')}>{video ? t('action.next') : t('action.skip')}</Button>
   {/snippet}
 </ListingStep>
 

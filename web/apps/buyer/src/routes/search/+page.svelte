@@ -22,8 +22,8 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
-  import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Skeleton, Switch } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Skeleton, Switch, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { search, searchVoice, batchGetListingSummaries, suggest, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
@@ -213,20 +213,28 @@
 <div class="search-container">
   <form class="search-bar" onsubmit={onSubmit}>
     <Input type="search" bind:value={q} placeholder={t('search.placeholder')} onfocus={() => { if (suggestions.length > 0) showSuggestions = true; }} />
-    <button type="button" class="search-bar__voice" onclick={() => (voiceOpen = true)} aria-label={t('search.voice.label')}>
-      <Icon name="microphone" />
-    </button>
-    <Button type="submit">{t('nav.search')}</Button>
+    <Tooltip text={tooltip('tooltip.voiceSearch')}>
+      {#snippet trigger(tp)}
+        <button type="button" class="search-bar__voice" onclick={() => (voiceOpen = true)} aria-label={t('search.voice.label')} {...tp}>
+          <Icon name="microphone" />
+        </button>
+      {/snippet}
+    </Tooltip>
+    <Button type="submit" tooltip={tooltip('tooltip.search')}>{t('nav.search')}</Button>
   </form>
 
   {#if showSuggestions && suggestions.length > 0}
     <ul class="search-suggestions" role="listbox">
       {#each suggestions as item}
         <li>
-          <button type="button" class="search-suggestions__item" onclick={() => selectSuggestion(item)}>
-            <Icon name="search" />
-            <span>{item}</span>
-          </button>
+          <Tooltip text={tooltip('tooltip.search')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="search-suggestions__item" onclick={() => selectSuggestion(item)} {...tp}>
+                <Icon name="search" />
+                <span>{item}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
         </li>
       {/each}
     </ul>
@@ -300,7 +308,7 @@
 
   <div bind:this={sentinel}></div>
   <div class="load-more">
-    <Button variant="secondary" onclick={loadMore} loading={loading && hits.length > 0}>{t('search.loadMore')}</Button>
+    <Button variant="secondary" onclick={loadMore} loading={loading && hits.length > 0} tooltip={tooltip('tooltip.loadMore')}>{t('search.loadMore')}</Button>
   </div>
 {/if}
 

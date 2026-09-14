@@ -7,9 +7,9 @@
   reorder directly from their digital storefront year-round.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button } from '@kalakriti/ui';
+  import { Button, Tooltip } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
 
   interface Props {
@@ -193,9 +193,13 @@
           <h2>{t('exhibition.stallCard.title')}</h2>
           <p class="modal-subhead">{t('exhibition.stallCard.subtitle')}</p>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
-          <Icon name="close" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+              <Icon name="close" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </header>
 
       <!-- Exhibition Controls -->
@@ -318,12 +322,12 @@
 
       <!-- Action Buttons -->
       <footer class="modal-actions">
-        <Button variant="secondary" size="sm" onclick={handleShare} class="placard-btn">
+        <Button variant="secondary" size="sm" onclick={handleShare} class="placard-btn" tooltip={tooltip('tooltip.shareCard')}>
           <Icon name="share" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.shareWhatsapp')}</span>
           <span class="btn-label--mobile">WhatsApp</span>
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint} class="placard-btn">
+        <Button variant="primary" size="sm" onclick={handlePrint} class="placard-btn" tooltip={tooltip('tooltip.printCard')}>
           <Icon name="print" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.print')}</span>
           <span class="btn-label--mobile">Print Placard</span>

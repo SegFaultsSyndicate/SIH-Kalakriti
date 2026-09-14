@@ -8,10 +8,20 @@
   card's price line via the shared `currency` store.
 -->
 <script lang="ts">
-  import { locale, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
+  import { locale, tooltip, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Popover, Button } from '@kalakriti/ui';
-  import { currency, CURRENCY_RATES } from './currency.svelte';
+  import { currency, CURRENCY_RATES } from '../../../apps/buyer/src/lib/currency.svelte';
+  import Popover from './Popover.svelte';
+  import Button, { type ButtonSize } from './Button.svelte';
+
+  interface Props {
+    /** xl (Button's own default) is the artisan app's minimum comfortable
+     * tap target. A header that also has to fit a wordmark and two more
+     * icon buttons on one row at phone width (the buyer shell) can pass a
+     * smaller size -- lg is still above --k-touch-min (44px). */
+    triggerSize?: ButtonSize;
+  }
+  let { triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
   let open = $state(false);
@@ -26,7 +36,7 @@
 
 <Popover align="end" bind:open>
   {#snippet trigger(props)}
-    <Button icon="dollar-sign" label={t('currency.selector.label')} variant="ghost" {...props} />
+    <Button icon="dollar-sign" label={t('currency.selector.label')} variant="ghost" tooltip={tooltip('tooltip.currency')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <ul class="k-currency-panel" role="list">

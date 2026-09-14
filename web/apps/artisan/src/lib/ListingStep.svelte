@@ -14,8 +14,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
-  import { Stepper, SpeakButton } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { SpeakButton, Stepper, Tooltip } from '@kalakriti/ui';
 
   interface Props {
     /** 0-indexed. */
@@ -50,9 +50,13 @@
     current={index}
   />
 
-  <button type="button" class="listing-step__back" onclick={() => goto(backHref)}>
-    {t('action.back')}
-  </button>
+  <Tooltip text={tooltip('tooltip.back')}>
+    {#snippet trigger(props)}
+      <button type="button" class="listing-step__back" onclick={() => goto(backHref)} {...props}>
+        {t('action.back')}
+      </button>
+    {/snippet}
+  </Tooltip>
 
   <h1>{heading}</h1>
   <SpeakButton text={speakText ?? heading} label={t('action.speak')} />

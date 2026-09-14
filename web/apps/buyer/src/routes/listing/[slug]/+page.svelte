@@ -24,8 +24,8 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale, matchesLocale, type DntTerm } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { locale, matchesLocale, tooltip, type DntTerm } from '@kalakriti/i18n';
+  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getListingSummary, type components } from '@kalakriti/api';
   import { getCached, setCached } from '@kalakriti/offline';
@@ -204,20 +204,25 @@
       {#if media.length > 1}
         <div class="listing__thumbs" role="tablist" aria-label={t('listing.gallery.processVideo')}>
           {#each media as item, index (index)}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={index === activeMediaIndex}
-              class="listing__thumb"
-              class:listing__thumb--active={index === activeMediaIndex}
-              onclick={() => (activeMediaIndex = index)}
-            >
-              {#if item.kind === 'VIDEO'}
-                <span class="listing__thumb-video"><Icon name="process-video" title={t('listing.gallery.processVideo')} /></span>
-              {:else if item.url}
-                <img src={item.url} alt={title ? `${title} photo ${index + 1}` : `Photo ${index + 1}`} />
-              {/if}
-            </button>
+            <Tooltip text={tooltip('tooltip.selectImage')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={index === activeMediaIndex}
+                class="listing__thumb"
+                class:listing__thumb--active={index === activeMediaIndex}
+                onclick={() => (activeMediaIndex = index)}
+                {...tp}
+              >
+                {#if item.kind === 'VIDEO'}
+                  <span class="listing__thumb-video"><Icon name="process-video" title={t('listing.gallery.processVideo')} /></span>
+                {:else if item.url}
+                  <img src={item.url} alt={title ? `${title} photo ${index + 1}` : `Photo ${index + 1}`} />
+                {/if}
+              </button>
+            {/snippet}
+          </Tooltip>
           {/each}
         </div>
       {/if}
@@ -232,16 +237,20 @@
           {/if}
         </p>
 
-        <button
-          type="button"
-          class="listing__share-btn"
-          onclick={handleShare}
-          title="Share this authentic craft piece"
-          aria-label="Share this listing"
-        >
-          <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
-          <span>{copied ? 'Copied!' : 'Share'}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.share')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="listing__share-btn"
+              onclick={handleShare}
+              aria-label="Share this listing"
+              {...tp}
+            >
+              <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
+              <span>{copied ? 'Copied!' : 'Share'}</span>
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <h1>{title}</h1>
@@ -255,25 +264,31 @@
         </div>
       </div>
       {#if listing.artisan_name}
-        <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title="View artisan profile">
-          <div class="listing__artisan-avatar">
-            {#if artisanAvatar}
-              <img src={artisanAvatar} alt={listing.artisan_name} class="listing__artisan-avatar-img" />
-            {:else}
-              <span class="listing__artisan-avatar-initial">{listing.artisan_name.charAt(0).toUpperCase()}</span>
-            {/if}
-            <span class="listing__artisan-verified" title="Govt & AI Verified Artisan">
-              <Icon name="verified-artisan" />
-            </span>
-          </div>
-          <div class="listing__artisan-info">
-            <span class="listing__artisan-name">{t('listing.by', { name: listing.artisan_name })}</span>
-            <span class="listing__artisan-sub">
-              {#if listing.artisan_district}<span>{listing.artisan_district}</span> • {/if}
-              <span class="listing__artisan-view">View artisan storefront →</span>
-            </span>
-          </div>
-        </a>
+        {@const artisanName = listing.artisan_name}
+        {@const artisanDistrict = listing.artisan_district}
+        <Tooltip text={tooltip('tooltip.viewArtisan')}>
+        {#snippet trigger(tp)}
+          <a href="/artisan/{encodeURIComponent(artisanName.toLowerCase())}" class="listing__artisan-badge" {...tp}>
+            <div class="listing__artisan-avatar">
+              {#if artisanAvatar}
+                <img src={artisanAvatar} alt={artisanName} class="listing__artisan-avatar-img" />
+              {:else}
+                <span class="listing__artisan-avatar-initial">{artisanName.charAt(0).toUpperCase()}</span>
+              {/if}
+              <span class="listing__artisan-verified">
+                <Icon name="verified-artisan" />
+              </span>
+            </div>
+            <div class="listing__artisan-info">
+              <span class="listing__artisan-name">{t('listing.by', { name: artisanName })}</span>
+              <span class="listing__artisan-sub">
+                {#if artisanDistrict}<span>{artisanDistrict}</span> • {/if}
+                <span class="listing__artisan-view">View artisan storefront →</span>
+              </span>
+            </div>
+          </a>
+        {/snippet}
+      </Tooltip>
       {/if}
       <p class="listing__price"><Money paise={listing.price?.amount_paise ?? 0} /></p>
 
@@ -351,17 +366,22 @@
       <span class="dock-label">{madeToOrder ? 'Advance Split' : 'Direct Price'}</span>
       <span class="dock-amount"><Money paise={listing.price?.amount_paise ?? 0} /></span>
     </div>
-    <button
-      type="button"
-      class="sticky-mobile-dock__action"
-      onclick={() => {
-        const form = document.querySelector('.listing__info');
-        form?.scrollIntoView({ behavior: 'smooth' });
-      }}
-    >
-      <Icon name={madeToOrder ? 'made-to-order' : 'ready-stock'} size="1rem" />
-      <span>{madeToOrder ? 'Commission Piece' : 'Acquire Now'}</span>
-    </button>
+    <Tooltip text={tooltip('tooltip.next')}>
+      {#snippet trigger(tp)}
+        <button
+          type="button"
+          class="sticky-mobile-dock__action"
+          onclick={() => {
+            const form = document.querySelector('.listing__info');
+            form?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          {...tp}
+        >
+          <Icon name={madeToOrder ? 'made-to-order' : 'ready-stock'} size="1rem" />
+          <span>{madeToOrder ? 'Commission Piece' : 'Acquire Now'}</span>
+        </button>
+      {/snippet}
+    </Tooltip>
   </aside>
 </div>
 {/if}

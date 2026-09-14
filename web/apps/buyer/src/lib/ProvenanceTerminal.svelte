@@ -6,8 +6,8 @@
   separation, monospace ledger hashing, and zero sci-fi neon gloss.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -117,15 +117,20 @@
         />
       </div>
 
-      <button
-        type="button"
-        class="inspect-action-btn"
-        onclick={verifyCode}
-        disabled={isChecking}
-      >
-        <Icon name="check" size="1rem" />
-        <span>{isChecking ? 'Inspecting...' : t('home.provenanceTerminal.verifyButton')}</span>
-      </button>
+      <Tooltip text={tooltip('tooltip.verify')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="inspect-action-btn"
+            onclick={verifyCode}
+            disabled={isChecking}
+            {...tp}
+          >
+            <Icon name="check" size="1rem" />
+            <span>{isChecking ? 'Inspecting...' : t('home.provenanceTerminal.verifyButton')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
     </div>
 
     <!-- Sample quick links -->
@@ -133,15 +138,20 @@
       <span class="sample-label">{t('home.provenanceTerminal.sampleCodes')}</span>
       <div class="sample-badges">
         {#each SAMPLE_CODES as sample}
-          <button
-            type="button"
-            class="sample-code-chip"
-            class:selected={searchCode === sample.code}
-            onclick={() => pickSample(sample.code)}
-          >
-            <span>{sample.label}</span>
-            <code class="chip-code">{sample.code}</code>
-          </button>
+          <Tooltip text={tooltip('tooltip.verify')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="sample-code-chip"
+                class:selected={searchCode === sample.code}
+                onclick={() => pickSample(sample.code)}
+                {...tp}
+              >
+                <span>{sample.label}</span>
+                <code class="chip-code">{sample.code}</code>
+              </button>
+            {/snippet}
+          </Tooltip>
         {/each}
       </div>
     </div>

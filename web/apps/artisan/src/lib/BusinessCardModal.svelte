@@ -6,9 +6,9 @@
   visiting card, instant WhatsApp sharing, and printing options.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button, showToast } from '@kalakriti/ui';
+  import { Button, showToast, Tooltip } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
 
   interface Props {
@@ -91,9 +91,13 @@
           <h2>{t('card.title')}</h2>
           <p class="modal-subhead">Share your authentic artisan identity with buyers and institutions.</p>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')}>
-          <Icon name="close" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+              <Icon name="close" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </header>
 
       <!-- Live Card Preview -->
@@ -147,15 +151,15 @@
 
       <!-- Action Buttons Strip -->
       <footer class="modal-actions">
-        <Button variant="secondary" size="sm" onclick={copyLink}>
+        <Button variant="secondary" size="sm" onclick={copyLink} tooltip={tooltip('tooltip.copy')}>
           <Icon name="link" size="0.85rem" />
           <span>Copy Link</span>
         </Button>
-        <Button variant="secondary" size="sm" onclick={shareWhatsApp}>
+        <Button variant="secondary" size="sm" onclick={shareWhatsApp} tooltip={tooltip('tooltip.shareCard')}>
           <Icon name="whatsapp" size="0.85rem" />
           <span>WhatsApp</span>
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint}>
+        <Button variant="primary" size="sm" onclick={handlePrint} tooltip={tooltip('tooltip.printCard')}>
           <Icon name="print" size="0.85rem" />
           <span>{t('card.printCard')}</span>
         </Button>

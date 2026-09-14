@@ -15,7 +15,8 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Tooltip } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
 
@@ -50,12 +51,20 @@
     <p class="update__title">{t('sw.update.title')}</p>
     <p class="update__body">{t('sw.update.body')}</p>
     <div class="update__actions">
-      <button type="button" class="update__button update__button--primary" onclick={update}>
-        {t('sw.update.accept')}
-      </button>
-      <button type="button" class="update__button" onclick={() => (needRefresh = false)}>
-        {t('sw.update.dismiss')}
-      </button>
+      <Tooltip text={tooltip('tooltip.update')}>
+        {#snippet trigger(props)}
+          <button type="button" class="update__button update__button--primary" onclick={update} {...props}>
+            {t('sw.update.accept')}
+          </button>
+        {/snippet}
+      </Tooltip>
+      <Tooltip text={tooltip('tooltip.dismiss')}>
+        {#snippet trigger(props)}
+          <button type="button" class="update__button" onclick={() => (needRefresh = false)} {...props}>
+            {t('sw.update.dismiss')}
+          </button>
+        {/snippet}
+      </Tooltip>
     </div>
   </div>
 {/if}

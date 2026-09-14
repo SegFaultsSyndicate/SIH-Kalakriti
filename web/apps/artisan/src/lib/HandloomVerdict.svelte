@@ -15,9 +15,9 @@
   only in the hackathon deck.
 -->
 <script lang="ts">
-  import { locale, formatPercent } from '@kalakriti/i18n';
+  import { locale, formatPercent, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { SpeakButton } from '@kalakriti/ui';
+  import { SpeakButton, Tooltip } from '@kalakriti/ui';
   import type { Component } from 'svelte';
   import type { SVGAttributes } from 'svelte/elements';
   import FftComparisonRaw from '@kalakriti/illustrations/src/fft-comparison.svg';
@@ -66,10 +66,14 @@
     </p>
   {/if}
 
-  <button type="button" class="k-handloom-verdict__figure-toggle" onclick={() => (showFigure = !showFigure)}>
-    <Icon name={showFigure ? 'chevron-up' : 'chevron-right'} />
-    {t('handloom.figureLink')}
-  </button>
+  <Tooltip text={tooltip('tooltip.showFigure')}>
+    {#snippet trigger(props)}
+      <button type="button" class="k-handloom-verdict__figure-toggle" onclick={() => (showFigure = !showFigure)} {...props}>
+        <Icon name={showFigure ? 'chevron-up' : 'chevron-right'} />
+        {t('handloom.figureLink')}
+      </button>
+    {/snippet}
+  </Tooltip>
   {#if showFigure}
     <FftComparison role="img" aria-label={t('handloom.figureAlt')} class="k-handloom-verdict__figure" />
   {/if}

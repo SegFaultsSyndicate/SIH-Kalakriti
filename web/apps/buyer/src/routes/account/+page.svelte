@@ -15,9 +15,9 @@
   Strictly adheres to Svelte 5 runes ($state, $derived) and GIGW 3.0 accessibility.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -220,9 +220,13 @@
     <section class="profile-banner">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">AS</div>
-        <button type="button" class="avatar-edit-btn" title={t('account.changePhotoTitle')} aria-label={t('account.changePhotoLabel')}>
-          <Icon name="camera" size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.addPhoto')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="avatar-edit-btn" aria-label={t('account.changePhotoLabel')} {...tp}>
+              <Icon name="camera" size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="profile-meta">
@@ -241,7 +245,11 @@
           <span class="contact-item">
             <Icon name="phone" size="0.9rem" />
             {phone}
-            <span class="verified-dot" title={t('account.phoneVerifiedTitle')}>{t('account.phoneVerifiedBadge')}</span>
+            <Tooltip text={t('account.phoneVerifiedTitle')}>
+              {#snippet trigger(tp)}
+                <span class="verified-dot" {...tp}>{t('account.phoneVerifiedBadge')}</span>
+              {/snippet}
+            </Tooltip>
           </span>
         </div>
       </div>
@@ -262,10 +270,14 @@
       </div>
 
       <div class="profile-actions-col">
-        <button type="button" class="banner-signout-btn" onclick={handleSignOut} title={t('account.signOutTitle')}>
-          <Icon name="lock" size="0.85rem" />
-          <span>{t('account.signOut')}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.signout')}>
+        {#snippet trigger(tp)}
+          <button type="button" class="banner-signout-btn" onclick={handleSignOut} {...tp}>
+            <Icon name="lock" size="0.85rem" />
+            <span>{t('account.signOut')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
       </div>
     </section>
 
@@ -284,34 +296,44 @@
         </a>
 
         <!-- Card 2: Login & Security -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <div class="card-icon-box">
-            <Icon name="lock" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Login & Security</h2>
-            <p class="card-desc">Edit name, mobile number, password, 2FA, and active sessions</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'security')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="lock" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">Login & Security</h2>
+              <p class="card-desc">Edit name, mobile number, password, 2FA, and active sessions</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 3: Your Addresses -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <div class="card-icon-box">
-            <Icon name="location" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Your Addresses</h2>
-            <p class="card-desc">Edit addresses and institutional GSTIN delivery preferences</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'addresses')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="location" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">Your Addresses</h2>
+              <p class="card-desc">Edit addresses and institutional GSTIN delivery preferences</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 4: Craft Provenance Passports -->
         <a href="/verify" class="hub-card">
@@ -325,19 +347,24 @@
         </a>
 
         <!-- Card 5: Loom Consultations -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <div class="card-icon-box">
-            <Icon name="video" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Loom Consultations</h2>
-            <p class="card-desc">Scheduled 1-on-1 video calls with master weavers & inquiries</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'consultations')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="video" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">Loom Consultations</h2>
+              <p class="card-desc">Scheduled 1-on-1 video calls with master weavers & inquiries</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 6: Bulk Procurement -->
         <a href="/bulk-order" class="hub-card">
@@ -356,46 +383,71 @@
     <div class="account-details-container">
       <!-- Section Navigation Pills -->
       <nav class="details-nav-pills" aria-label="Account Settings Tabs">
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'personal')}
-        >
-          <Icon name="user" size="0.95rem" />
-          Personal Details
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <Icon name="location" size="0.95rem" />
-          Saved Addresses ({savedAddresses.length})
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <Icon name="lock" size="0.95rem" />
-          Login & Security
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'orders')}
-        >
-          <Icon name="collective-order" size="0.95rem" />
-          Recent Orders (2)
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <Icon name="video" size="0.95rem" />
-          Loom Video Calls (1)
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'personal')}
+              {...tp}
+            >
+              <Icon name="user" size="0.95rem" />
+              Personal Details
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'addresses')}
+              {...tp}
+            >
+              <Icon name="location" size="0.95rem" />
+              Saved Addresses ({savedAddresses.length})
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'security')}
+              {...tp}
+            >
+              <Icon name="lock" size="0.95rem" />
+              Login & Security
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'orders')}
+              {...tp}
+            >
+              <Icon name="collective-order" size="0.95rem" />
+              Recent Orders (2)
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'consultations')}
+              {...tp}
+            >
+              <Icon name="video" size="0.95rem" />
+              Loom Video Calls (1)
+            </button>
+          {/snippet}
+        </Tooltip>
       </nav>
 
       <!-- Panel 1: Personal Details & Contact -->
@@ -455,13 +507,18 @@
                     value={phone}
                     readonly
                   />
-                  <button
-                    type="button"
-                    class="action-inline-btn"
-                    onclick={() => (isPhoneModalOpen = true)}
-                  >
-                    Change via OTP
-                  </button>
+                  <Tooltip text={tooltip('tooltip.changePhone')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="action-inline-btn"
+                        onclick={() => (isPhoneModalOpen = true)}
+                        {...tp}
+                      >
+                        Change via OTP
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
                 <span class="field-tip">Verified with 2-Factor Authentication</span>
               </div>
@@ -496,9 +553,13 @@
             </div>
 
             <div class="form-submit-row">
-              <button type="submit" class="primary-save-btn">
-                Save Profile Changes
-              </button>
+              <Tooltip text={tooltip('tooltip.save')}>
+              {#snippet trigger(tp)}
+                <button type="submit" class="primary-save-btn" {...tp}>
+                  Save Profile Changes
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </form>
         </div>
@@ -511,14 +572,19 @@
               <h2 class="panel-title">Your Delivery Addresses</h2>
               <p class="panel-desc">Manage shipping destinations and corporate institutional addresses</p>
             </div>
-            <button
-              type="button"
-              class="add-addr-btn"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <Icon name="plus" size="0.95rem" />
-              Add a New Address
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="add-addr-btn"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <Icon name="plus" size="0.95rem" />
+                Add a New Address
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
 
           <div class="addresses-grid">
@@ -544,38 +610,53 @@
 
                 <div class="addr-actions">
                   {#if !addr.isDefault}
-                    <button
-                      type="button"
-                      class="addr-text-btn"
-                      onclick={() => handleSetDefaultAddress(addr.id)}
-                    >
-                      Set as Default
-                    </button>
+                    <Tooltip text={tooltip('tooltip.setDefault')}>
+                      {#snippet trigger(tp)}
+                        <button
+                          type="button"
+                          class="addr-text-btn"
+                          onclick={() => handleSetDefaultAddress(addr.id)}
+                          {...tp}
+                        >
+                          Set as Default
+                        </button>
+                      {/snippet}
+                    </Tooltip>
                     <span class="btn-divider">|</span>
                   {/if}
-                  <button
-                    type="button"
-                    class="addr-text-btn remove-btn"
-                    onclick={() => handleDeleteAddress(addr.id)}
-                  >
-                    Remove
-                  </button>
+                  <Tooltip text={tooltip('tooltip.removeAddress')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="addr-text-btn remove-btn"
+                        onclick={() => handleDeleteAddress(addr.id)}
+                        {...tp}
+                      >
+                        Remove
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
               </div>
             {/each}
 
             <!-- Add Address Card Placeholder -->
-            <button
-              type="button"
-              class="new-address-placeholder-card"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <div class="plus-circle">
-                <Icon name="plus" size="1.5rem" />
-              </div>
-              <strong>Add Delivery Address</strong>
-              <small>Home, atelier, or corporate ministry office</small>
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="new-address-placeholder-card"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <div class="plus-circle">
+                  <Icon name="plus" size="1.5rem" />
+                </div>
+                <strong>Add Delivery Address</strong>
+                <small>Home, atelier, or corporate ministry office</small>
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
@@ -596,9 +677,13 @@
                 <strong>Name</strong>
                 <span>{fullName}</span>
               </div>
-              <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')}>
-                Edit
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')} {...tp}>
+                    Edit
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 2: Mobile Phone Number -->
@@ -607,13 +692,18 @@
                 <strong>Mobile Phone Number</strong>
                 <span>{phone} (Verified)</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => (isPhoneModalOpen = true)}
-              >
-                Change
-              </button>
+              <Tooltip text={tooltip('tooltip.changePhone')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => (isPhoneModalOpen = true)}
+                    {...tp}
+                  >
+                    Change
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 3: Password -->
@@ -622,13 +712,18 @@
                 <strong>Password</strong>
                 <span>•••••••••••• (Last changed 14 days ago)</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => showToast({ message: 'Password reset link sent to your verified email', variant: 'info' })}
-              >
-                Change
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => showToast({ message: 'Password reset link sent to your verified email', variant: 'info' })}
+                    {...tp}
+                  >
+                    Change
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 4: Two-Factor Authentication -->
@@ -637,19 +732,24 @@
                 <strong>Two-Factor Authentication (2FA)</strong>
                 <span>Receive a one-time passcode on your phone upon login</span>
               </div>
-              <button
-                type="button"
-                class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
-                onclick={() => {
-                  twoFactorEnabled = !twoFactorEnabled;
-                  showToast({
-                    message: twoFactorEnabled ? '2FA enabled' : '2FA disabled',
-                    variant: 'info',
-                  });
-                }}
-              >
-                {twoFactorEnabled ? 'Enabled' : 'Disabled'}
-              </button>
+              <Tooltip text={tooltip('tooltip.toggle2fa')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
+                    onclick={() => {
+                      twoFactorEnabled = !twoFactorEnabled;
+                      showToast({
+                        message: twoFactorEnabled ? '2FA enabled' : '2FA disabled',
+                        variant: 'info',
+                      });
+                    }}
+                    {...tp}
+                  >
+                    {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
 
@@ -660,14 +760,19 @@
                 <h3 class="block-title">Active Devices & Sessions</h3>
                 <p class="block-sub">Signed-in web browsers and mobile PWAs connected to your account</p>
               </div>
-              <button
-                type="button"
-                class="revoke-all-btn"
-                onclick={handleRevokeOtherSessions}
-              >
-                <Icon name="lock" size="0.85rem" />
-                Sign Out of All Other Devices
-              </button>
+              <Tooltip text={tooltip('tooltip.revokeSessions')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="revoke-all-btn"
+                  onclick={handleRevokeOtherSessions}
+                  {...tp}
+                >
+                  <Icon name="lock" size="0.85rem" />
+                  Sign Out of All Other Devices
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
 
             <div class="sessions-list">
@@ -696,21 +801,31 @@
             <h3 class="block-title">DPDP Act 2023 Data Sovereignty</h3>
             <p class="block-sub">Under India's Digital Personal Data Protection Act 2023, you retain absolute ownership over your account data.</p>
             <div class="dpdp-actions">
-              <button
-                type="button"
-                class="dpdp-btn"
-                onclick={() => showToast({ message: 'Personal data archive download started (JSON)', variant: 'success' })}
-              >
-                <Icon name="download" size="0.9rem" />
-                Download Personal Data Archive
-              </button>
-              <button
-                type="button"
-                class="dpdp-btn danger"
-                onclick={() => showToast({ message: 'Consent withdrawal request logged. An officer will confirm via SMS.', variant: 'info' })}
-              >
-                Manage Privacy Consent
-              </button>
+              <Tooltip text={tooltip('tooltip.exportData')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn"
+                    onclick={() => showToast({ message: 'Personal data archive download started (JSON)', variant: 'success' })}
+                    {...tp}
+                  >
+                    <Icon name="download" size="0.9rem" />
+                    Download Personal Data Archive
+                  </button>
+                {/snippet}
+              </Tooltip>
+              <Tooltip text={tooltip('tooltip.withdrawConsent')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn danger"
+                    onclick={() => showToast({ message: 'Consent withdrawal request logged. An officer will confirm via SMS.', variant: 'info' })}
+                    {...tp}
+                  >
+                    Manage Privacy Consent
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -769,13 +884,18 @@
                 <span class="dot-sep">•</span>
                 <a href="/verify" class="rail-action-link">View Cryptographic Seal</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
-                >
-                  Download Tax Invoice
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                        {...tp}
+                      >
+                        Download Tax Invoice
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
 
@@ -817,13 +937,18 @@
                 <span class="dot-sep">•</span>
                 <a href="/verify" class="rail-action-link">Ed25519 Provenance Certificate</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
-                >
-                  Download Tax Invoice
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
+                        {...tp}
+                      >
+                        Download Tax Invoice
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
           </div>
@@ -860,21 +985,31 @@
             </div>
 
             <div class="consult-actions">
-              <button
-                type="button"
-                class="join-room-btn"
-                onclick={() => showToast({ message: 'Loom Video Room will activate 10 minutes prior to session', variant: 'info' })}
-              >
-                <Icon name="video" size="1.1rem" />
-                Join Video Consultation Room
-              </button>
-              <button
-                type="button"
-                class="reschedule-btn"
-                onclick={() => showToast({ message: 'Reschedule request sent to artisan guild coordinator', variant: 'info' })}
-              >
-                Reschedule Session
-              </button>
+              <Tooltip text={tooltip('tooltip.joinRoom')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="join-room-btn"
+                  onclick={() => showToast({ message: 'Loom Video Room will activate 10 minutes prior to session', variant: 'info' })}
+                  {...tp}
+                >
+                  <Icon name="video" size="1.1rem" />
+                  Join Video Consultation Room
+                </button>
+              {/snippet}
+            </Tooltip>
+            <Tooltip text={tooltip('tooltip.reschedule')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="reschedule-btn"
+                  onclick={() => showToast({ message: 'Reschedule request sent to artisan guild coordinator', variant: 'info' })}
+                  {...tp}
+                >
+                  Reschedule Session
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </div>
         </div>
@@ -896,14 +1031,19 @@
     >
       <div class="modal-head">
         <h3 class="modal-title">Change Mobile Number via OTP</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isPhoneModalOpen = false)}
-          aria-label="Close modal"
-        >
-          ✕
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isPhoneModalOpen = false)}
+              aria-label="Close modal"
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="modal-body">
@@ -922,13 +1062,18 @@
               bind:value={newPhone}
               maxlength="13"
             />
-            <button
-              type="button"
-              class="action-inline-btn"
-              onclick={handleRequestPhoneOtp}
-            >
-              {phoneOtpSent ? 'Resend' : 'Send Code'}
-            </button>
+            <Tooltip text={tooltip('tooltip.sendOtp')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="action-inline-btn"
+                onclick={handleRequestPhoneOtp}
+                {...tp}
+              >
+                {phoneOtpSent ? 'Resend' : 'Send Code'}
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
@@ -949,21 +1094,31 @@
       </div>
 
       <div class="modal-foot">
-        <button
-          type="button"
-          class="modal-cancel-btn"
-          onclick={() => (isPhoneModalOpen = false)}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="modal-submit-btn"
-          disabled={!phoneOtpSent || isVerifyingPhone}
-          onclick={handleVerifyPhone}
-        >
-          {isVerifyingPhone ? 'Verifying...' : 'Verify & Update Number'}
-        </button>
+        <Tooltip text={tooltip('tooltip.cancel')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-cancel-btn"
+              onclick={() => (isPhoneModalOpen = false)}
+              {...tp}
+            >
+              Cancel
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.verifyOtp')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-submit-btn"
+              disabled={!phoneOtpSent || isVerifyingPhone}
+              onclick={handleVerifyPhone}
+              {...tp}
+            >
+              {isVerifyingPhone ? 'Verifying...' : 'Verify & Update Number'}
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </div>
@@ -982,14 +1137,19 @@
     >
       <div class="modal-head">
         <h3 class="modal-title">Add a New Delivery Address</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isAddAddressOpen = false)}
-          aria-label="Close modal"
-        >
-          ✕
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isAddAddressOpen = false)}
+              aria-label="Close modal"
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <form onsubmit={handleAddAddress}>
@@ -1079,16 +1239,25 @@
         </div>
 
         <div class="modal-foot">
-          <button
-            type="button"
-            class="modal-cancel-btn"
-            onclick={() => (isAddAddressOpen = false)}
-          >
-            Cancel
-          </button>
-          <button type="submit" class="modal-submit-btn">
-            Save Address
-          </button>
+          <Tooltip text={tooltip('tooltip.cancel')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="modal-cancel-btn"
+                onclick={() => (isAddAddressOpen = false)}
+                {...tp}
+              >
+                Cancel
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button type="submit" class="modal-submit-btn" {...tp}>
+                Save Address
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       </form>
     </div>

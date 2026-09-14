@@ -15,8 +15,8 @@
     - Direct Order & Social Share copy actions
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs, type BreadcrumbItem, Money, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, type BreadcrumbItem, Money, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { wishlist } from '$lib/wishlist.svelte';
 
@@ -390,37 +390,51 @@
       <div class="sidebar-header">
         <h2 class="sidebar-title">{t('giTagged.shoppingOptions')}</h2>
         {#if selectedCategory !== 'all' || selectedPriceRange || selectedColor || selectedState !== 'all'}
-          <button type="button" class="sidebar-clear-btn" onclick={resetAllFilters}>
-            {t('giTagged.clearAll')}
-          </button>
+          <Tooltip text={tooltip('tooltip.clearFilters')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="sidebar-clear-btn" onclick={resetAllFilters} {...tp}>
+              {t('giTagged.clearAll')}
+            </button>
+          {/snippet}
+        </Tooltip>
         {/if}
       </div>
 
       <!-- 1. CATEGORY ACCORDION -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isCategoryOpen = !isCategoryOpen)}
-          aria-expanded={isCategoryOpen}
-        >
-          <span>{t('giTagged.filter.category')}</span>
-          <Icon name={isCategoryOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isCategoryOpen = !isCategoryOpen)}
+              aria-expanded={isCategoryOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.category')}</span>
+              <Icon name={isCategoryOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isCategoryOpen}
           <ul class="filter-list" role="list">
             {#each CATEGORY_FILTERS as cat}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedCategory === cat.label}
-                  onclick={() => (selectedCategory = selectedCategory === cat.label ? 'all' : cat.label)}
-                >
-                  <span class="option-name">{cat.label}</span>
-                  <span class="option-count">({cat.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectCategory')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedCategory === cat.label}
+                      onclick={() => (selectedCategory = selectedCategory === cat.label ? 'all' : cat.label)}
+                      {...tp}
+                    >
+                      <span class="option-name">{cat.label}</span>
+                      <span class="option-count">({cat.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -429,29 +443,39 @@
 
       <!-- 2. PRICE ACCORDION (IMAGE 4) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isPriceOpen = !isPriceOpen)}
-          aria-expanded={isPriceOpen}
-        >
-          <span>{t('giTagged.filter.price')}</span>
-          <Icon name={isPriceOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isPriceOpen = !isPriceOpen)}
+              aria-expanded={isPriceOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.price')}</span>
+              <Icon name={isPriceOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isPriceOpen}
           <ul class="filter-list" role="list">
             {#each PRICE_TIERS as tier}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedPriceRange === tier.label}
-                  onclick={() => (selectedPriceRange = selectedPriceRange === tier.label ? null : tier.label)}
-                >
-                  <span class="option-name">{tier.label}</span>
-                  <span class="option-count">({tier.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectPrice')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedPriceRange === tier.label}
+                      onclick={() => (selectedPriceRange = selectedPriceRange === tier.label ? null : tier.label)}
+                      {...tp}
+                    >
+                      <span class="option-name">{tier.label}</span>
+                      <span class="option-count">({tier.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -460,32 +484,41 @@
 
       <!-- 3. COLOR PALETTE SWATCHES (IMAGE 4) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isColorOpen = !isColorOpen)}
-          aria-expanded={isColorOpen}
-        >
-          <span>{t('giTagged.filter.color')}</span>
-          <Icon name={isColorOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isColorOpen = !isColorOpen)}
+              aria-expanded={isColorOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.color')}</span>
+              <Icon name={isColorOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isColorOpen}
           <div class="swatches-grid">
             {#each COLOR_SWATCHES as swatch}
-              <button
-                type="button"
-                class="swatch-circle"
-                class:active={selectedColor === swatch.hex}
-                style="background-color: {swatch.hex};"
-                title={swatch.name}
-                aria-label={`Filter by ${swatch.name}`}
-                onclick={() => (selectedColor = selectedColor === swatch.hex ? null : swatch.hex)}
-              >
-                {#if selectedColor === swatch.hex}
-                  <span class="swatch-check">✓</span>
-                {/if}
-              </button>
+              <Tooltip text={tooltip('tooltip.selectColor')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="swatch-circle"
+                    class:active={selectedColor === swatch.hex}
+                    style="background-color: {swatch.hex};"
+                    {...tp}
+                    aria-label={`Filter by ${swatch.name}`}
+                    onclick={() => (selectedColor = selectedColor === swatch.hex ? null : swatch.hex)}
+                  >
+                    {#if selectedColor === swatch.hex}
+                      <span class="swatch-check">✓</span>
+                    {/if}
+                  </button>
+                {/snippet}
+              </Tooltip>
             {/each}
           </div>
         {/if}
@@ -493,29 +526,39 @@
 
       <!-- 4. WEAVING STYLE ACCORDION (IMAGE 1) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isWeavingOpen = !isWeavingOpen)}
-          aria-expanded={isWeavingOpen}
-        >
-          <span>{t('giTagged.filter.weavingStyle')}</span>
-          <Icon name={isWeavingOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isWeavingOpen = !isWeavingOpen)}
+              aria-expanded={isWeavingOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.weavingStyle')}</span>
+              <Icon name={isWeavingOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isWeavingOpen}
           <ul class="filter-list" role="list">
             {#each WEAVING_STYLES as style}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedWeavingStyle === style.label}
-                  onclick={() => (selectedWeavingStyle = selectedWeavingStyle === style.label ? null : style.label)}
-                >
-                  <span class="option-name">{style.label}</span>
-                  <span class="option-count">({style.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectWeaving')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedWeavingStyle === style.label}
+                      onclick={() => (selectedWeavingStyle = selectedWeavingStyle === style.label ? null : style.label)}
+                      {...tp}
+                    >
+                      <span class="option-name">{style.label}</span>
+                      <span class="option-count">({style.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -524,29 +567,39 @@
 
       <!-- 5. PRINT OR PATTERN TYPE ACCORDION (IMAGE 1) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isPatternOpen = !isPatternOpen)}
-          aria-expanded={isPatternOpen}
-        >
-          <span>{t('giTagged.filter.patternType')}</span>
-          <Icon name={isPatternOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isPatternOpen = !isPatternOpen)}
+              aria-expanded={isPatternOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.patternType')}</span>
+              <Icon name={isPatternOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isPatternOpen}
           <ul class="filter-list" role="list">
             {#each PATTERN_TYPES as pat}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedPattern === pat.label}
-                  onclick={() => (selectedPattern = selectedPattern === pat.label ? null : pat.label)}
-                >
-                  <span class="option-name">{pat.label}</span>
-                  <span class="option-count">({pat.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectPattern')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedPattern === pat.label}
+                      onclick={() => (selectedPattern = selectedPattern === pat.label ? null : pat.label)}
+                      {...tp}
+                    >
+                      <span class="option-name">{pat.label}</span>
+                      <span class="option-count">({pat.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -555,29 +608,39 @@
 
       <!-- 6. FABRIC ACCORDION (IMAGE 2) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isFabricOpen = !isFabricOpen)}
-          aria-expanded={isFabricOpen}
-        >
-          <span>{t('giTagged.filter.fabric')}</span>
-          <Icon name={isFabricOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isFabricOpen = !isFabricOpen)}
+              aria-expanded={isFabricOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.fabric')}</span>
+              <Icon name={isFabricOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isFabricOpen}
           <ul class="filter-list" role="list">
             {#each FABRICS as fab}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedFabric === fab.label}
-                  onclick={() => (selectedFabric = selectedFabric === fab.label ? null : fab.label)}
-                >
-                  <span class="option-name">{fab.label}</span>
-                  <span class="option-count">({fab.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectFabric')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedFabric === fab.label}
+                      onclick={() => (selectedFabric = selectedFabric === fab.label ? null : fab.label)}
+                      {...tp}
+                    >
+                      <span class="option-name">{fab.label}</span>
+                      <span class="option-count">({fab.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -586,29 +649,39 @@
 
       <!-- 7. DISCOUNT ACCORDION (IMAGE 2) -->
       <div class="filter-accordion">
-        <button
-          type="button"
-          class="filter-accordion-toggle"
-          onclick={() => (isDiscountOpen = !isDiscountOpen)}
-          aria-expanded={isDiscountOpen}
-        >
-          <span>{t('giTagged.filter.discount')}</span>
-          <Icon name={isDiscountOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="filter-accordion-toggle"
+              onclick={() => (isDiscountOpen = !isDiscountOpen)}
+              aria-expanded={isDiscountOpen}
+              {...props}
+            >
+              <span>{t('giTagged.filter.discount')}</span>
+              <Icon name={isDiscountOpen ? 'chevron-up' : 'chevron-down'} size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isDiscountOpen}
           <ul class="filter-list" role="list">
             {#each DISCOUNT_TIERS as disc}
               <li>
-                <button
-                  type="button"
-                  class="filter-option-btn"
-                  class:active={selectedDiscount === disc.minPct}
-                  onclick={() => (selectedDiscount = selectedDiscount === disc.minPct ? null : disc.minPct)}
-                >
-                  <span class="option-name">{disc.label}</span>
-                  <span class="option-count">({disc.count})</span>
-                </button>
+                <Tooltip text={tooltip('tooltip.selectDiscount')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="filter-option-btn"
+                      class:active={selectedDiscount === disc.minPct}
+                      onclick={() => (selectedDiscount = selectedDiscount === disc.minPct ? null : disc.minPct)}
+                      {...tp}
+                    >
+                      <span class="option-name">{disc.label}</span>
+                      <span class="option-count">({disc.count})</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
               </li>
             {/each}
           </ul>
@@ -623,33 +696,43 @@
         <div class="toolbar-left">
           <!-- View switcher -->
           <div class="view-switchers" role="group" aria-label="View format">
-            <button
-              type="button"
-              class="view-btn"
-              class:active={viewMode === 'grid'}
-              onclick={() => (viewMode = 'grid')}
-              aria-label="Grid view"
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="1" width="6" height="6" rx="1" />
-                <rect x="9" y="1" width="6" height="6" rx="1" />
-                <rect x="1" y="9" width="6" height="6" rx="1" />
-                <rect x="9" y="9" width="6" height="6" rx="1" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              class="view-btn"
-              class:active={viewMode === 'list'}
-              onclick={() => (viewMode = 'list')}
-              aria-label="List view"
-            >
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="2" width="14" height="2" rx="0.5" />
-                <rect x="1" y="7" width="14" height="2" rx="0.5" />
-                <rect x="1" y="12" width="14" height="2" rx="0.5" />
-              </svg>
-            </button>
+            <Tooltip text={tooltip('tooltip.gridView')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="view-btn"
+                class:active={viewMode === 'grid'}
+                onclick={() => (viewMode = 'grid')}
+                aria-label="Grid view"
+                {...tp}
+              >
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="1" y="1" width="6" height="6" rx="1" />
+                  <rect x="9" y="1" width="6" height="6" rx="1" />
+                  <rect x="1" y="9" width="6" height="6" rx="1" />
+                  <rect x="9" y="9" width="6" height="6" rx="1" />
+                </svg>
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.listView')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="view-btn"
+                class:active={viewMode === 'list'}
+                onclick={() => (viewMode = 'list')}
+                aria-label="List view"
+                {...tp}
+              >
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="1" y="2" width="14" height="2" rx="0.5" />
+                  <rect x="1" y="7" width="14" height="2" rx="0.5" />
+                  <rect x="1" y="12" width="14" height="2" rx="0.5" />
+                </svg>
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
 
           <span class="items-counter">
@@ -698,7 +781,11 @@
           <Icon name="info" size="2rem" />
           <h3>No GI Products Match Selected Filters</h3>
           <p>Try clearing your price, color, or state filter to view more registered crafts.</p>
-          <button type="button" class="reset-btn" onclick={resetAllFilters}>Reset Filters</button>
+          <Tooltip text={tooltip('tooltip.reset')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="reset-btn" onclick={resetAllFilters} {...tp}>Reset Filters</button>
+          {/snippet}
+        </Tooltip>
         </div>
       {:else}
         <div class={viewMode === 'grid' ? 'gi-products-grid' : 'gi-products-list'}>
@@ -746,7 +833,7 @@
                   type="button"
                   class="gi-quick-share-btn"
                   onclick={() => copyProductShare(prod)}
-                  title="Copy artisan piece link"
+                  title={tooltip('tooltip.share')}
                   aria-label="Share listing"
                 >
                   <Icon name="share" size="0.85rem" />
@@ -786,19 +873,23 @@
                     <span>Direct Order</span>
                     <Icon name="arrow-right" size="0.85rem" />
                   </a>
-                  <button
-                    type="button"
-                    class="gi-wishlist-btn"
-                    class:is-wishlisted={wishlist.has(prod.id)}
-                    onclick={(e) => { e.preventDefault(); wishlist.toggle(prod.id, prod.title); }}
-                    title={wishlist.has(prod.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                    aria-label="Wishlist"
-                  >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill={wishlist.has(prod.id) ? '#e11d48' : 'none'} stroke={wishlist.has(prod.id) ? '#e11d48' : 'currentColor'} stroke-width="2">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                    <span>{wishlist.has(prod.id) ? 'Saved' : 'Wishlist'}</span>
-                  </button>
+                  <Tooltip text={tooltip('tooltip.wishlist')}>
+                  {#snippet trigger(tp)}
+                    <button
+                      type="button"
+                      class="gi-wishlist-btn"
+                      class:is-wishlisted={wishlist.has(prod.id)}
+                      onclick={(e) => { e.preventDefault(); wishlist.toggle(prod.id, prod.title); }}
+                      aria-label="Wishlist"
+                      {...tp}
+                    >
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill={wishlist.has(prod.id) ? '#e11d48' : 'none'} stroke={wishlist.has(prod.id) ? '#e11d48' : 'currentColor'} stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                      <span>{wishlist.has(prod.id) ? 'Saved' : 'Wishlist'}</span>
+                    </button>
+                  {/snippet}
+                </Tooltip>
                 </div>
               </div>
             </article>
