@@ -3940,6 +3940,146 @@
           }
         }
       }
+    },
+    "/schemes": {
+      "get": {
+        "summary": "List government schemes",
+        "responses": {
+          "200": {
+            "description": "Government schemes list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GovernmentScheme"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Upsert government scheme",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSchemeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upserted government scheme",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernmentScheme"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemes/match": {
+      "get": {
+        "summary": "Match caller against active government schemes",
+        "responses": {
+          "200": {
+            "description": "Government scheme match results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SchemeMatch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemes/{id}": {
+      "patch": {
+        "summary": "Update government scheme by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSchemeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated government scheme",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernmentScheme"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete government scheme by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5676,6 +5816,202 @@
         "properties": {
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "GovernmentScheme": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "authority",
+          "ministry",
+          "official_url",
+          "sort_order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "CENTRAL",
+              "STATE"
+            ]
+          },
+          "ministry": {
+            "type": "string"
+          },
+          "official_url": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "name_i18n_key": {
+            "type": "string"
+          },
+          "name_text": {
+            "type": "string"
+          },
+          "summary_i18n_key": {
+            "type": "string"
+          },
+          "summary_text": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "SchemeCriterion": {
+        "type": "object",
+        "required": [
+          "type",
+          "string_values",
+          "negate"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SOCIAL_CATEGORY",
+              "STATE_CODE",
+              "CRAFT_ID",
+              "MIN_YEARS_EXPERIENCE",
+              "HAS_PEHCHAN_ID",
+              "HAS_PM_VISHWAKARMA_ID",
+              "CLUSTER_MEMBER",
+              "SHG_MEMBER"
+            ]
+          },
+          "string_values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "int_value": {
+            "type": "integer"
+          },
+          "negate": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SchemeManualCheck": {
+        "type": "object",
+        "properties": {
+          "i18n_key": {
+            "type": "string"
+          },
+          "check_text": {
+            "type": "string"
+          }
+        }
+      },
+      "SchemeMatch": {
+        "type": "object",
+        "required": [
+          "scheme",
+          "status",
+          "matched_criteria_labels",
+          "unmet_criteria_labels",
+          "manual_checks"
+        ],
+        "properties": {
+          "scheme": {
+            "$ref": "#/components/schemas/GovernmentScheme"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MAY_QUALIFY",
+              "CHECK_REQUIRED",
+              "UNLIKELY"
+            ]
+          },
+          "matched_criteria_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unmet_criteria_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "manual_checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeManualCheck"
+            }
+          }
+        }
+      },
+      "UpsertSchemeRequest": {
+        "type": "object",
+        "required": [
+          "code",
+          "ministry",
+          "official_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "CENTRAL",
+              "STATE"
+            ]
+          },
+          "ministry": {
+            "type": "string"
+          },
+          "official_url": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "name_i18n_key": {
+            "type": "string"
+          },
+          "name_text": {
+            "type": "string"
+          },
+          "summary_i18n_key": {
+            "type": "string"
+          },
+          "summary_text": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeCriterion"
+            }
+          },
+          "manual_checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeManualCheck"
+            }
           }
         }
       }

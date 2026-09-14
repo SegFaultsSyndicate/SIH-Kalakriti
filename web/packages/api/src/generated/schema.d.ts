@@ -3624,6 +3624,172 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schemes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List government schemes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Government schemes list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            schemes?: components["schemas"]["GovernmentScheme"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Upsert government scheme */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSchemeRequest"];
+                };
+            };
+            responses: {
+                /** @description Upserted government scheme */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GovernmentScheme"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schemes/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Match caller against active government schemes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Government scheme match results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            matches?: components["schemas"]["SchemeMatch"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schemes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete government scheme by ID */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deletion confirmation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update government scheme by ID */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSchemeRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated government scheme */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GovernmentScheme"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4167,6 +4333,55 @@ export interface components {
         };
         RevokeBadgeRequest: {
             reason: string;
+        };
+        GovernmentScheme: {
+            id: string;
+            code: string;
+            /** @enum {string} */
+            authority: "CENTRAL" | "STATE";
+            ministry: string;
+            official_url: string;
+            state_code?: string;
+            name_i18n_key?: string;
+            name_text?: string;
+            summary_i18n_key?: string;
+            summary_text?: string;
+            sort_order: number;
+        };
+        SchemeCriterion: {
+            /** @enum {string} */
+            type: "SOCIAL_CATEGORY" | "STATE_CODE" | "CRAFT_ID" | "MIN_YEARS_EXPERIENCE" | "HAS_PEHCHAN_ID" | "HAS_PM_VISHWAKARMA_ID" | "CLUSTER_MEMBER" | "SHG_MEMBER";
+            string_values: string[];
+            int_value?: number;
+            negate: boolean;
+        };
+        SchemeManualCheck: {
+            i18n_key?: string;
+            check_text?: string;
+        };
+        SchemeMatch: {
+            scheme: components["schemas"]["GovernmentScheme"];
+            /** @enum {string} */
+            status: "MAY_QUALIFY" | "CHECK_REQUIRED" | "UNLIKELY";
+            matched_criteria_labels: string[];
+            unmet_criteria_labels: string[];
+            manual_checks: components["schemas"]["SchemeManualCheck"][];
+        };
+        UpsertSchemeRequest: {
+            id?: string;
+            code: string;
+            /** @enum {string} */
+            authority?: "CENTRAL" | "STATE";
+            ministry: string;
+            official_url: string;
+            state_code?: string;
+            name_i18n_key?: string;
+            name_text?: string;
+            summary_i18n_key?: string;
+            summary_text?: string;
+            sort_order?: number;
+            criteria?: components["schemas"]["SchemeCriterion"][];
+            manual_checks?: components["schemas"]["SchemeManualCheck"][];
         };
     };
     responses: never;

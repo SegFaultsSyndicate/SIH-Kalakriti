@@ -792,3 +792,26 @@ export function grantBadge(artisanId: string, body: GrantBadgeBody, options?: Ca
 export function revokeBadge(artisanId: string, code: string, body: { reason: string }, options?: CallOptions): Promise<{ status?: string }> {
   return call(`/artisans/${encodeURIComponent(artisanId)}/badges/${encodeURIComponent(code)}`, { ...options, method: 'DELETE', body }) as Promise<{ status?: string }>;
 }
+
+// --- Government Scheme Operations ---
+
+export type GovernmentScheme = Json<paths['/schemes']['get']['responses'][200]>['schemes'][number];
+export type SchemeMatchesResponse = Json<paths['/schemes/match']['get']['responses'][200]>;
+export type UpsertSchemeBody = Json<paths['/schemes']['post']['requestBody']>;
+
+export function listSchemes(options?: CallOptions): Promise<{ schemes: GovernmentScheme[] }> {
+  return call('/schemes', { ...options, method: 'GET' }) as Promise<{ schemes: GovernmentScheme[] }>;
+}
+
+export function matchSchemes(options?: CallOptions): Promise<SchemeMatchesResponse> {
+  return call('/schemes/match', { ...options, method: 'GET' }) as Promise<SchemeMatchesResponse>;
+}
+
+export function upsertScheme(body: UpsertSchemeBody, id?: string, options?: CallOptions): Promise<GovernmentScheme> {
+  const path = id ? `/schemes/${encodeURIComponent(id)}` : '/schemes';
+  return call(path, { ...options, method: id ? 'PATCH' : 'POST', body }) as Promise<GovernmentScheme>;
+}
+
+export function deleteScheme(id: string, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/schemes/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<{ status?: string }>;
+}

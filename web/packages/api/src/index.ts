@@ -129,6 +129,10 @@ export {
   getBadgeProgress,
   grantBadge,
   revokeBadge,
+  listSchemes,
+  matchSchemes,
+  upsertScheme,
+  deleteScheme,
   type Company,
   type RegisterCompanyBody,
   type CompanyListResponse,
@@ -151,6 +155,9 @@ export {
   type ArtisanBadgesResponse,
   type BadgeProgressResponse,
   type GrantBadgeBody,
+  type GovernmentScheme,
+  type SchemeMatchesResponse,
+  type UpsertSchemeBody,
 } from './operations';
 export { watchOrderEvents, type SseStatus } from './sse.svelte';
 export type { SseEvent } from './sse-parse';
