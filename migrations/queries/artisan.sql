@@ -38,6 +38,7 @@ SET display_name        = COALESCE(sqlc.narg('display_name'), display_name),
     years_of_experience = COALESCE(sqlc.narg('years_of_experience'), years_of_experience),
     bio                 = COALESCE(sqlc.narg('bio'), bio),
     photo_media_id      = COALESCE(sqlc.narg('photo_media_id'), photo_media_id),
+    social_category     = COALESCE(sqlc.narg('social_category'), social_category),
     updated_at          = now()
 WHERE id = @id
 RETURNING *;
@@ -94,3 +95,10 @@ SELECT s.* FROM shg s
 JOIN shg_member m ON m.shg_id = s.id
 WHERE m.artisan_id = @artisan_id
 LIMIT 1;
+
+-- name: UpdateArtisanSocialCategory :one
+UPDATE artisan
+SET social_category = @social_category,
+    updated_at = now()
+WHERE id = @id
+RETURNING *;

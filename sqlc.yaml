@@ -19,6 +19,7 @@ sql:
       - "migrations/queries/b2b.sql"
       - "migrations/queries/trends.sql"
       - "migrations/queries/badges.sql"
+      - "migrations/queries/schemes.sql"
     gen:
       go:
         package: "db"
