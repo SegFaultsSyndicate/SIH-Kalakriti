@@ -19,6 +19,7 @@
     setSessionRefreshHandler,
     setUnauthorizedHandler,
     createLoginRedirectHandler,
+    setAcceptLanguage,
   } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import BuyerFooter from '$lib/BuyerFooter.svelte';
@@ -66,6 +67,10 @@
     };
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
+  });
+
+  $effect(() => {
+    setAcceptLanguage(locale.meta.tag);
   });
 
   $effect(() => {
