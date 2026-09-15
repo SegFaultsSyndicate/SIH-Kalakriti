@@ -2,7 +2,25 @@
 -- +goose Up
 
 CREATE TYPE social_category AS ENUM ('GENERAL', 'OBC', 'SC', 'ST', 'EWS', 'PREFER_NOT_TO_SAY');
+
+-- mv_artisans_by_category (023_insight.sql) reads artisan.social_category,
+-- so Postgres refuses to retype the column while the view depends on it.
+-- Drop and recreate around the type change.
+DROP MATERIALIZED VIEW mv_artisans_by_category;
 ALTER TABLE artisan ALTER COLUMN social_category TYPE social_category USING social_category::social_category;
+CREATE MATERIALIZED VIEW mv_artisans_by_category AS
+SELECT
+    state_code,
+    district,
+    social_category,
+    COUNT(*) AS artisan_count,
+    COUNT(*) FILTER (WHERE verified = true) AS verified_count
+FROM artisan
+WHERE social_category IS NOT NULL
+GROUP BY state_code, district, social_category;
+
+CREATE INDEX mv_artisans_by_category_state_district_idx
+    ON mv_artisans_by_category (state_code, district);
 
 CREATE TYPE scheme_authority AS ENUM ('CENTRAL', 'STATE');
 CREATE TYPE scheme_criterion_type AS ENUM (
@@ -141,5 +159,21 @@ DROP TABLE IF EXISTS scheme_criterion;
 DROP TABLE IF EXISTS government_scheme;
 DROP TYPE IF EXISTS scheme_criterion_type;
 DROP TYPE IF EXISTS scheme_authority;
+
+DROP MATERIALIZED VIEW IF EXISTS mv_artisans_by_category;
 ALTER TABLE artisan ALTER COLUMN social_category TYPE text;
+CREATE MATERIALIZED VIEW mv_artisans_by_category AS
+SELECT
+    state_code,
+    district,
+    social_category,
+    COUNT(*) AS artisan_count,
+    COUNT(*) FILTER (WHERE verified = true) AS verified_count
+FROM artisan
+WHERE social_category IS NOT NULL
+GROUP BY state_code, district, social_category;
+
+CREATE INDEX mv_artisans_by_category_state_district_idx
+    ON mv_artisans_by_category (state_code, district);
+
 DROP TYPE IF EXISTS social_category;
