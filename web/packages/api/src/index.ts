@@ -152,6 +152,7 @@ export {
   type CreateTrendLinkBody,
   type TrendLinksResponse,
   type Badge,
+  type ArtisanBadge,
   type ArtisanBadgesResponse,
   type BadgeProgressResponse,
   type GrantBadgeBody,

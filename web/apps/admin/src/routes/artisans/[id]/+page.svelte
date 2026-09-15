@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Button, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
-  import { session, grantBadge, revokeBadge, type Badge, type ArtisanBadge } from '@kalakriti/api';
+  import { session, grantBadge, revokeBadge, type ArtisanBadge } from '@kalakriti/api';
   import type { PageData } from './$types';
 
   interface Props { data: PageData }
@@ -13,7 +13,7 @@
   const authorized = $derived(role === 'MINISTRY');
 
   let artisanBadges = $state<ArtisanBadge[]>(data.artisanBadges);
-  const conferredCatalog = $derived(data.badgeCatalog.filter((b) => b.kind === 'BADGE_KIND_CONFERRED'));
+  const conferredCatalog = $derived(data.badgeCatalog.filter((b) => b.kind === 'CONFERRED'));
   const grantedIds = $derived(new Set(artisanBadges.map((g) => g.badge.id)));
   const availableBadges = $derived(conferredCatalog.filter((b) => !grantedIds.has(b.id)));
 
@@ -87,10 +87,10 @@
             <li class="admin-badge-item">
               <div class="admin-badge-item__info">
                 <span class="admin-badge-item__code">{grant.badge.code}</span>
-                <span class="admin-badge-item__name">{t(`badge.${grant.badge.code}.name`)}</span>
+                <span class="admin-badge-item__name">{t(`badge.${grant.badge.code}.name` as MessageKey)}</span>
                 <span class="admin-badge-item__meta">Granted on {grant.granted_at} by {grant.granted_by}</span>
               </div>
-              {#if grant.badge.kind === 'BADGE_KIND_CONFERRED'}
+              {#if grant.badge.kind === 'CONFERRED'}
                 {#if activeRevokeCode === grant.badge.code}
                   <div class="admin-revoke-form">
                     <input
@@ -139,7 +139,7 @@
           <select bind:value={selectedBadgeId} class="admin-select">
             <option value="">-- {t('common.selectBadge')} --</option>
             {#each availableBadges as b (b.id)}
-              <option value={b.id}>{b.code} ({t(`badge.${b.code}.name`)})</option>
+              <option value={b.id}>{b.code} ({t(`badge.${b.code}.name` as MessageKey)})</option>
             {/each}
           </select>
           <Button type="submit" variant="primary" disabled={submitting || !selectedBadgeId}>

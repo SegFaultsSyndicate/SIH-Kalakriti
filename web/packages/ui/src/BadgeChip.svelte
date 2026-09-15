@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon, type IconName } from '@kalakriti/icons';
   import SpeakButton from './SpeakButton.svelte';
 
   interface BadgeCatalogEntry {
     code: string;
-    kind: 'BADGE_KIND_EARNED' | 'BADGE_KIND_CONFERRED';
-    tier?: 'BADGE_TIER_BRONZE' | 'BADGE_TIER_SILVER' | 'BADGE_TIER_GOLD';
+    kind: 'EARNED' | 'CONFERRED';
+    tier?: 'BRONZE' | 'SILVER' | 'GOLD';
     icon_name: string;
     threshold?: number;
   }
@@ -23,12 +23,12 @@
 
   const t = $derived(locale.t);
   const iconName = $derived((granted ? badge.icon_name : 'badge-locked') as IconName);
-  const name = $derived(t(`badge.${badge.code}.name`));
-  const desc = $derived(t(`badge.${badge.code}.desc`));
+  const name = $derived(t(`badge.${badge.code}.name` as MessageKey));
+  const desc = $derived(t(`badge.${badge.code}.desc` as MessageKey));
   const tierLabel = $derived(
-    badge.tier === 'BADGE_TIER_BRONZE' ? t('badges.tier.bronze') :
-    badge.tier === 'BADGE_TIER_SILVER' ? t('badges.tier.silver') :
-    badge.tier === 'BADGE_TIER_GOLD' ? t('badges.tier.gold') : null,
+    badge.tier === 'BRONZE' ? t('badges.tier.bronze') :
+    badge.tier === 'SILVER' ? t('badges.tier.silver') :
+    badge.tier === 'GOLD' ? t('badges.tier.gold') : null,
   );
   const speakText = $derived(
     tierLabel ? `${name}. ${tierLabel}. ${desc}` : `${name}. ${desc}`,
@@ -51,7 +51,7 @@
       </div>
       <span class="k-badge-chip__meta">{t('badges.progressLabel', { current: String(progress.current), total: String(progress.total) })}</span>
     {:else}
-      <span class="k-badge-chip__meta">{t(`badge.${badge.code}.criteria`, { threshold: String(badge.threshold ?? '') })}</span>
+      <span class="k-badge-chip__meta">{t(`badge.${badge.code}.criteria` as MessageKey, { threshold: String(badge.threshold ?? '') })}</span>
     {/if}
   </div>
   <SpeakButton text={speakText} label={t('badges.readAloud')} />

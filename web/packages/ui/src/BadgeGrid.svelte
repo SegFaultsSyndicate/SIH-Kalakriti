@@ -6,8 +6,8 @@
   interface BadgeCatalogEntry {
     id: string;
     code: string;
-    kind: 'BADGE_KIND_EARNED' | 'BADGE_KIND_CONFERRED';
-    tier?: 'BADGE_TIER_BRONZE' | 'BADGE_TIER_SILVER' | 'BADGE_TIER_GOLD';
+    kind: 'EARNED' | 'CONFERRED';
+    tier?: 'BRONZE' | 'SILVER' | 'GOLD';
     icon_name: string;
     metric?: string;
     threshold?: number;
@@ -35,7 +35,7 @@
   // family are not shown separately until that one is reached.
   const inProgressEntries = $derived(
     catalog
-      .filter((b) => b.kind === 'BADGE_KIND_EARNED' && !grantedIds.has(b.id))
+      .filter((b) => b.kind === 'EARNED' && !grantedIds.has(b.id))
       .filter((b, _, all) => {
         const sameFamily = all.filter((x) => x.metric === b.metric && !grantedIds.has(x.id));
         const lowest = sameFamily.reduce((min, x) => ((x.threshold ?? 0) < (min.threshold ?? 0) ? x : min), sameFamily[0]);
@@ -44,7 +44,7 @@
   );
 
   const lockedConferredEntries = $derived(
-    catalog.filter((b) => b.kind === 'BADGE_KIND_CONFERRED' && !grantedIds.has(b.id)),
+    catalog.filter((b) => b.kind === 'CONFERRED' && !grantedIds.has(b.id)),
   );
 </script>
 

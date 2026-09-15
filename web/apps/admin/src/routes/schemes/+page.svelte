@@ -47,7 +47,7 @@
   let stateCode = $state('');
   let nameText = $state('');
   let summaryText = $state('');
-  let sortOrder = $state(10);
+  let sortOrder = $state('10');
 
   type CriterionType =
     | 'SOCIAL_CATEGORY'
@@ -62,7 +62,7 @@
   interface FormCriterion {
     type: CriterionType;
     stringValues: string;
-    intValue?: number;
+    intValue?: string;
     negate: boolean;
   }
 
@@ -108,7 +108,7 @@
     stateCode = '';
     nameText = '';
     summaryText = '';
-    sortOrder = (schemes.length + 1) * 10;
+    sortOrder = String((schemes.length + 1) * 10);
     criteria = [];
     manualChecks = [];
     formOpen = true;
@@ -123,7 +123,7 @@
     stateCode = s.state_code ?? '';
     nameText = s.name_text ?? (s.name_i18n_key ? t(s.name_i18n_key as MessageKey) : '');
     summaryText = s.summary_text ?? (s.summary_i18n_key ? t(s.summary_i18n_key as MessageKey) : '');
-    sortOrder = s.sort_order;
+    sortOrder = String(s.sort_order);
     criteria = [];
     manualChecks = [];
     formOpen = true;
@@ -174,7 +174,7 @@
                 .map((v) => v.trim())
                 .filter(Boolean)
             : [],
-          int_value: c.intValue !== undefined ? Number(c.intValue) : undefined,
+          int_value: c.intValue ? Number(c.intValue) : undefined,
           negate: c.negate,
         })),
         manual_checks: manualChecks
@@ -396,7 +396,7 @@
 
       <FieldGroup label="Sort Order">
         {#snippet children({ id })}
-          <Input {id} type="number" bind:value={sortOrder} />
+          <Input {id} bind:value={sortOrder} />
         {/snippet}
       </FieldGroup>
 
@@ -423,7 +423,6 @@
 
             {#if crit.type === 'MIN_YEARS_EXPERIENCE'}
               <Input
-                type="number"
                 bind:value={crit.intValue}
                 placeholder="Min years"
               />
@@ -464,7 +463,7 @@
           <p class="section-empty">No manual checks defined.</p>
         {/if}
 
-        {#each manualChecks as check, idx}
+        {#each manualChecks as _, idx}
           <div class="check-row">
             <Input
               bind:value={manualChecks[idx]}

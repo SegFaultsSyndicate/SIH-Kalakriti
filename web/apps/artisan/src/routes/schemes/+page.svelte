@@ -12,13 +12,13 @@
   const t = $derived(locale.t);
 
   const mayQualify = $derived(
-    data.matches.filter((m) => m.status === 'MATCH_STATUS_MAY_QUALIFY'),
+    data.matches.filter((m) => m.status === 'MAY_QUALIFY'),
   );
   const checkRequired = $derived(
-    data.matches.filter((m) => m.status === 'MATCH_STATUS_CHECK_REQUIRED'),
+    data.matches.filter((m) => m.status === 'CHECK_REQUIRED'),
   );
   const unlikely = $derived(
-    data.matches.filter((m) => m.status === 'MATCH_STATUS_UNLIKELY'),
+    data.matches.filter((m) => m.status === 'UNLIKELY'),
   );
 
   function schemeName(scheme: { name_i18n_key?: string; name_text?: string }): string {
@@ -59,7 +59,7 @@
   {#if mayQualify.length > 0 || checkRequired.length > 0}
     <div class="schemes-list" role="feed" aria-label={t('schemes.title')}>
       {#each [...mayQualify, ...checkRequired] as match (match.scheme.id)}
-        {@const isMayQualify = match.status === 'MATCH_STATUS_MAY_QUALIFY'}
+        {@const isMayQualify = match.status === 'MAY_QUALIFY'}
         {@const title = schemeName(match.scheme)}
         {@const summary = schemeSummary(match.scheme)}
         <article class="scheme-card" class:scheme-card--may-qualify={isMayQualify}>
@@ -88,7 +88,7 @@
             <div class="scheme-card__checklist">
               <h3 class="scheme-card__checklist-title">{t('schemes.manualChecklist')}</h3>
               <ul class="scheme-card__checklist-items">
-                {#each match.manual_checks as check (check.id)}
+                {#each match.manual_checks as check, i (check.i18n_key ?? check.check_text ?? i)}
                   <li class="scheme-card__check-item">
                     <label class="scheme-card__check-label">
                       <input type="checkbox" class="scheme-card__checkbox" />

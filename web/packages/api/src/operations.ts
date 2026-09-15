@@ -15,7 +15,7 @@
 
 import { call, type CallOptions } from './retry';
 import { API_BASE } from './transport';
-import type { paths } from './generated/schema';
+import type { paths, components } from './generated/schema';
 
 type Json<T> = T extends { content: { 'application/json': infer J } } ? J : never;
 
@@ -768,7 +768,8 @@ export function pinTrendLink(id: string, pinned: boolean, options?: CallOptions)
 
 // --- Badge Operations ---
 
-export type Badge = Json<paths['/badges']['get']['responses'][200]>['badges'][number];
+export type Badge = NonNullable<Json<paths['/badges']['get']['responses'][200]>['badges']>[number];
+export type ArtisanBadge = components['schemas']['ArtisanBadge'];
 export type ArtisanBadgesResponse = Json<paths['/artisans/{id}/badges']['get']['responses'][200]>;
 export type BadgeProgressResponse = Json<paths['/badges/me/progress']['get']['responses'][200]>;
 export type GrantBadgeBody = Json<paths['/artisans/{id}/badges']['post']['requestBody']>;
@@ -785,8 +786,8 @@ export function getBadgeProgress(options?: CallOptions): Promise<BadgeProgressRe
   return call('/badges/me/progress', { ...options, method: 'GET' }) as Promise<BadgeProgressResponse>;
 }
 
-export function grantBadge(artisanId: string, body: GrantBadgeBody, options?: CallOptions): Promise<unknown> {
-  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'POST', body });
+export function grantBadge(artisanId: string, body: GrantBadgeBody, options?: CallOptions): Promise<ArtisanBadge> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'POST', body }) as Promise<ArtisanBadge>;
 }
 
 export function revokeBadge(artisanId: string, code: string, body: { reason: string }, options?: CallOptions): Promise<{ status?: string }> {
@@ -795,7 +796,7 @@ export function revokeBadge(artisanId: string, code: string, body: { reason: str
 
 // --- Government Scheme Operations ---
 
-export type GovernmentScheme = Json<paths['/schemes']['get']['responses'][200]>['schemes'][number];
+export type GovernmentScheme = NonNullable<Json<paths['/schemes']['get']['responses'][200]>['schemes']>[number];
 export type SchemeMatchesResponse = Json<paths['/schemes/match']['get']['responses'][200]>;
 export type UpsertSchemeBody = Json<paths['/schemes']['post']['requestBody']>;
 
