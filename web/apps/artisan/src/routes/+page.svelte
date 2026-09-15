@@ -211,14 +211,14 @@
 <div class="b2b-opportunity-card">
   <div class="b2b-header">
     <Icon name="package" />
-    <span class="b2b-kicker">Year-Round Sourcing &amp; Boutique Partnerships</span>
+    <span class="b2b-kicker">{t('home.sourcing.kicker')}</span>
   </div>
   <p class="b2b-desc">
-    Verified retailers, independent boutique studios, and export houses procure authenticated craft pieces directly from certified clusters.
+    {t('home.sourcing.desc')}
   </p>
   <div class="b2b-actions">
-    <a href="/orders" class="b2b-btn">View Sourcing Lots</a>
-    <a href="/trends" class="b2b-btn secondary">View Market Trends</a>
+    <a href="/orders" class="b2b-btn">{t('home.sourcing.viewLots')}</a>
+    <a href="/trends" class="b2b-btn secondary">{t('home.sourcing.viewTrends')}</a>
   </div>
 </div>
 

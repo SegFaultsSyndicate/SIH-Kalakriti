@@ -61,6 +61,7 @@
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
+  let craftId = $state<string | undefined>(undefined);
   let craftName = $state('Weaving & Handloom (बुनकरी)');
   let districtName = $state('Varanasi, Uttar Pradesh');
   let clusterName = $state('Varanasi Silk Weaver Common Facility Centre');
@@ -109,6 +110,7 @@
       if (draft.pehchanId) pehchanId = draft.pehchanId;
       if (draft.clusterName) clusterName = draft.clusterName;
 
+      if (draft.craftId) craftId = draft.craftId;
       if (draft.craftName) {
         craftName = draft.craftName;
       }
@@ -158,8 +160,54 @@
     })();
   });
 
+  const localizedCraftName = $derived.by(() => {
+    const cid = (craftId || '').toLowerCase();
+    const cname = (craftName || '').toLowerCase();
+
+    if (cid === 'block-printing' || cname.includes('block') || cname.includes('print')) {
+      return t('craft.block-printing.name');
+    }
+    if (cid === 'weaving' || cname.includes('weav') || cname.includes('loom') || cname.includes('बुनकरी')) {
+      return t('craft.weaving.name');
+    }
+    if (cid === 'pottery' || cname.includes('pott') || cname.includes('clay') || cname.includes('terracotta')) {
+      return t('craft.pottery.name');
+    }
+    if (cid === 'metalwork' || cname.includes('metal') || cname.includes('brass') || cname.includes('bronze')) {
+      return t('craft.metalwork.name');
+    }
+    if (cid === 'woodwork' || cname.includes('wood')) {
+      return t('craft.woodwork.name');
+    }
+    if (cid === 'embroidery' || cname.includes('embroid') || cname.includes('zari') || cname.includes('chikankari')) {
+      return t('craft.embroidery.name');
+    }
+    if (cid === 'painting' || cname.includes('paint') || cname.includes('madhubani') || cname.includes('warli')) {
+      return t('craft.painting.name');
+    }
+    if (cid === 'basketry' || cname.includes('basket') || cname.includes('cane')) {
+      return t('craft.basketry.name');
+    }
+    if (cid === 'jewellery' || cname.includes('jewel') || cname.includes('meenakari') || cname.includes('filigree')) {
+      return t('craft.jewellery.name');
+    }
+    if (cid === 'leather' || cname.includes('leather')) {
+      return t('craft.leather.name');
+    }
+    if (cid === 'stone' || cname.includes('stone')) {
+      return t('craft.stone.name');
+    }
+    if (cid === 'bamboo' || cname.includes('bamboo')) {
+      return t('craft.bamboo.name');
+    }
+    if (cid === 'other' || cname.includes('other') || cname.includes('something else')) {
+      return t('craft.other.name');
+    }
+    return craftName;
+  });
+
   const spokenProfileText = $derived(
-    t('profile.spokenSummary', { name, district: districtName, craft: craftName }),
+    t('profile.spokenSummary', { name, district: districtName, craft: localizedCraftName }),
   );
 
   const initial = $derived((name.trim()[0] ?? 'A').toUpperCase());
@@ -364,6 +412,11 @@
   <section class="profile-hero">
     <div class="profile-hero__badge-rule"></div>
 
+    <a class="profile-hero__corner-badge" href="/badges">
+      <Icon name="badge-verified" size="1rem" />
+      <span>{t('nav.badges')}</span>
+    </a>
+
     <div class="profile-hero__main">
       <div class="profile-avatar-wrap">
         <div
@@ -443,7 +496,7 @@
           </span>
         </div>
 
-        <p class="profile-hero__role">{t('profile.masterArtisan', { craft: craftName })}</p>
+        <p class="profile-hero__role">{t('profile.masterArtisan', { craft: localizedCraftName })}</p>
 
         <div class="profile-hero__meta">
           <span class="profile-meta-item">
@@ -464,31 +517,27 @@
                 phoneOtpInput = '';
               }}
             >
-              Change
+              {t('profile.phone.change')}
             </button>
           </span>
         </div>
 
         <div class="profile-hero__followers">
           <Icon name="users" size="1.1rem" />
-          <span><strong>{followerCount}</strong> {t('profile.followers', { count: String(followerCount) })}</span>
+          <span>{t('profile.followers', { count: String(followerCount) })}</span>
         </div>
       </div>
     </div>
 
     <div class="profile-hero__actions">
-      <SpeakButton text={spokenProfileText} label={t('action.speak')} />
-      <a class="profile-btn-ghost" href="/badges">
-        <Icon name="badge-verified" size="1rem" />
-        {t('nav.badges')}
-      </a>
-      <a class="profile-btn-ghost" href="/schemes">
+      <SpeakButton class="profile-action-btn" text={spokenProfileText} label={t('action.speak')} />
+      <a class="profile-action-btn" href="/schemes">
         <Icon name="verified-artisan" size="1rem" />
-        {t('nav.schemes')}
+        <span>{t('nav.schemes')}</span>
       </a>
-      <a class="profile-btn-ghost" href="/accessibility">
+      <a class="profile-action-btn" href="/accessibility">
         <Icon name="accessibility" size="1rem" />
-        {t('profile.a11ySettings')}
+        <span>{t('profile.a11ySettings')}</span>
       </a>
     </div>
   </section>
@@ -560,7 +609,7 @@
     <div class="profile-grid-details">
       <div class="detail-tile">
         <span class="detail-tile__label">{t('profile.guild.primaryCraft')}</span>
-        <span class="detail-tile__value">{craftName}</span>
+        <span class="detail-tile__value">{localizedCraftName}</span>
       </div>
 
       <div class="detail-tile">
@@ -1098,6 +1147,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--k-space-2);
+    padding-inline-end: 6.5rem;
   }
 
   .profile-hero__name {
@@ -1162,39 +1212,92 @@
     font-size: var(--k-text-sm);
   }
 
-  .profile-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--k-space-3);
-    margin-block-start: var(--k-space-4);
-    padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
-  }
-
-  .profile-btn-ghost {
+  .profile-hero__corner-badge {
+    position: absolute;
+    inset-block-start: var(--k-space-4);
+    inset-inline-end: var(--k-space-4);
     display: inline-flex;
     align-items: center;
     gap: var(--k-space-1);
-    padding: var(--k-space-1) var(--k-space-3);
+    padding: 0.3rem var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background: transparent;
+    background-color: var(--k-surface-base);
     color: var(--k-text-secondary);
+    font-family: var(--k-font-body);
     font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
     text-decoration: none;
-    transition: background-color var(--k-duration-fast) var(--k-ease-standard);
+    transition: all var(--k-duration-fast) var(--k-ease-standard);
+    z-index: 2;
   }
 
-  .profile-btn-ghost:hover {
+  .profile-hero__corner-badge:hover {
     background-color: var(--k-surface-sunken);
+    border-color: var(--k-border-interactive);
     color: var(--k-text-primary);
+  }
+
+  .profile-hero__actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--k-space-2);
+    margin-block-start: var(--k-space-4);
+    padding-block-start: var(--k-space-3);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    inline-size: 100%;
+    box-sizing: border-box;
+  }
+
+  .profile-hero__actions :global(.k-speak),
+  .profile-hero__actions :global(.profile-action-btn),
+  .profile-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--k-space-1);
+    min-block-size: 2.35rem;
+    min-inline-size: 0;
+    inline-size: 100%;
+    padding: var(--k-space-1) var(--k-space-2);
+    border: var(--k-hairline) solid var(--k-stone-300);
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-surface-base);
+    color: var(--k-text-primary);
+    font-family: var(--k-font-body);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
+    text-decoration: none;
+    text-align: center;
+    line-height: 1.2;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all var(--k-duration-fast) var(--k-ease-standard);
+  }
+
+  .profile-hero__actions :global(.k-speak:hover),
+  .profile-hero__actions :global(.profile-action-btn:hover),
+  .profile-action-btn:hover {
+    background-color: var(--k-surface-sunken);
+    border-color: var(--k-border-interactive);
+    color: var(--k-text-primary);
+  }
+
+  .profile-hero__actions :global(.k-icon),
+  .profile-action-btn :global(.k-icon) {
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex-shrink: 0;
   }
 
   @media (max-width: 32rem) {
     .profile-hero {
       padding: var(--k-space-3);
+    }
+
+    .profile-hero__corner-badge {
+      inset-block-start: var(--k-space-3);
+      inset-inline-end: var(--k-space-3);
     }
 
     .profile-avatar {
@@ -1211,13 +1314,16 @@
     }
 
     .profile-hero__actions {
-      flex-direction: column;
-      align-items: stretch;
-      gap: var(--k-space-2);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem;
     }
 
-    .profile-btn-ghost {
-      justify-content: center;
+    .profile-hero__actions :global(.k-speak),
+    .profile-hero__actions :global(.profile-action-btn),
+    .profile-action-btn {
+      padding: var(--k-space-1) 0.2rem;
+      font-size: 0.7rem;
+      gap: 2px;
     }
 
     .profile-card {
@@ -1436,6 +1542,8 @@
     border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
     background-color: var(--k-surface-raised);
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .tool-tile__icon-wrap {
@@ -1448,6 +1556,7 @@
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-base);
     color: var(--k-accent-primary-text);
+    align-self: flex-start;
   }
 
   .tool-tile__content {
@@ -1455,6 +1564,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--k-space-2);
+    flex: 1;
+    min-inline-size: 0;
+    inline-size: 100%;
+    height: 100%;
   }
 
   .tool-tile__heading {
@@ -1466,28 +1579,41 @@
 
   .tool-tile__desc {
     margin: 0;
+    margin-block-end: auto;
     color: var(--k-text-secondary);
     font-size: var(--k-text-xs);
     line-height: 1.45;
   }
 
+  .tool-tile__content > :global(button),
+  .tool-tile__content > :global(.k-button),
+  .tool-tile__content > .profile-action-link {
+    margin-block-start: auto;
+  }
+
   .profile-action-link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--k-space-1);
-    padding: var(--k-space-2) var(--k-space-3);
+    min-block-size: 2.5rem;
+    padding-inline: var(--k-space-3);
     border: var(--k-hairline) solid var(--k-indigo-300);
     border-radius: var(--k-radius-md);
     background-color: var(--k-surface-base);
     color: var(--k-accent-secondary);
+    font-family: var(--k-font-body);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
     text-decoration: none;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
+    margin-block-start: auto;
+    box-sizing: border-box;
   }
 
   .profile-action-link:hover {
     background-color: var(--k-indigo-700);
+    border-color: var(--k-indigo-700);
     color: var(--k-text-on-accent);
   }
 

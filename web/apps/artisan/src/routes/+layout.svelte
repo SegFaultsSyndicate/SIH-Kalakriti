@@ -200,6 +200,8 @@
     display: flex;
     flex-direction: column;
     min-block-size: 100dvh;
+    max-inline-size: 100%;
+    overflow-x: hidden;
   }
 
   .shell__header {

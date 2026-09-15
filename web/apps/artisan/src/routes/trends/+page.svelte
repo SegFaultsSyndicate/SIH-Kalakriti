@@ -168,7 +168,7 @@
       await pinTrendLink(trend.id, next);
       trends = trends.map((item) => (item.id === trend.id ? { ...item, pinned: next } : item));
       showToast({
-        message: next ? 'Trend pinned to cluster board' : 'Trend unpinned',
+        message: next ? t('trends.toast.saved') : t('trends.toast.shared'),
         variant: 'info',
       });
     } catch {
@@ -199,7 +199,7 @@
       newTitle = '';
 
       showToast({
-        message: 'Trend inspiration shared with artisan collective.',
+        message: t('trends.toast.shared'),
         variant: 'success',
       });
     } catch (err) {
@@ -218,7 +218,7 @@
       trends = [mockCreated, ...trends];
       submitModalOpen = false;
       showToast({
-        message: 'Inspiration saved to your cluster trend board.',
+        message: t('trends.toast.saved'),
         variant: 'info',
       });
     } finally {
@@ -233,6 +233,37 @@
       return url;
     }
   }
+
+  function getLocalizedTitle(item: TrendLink): string {
+    if (item.id === 'trend-01') return t('trends.item1.title');
+    if (item.id === 'trend-02') return t('trends.item2.title');
+    if (item.id === 'trend-03') return t('trends.item3.title');
+    if (item.id === 'trend-04') return t('trends.item4.title');
+    return item.title;
+  }
+
+  function getLocalizedDesc(item: TrendLink): string | undefined {
+    if (item.id === 'trend-01') return t('trends.item1.desc');
+    if (item.id === 'trend-02') return t('trends.item2.desc');
+    if (item.id === 'trend-03') return t('trends.item3.desc');
+    if (item.id === 'trend-04') return t('trends.item4.desc');
+    return item.description;
+  }
+
+  function getLocalizedCurator(item: TrendLink): string {
+    if (item.id === 'trend-01') return t('trends.item1.curator');
+    if (item.id === 'trend-02') return t('trends.item2.curator');
+    if (item.id === 'trend-03') return t('trends.item3.curator');
+    if (item.id === 'trend-04') return t('trends.item4.curator');
+    return item.curator_name || t('trends.role.communityMember');
+  }
+
+  function getLocalizedRole(role?: string): string {
+    if (role === 'MINISTRY' || role === 'CLUSTER_OFFICER') {
+      return t('trends.role.ministryAdvisor');
+    }
+    return t('trends.role.artisanContributor');
+  }
 </script>
 
 <svelte:head>
@@ -243,8 +274,8 @@
   <!-- Header with Editorial Kicker & Voice Readout -->
   <header class="trends-header">
     <div class="header-top">
-      <span class="kicker">dual-curated market intelligence</span>
-      <SpeakButton label="Read market trends introduction" text="Market Trends and Social Inspiration. Discover what buyers and boutiques are searching for on Instagram and Pinterest." />
+      <span class="kicker">{t('trends.kicker')}</span>
+      <SpeakButton label={t('trends.intro.speakLabel')} text={t('trends.intro.speakText')} />
     </div>
 
     <div class="heading-row">
@@ -255,30 +286,28 @@
 
       <Button variant="primary" size="md" onclick={() => (submitModalOpen = true)}>
         <Icon name="plus" />
-        <span>Share Trend Link</span>
+        <span>{t('trends.submit')}</span>
       </Button>
     </div>
 
     <!-- Dual Curation Governance Callout -->
-    <div class="curation-banner" role="region" aria-label="Dual Curation Governance">
+    <div class="curation-banner" role="region" aria-label={t('trends.curation.policyLabel')}>
       <Icon name="info" />
       <div class="banner-text">
-        <strong>Dual Curation Policy:</strong>
-        <span>
-          Trends are contributed by both Ministry cluster advisors (identifying retail market shifts) and fellow master artisans (sharing practical viral techniques).
-        </span>
+        <strong>{t('trends.curation.policyLabel')}</strong>
+        <span>{t('trends.curation.policyDesc')}</span>
       </div>
     </div>
 
     <!-- Filter Pills Navigation -->
-    <div class="filter-strip" role="toolbar" aria-label="Trend filters">
+    <div class="filter-strip" role="toolbar" aria-label={t('trends.title')}>
       <button
         type="button"
         class="filter-pill"
         class:is-active={activeFilter === 'ALL'}
         onclick={() => (activeFilter = 'ALL')}
       >
-        All Trends ({trends.length})
+        {t('trends.filter.all', { count: String(trends.length) })}
       </button>
       <button
         type="button"
@@ -286,7 +315,7 @@
         class:is-active={activeFilter === 'MINISTRY'}
         onclick={() => (activeFilter = 'MINISTRY')}
       >
-        Ministry Sourcing
+        {t('trends.filter.ministry')}
       </button>
       <button
         type="button"
@@ -294,7 +323,7 @@
         class:is-active={activeFilter === 'ARTISAN'}
         onclick={() => (activeFilter = 'ARTISAN')}
       >
-        Artisan Shared
+        {t('trends.filter.artisan')}
       </button>
       <button
         type="button"
@@ -302,7 +331,7 @@
         class:is-active={activeFilter === 'INSTAGRAM'}
         onclick={() => (activeFilter = 'INSTAGRAM')}
       >
-        Instagram
+        {t('trends.filter.instagram')}
       </button>
       <button
         type="button"
@@ -310,7 +339,7 @@
         class:is-active={activeFilter === 'PINTEREST'}
         onclick={() => (activeFilter = 'PINTEREST')}
       >
-        Pinterest
+        {t('trends.filter.pinterest')}
       </button>
     </div>
   </header>
@@ -324,9 +353,9 @@
   {:else if filteredTrends.length === 0}
     <div class="empty-box">
       <Icon name="link" />
-      <p>No market trends found for this filter.</p>
+      <p>{t('trends.filter.empty')}</p>
       <Button variant="secondary" size="md" onclick={() => (activeFilter = 'ALL')}>
-        <span>View All Trends</span>
+        <span>{t('trends.filter.viewAll')}</span>
       </Button>
     </div>
   {:else}
@@ -343,7 +372,7 @@
               {#if item.pinned}
                 <span class="pinned-tag">
                   <Icon name="check" />
-                  <span>CLUSTER PRIORITY</span>
+                  <span>{t('trends.clusterPriority')}</span>
                 </span>
               {/if}
 
@@ -363,15 +392,18 @@
           <!-- Trend Title & Link -->
           <h2 class="trend-title">
             <a href={item.url} target="_blank" rel="noopener noreferrer" class="title-link">
-              <span>{item.title}</span>
+              <span>{getLocalizedTitle(item)}</span>
               <Icon name="external-link" />
             </a>
           </h2>
 
           <!-- Voice Spoken Explanation for Low-Literacy Artisans -->
           <div class="voice-row">
-            <SpeakButton label="Read trend details aloud" text={`${item.title}. Curated by ${item.curator_name || 'Collective contributor'}. Source: ${getDomain(item.url)}`} />
-            <span class="domain-text">Source: {getDomain(item.url)}</span>
+            <SpeakButton
+              label={t('trends.readAloud')}
+              text={`${getLocalizedTitle(item)}. ${getLocalizedCurator(item)}. ${t('trends.sourceLabel', { domain: getDomain(item.url) })}`}
+            />
+            <span class="domain-text">{t('trends.sourceLabel', { domain: getDomain(item.url) })}</span>
           </div>
 
           <!-- Curator Badge (Dual Curation Visibility) -->
@@ -381,26 +413,26 @@
             </div>
             <div class="curator-info">
               <span class="curator-role-label">
-                {item.curator_role === 'MINISTRY' ? 'Ministry Cluster Advisor' : 'Artisan Contributor'}
+                {getLocalizedRole(item.curator_role)}
               </span>
-              <span class="curator-name">{item.curator_name || 'Community Member'}</span>
+              <span class="curator-name">{getLocalizedCurator(item)}</span>
             </div>
           </div>
 
           <!-- Description Strip -->
-          {#if item.description}
-            <p class="trend-description">{item.description}</p>
+          {#if getLocalizedDesc(item)}
+            <p class="trend-description">{getLocalizedDesc(item)}</p>
           {/if}
 
           <!-- Direct Production CTA -->
           <div class="card-actions">
             <a href="/listing/new/capture" class="k-btn k-btn--primary">
               <Icon name="camera" />
-              <span>Craft Similar Piece</span>
+              <span>{t('trends.craftSimilar')}</span>
             </a>
             <a href={item.url} target="_blank" rel="noopener noreferrer" class="k-btn k-btn--secondary">
               <Icon name="link" />
-              <span>View Social Post</span>
+              <span>{t('trends.viewSocialPost')}</span>
             </a>
           </div>
         </article>
@@ -410,14 +442,14 @@
 
   <!-- Share Trend Link Dialog -->
   {#if submitModalOpen}
-    <Dialog bind:open={submitModalOpen} title="Share Social Trend or Boutique Inspiration">
+    <Dialog bind:open={submitModalOpen} title={t('trends.modal.heading')}>
       <div class="modal-body">
         <p class="modal-intro">
-          Found an inspiring reel, Pinterest palette, or boutique showcase? Share it with the artisan collective so weavers and crafters can align production with active market demand.
+          {t('trends.modal.intro')}
         </p>
 
         <div class="modal-field-stack">
-          <FieldGroup label="Social Media or Web URL" description="Paste link from Instagram, Pinterest, YouTube, or boutique store">
+          <FieldGroup label={t('trends.modal.urlLabel')} description={t('trends.modal.urlDesc')}>
             {#snippet children({ id, describedBy })}
               <Input
                 {id}
@@ -429,19 +461,19 @@
             {/snippet}
           </FieldGroup>
 
-          <FieldGroup label="Trend Headline / Insight" description="What makes this piece or colorway relevant to buyers?">
+          <FieldGroup label={t('trends.modal.headlineLabel')} description={t('trends.modal.headlineDesc')}>
             {#snippet children({ id, describedBy })}
               <Input
                 {id}
                 aria-describedby={describedBy}
-                placeholder="e.g., Earth tone block print napkins trending in home boutiques"
+                placeholder={t('trends.modal.headlinePlaceholder')}
                 bind:value={newTitle}
               />
             {/snippet}
           </FieldGroup>
 
           <div class="modal-two-col">
-            <FieldGroup label="Source Platform">
+            <FieldGroup label={t('trends.modal.platformLabel')}>
               {#snippet children({ id, describedBy })}
                 <Select
                   {id}
@@ -452,7 +484,7 @@
               {/snippet}
             </FieldGroup>
 
-            <FieldGroup label="Target Craft Tradition">
+            <FieldGroup label={t('trends.modal.craftLabel')}>
               {#snippet children({ id, describedBy })}
                 <Select
                   {id}
@@ -467,7 +499,7 @@
 
         <div class="modal-actions">
           <Button variant="secondary" size="md" onclick={() => (submitModalOpen = false)}>
-            <span>Cancel</span>
+            <span>{t('company.action.cancel')}</span>
           </Button>
           <Button
             variant="primary"
@@ -476,9 +508,9 @@
             onclick={handleCreateTrend}
           >
             {#if submitting}
-              <span>Sharing...</span>
+              <span>{t('trends.modal.sharing')}</span>
             {:else}
-              <span>Publish to Trend Board</span>
+              <span>{t('trends.modal.publish')}</span>
             {/if}
           </Button>
         </div>
@@ -494,12 +526,16 @@
       margin-inline: auto;
       padding-inline: 1rem;
       padding-block: 1.5rem 5rem;
+      max-inline-size: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
 
     .trends-header {
       margin-block-end: 2rem;
       border-block-end: 1px solid var(--k-border-hairline);
       padding-block-end: 1.5rem;
+      max-inline-size: 100%;
     }
 
     .header-top {
@@ -507,6 +543,7 @@
       justify-content: space-between;
       align-items: center;
       margin-block-end: 0.25rem;
+      max-inline-size: 100%;
     }
 
     .kicker {
@@ -523,6 +560,8 @@
       align-items: flex-start;
       gap: 1rem;
       margin-block-end: 1.25rem;
+      flex-wrap: wrap;
+      max-inline-size: 100%;
     }
 
     @media (max-width: 600px) {
@@ -537,6 +576,7 @@
       color: var(--k-ink);
       line-height: 1.25;
       margin-block-end: 0.35rem;
+      overflow-wrap: break-word;
     }
 
     .subtitle {
@@ -544,6 +584,7 @@
       color: var(--k-text-muted);
       line-height: 1.5;
       max-width: 650px;
+      overflow-wrap: break-word;
     }
 
     .curation-banner {
@@ -555,6 +596,8 @@
       border: 1px solid var(--k-border-hairline);
       font-size: 0.875rem;
       margin-block-end: 1.25rem;
+      max-inline-size: 100%;
+      box-sizing: border-box;
     }
 
     .banner-text strong {
@@ -571,6 +614,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
+      max-inline-size: 100%;
     }
 
     .filter-pill {
@@ -583,6 +627,7 @@
       cursor: pointer;
       min-block-size: 38px;
       transition: all var(--k-dur-fast) var(--k-ease);
+      max-inline-size: 100%;
     }
 
     .filter-pill:hover {
@@ -602,6 +647,7 @@
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      max-inline-size: 100%;
     }
 
     .trend-card {
@@ -611,6 +657,9 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      max-inline-size: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
 
     .trend-card.is-pinned {
@@ -771,18 +820,22 @@
       margin-block-start: 0.5rem;
       border-block-start: 1px solid var(--k-border-hairline);
       padding-block-start: 1rem;
+      max-inline-size: 100%;
     }
 
     .k-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.45rem;
-      padding: 0.6rem 1.1rem;
+      padding: 0.6rem 1rem;
       font-size: 0.875rem;
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
       min-block-size: 44px;
+      max-inline-size: 100%;
+      word-break: break-word;
     }
 
     .k-btn--primary {

@@ -82,7 +82,7 @@
             <span class="social-tile__label">{label}</span>
           </button>
           <div class="social-tile__voice">
-            <SpeakButton text={label} label={label} />
+            <SpeakButton text={label} label={label} iconOnly />
           </div>
         </div>
       {/each}
@@ -194,7 +194,3 @@
     align-items: center;
   }
 </style>
-`;
-
-fs.writeFileSync(path.join(dir, '+page.svelte'), content, 'utf8');
-console.log('Created social-category/+page.svelte');
