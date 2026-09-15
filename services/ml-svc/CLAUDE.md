@@ -76,7 +76,7 @@ a ninth.
 | `vlm` | `ExtractAttributes`, `VerifyTechnique`, `GenerateDescription`'s polish | Qwen2.5-VL, one checkpoint backs all three | `ML_SVC_IMAGE_ATTRIBUTE_EXTRACTION_MODEL`, `ML_SVC_TECHNIQUE_VERIFICATION_MODEL`, `ML_SVC_IMAGE_DESCRIPTION_MODEL` (all default to the same repo id; see `vlm/real.py`'s docstring for what happens if they diverge), `ML_SVC_VIDEO_FRAMES` |
 | `embedding` | `Embed` | SentenceTransformer (e5), ONNX Runtime by default | `ML_SVC_TEXT_EMBEDDING_MODEL`, `ML_SVC_TEXT_EMBEDDING_BACKEND` (`onnx`\|`torch`) |
 | `reranking` | `Rerank` | CrossEncoder (bge), ONNX Runtime by default | `ML_SVC_TEXT_RERANKING_MODEL`, `ML_SVC_TEXT_RERANKING_BACKEND` (`onnx`\|`torch`) |
-| `handloom_texture` | `DetectHandloom` | FFT peak-ratio + an optional, never-yet-trained texture CNN | `ML_SVC_HANDLOOM_DETECTION_MODEL` (checkpoint path; not wired to any loader yet -- see `real.py`, this was true before the refactor too) |
+| `handloom_texture` | `DetectHandloom` | FFT peak-ratio + an optional, never-yet-trained texture CNN (loader now wired, no checkpoint exists yet) | `ML_SVC_HANDLOOM_DETECTION_MODEL` (checkpoint path; empty = optional, degrades to FFT-only, same pattern as `image_lighting`) |
 | `voice_transcription` | `Transcribe` | Bhashini HTTP API -- proof "a model" can be an external API call, not just a local checkpoint | `ML_SVC_VOICE_TRANSCRIPTION_URL`/`_API_KEY` |
 
 **`embedding`/`reranking` run through ONNX Runtime, not eager PyTorch, by
@@ -121,6 +121,41 @@ compatibility (see the `vlm` row above), so bumping torch to fix this would
 risk the VLM's carefully-pinned quantization stack instead. Bisected
 1.17.3-1.29.0 by hand; 1.17.3 through 1.22.0 lack the offending entries. Same
 pin applies to `onnxruntime-gpu` in the `onnx-gpu` extra.
+
+**`handloom_texture`'s checkpoint loader is now wired** (`net.py` +
+`real.py`'s `_get_net()`, copied from `image_lighting/real.py`'s lazy-load
+pattern exactly: unset or bad checkpoint logs and degrades, never raises).
+Still no checkpoint to actually point `ML_SVC_HANDLOOM_DETECTION_MODEL` at
+-- checked before writing `net.py`: no public handloom-vs-powerloom
+checkpoint or dataset exists anywhere. Two papers doing exactly this binary
+classification (gamucha towels, Sci Rep 2024; Mekhela Sador saris, NMITCON
+2024) both built private, unreleased datasets (100-200 physical fabric
+samples, phone-camera macro shots at 5-10cm, augmented to 17k+ images) and
+both trained a small/modified net from scratch rather than reusing a
+published one. The first paper is the more useful data point for anyone
+tempted to reach for a pretrained ImageNet backbone here instead of
+collecting task data: it benchmarks VGG16/19, ResNet50, InceptionV3, and
+DenseNet201 against a small custom net on this exact task, and the
+pretrained backbones scored WORSE (50-92% val accuracy) than the ~11M-param
+custom net (94-98%) -- unsurprising, since weave regularity is a local,
+frequency-domain property (what the FFT peak-ratio already measures
+analytically), not the object-shape semantics ImageNet pretraining teaches.
+`net.py`'s `TextureNet` is therefore sized for training from scratch on a
+small dataset (a few thousand parameters, depthwise-separable convs,
+`AdaptiveAvgPool2d` so it accepts any crop size), not for loading a
+pretrained backbone. Dataset bootstrap plan, once real listing photos exist:
+weak-label a pile of unlabelled weave close-ups with the existing FFT
+peak-ratio (confident tails = provisional label, human only adjudicates the
+ambiguous middle), which is a much smaller labelling job than starting cold
+-- see `real.py`'s module docstring.
+
+**Also fixed while wiring the above**: `score()` passed its FFT input
+(`pixels`, already mean-subtracted for the FFT) into `_texture_cnn_score`,
+which then divided by 255 expecting ordinary `[0, 255]` greyscale -- inert
+while `_texture_net` was always `None` unconditionally, but would have fed
+the net garbage the moment a checkpoint was configured. Fixed by keeping the
+pre-mean-subtraction array (`raw_pixels`) around and passing that to the CNN
+instead.
 
 **Every one of these env var names changed in the modularization pass** (from
 vendor/backend-shaped names like `ML_SVC_VLM_MODEL`, `S3_*`, `BHASHINI_*` to
@@ -204,6 +239,8 @@ instead of a monolithic registry.
   shape/state-dict tests, `importorskip("torch")`.
 - `tests/models/test_image_lighting_real.py` -- the one real-mode behaviour
   that needs no torch at all (unconfigured checkpoint -> unavailable).
+- `tests/models/test_handloom_texture_net.py` / `test_handloom_texture_real.py`
+  -- same two-test split as `image_lighting`'s pair, same reasons.
 - `tests/features/test_<feature>.py` -- one per feature, using hand-written
   fake Protocol implementations, not any component's real mock. Mirrors what
   `tests/test_real_helpers.py` used to cover as one flat file of pure-function
