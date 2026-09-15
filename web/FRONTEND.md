@@ -251,8 +251,11 @@ Full manual-verification checklist (keyboard traversal, screen-reader pass,
 
 Full 8-minute click-path script, timings, and a troubleshooting table:
 `web/DEMO.md`. `PUBLIC_DEMO_MODE=1` is a cosmetic-only flag (fixed
-empty-state illustrations, deterministic timings) — it does **not** seed
-any data; there is no seed-data backend for artisans/listings/orders yet.
+empty-state illustrations, deterministic timings) — it does **not** seed any
+data itself. `make seed-demo` (or `make demo-up`/`make seed-data`, which now
+call it) does: it registers real artisans, publishes real listings and
+places a real bulk order through the live BFF REST API (see
+`cmd/seed-demo/main.go`) rather than inserting rows directly.
 
 ---
 

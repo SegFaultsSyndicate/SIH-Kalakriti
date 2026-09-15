@@ -478,3 +478,160 @@ node scripts/audit.mjs --locale <code_or_tag>
 - If you add new keys to `en.ts`, all non-English catalogues must have their translations populated to keep the baseline at 0. Never raise a baseline number to mask missing translations.
 - All non-English catalogues are typed as `export const <code>: Messages = { ... }`, making missing keys a compile-time type error permanently.
 
+## Outbound webhook subscribe route added (pkg/webhook.Manager was unused)
+
+`pkg/webhook.Manager` (CRUD) and the delivery `Worker`/`cmd/webhook-worker`
+existed, but nothing in `services/bff/internal/bff/server.go` ever mounted a
+route for subscription CRUD (only the *inbound* payment webhook existed).
+Fixed by adding `POST/GET /webhooks/subscriptions` and
+`DELETE /webhooks/subscriptions/:id` (all under `authed`) to
+`handler/api.go` + `server.go`, wired to a `*webhook.Manager` built in
+`cmd/bff/main.go` from its own `database/sql`/`lib/pq` connection (pkg/webhook
+predates pgxpool and wasn't worth rewriting just for this). Subscriber id
+comes from the JWT principal's `Subject`, parsed as a UUID — true for artisan
+ids, **not** guaranteed for buyer ids (opaque `text` elsewhere in this
+schema); a non-UUID buyer subject gets a 400, not a silent wrong write.
+`DeleteSubscription` now takes `subscriberID` too and filters on it, so one
+caller can no longer delete another's subscription by guessing a UUID.
+
+## No public path ever issues a BUYER, CLUSTER_OFFICER or MINISTRY token
+
+Found while writing `cmd/seed-demo` (a seeder that creates real
+artisans/listings/orders through the live BFF API instead of writing rows
+directly). `VerifyOtp` in `services/core-svc/internal/core/service/auth.go`
+hardcodes every OTP login to `auth.RoleArtisan` — there is no OTP flow, REST
+route, or self-service path anywhere that mints a `RoleBuyer` token, and
+`SubmitForApproval` (the listing-moderation step) requires
+`RoleClusterOfficer`/`RoleMinistry`, which are equally unreachable. Both
+roles appear only in test helpers (`bfftest/server.go`,
+`artisan_test.go`) — never in a real request path. Concretely: **nothing in
+the current product can create a bulk order as a real buyer, or move a
+listing from draft to published, without someone minting a JWT by hand.**
+`cmd/seed-demo/main.go` does exactly that with `pkg/auth.Issuer` directly
+(same `JWT_SECRET` the bff verifies against) to get demo data in, and says so
+in its own doc comment — this is a workaround for a real product gap, not a
+fix. Before real buyers or moderators use this in production, something
+needs to actually issue those roles: a buyer signup/login flow, and an
+admin/ops path for granting cluster-officer or ministry accounts.
+
+## Production secrets: docker-compose.yml now reads `.env`, no second compose file
+
+Every hardcoded dev secret in `docker-compose.yml`
+(`POSTGRES_PASSWORD`, `JWT_SECRET`, `S3_ACCESS_KEY`/`S3_SECRET_KEY`,
+`MINIO_ROOT_USER`/`PASSWORD`, Kafka `CLUSTER_ID`) is now `${VAR:-dev-default}`
+— same pattern the ml-svc block already used for `HF_TOKEN`. A real deploy
+generates a repo-root `.env` (`docker compose` reads it automatically) with
+`scripts/gen-prod-secrets.sh`, which refuses to run if `.env` already exists
+and does not touch `BASE_URL`/`CORS_ALLOWED_ORIGINS` (deploy-specific, edit by
+hand). Deliberately did **not** add a `docker-compose.prod.yml` — see the
+`docker-compose.full.yml` postmortem above; a second compose file drifts the
+moment someone edits only one of them. `bff`'s `CORS_ALLOWED_ORIGINS` env var
+also got wired into compose (was previously unset/undocumented there) since a
+frontend deployed separately on Vercel calls this bff cross-origin.
+
+## Backend CI added (`.github/workflows/ci.yml` only had a `web` job before)
+
+Added `go` (spins up a `pgvector/pgvector:pg17` service container, installs
+`protoc-gen-go`/`protoc-gen-go-grpc`, runs `make proto-go sqlc migrate-up
+lint test`) and `ml-svc` (`uv sync --extra dev && pytest`) jobs alongside the
+existing `web` job. `buf`/`goose`/`sqlc` need no separate install step — the
+Makefile already falls back to `go run .../tool@pinned-version` when the
+binary isn't on `PATH`.
+
+## gRPC service-to-service calls had no load-balancing policy (fixed)
+
+Every gRPC client in the repo dialed a bare `host:port` via
+`grpc.NewClient(addr, grpc.WithTransportCredentials(...))` with no LB policy
+— fine at one replica per service (docker-compose's reality today), but
+silently broken the moment any backend scales to multiple pods in k8s: gRPC's
+default resolver scheme is `passthrough`, which treats the address as one
+opaque target and never re-resolves it, so the connection pins to whichever
+single pod it first reached — `round_robin` has nothing to balance across
+without also fixing the resolver scheme, and a plain `ClusterIP` Service
+doesn't help either, since it hands back only its own virtual IP, not one
+address per pod.
+
+Fixed with **pkg/grpcdial** (`pkg/grpcdial/grpcdial.go`): `grpcdial.Dial(addr)`
+prefixes the target with `dns:///` (triggers real re-resolution to every `A`
+record behind a name) and sets `round_robin` via
+`grpc.WithDefaultServiceConfig`. Every dial site now uses it: `services/bff/
+cmd/bff/main.go` (→ core-svc, search-svc, insight-svc, collab-svc,
+channel-svc), `services/channel-svc/cmd/channel-svc/main.go` (→ core-svc),
+`services/core-svc/cmd/core-svc/main.go` (→ ml-svc), `services/search-svc/
+cmd/search-svc/main.go` (→ ml-svc, → core-svc). A unit test
+(`pkg/grpcdial/grpcdial_test.go`, using grpc-go's manual resolver against 3
+fake backends) proves the round_robin service config actually spreads calls
+across resolved addresses rather than pinning to one.
+
+`dns:///` alone is not sufficient — it also requires a **headless** k8s
+Service (`clusterIP: None`) on the callee, since CoreDNS only returns one A
+record per pod for a headless Service; a normal ClusterIP Service still
+resolves to just its own virtual IP regardless of the dial-side scheme. Every
+Service manifest under `deploy/k8s/` for a service reached over gRPC
+(core-svc, collab-svc, channel-svc, insight-svc, ml-svc, search-svc) is now
+headless. `bff`'s Service stays plain ClusterIP — it's reached over HTTP via
+Ingress, not dialed as gRPC by anything.
+
+Explicitly out of scope, and don't revisit without a real reason: no service
+mesh (Istio/Linkerd) — `round_robin` + headless Service solves the actual
+problem with zero new infrastructure. No Kafka request/reply conversion for
+ml-svc's synchronous, same-request-cycle calls (`Embed`/`Rerank`/`Transcribe`
+in search-svc, live at query time) — that would need correlation IDs, a reply
+topic, and a blocking wait-with-timeout in an HTTP handler, objectively more
+complex than fixing the LB policy. ml-svc's *other* calls
+(`EnhanceImage`/`ExtractAttributes`/`GenerateDescription`/`Translate`, all
+reachable only from `services/core-svc/internal/core/service/pipeline.go`
+inside the `MediaUploadedHandler` Kafka consumer) were already async before
+this change and needed no architecture change, only the same `dns:///` +
+round_robin fix on their own outbound gRPC hop.
+
+## k8s manifests for core-svc/collab-svc/channel-svc/insight-svc added; `user-svc-deployment.yaml` deleted
+
+`deploy/k8s/` previously had manifests only for `bff`, `ml-svc`, `search-svc`
+and a stray `web`, plus a `user-svc-deployment.yaml` that doesn't correspond
+to any real service under `services/` (real services are core-svc, search-svc,
+collab-svc, channel-svc, insight-svc, bff, ml-svc, web) — its ports (8080/9090),
+ownership of `JWT_SECRET`, and general shape strongly suggest it's a stale
+pre-rename draft of what's now `core-svc`. Deleted it rather than fixing it,
+same reasoning as the `docker-compose.full.yml` postmortem above: keeping two
+manifests both claiming to be "the identity service" under different names is
+exactly the kind of duplicate that drifts and confuses later, not a safety
+net. Added real manifests for the four services that were missing entirely
+(`core-svc-deployment.yaml`, `collab-svc-deployment.yaml`,
+`channel-svc-deployment.yaml`, `insight-svc-deployment.yaml`), with ports,
+env var names, and health-check paths taken from each service's actual
+`main.go` and `docker-compose.yml` — not assumed. Notable per-service specifics
+future edits should preserve:
+- **insight-svc** has exactly one listener, gRPC-only, no HTTP port at all
+  (confirms the already-fixed fictional `INSIGHT_SVC_HTTP_PORT` from the
+  `.env.example` section above stays gone) — its k8s probes are a bare
+  `tcpSocket` check, not an invented HTTP path.
+- **channel-svc** exposes only `/health`, not the `/healthz`+`/readyz` pair
+  core-svc/collab-svc/search-svc all have — don't copy the two-path pattern
+  onto it.
+- **collab-svc**'s own env var names are `COLLAB_GRPC_ADDR`/`COLLAB_HTTP_ADDR`
+  (not `COLLAB_SVC_GRPC_ADDR`/`COLLAB_SVC_HTTP_ADDR`, unlike every other
+  service's naming convention) — docker-compose.yml never overrides them
+  either, relying on the `:50053`/`:8083` code defaults instead; the new k8s
+  manifest does the same rather than setting a var under the wrong name.
+
+`deploy/k8s/configmap.yaml` also had six `*-addr` keys
+(`user-svc-addr`, `catalog-svc-addr`, `search-svc-addr`, `order-svc-addr`,
+`social-svc-addr`, `ml-svc-addr`) that no manifest ever actually read via
+`configMapKeyRef` — dead configuration, three of them (`catalog-svc`,
+`order-svc`, `social-svc`) for services that don't exist anywhere in
+`services/`. Deleted rather than fixed, since nothing consumes them; every
+real service gets its peer addresses from literal env values in its own
+Deployment instead (see `bff-deployment.yaml`'s `CORE_SVC_ADDR` etc.).
+
+`deploy/k8s/bff-deployment.yaml`, `search-svc-hpa.yaml` (now
+`search-svc-deployment.yaml` in spirit, filename unchanged) and the deleted
+`user-svc-deployment.yaml` all had the same `DATABASE_URL` mistake
+`.env.example` had (see that section above) — `pkg/config` reads
+`POSTGRES_DSN`. Fixed in both surviving files. `search-svc-hpa.yaml` also had
+its gRPC/HTTP ports backwards (8082 labeled `"grpc"`, real gRPC port is
+50052 per `SEARCH_SVC_GRPC_ADDR`'s default) and probed a port 9092 the
+service never listens on (`/healthz`/`/readyz` are served on the HTTP port,
+8082) — fixed to match `services/search-svc/cmd/search-svc/main.go`'s actual
+`envOr` defaults.
+

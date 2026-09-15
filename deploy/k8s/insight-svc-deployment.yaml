@@ -1,0 +1,121 @@
+# deploy/k8s/insight-svc-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insight-svc
+  labels:
+    app: insight-svc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insight-svc
+  template:
+    metadata:
+      labels:
+        app: insight-svc
+    spec:
+      containers:
+      - name: insight-svc
+        image: kalakriti/insight-svc:latest
+        imagePullPolicy: IfNotPresent
+        # insight-svc has exactly one listener -- a gRPC port, no HTTP at
+        # all (see services/insight-svc/cmd/insight-svc/main.go's envOr
+        # ("GRPC_ADDR", ":8085") -- no HTTP_ADDR anywhere). A fictional
+        # INSIGHT_SVC_HTTP_PORT was already flagged and removed from
+        # .env.example per CLAUDE.md; don't reintroduce it here.
+        ports:
+        - containerPort: 8085
+          name: grpc
+        env:
+        - name: POSTGRES_DSN
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: database-url
+        - name: S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: minio-endpoint
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: minio-access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: minio-secret-key
+        - name: S3_USE_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: minio-use-ssl
+        - name: S3_BUCKET
+          value: "kalakriti"
+        - name: OTLP_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: otlp-endpoint
+        # No HTTP health endpoint exists (gRPC-only service, health is
+        # served via grpc_health_v1 on the same port) -- a plain TCP probe
+        # is the honest check here rather than inventing an HTTP path.
+        livenessProbe:
+          tcpSocket:
+            port: 8085
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insight-svc
+spec:
+  # Headless: bff dials "dns:///insight-svc:8085" with round_robin load
+  # balancing (pkg/grpcdial) -- see core-svc-deployment.yaml's Service for
+  # why headless is required, not optional.
+  clusterIP: None
+  selector:
+    app: insight-svc
+  ports:
+  - name: grpc
+    port: 8085
+    targetPort: 8085
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: insight-svc-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: insight-svc
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

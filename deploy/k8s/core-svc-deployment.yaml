@@ -1,0 +1,151 @@
+# deploy/k8s/core-svc-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-svc
+  labels:
+    app: core-svc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: core-svc
+  template:
+    metadata:
+      labels:
+        app: core-svc
+    spec:
+      containers:
+      - name: core-svc
+        image: kalakriti/core-svc:latest
+        imagePullPolicy: IfNotPresent
+        # Real ports/env per services/core-svc/cmd/core-svc/main.go's
+        # defaultGRPCAddr/defaultHTTPAddr and docker-compose.yml, not guessed.
+        ports:
+        - containerPort: 50051
+          name: grpc
+        - containerPort: 8081
+          name: http
+        env:
+        - name: POSTGRES_DSN
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: database-url
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: redis-addr
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: kafka-brokers
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: jwt-secret
+        - name: S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: minio-endpoint
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: minio-access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: minio-secret-key
+        - name: S3_USE_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: minio-use-ssl
+        - name: S3_BUCKET
+          value: "kalakriti"
+        # ml-svc's real gRPC port is 50055, not 50051 -- see ml-svc-hpa.yaml's
+        # own port-mismatch fix; dns:/// scheme is added at the code level
+        # (pkg/grpcdial), not here.
+        - name: ML_SVC_ADDR
+          value: "ml-svc:50055"
+        - name: OTLP_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: kalakriti-config
+              key: otlp-endpoint
+        # Must stay false/unset in any real deployment: there is no real SMS
+        # provider wired up, and main.go refuses this outright when
+        # APP_ENV=production anyway (see CLAUDE.md).
+        - name: AUTH_DEV_OTP_ENABLED
+          value: "false"
+        - name: APP_ENV
+          value: "production"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 300m
+            memory: 384Mi
+          limits:
+            cpu: 1500m
+            memory: 768Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core-svc
+spec:
+  # Headless: bff/channel-svc/search-svc all dial "dns:///core-svc:50051"
+  # with round_robin load balancing (pkg/grpcdial), which needs CoreDNS to
+  # return one A record per pod -- a normal ClusterIP Service returns only
+  # the virtual IP and pins every client to a single pod regardless of
+  # replica count.
+  clusterIP: None
+  selector:
+    app: core-svc
+  ports:
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+  - name: http
+    port: 8081
+    targetPort: 8081
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: core-svc-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: core-svc
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

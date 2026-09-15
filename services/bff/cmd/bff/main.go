@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,12 +13,13 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	"github.com/ZoroNewbie00/kalakriti/pkg/postgres"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/client"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/repo"
@@ -69,22 +71,31 @@ func run() error {
 	defer pgPool.Close()
 	idempStore := repo.NewIdempotencyStore(repo.New(pgPool))
 
+	// pkg/webhook uses database/sql (lib/pq) rather than pgxpool, so it gets
+	// its own thin connection to the same database instead of sharing pgPool.
+	webhookDB, err := sql.Open("postgres", mustEnv("POSTGRES_DSN"))
+	if err != nil {
+		return fmt.Errorf("opening webhook db: %w", err)
+	}
+	defer webhookDB.Close()
+	webhookMgr := webhook.NewManager(webhookDB)
+
 	// Dial backend services. Each is a single shared connection per backend;
 	// grpc.NewClient doesn't connect until first use, so a backend that's down
 	// at startup doesn't block bff from starting.
-	coreConn, err := grpc.NewClient(getEnv("CORE_SVC_ADDR", "localhost:50051"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	coreConn, err := grpcdial.Dial(getEnv("CORE_SVC_ADDR", "localhost:50051"))
 	if err != nil {
 		return fmt.Errorf("dialling core-svc: %w", err)
 	}
 	defer coreConn.Close()
 
-	searchConn, err := grpc.NewClient(getEnv("SEARCH_SVC_ADDR", "localhost:50052"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	searchConn, err := grpcdial.Dial(getEnv("SEARCH_SVC_ADDR", "localhost:50052"))
 	if err != nil {
 		return fmt.Errorf("dialling search-svc: %w", err)
 	}
 	defer searchConn.Close()
 
-	insightConn, err := grpc.NewClient(getEnv("INSIGHT_SVC_ADDR", "localhost:8085"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	insightConn, err := grpcdial.Dial(getEnv("INSIGHT_SVC_ADDR", "localhost:8085"))
 	if err != nil {
 		return fmt.Errorf("dialling insight-svc: %w", err)
 	}
@@ -96,7 +107,7 @@ func run() error {
 	// bff block pointing at collab-svc's HTTP port (8083) instead — same
 	// stale-port shape as CORE_SVC_ADDR/SEARCH_SVC_ADDR were, never actually
 	// read by any Go code until now.
-	collabConn, err := grpc.NewClient(getEnv("COLLAB_SVC_ADDR", "localhost:50053"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	collabConn, err := grpcdial.Dial(getEnv("COLLAB_SVC_ADDR", "localhost:50053"))
 	if err != nil {
 		return fmt.Errorf("dialling collab-svc: %w", err)
 	}
@@ -105,7 +116,7 @@ func run() error {
 	// channel-svc's gRPC port (see its main.go default: :9096, distinct from
 	// collab-svc's :50053 to avoid a port collision) — CHANNEL_SVC_ADDR is
 	// already used for channel-svc's HTTP port, so this is a separate var.
-	channelConn, err := grpc.NewClient(getEnv("CHANNEL_SVC_GRPC_ADDR", "localhost:9096"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	channelConn, err := grpcdial.Dial(getEnv("CHANNEL_SVC_GRPC_ADDR", "localhost:9096"))
 	if err != nil {
 		return fmt.Errorf("dialling channel-svc: %w", err)
 	}
@@ -142,6 +153,7 @@ func run() error {
 		TrendSvc:   client.NewTrends(coreConn),
 		BadgeSvc:   client.NewBadges(coreConn),
 		SchemeSvc:  client.NewSchemes(coreConn),
+		WebhookMgr: webhookMgr,
 	})
 	if err != nil {
 		return err

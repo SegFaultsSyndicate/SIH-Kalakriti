@@ -1,37 +1,34 @@
-# deploy/k8s/search-svc-hpa.yaml
+# deploy/k8s/collab-svc-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: search-svc
+  name: collab-svc
   labels:
-    app: search-svc
+    app: collab-svc
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: search-svc
+      app: collab-svc
   template:
     metadata:
       labels:
-        app: search-svc
+        app: collab-svc
     spec:
       containers:
-      - name: search-svc
-        image: kalakriti/search-svc:latest
+      - name: collab-svc
+        image: kalakriti/collab-svc:latest
         imagePullPolicy: IfNotPresent
+        # Real ports per services/collab-svc/cmd/collab-svc/main.go's
+        # defaultGRPCAddr/defaultHTTPAddr (COLLAB_GRPC_ADDR/COLLAB_HTTP_ADDR
+        # env vars are left unset here, same as docker-compose.yml, so the
+        # service falls back to these same defaults).
         ports:
-        # Real ports per services/search-svc/cmd/search-svc/main.go's
-        # envOr defaults: SEARCH_SVC_GRPC_ADDR :50052, SEARCH_SVC_HTTP_ADDR
-        # :8082 -- this manifest previously had them backwards (8082 named
-        # "grpc") and probed a port 9092 the service never listens on.
-        - containerPort: 50052
+        - containerPort: 50053
           name: grpc
-        - containerPort: 8082
+        - containerPort: 8083
           name: http
         env:
-        # pkg/config reads POSTGRES_DSN, not DATABASE_URL (see CLAUDE.md's
-        # .env.example section) -- this manifest set a name the service
-        # never reads and was never smoke-tested.
         - name: POSTGRES_DSN
           valueFrom:
             secretKeyRef:
@@ -47,6 +44,8 @@ spec:
             configMapKeyRef:
               name: kalakriti-config
               key: kafka-brokers
+        - name: CORE_SVC_ADDR
+          value: "core-svc:50051"
         - name: OTLP_ENDPOINT
           valueFrom:
             configMapKeyRef:
@@ -55,13 +54,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8082
+            port: 8083
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /readyz
-            port: 8082
+            port: 8083
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -78,33 +77,32 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: search-svc
+  name: collab-svc
 spec:
-  # Headless: bff dials "dns:///search-svc:50052" with round_robin load
-  # balancing (pkg/grpcdial), which needs CoreDNS to return one A record per
-  # pod -- a normal ClusterIP Service returns only the virtual IP and pins
-  # every client to a single pod regardless of replica count.
+  # Headless: bff dials "dns:///collab-svc:50053" with round_robin load
+  # balancing (pkg/grpcdial) -- see core-svc-deployment.yaml's Service for
+  # why headless is required, not optional.
   clusterIP: None
   selector:
-    app: search-svc
+    app: collab-svc
   ports:
   - name: grpc
-    port: 50052
-    targetPort: 50052
+    port: 50053
+    targetPort: 50053
   - name: http
-    port: 8082
-    targetPort: 8082
+    port: 8083
+    targetPort: 8083
   type: ClusterIP
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: search-svc-hpa
+  name: collab-svc-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: search-svc
+    name: collab-svc
   minReplicas: 2
   maxReplicas: 8
   metrics:

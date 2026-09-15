@@ -1,4 +1,4 @@
-name: Web
+name: CI
 
 on:
   push:
@@ -31,3 +31,49 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm size
+
+  go:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: kalakriti
+          POSTGRES_PASSWORD: kalakriti
+          POSTGRES_DB: kalakriti
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.0"
+      - name: Install protoc plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Generate proto + sqlc code
+        run: make proto-go sqlc
+      - run: make migrate-up
+        env:
+          POSTGRES_DSN: postgres://kalakriti:kalakriti@localhost:5432/kalakriti?sslmode=disable
+      - run: make lint
+      - run: make test
+        env:
+          POSTGRES_DSN: postgres://kalakriti:kalakriti@localhost:5432/kalakriti?sslmode=disable
+
+  ml-svc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ml-svc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --extra dev
+      - run: uv run --extra dev pytest -q

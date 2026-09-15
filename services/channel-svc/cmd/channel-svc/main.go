@@ -16,12 +16,12 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	socialv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/social/v1"
@@ -185,7 +185,7 @@ func run() error {
 	// publisher below and the IndiaHandmade export handler further down —
 	// both need a listing hydrated beyond what the bare
 	// catalog.listing.published event or the listing row alone carries.
-	coreConn, err := grpc.NewClient(cfg.coreSvcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	coreConn, err := grpcdial.Dial(cfg.coreSvcAddr)
 	if err != nil {
 		return fmt.Errorf("dialling core-svc: %w", err)
 	}

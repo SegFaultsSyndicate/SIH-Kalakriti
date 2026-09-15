@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -42,6 +44,7 @@ type APIHandler struct {
 	redis         *redis.Client
 	logger        *slog.Logger
 	webhookSecret string
+	webhookMgr    *webhook.Manager
 }
 
 // SetSecurity configures Redis, structured logging and webhook credentials for security enforcement.
@@ -49,6 +52,13 @@ func (h *APIHandler) SetSecurity(rdb *redis.Client, logger *slog.Logger, webhook
 	h.redis = rdb
 	h.logger = logger
 	h.webhookSecret = webhookSecret
+}
+
+// SetWebhookManager wires the outbound webhook subscription manager, used by
+// the buyer-facing subscribe/list/unsubscribe endpoints (distinct from
+// webhookSecret above, which only verifies the inbound payment callback).
+func (h *APIHandler) SetWebhookManager(mgr *webhook.Manager) {
+	h.webhookMgr = mgr
 }
 
 // AuthService is the auth-svc gRPC client interface.
@@ -454,6 +464,111 @@ func (h *APIHandler) HandlePaymentWebhook(w http.ResponseWriter, r *http.Request
 	}
 
 	httpx.JSON(w, http.StatusOK, map[string]string{"status": "processed"})
+}
+
+// --- Outbound Webhook Subscriptions ---
+// Buyer/seller/admin-facing CRUD over pkg/webhook.Manager, delivered by the
+// separate webhook-worker process (cmd/webhook-worker). Subscriber id comes
+// from the authenticated principal's Subject, which must be a UUID — true
+// for artisan ids, not guaranteed for opaque buyer ids (see CLAUDE.md).
+
+func subscriberTypeFor(role auth.Role) string {
+	switch role {
+	case auth.RoleArtisan:
+		return "seller"
+	case auth.RoleBuyer:
+		return "buyer"
+	default:
+		return "admin"
+	}
+}
+
+func (h *APIHandler) CreateWebhookSubscription(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("caller id is not a valid subscriber id"))
+		return
+	}
+
+	var body struct {
+		URL    string   `json:"url"`
+		Secret string   `json:"secret"`
+		Events []string `json:"events"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+	if body.URL == "" || body.Secret == "" || len(body.Events) == 0 {
+		httpx.Error(w, domain.InvalidInput("url, secret and events are required"))
+		return
+	}
+
+	id, err := h.webhookMgr.CreateSubscription(r.Context(), webhook.Subscription{
+		SubscriberID:   subscriberID,
+		SubscriberType: subscriberTypeFor(p.Role),
+		URL:            body.URL,
+		Secret:         body.Secret,
+		Events:         body.Events,
+	})
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusCreated, map[string]string{"id": id.String()})
+}
+
+func (h *APIHandler) ListWebhookSubscriptions(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("caller id is not a valid subscriber id"))
+		return
+	}
+
+	subs, err := h.webhookMgr.ListSubscriptions(r.Context(), subscriberID)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": subs})
+}
+
+func (h *APIHandler) DeleteWebhookSubscription(w http.ResponseWriter, r *http.Request) {
+	p, err := auth.RequirePrincipal(r.Context())
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	subscriberID, err := uuid.Parse(p.Subject)
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("caller id is not a valid subscriber id"))
+		return
+	}
+	subID, err := uuid.Parse(httpx.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid subscription id"))
+		return
+	}
+
+	if err := h.webhookMgr.DeleteSubscription(r.Context(), subID, subscriberID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			httpx.Error(w, domain.NotFound("subscription not found"))
+			return
+		}
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
 func (h *APIHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {

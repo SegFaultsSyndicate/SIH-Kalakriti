@@ -18,12 +18,12 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	searchv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1"
@@ -103,13 +103,13 @@ func run() error {
 		}
 	}()
 
-	mlConn, err := grpc.NewClient(pipeline.MLSvcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	mlConn, err := grpcdial.Dial(pipeline.MLSvcAddr)
 	if err != nil {
 		return fmt.Errorf("dialling ml-svc: %w", err)
 	}
 	defer func() { _ = mlConn.Close() }()
 
-	coreConn, err := grpc.NewClient(coreAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	coreConn, err := grpcdial.Dial(coreAddr)
 	if err != nil {
 		return fmt.Errorf("dialling core-svc: %w", err)
 	}

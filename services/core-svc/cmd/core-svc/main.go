@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -29,6 +28,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
@@ -126,8 +126,7 @@ func run() error {
 	// ml-svc is dialled lazily: grpc.NewClient does not connect until the first
 	// RPC, so a cold ml-svc delays cataloguing rather than stopping core-svc
 	// from serving the artisan app.
-	mlConn, err := grpc.NewClient(cfg.pipeline.MLSvcAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	mlConn, err := grpcdial.Dial(cfg.pipeline.MLSvcAddr)
 	if err != nil {
 		return fmt.Errorf("dialling ml-svc at %s: %w", cfg.pipeline.MLSvcAddr, err)
 	}

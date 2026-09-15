@@ -11,6 +11,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
@@ -55,6 +56,10 @@ type Config struct {
 	TrendSvc   handler.TrendService
 	BadgeSvc   handler.BadgeService
 	SchemeSvc  handler.SchemeService
+
+	// WebhookMgr backs buyer/seller-facing subscribe/list/unsubscribe
+	// endpoints; delivery itself runs out-of-process (cmd/webhook-worker).
+	WebhookMgr *webhook.Manager
 
 	// Rate limiting.
 	RateLimitPerIP        int
@@ -105,6 +110,7 @@ func (s *Server) mountRoutes() {
 		cfg.B2BSvc, cfg.TrendSvc, cfg.BadgeSvc, cfg.SchemeSvc,
 	)
 	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
+	apiH.SetWebhookManager(cfg.WebhookMgr)
 
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
@@ -190,6 +196,11 @@ func (s *Server) mountRoutes() {
 	authed.DELETE("/schemes/:id", httpx.WrapHandler(apiH.DeleteScheme))
 	authed.POST("/artisans/:id/badges", httpx.WrapHandler(withIdempotency(apiH.GrantBadge, cfg.IdempStore)))
 	authed.DELETE("/artisans/:id/badges/:code", httpx.WrapHandler(apiH.RevokeBadge))
+
+	// Outbound webhook subscriptions (delivery runs in cmd/webhook-worker).
+	authed.POST("/webhooks/subscriptions", httpx.WrapHandler(withIdempotency(apiH.CreateWebhookSubscription, cfg.IdempStore)))
+	authed.GET("/webhooks/subscriptions", httpx.WrapHandler(apiH.ListWebhookSubscriptions))
+	authed.DELETE("/webhooks/subscriptions/:id", httpx.WrapHandler(apiH.DeleteWebhookSubscription))
 
 	// Artisan endpoints.
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))

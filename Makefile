@@ -20,13 +20,18 @@ POSTGRES_DB       ?= kalakriti
 POSTGRES_PORT     ?= 5432
 POSTGRES_DSN      ?= postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
+# Must match whatever docker-compose.yml's bff/core-svc containers were
+# actually started with (their own JWT_SECRET default, or your .env override).
+JWT_SECRET        ?= dev-secret-change-in-prod-32bytes-minimum
+BFF_BASE_URL       ?= http://localhost:8000
+
 # Prefer a locally installed binary; otherwise pin the version through `go run`.
 BUF   ?= $(shell command -v buf   2>/dev/null || echo "go run github.com/bufbuild/buf/cmd/buf@v1.34.0")
 GOOSE ?= $(shell command -v goose 2>/dev/null || echo "go run github.com/pressly/goose/v3/cmd/goose@v3.21.1")
 SQLC  ?= $(shell command -v sqlc  2>/dev/null || echo "go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.27.0")
 LINT  ?= $(shell command -v golangci-lint 2>/dev/null || echo "go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1")
 
-.PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed sqlc test test-ml lint tidy build clean check psql services services-stop
+.PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed seed-demo seed-data sqlc test test-ml lint tidy build clean check psql services services-stop demo-up demo-reset tags docker-build
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-14s %s\n", $$1, $$2}'
@@ -149,6 +154,8 @@ demo-up: proto sqlc ## Start full demo: infra + all services + migrate + seed
 	$(MAKE) migrate-up POSTGRES_DSN="$(POSTGRES_DSN)"
 	@echo "Seeding craft ontology..."
 	$(MAKE) seed POSTGRES_DSN="$(POSTGRES_DSN)"
+	@echo "Seeding demo artisans/listings/orders through the real API..."
+	$(MAKE) seed-demo
 	@echo ""
 	@echo "✓ Demo environment ready!"
 	@echo ""
@@ -166,10 +173,12 @@ demo-reset: ## Reset demo: down + volumes + demo-up
 
 # scripts/seed/main.go targets a users/orders/order_allocations schema that
 # predates the real migrations (no `users` table exists — see CLAUDE.md) and
-# will fail against the current database. There is no working seeder for
-# demo artisans/listings/orders yet (web/FRONTEND.md tracks this gap); this
-# target seeds the craft ontology, same as `make seed`, until one exists.
-seed-data: seed ## Alias for `make seed` (the artisan/listing seeder is broken against the current schema — see comment above)
+# will fail against the current database; left in place but unused (`make
+# seed` runs services/core-svc/cmd/seed-ontology instead).
+seed-demo: ## Seed demo artisans/listings/orders through the real BFF API (needs `make up`/`make demo-up` running, and `make seed` already run)
+	go run ./cmd/seed-demo
+
+seed-data: seed seed-demo ## Alias for `make seed seed-demo`
 
 tags: ## Generate QR code sheet PDF
 	go run scripts/generate-qr-sheet/main.go
