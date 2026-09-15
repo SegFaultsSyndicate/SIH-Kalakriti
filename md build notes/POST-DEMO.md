@@ -1,5 +1,11 @@
 # Post-Demo Roadmap
 
+> **Historical, mostly superseded.** This was a pre-implementation planning
+> doc. Most items it proposes (webhooks, fraud detection, i18n, chaos testing,
+> backups, compliance audit) were later built — cross-reference
+> `docs/IMPLEMENTATION_SUMMARY.md` and the individual `docs/*.md` files rather
+> than treating anything here as an open TODO.
+
 **Demo Date:** September 20, 2026  
 **This document:** Improvements to implement after demo, when time allows
 

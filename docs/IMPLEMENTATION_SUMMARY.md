@@ -1,5 +1,12 @@
 # Implementation Summary - 2026-08-28
 
+**Historical session log — describes what was true on 2026-08-28.** A few
+numeric claims below were wrong even at the time (they contradicted their own
+sibling docs) and have been corrected inline as of 2026-09-15; everything else
+is a point-in-time record, not living documentation — check
+`docs/PORTS_AND_APIS.md`, `docs/BACKEND_FLOW.md`, and `docs/MICROSERVICES.md`
+for current state.
+
 ## Completed Features
 
 This document summarizes all features implemented in this session, completing the high-priority items from POST-DEMO.md and the deferred production-readiness tasks.
@@ -195,13 +202,17 @@ SERVICE=core-svc bash scripts/chaos/service-crash.sh
 
 ### Idempotency Enforcement ✓
 - `pkg/idempotency` middleware with Redis-backed store
-- 24-hour key retention
+- **7-day key retention** (corrected 2026-09-15: `pkg/idempotency/idempotency.go`'s
+  real `TTL = 7 * 24 * time.Hour`; this doc originally said 24 hours)
 - Bulk order creation enforces idempotency keys
 
 ### Rate Limiting ✓
 - Redis-backed sliding window
 - Configurable per-endpoint limits
-- 429 status code with Retry-After header
+- **503 status code, no `Retry-After` header** (corrected 2026-09-15: this doc
+  originally said "429 with Retry-After," which contradicted
+  `docs/RATE_LIMITING.md` and the actual code in
+  `services/bff/cmd/bff/main.go`)
 
 ---
 
@@ -284,7 +295,9 @@ SERVICE=core-svc bash scripts/chaos/service-crash.sh
 - `pkg/i18n/i18n.go`
 - `pkg/i18n/middleware.go`
 - `pkg/domain/i18n.go`
-- `pkg/httpx/error.go`
+(not `pkg/httpx/error.go` — that file doesn't exist; the JSON error body is
+built in `pkg/domain`, `pkg/httpx/render.go` just calls it, same correction as
+the note above in the i18n section)
 
 ### Scripts
 - `scripts/backup.sh`

@@ -313,8 +313,9 @@ curl http://localhost:8000/api/v1/listings | jq '.listings | length'
 # 5. Document results
 echo "$(date -Iseconds): Restore drill successful" >> /var/log/kalakriti/restore-drills.log
 
-# 6. Clean up test environment
-docker compose -f docker-compose.test.yml down -v
+# 6. Clean up test environment (same disposable project as step 1 — there is
+#    still no docker-compose.test.yml in the repo)
+docker compose -f docker-compose.yml -p kalakriti-drill down -v
 ```
 
 Add to calendar: **First Monday of every month, 10:00 AM**

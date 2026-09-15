@@ -1,5 +1,12 @@
 # Kalakriti Demo Runbook
 
+> **Historical, superseded.** Uses fictional endpoints (`/api/v1/catalog/upload`,
+> `/api/v1/provenance/verify`, `/api/v1/artisan/{id}/income-statement`,
+> `/api/v1/income/verify`) and service ports (`8080`-`8084` for `user-svc`/
+> `catalog-svc`/etc.) that don't exist in the real bff/service topology. For a
+> working demo script, use `make demo-up` and the real routes in
+> `docs/PORTS_AND_APIS.md`.
+
 Complete demonstration guide for Smart India Hackathon 2026.
 
 **Date:** September 2026  

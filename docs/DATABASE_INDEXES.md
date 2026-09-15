@@ -1,344 +1,138 @@
-# Database Index Audit & Recommendations
+# Database Index Audit
 
-**Last Updated:** 2026-08-28  
+**Last Updated:** 2026-09-15
 **Database:** PostgreSQL 18 + pgvector
 
----
-
-## Existing Indexes
-
-Based on migrations analysis, these indexes already exist:
-
-### Identity & Auth
-- `idx_users_phone` on `users(phone_e164)` — login lookups
-- `idx_artisans_user_id` on `artisans(user_id)` — profile lookups
-- `idx_otp_challenges_phone` on `otp_challenges(phone_e164)` — OTP verification
-
-### Catalog
-- `idx_listings_artisan_id` on `listings(artisan_id)` — artisan's listings
-- `idx_listings_status` on `listings(status)` — filter by status
-- `idx_listings_craft` on `listings(craft)` — filter by craft type
-- `idx_listings_created_at` on `listings(created_at DESC)` — recent listings
-- `idx_listings_published_at` on `listings(published_at DESC)` — recent published
-
-### Media
-- `idx_media_artisan_id` on `media(artisan_id)` — artisan's media
-- `idx_media_status` on `media(status)` — pending/uploaded filter
-- `idx_listing_media_listing_id` on `listing_media(listing_id)` — listing's photos
-- `idx_listing_media_media_id` on `listing_media(media_id)` — media usage
-
-### Search
-- `idx_listings_embedding_hnsw` on `listings USING hnsw(embedding vector_cosine_ops)` — vector search
-- `idx_search_queries_query_text` on `search_queries(query_text)` — analytics
-
-### Orders
-- `idx_bulk_orders_buyer_id` on `bulk_orders(buyer_id)` — buyer's orders
-- `idx_bulk_orders_status` on `bulk_orders(status)` — order pipeline
-- `idx_order_lots_bulk_order_id` on `order_lots(bulk_order_id)` — order's lots
-- `idx_order_allocations_lot_id` on `order_allocations(lot_id)` — lot allocations
-- `idx_order_allocations_artisan_id` on `order_allocations(artisan_id)` — artisan's work
-- `idx_qc_results_allocation_id` on `qc_results(allocation_id)` — QC lookups
-
-### Payments
-- `idx_payment_splits_bulk_order_id` on `payment_splits(bulk_order_id)` — order payments
-- `idx_payment_split_lines_split_id` on `payment_split_lines(split_id)` — split details
-- `idx_payment_split_lines_payee` on `payment_split_lines(payee_type, payee_id)` — payee lookup
-
-### Social
-- `idx_follows_follower_id` on `follows(follower_id)` — user's follows
-- `idx_follows_artisan_id` on `follows(artisan_id)` — artisan's followers
-- `idx_follows_unique` UNIQUE on `follows(follower_id, artisan_id)` — prevent duplicates
-
-### Events & Outbox
-- `idx_outbox_status` on `outbox(status)` — pending events
-- `idx_outbox_created_at` on `outbox(created_at)` — event ordering
-- `idx_bulk_order_events_order_id` on `bulk_order_events(bulk_order_id)` — order timeline
-
-### Provenance
-- `idx_provenance_records_listing_id` on `provenance_records(listing_id)` — product provenance
-- `idx_provenance_records_code` on `provenance_records(code)` — QR lookup
-
-### Income Statements
-- `idx_income_statements_artisan` on `income_statements(artisan_id)` — artisan statements
-- `idx_income_statements_code` on `income_statements(code)` — verification lookup
-
-### Infrastructure
-- `idx_idempotency_keys_key` UNIQUE on `idempotency_keys(key)` — idempotency
-- `idx_idempotency_keys_expires_at` on `idempotency_keys(expires_at)` — TTL cleanup
+This file previously described a schema that never existed in this repo
+(`users`, `artisans`, `listings`, `bulk_orders`, `order_allocations`,
+`otp_challenges`, plural table names throughout — none of these are real; see
+`CLAUDE.md`'s migrations section for the history of this class of mistake).
+It has been rewritten from the actual `CREATE INDEX` statements in
+`migrations/*.sql`. There is no `users` table anywhere in this schema — buyer
+identity is external, and `bulk_order.buyer_id` is an opaque `text` column.
 
 ---
 
-## Missing Indexes (High Impact)
+## Existing indexes, by domain
 
-### 1. Composite Index for Listing Filters
-**Problem:** Filtering listings by multiple criteria (status + craft + price range) does full table scan.
+### Identity & ontology (`002_identity.sql`, `003_ontology.sql`, `013_identity_extensions.sql`)
+- `artisan_primary_cluster_id_idx` on `artisan (primary_cluster_id)`
+- `artisan_display_name_trgm_idx` — GIN trigram on `artisan (display_name)`, for fuzzy name search
+- `cluster_member_artisan_id_idx` on `cluster_member (artisan_id)`
+- `shg_member_artisan_id_idx` on `shg_member (artisan_id)`
+- `craft_parent_craft_id_idx` on `craft (parent_craft_id)`
+- `craft_alias_lower_alias_script_key` — UNIQUE on `craft_alias (lower(alias), script)`
+- `craft_alias_alias_trgm_idx` — GIN trigram on `craft_alias (alias)`
+- `craft_alias_craft_id_idx` on `craft_alias (craft_id)`
+- `craft_relation_to_craft_id_idx` on `craft_relation (to_craft_id, kind)`
+- `artisan_craft_craft_id_idx` on `artisan_craft (craft_id)`
+- `artisan_craft_one_primary_key` — UNIQUE on `artisan_craft (artisan_id) WHERE is_primary`
 
-**Query Pattern:**
-```sql
-SELECT * FROM listings 
-WHERE status = 'published' 
-  AND craft = 'madhubani' 
-  AND price_paise BETWEEN 100000 AND 500000
-ORDER BY published_at DESC
-LIMIT 20;
-```
+### Catalog (`004_catalog.sql`, `014_listing_media.sql`, `016_pipeline.sql`)
+- `product_artisan_id_created_at_idx` on `product (artisan_id, created_at DESC)`
+- `listing_artisan_id_state_idx` on `listing (artisan_id, state)`
+- `listing_product_id_idx` on `listing (product_id)`
+- `listing_published_at_idx` — partial, `listing (published_at) WHERE state = 'PUBLISHED'`
+- `listing_owner_shg_id_idx` — partial, `listing (owner_shg_id) WHERE owner_shg_id IS NOT NULL`
+- `listing_needs_description_idx` — partial, `listing (artisan_id) WHERE needs_description`
+- `listing_media_listing_id_ordinal_key` — UNIQUE `(listing_id, ordinal)`
+- `listing_media_one_primary_image_key` / `listing_media_one_process_video_key` — UNIQUE partials enforcing "at most one primary image / process video per listing"
+- `listing_media_media_id_idx` on `listing_media (media_id)`
 
-**Add:**
-```sql
-CREATE INDEX idx_listings_status_craft_price 
-ON listings(status, craft, price_paise, published_at DESC);
-```
+### Media (`005_media.sql`, `015_media_lifecycle.sql`)
+- `media_product_id_uploaded_at_idx` on `media (product_id, uploaded_at)`
+- `media_sha256_hex_idx` on `media (sha256_hex)` — dedup lookup
+- `media_pending_created_at_idx` — partial, `media (created_at) WHERE state = 'PENDING'` — this is what the upload-reaper query hits
+- `media_artisan_id_state_idx` on `media (artisan_id, state)`
 
-**Impact:** 10-100x faster for filtered searches.
+### Search (`006_search.sql`)
+- `listing_search_document_tsv_idx` — GIN on `document_tsv` (lexical full-text)
+- `listing_search_embedding_hnsw_idx` — HNSW cosine on `embedding vector(768)` (semantic)
+- `listing_search_craft_id_price_paise_idx` on `(craft_id, price_paise)`
+- `listing_search_colours_idx` / `listing_search_materials_idx` — GIN on array columns
+- `listing_search_state_code_idx`, `listing_search_indexed_at_idx`
 
----
+### Orders (`007_orders.sql`, `019_bulk_order_events.sql`)
+- `bulk_order_buyer_id_created_at_idx` on `bulk_order (buyer_id, created_at DESC)`
+- `bulk_order_state_required_by_idx` — partial index on `(state, required_by)`
+- `order_lot_artisan_id_state_idx` on `order_lot (artisan_id, state)`
+- `order_lot_bulk_order_id_idx` on `order_lot (bulk_order_id)`
+- `order_lot_responds_by_idx` — partial, `order_lot (responds_by) WHERE state = 'OFFERED'`
+- `capacity_reservation_held_idx`
+- `bulk_order_event_bulk_order_id_occurred_at_idx` on `bulk_order_event (bulk_order_id, occurred_at)`
 
-### 2. Artisan Search by Location
-**Problem:** No index for district/state filters.
+### QC & compensation (`020_qc_results.sql`, `021_compensation.sql`)
+- `qc_result_lot_id_idx` on `qc_result (lot_id)`
+- `qc_defect_qc_result_id_idx` on `qc_defect (qc_result_id)`
+- `bulk_order_amendment_bulk_order_id_idx`
+- `bulk_order_amendment_one_pending_idx` — UNIQUE, enforces one pending amendment per order
 
-**Query Pattern:**
-```sql
-SELECT * FROM artisans 
-WHERE state = 'Bihar' 
-  AND district = 'Madhubani';
-```
+### Payments (`008_payments.sql`)
+- `payment_split_line_payee_id_created_at_idx`
+- `payment_split_line_unsettled_idx` — partial on `payment_split_id`
+- `escrow_milestone_lot_id_trigger_idx` on `(lot_id, trigger)`
 
-**Add:**
-```sql
-CREATE INDEX idx_artisans_location 
-ON artisans(state, district);
-```
+### Social (`009_social.sql`)
+- `follow_follower_id_created_at_idx` on `follow (follower_id, created_at DESC)`
+- `notification_recipient_unread_idx` — partial on `(recipient_id, created_at DESC)`
 
-**Impact:** Fast location-based artisan discovery.
+### Disputes (`010_disputes.sql`) — schema exists, no service implements dispute handling yet
+- `dispute_state_created_at_idx`, `dispute_bulk_order_id_idx`
 
----
+### Outbox & idempotency (`011_outbox.sql`, `012_idempotency.sql`)
+- `outbox_unpublished_idx` — partial, `outbox (created_at) WHERE published_at IS NULL` — this is the index the relay's poll query actually uses
+- `idempotency_key_expires_at_idx` on `idempotency_key (expires_at)` — TTL cleanup
 
-### 3. Order Allocation Status
-**Problem:** Dashboard queries "orders in production" scan all allocations.
+### Pricing & search analytics (`017_search_queries.sql`, `018_pricing.sql`)
+- `search_query_log_normalised_trgm_idx`, `search_query_log_times_seen_idx`
+- `state_minimum_wage_state_code_effective_date_idx`
+- `seasonality_multiplier_craft_id_month_idx`, `seasonality_multiplier_month_idx`
 
-**Query Pattern:**
-```sql
-SELECT * FROM order_allocations 
-WHERE status = 'in_production' 
-  AND deadline < NOW() + INTERVAL '7 days';
-```
+### Provenance (`022_provenance.sql`)
+- `provenance_record_short_code_idx` — QR lookup
+- `provenance_record_artisan_id_sealed_at_idx`
+- `provenance_record_listing_id_idx`
 
-**Add:**
-```sql
-CREATE INDEX idx_order_allocations_status_deadline 
-ON order_allocations(status, deadline);
-```
+### Insight materialized views & income statements (`023_insight.sql`)
+- One index per materialized view keyed on its natural grouping (state/district, craft/month, decline rate, etc.)
+- `income_statement_short_code_idx`, `income_statement_artisan_id_created_at_idx`
 
-**Impact:** Fast dashboard for overdue/urgent orders.
+### Audit, fraud, webhooks (`025_audit_log.sql`, `026_fraud_detection.sql`, `027_webhooks.sql`)
+- `idx_audit_log_timestamp`, `idx_audit_log_actor_id` (partial), `idx_audit_log_resource`, `idx_audit_log_action`
+- `idx_fraud_flags_status` (partial: pending/reviewing), `idx_fraud_flags_resource`, `idx_fraud_flags_created_at`, `idx_fraud_flags_severity` (partial: high/critical)
+- `idx_webhook_subscriptions_subscriber`, `idx_webhook_subscriptions_active` (partial), `idx_webhook_deliveries_pending`, `idx_webhook_deliveries_subscription`, `idx_webhook_deliveries_event`
 
----
+### Notification delivery (`029_notification_delivery.sql`)
+- `notification_delivery_notification_id_idx`
+- `notification_delivery_status_created_at_idx` (partial)
 
-### 4. Media Pending Cleanup
-**Problem:** Reaper job scans all media to find expired pending uploads.
+### B2B (`031_b2b.sql`)
+- `company_type_idx`, `company_verification_status_idx`, `company_boutique_location_idx`, `company_user_id_idx`
+- `company_sale_settlement_company_idx`, `company_sale_settlement_order_idx`
+- `company_interest_artisan_status_idx`, `company_interest_company_idx`
+- `supply_partnership_artisan_active_idx`, `supply_partnership_company_active_idx`
+- `boutique_match_artisan_score_idx`
 
-**Query Pattern:**
-```sql
-DELETE FROM media 
-WHERE status = 'pending' 
-  AND created_at < NOW() - INTERVAL '1 hour';
-```
-
-**Add:**
-```sql
-CREATE INDEX idx_media_status_created_at 
-ON media(status, created_at) 
-WHERE status = 'pending';
-```
-
-**Impact:** Partial index makes reaper job instant.
-
----
-
-### 5. Outbox Relay Performance
-**Problem:** Outbox relay polls for pending events every second.
-
-**Query Pattern:**
-```sql
-SELECT * FROM outbox 
-WHERE status = 'pending' 
-ORDER BY created_at 
-LIMIT 100 
-FOR UPDATE SKIP LOCKED;
-```
-
-**Existing:** `idx_outbox_status` + `idx_outbox_created_at` (separate indexes)
-
-**Add:**
-```sql
-CREATE INDEX idx_outbox_pending_fifo 
-ON outbox(created_at) 
-WHERE status = 'pending';
-```
-
-**Impact:** Partial index optimized for the common case (pending events).
+### Trends, badges, schemes (`032_trends.sql`, `033_badges.sql`, `034_schemes.sql`)
+- `trend_link_feed_idx`, `trend_link_craft_idx`, `trend_link_source_idx`
+- `artisan_badge_artisan_active_idx`
+- `scheme_criterion_scheme_idx`, `scheme_manual_check_scheme_idx`, `government_scheme_active_idx`
 
 ---
 
-### 6. Feed Generation Performance
-**Problem:** Generating user feed scans all followed artisans' listings.
+## Adding a new index
 
-**Query Pattern:**
-```sql
-SELECT l.* FROM listings l
-JOIN follows f ON l.artisan_id = f.artisan_id
-WHERE f.follower_id = '...' 
-  AND l.status = 'published'
-ORDER BY l.published_at DESC
-LIMIT 20;
-```
+There's no dedicated "performance indexes" migration to append to — each
+migration that introduces a table also introduces its own indexes at
+creation time. Add a new index in a fresh numbered migration
+(`migrations/0NN_<description>.sql`), and if the table already has
+meaningful row counts, use `CREATE INDEX CONCURRENTLY` inside a
+`-- +goose StatementBegin` / `-- +goose StatementEnd` block with
+`-- +goose NO TRANSACTION` above it (goose won't let `CONCURRENTLY` run
+inside its default per-file transaction).
 
-**Add:**
-```sql
-CREATE INDEX idx_listings_published_recent 
-ON listings(artisan_id, published_at DESC) 
-WHERE status = 'published';
-```
+## Monitoring index usage
 
-**Impact:** Fast personalized feed queries.
-
----
-
-### 7. Payment Split Lookup by Artisan
-**Problem:** "How much do I earn this month?" queries are slow.
-
-**Query Pattern:**
-```sql
-SELECT SUM(psl.amount_paise) 
-FROM payment_split_lines psl
-JOIN payment_splits ps ON psl.split_id = ps.id
-WHERE psl.payee_type = 'artisan' 
-  AND psl.payee_id = '...'
-  AND ps.created_at >= '2026-08-01'
-  AND ps.created_at < '2026-09-01';
-```
-
-**Add:**
-```sql
-CREATE INDEX idx_payment_splits_created_at 
-ON payment_splits(created_at);
-```
-
-**Impact:** Fast income aggregation queries.
-
----
-
-## Performance Testing
-
-Run these queries before/after adding indexes:
-
-```sql
--- Enable timing
-\timing on
-
--- Test 1: Filtered listing search
-EXPLAIN ANALYZE
-SELECT * FROM listings 
-WHERE status = 'published' 
-  AND craft = 'madhubani' 
-  AND price_paise BETWEEN 100000 AND 500000
-ORDER BY published_at DESC
-LIMIT 20;
-
--- Test 2: Artisan location search
-EXPLAIN ANALYZE
-SELECT * FROM artisans 
-WHERE state = 'Bihar';
-
--- Test 3: Urgent orders dashboard
-EXPLAIN ANALYZE
-SELECT * FROM order_allocations 
-WHERE status = 'in_production' 
-  AND deadline < NOW() + INTERVAL '7 days';
-
--- Test 4: User feed
-EXPLAIN ANALYZE
-SELECT l.* FROM listings l
-JOIN follows f ON l.artisan_id = f.artisan_id
-WHERE f.follower_id = (SELECT id FROM users LIMIT 1)
-  AND l.status = 'published'
-ORDER BY l.published_at DESC
-LIMIT 20;
-
--- Test 5: Outbox relay
-EXPLAIN ANALYZE
-SELECT * FROM outbox 
-WHERE status = 'pending' 
-ORDER BY created_at 
-LIMIT 100;
-```
-
-**Before indexes:** Look for "Seq Scan" in EXPLAIN output.  
-**After indexes:** Should see "Index Scan" or "Index Only Scan".
-
----
-
-## Migration File
-
-Create `migrations/024_performance_indexes.sql`:
-
-```sql
--- +goose Up
--- +goose StatementBegin
-
--- 1. Composite index for listing filters
-CREATE INDEX CONCURRENTLY idx_listings_status_craft_price 
-ON listings(status, craft, price_paise, published_at DESC);
-
--- 2. Artisan location search
-CREATE INDEX CONCURRENTLY idx_artisans_location 
-ON artisans(state, district);
-
--- 3. Order allocation status + deadline
-CREATE INDEX CONCURRENTLY idx_order_allocations_status_deadline 
-ON order_allocations(status, deadline);
-
--- 4. Media pending cleanup (partial index)
-CREATE INDEX CONCURRENTLY idx_media_status_created_at 
-ON media(status, created_at) 
-WHERE status = 'pending';
-
--- 5. Outbox relay optimization (partial index)
-CREATE INDEX CONCURRENTLY idx_outbox_pending_fifo 
-ON outbox(created_at) 
-WHERE status = 'pending';
-
--- 6. Published listings feed (partial index)
-CREATE INDEX CONCURRENTLY idx_listings_published_recent 
-ON listings(artisan_id, published_at DESC) 
-WHERE status = 'published';
-
--- 7. Payment split time range queries
-CREATE INDEX CONCURRENTLY idx_payment_splits_created_at 
-ON payment_splits(created_at);
-
--- +goose StatementEnd
-
--- +goose Down
--- +goose StatementBegin
-
-DROP INDEX CONCURRENTLY IF EXISTS idx_listings_status_craft_price;
-DROP INDEX CONCURRENTLY IF EXISTS idx_artisans_location;
-DROP INDEX CONCURRENTLY IF EXISTS idx_order_allocations_status_deadline;
-DROP INDEX CONCURRENTLY IF EXISTS idx_media_status_created_at;
-DROP INDEX CONCURRENTLY IF EXISTS idx_outbox_pending_fifo;
-DROP INDEX CONCURRENTLY IF EXISTS idx_listings_published_recent;
-DROP INDEX CONCURRENTLY IF EXISTS idx_payment_splits_created_at;
-
--- +goose StatementEnd
-```
-
-**Note:** `CONCURRENTLY` allows creating indexes without blocking writes (safe for production).
-
----
-
-## Index Maintenance
-
-### Monitor Index Usage
 ```sql
 -- Find unused indexes
 SELECT schemaname, tablename, indexname, idx_scan
@@ -347,94 +141,24 @@ WHERE idx_scan = 0
   AND indexrelname NOT LIKE '%_pkey'
 ORDER BY pg_relation_size(indexrelid) DESC;
 
--- Find duplicate indexes
-SELECT pg_size_pretty(SUM(pg_relation_size(idx))::BIGINT) AS size,
-       (array_agg(idx))[1] AS idx1, (array_agg(idx))[2] AS idx2
-FROM (
-    SELECT indexrelid::regclass AS idx, indrelid::regclass AS tbl,
-           (indrelid::text ||E'\n'|| indclass::text ||E'\n'|| indkey::text ||E'\n'||
-            COALESCE(indexprs::text,'')||E'\n' || COALESCE(indpred::text,'')) AS key
-    FROM pg_index
-) sub
-GROUP BY key, tbl
-HAVING COUNT(*) > 1;
-```
-
-### Rebuild Bloated Indexes
-```sql
--- Check index bloat
+-- Check index bloat / size
 SELECT schemaname, tablename, indexname,
        pg_size_pretty(pg_relation_size(indexrelid)) AS size
 FROM pg_stat_user_indexes
 ORDER BY pg_relation_size(indexrelid) DESC;
-
--- Rebuild if needed
-REINDEX INDEX CONCURRENTLY idx_listings_status_craft_price;
 ```
 
-### VACUUM & ANALYZE
 ```sql
 -- After bulk inserts or deletes
-VACUUM ANALYZE listings;
-VACUUM ANALYZE order_allocations;
+VACUUM ANALYZE listing;
+VACUUM ANALYZE bulk_order;
 
--- Check last vacuum time
 SELECT schemaname, relname, last_vacuum, last_autovacuum, last_analyze
 FROM pg_stat_user_tables
 ORDER BY last_autovacuum;
 ```
 
----
-
-## Future Considerations
-
-### 1. Partial Indexes for Soft Deletes
-If tables add `deleted_at` column:
-```sql
-CREATE INDEX idx_listings_active 
-ON listings(id, status, published_at) 
-WHERE deleted_at IS NULL;
-```
-
-### 2. GIN Indexes for Full-Text Search
-If adding description search:
-```sql
-CREATE INDEX idx_listings_description_fts 
-ON listings USING gin(to_tsvector('english', description));
-```
-
-### 3. BRIN Indexes for Time-Series
-For very large tables (>10M rows) with time-based queries:
-```sql
-CREATE INDEX idx_outbox_created_at_brin 
-ON outbox USING brin(created_at);
-```
-
-### 4. Covering Indexes
-For index-only scans:
-```sql
-CREATE INDEX idx_listings_covering 
-ON listings(status, craft) 
-INCLUDE (title, price_paise, published_at);
-```
-
----
-
-## Summary
-
-**Indexes Added:** 7 new indexes (migration 024)  
-**Expected Performance Gain:** 10-100x on filtered queries  
-**Disk Space Impact:** ~50-100MB (negligible for current data size)  
-**Maintenance:** Auto-updated, no manual work needed
-
-**Apply now:**
-```bash
-cd /c/projects/kalakritibatch13/kalakriti
+To apply pending migrations against the real stack:
+```sh
 make migrate-up
-```
-
-**Verify:**
-```bash
-make psql
-\di  # List all indexes
 ```

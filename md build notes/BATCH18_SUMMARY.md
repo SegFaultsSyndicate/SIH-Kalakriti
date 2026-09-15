@@ -1,5 +1,12 @@
 # BATCH 18 - Hardening, Seed Data & Deployment
 
+> **Historical, superseded.** Point-in-time session log from 2026-08-28.
+> References service names (`user-svc`, `catalog-svc`, `order-svc`,
+> `social-svc`) and `docker-compose.full.yml` that don't match the real
+> `services/` directory (`core-svc`, `search-svc`, `collab-svc`, `channel-svc`,
+> `bff`, `ml-svc`, `insight-svc`) or the maintained `docker-compose.yml`. See
+> `docs/MICROSERVICES.md` for the current service list.
+
 **Status:** ✅ Complete  
 **Date:** 2026-08-28
 

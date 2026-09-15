@@ -14,6 +14,7 @@ services/core-svc/     identity, artisan profiles, catalog, provenance
 services/search-svc/   pgvector similarity search and discovery
 services/collab-svc/   collective fulfilment, pooled orders, allocation
 services/channel-svc/  outbound channel sync and notifications
+services/insight-svc/  ministry analytics and income-statement generation
 services/bff/          the only REST/JSON surface
 services/ml-svc/       Python 3.11 gRPC server wrapping the models
 migrations/            goose migrations (single database, schema per service)

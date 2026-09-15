@@ -1,5 +1,11 @@
 # Fix & Merge Complete — 2026-08-28
 
+> **Historical, superseded.** Point-in-time session log from 2026-08-28. It
+> references `docker-compose.full.yml` as a canonical file to fix — that file
+> has since been confirmed dead/unmaintained (see `CLAUDE.md`); only
+> `docker-compose.yml` is real. Check `docs/PORTS_AND_APIS.md` for current
+> ports/env vars.
+
 **Deadline:** Sept 20, 2026 (23 days remaining)  
 **Strategy executed:** 7-14 day plan (fix critical gaps, build insight-svc, skip channel-svc)
 
