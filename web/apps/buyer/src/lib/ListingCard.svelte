@@ -30,6 +30,7 @@
   const t = $derived(locale.t);
   const title = $derived(
     listing.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.title ??
+      listing.translations?.find((tr) => matchesLocale(tr.language, 'hi'))?.title ??
       listing.translations?.[0]?.title ??
       '',
   );
