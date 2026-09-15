@@ -112,8 +112,12 @@
 
   async function hydrate(ids: string[]): Promise<ListingSummary[]> {
     if (ids.length === 0) return [];
-    const { summaries } = await batchGetListingSummaries(ids);
-    return (summaries ?? []) as ListingSummary[];
+    try {
+      const { summaries } = await batchGetListingSummaries(ids);
+      return (summaries ?? []) as ListingSummary[];
+    } catch {
+      return [];
+    }
   }
 
   interface RawFallbackCraft {
@@ -242,13 +246,17 @@
     descriptionKey: MessageKey;
   }
 
-  function toFallbackListing(raw: RawFallbackListing): ListingSummary {
+  function toFallbackListing(
+    raw: RawFallbackListing,
+    tFn: (k: MessageKey, params?: Record<string, string | number>) => string,
+    currentCode: string
+  ): ListingSummary {
     return {
       id: raw.id,
       product_id: raw.product_id,
       artisan_id: raw.artisan_id,
-      artisan_name: t(raw.artisanNameKey),
-      craft_name: t(raw.craftNameKey),
+      artisan_name: tFn(raw.artisanNameKey),
+      craft_name: tFn(raw.craftNameKey),
       craft_slug: raw.craft_slug,
       craft_gi_registration_no: raw.craft_gi_registration_no,
       gi_certified: raw.gi_certified,
@@ -260,9 +268,9 @@
       image_url: raw.image_url,
       translations: [
         {
-          language: locale.code,
-          title: t(raw.titleKey),
-          description: t(raw.descriptionKey),
+          language: currentCode,
+          title: tFn(raw.titleKey),
+          description: tFn(raw.descriptionKey),
         },
       ],
     };
@@ -400,8 +408,12 @@
     },
   ];
 
-  const FALLBACK_GI_LISTINGS = $derived(RAW_FALLBACK_GI_LISTINGS.map(toFallbackListing));
-  const FALLBACK_NEW_ARRIVALS = $derived(RAW_FALLBACK_NEW_ARRIVALS.map(toFallbackListing));
+  const FALLBACK_GI_LISTINGS = $derived(
+    RAW_FALLBACK_GI_LISTINGS.map((raw) => toFallbackListing(raw, t, locale.code))
+  );
+  const FALLBACK_NEW_ARRIVALS = $derived(
+    RAW_FALLBACK_NEW_ARRIVALS.map((raw) => toFallbackListing(raw, t, locale.code))
+  );
 
   const displayCrafts = $derived(crafts.length > 0 ? crafts : FALLBACK_CRAFTS);
   const displayGiListings = $derived(giListings.length > 0 ? giListings : FALLBACK_GI_LISTINGS);
@@ -470,6 +482,7 @@
   });
 
   $effect(() => {
+    void locale.code;
     void load();
   });
 </script>
