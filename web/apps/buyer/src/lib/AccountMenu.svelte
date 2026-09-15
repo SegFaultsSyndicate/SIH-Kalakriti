@@ -287,11 +287,11 @@
                 onclick={toggleCurrencyMenu}
                 aria-expanded={isCurrencyMenuOpen}
                 aria-haspopup="true"
-                aria-label="Change currency"
+                aria-label={t('tooltip.currency')}
                 {...tp}
               >
                 <Icon name="dollar-sign" size="0.9rem" />
-                <span>Change currency</span>
+                <span>{t('tooltip.currency')}</span>
               </button>
             {/snippet}
           </Tooltip>
