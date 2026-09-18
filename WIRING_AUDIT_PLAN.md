@@ -1,6 +1,9 @@
 # Kalakriti — Frontend/Backend Wiring Audit & Remediation Plan
 
-**Status:** proposed, not executed. Nothing in this document has been changed in the codebase.
+**Status:** 10 commits on branch `fix/api-wiring-audit`. Fixed and verified: F-1, F-2, F-3, F-4
+(partial), F-5, F-6 (reconnect half), F-8, F-9, F-12, F-13, F-14. F-7 diagnosed, needs a decision
+(its own commit, no code change). F-4's broader scope, F-6's readiness half, F-10, and F-11 are
+real, scoped followups, not silently dropped — see §7.
 **Date:** 2026-09-19
 **Scope:** every request path between the three SvelteKit apps and the Go BFF, and everything
 behind the BFF that a browser request depends on.
@@ -481,22 +484,30 @@ Everything else in this plan I can proceed on without you.
 
 ---
 
-## 5. Execution sequence
+## 5. Execution sequence — actual status
 
-| Step | Work | Gate before moving on |
+No Docker in this environment (checked bash and PowerShell, neither has the binary), so nothing
+below claiming "done" was verified against a live multi-container stack. Every fix was instead
+verified the strongest way available without one: real `go build`/`go vet`/`go test` across all 7
+modules, real `pnpm check`/`vitest` runs, and for the BFF specifically, a real `*bff.Server`
+booted with `httptest` and driven with real HTTP requests (`services/bff/internal/bff/server_test.go`)
+rather than reasoning from a code read. Where that wasn't enough to trust a fix, it was left
+diagnosed-but-not-applied instead (F-7, and F-4's broader scope) rather than shipped unverified.
+
+| Step | Work | Status |
 |---|---|---|
-| 1 | F-1 access log, F-2 API 404 fall-through, F-8 timeout (native gin middleware; SSE exempt) | `curl` a bad route and an unauthenticated route; log shows 404 and 401 |
-| 2 | Bring up a healthy `make demo-up` stack, capture fresh logs, walk the artisan flow end to end | A log that now contains real non-200 statuses |
-| 3 | F-3 presigned URL topology | Photo upload completes; `POST /media/{id}/confirm` appears in the log |
-| 4 | F-4 DEV mock gating (`VITE_USE_MOCKS`, visible badge, no fabricated IDs) | `pnpm dev` surfaces real errors instead of mock data |
-| 5 | **Decision point (§4)**, then F-5 / F-9 role work as chosen | An admin login that reaches a real 200, or a documented decision not to |
-| 6 | F-6 consumer supervision + readiness | Kill and restart Kafka; consumers recover; `/readyz` went red meanwhile |
-| 7 | F-7 NGINX/base-path, F-14 dev proxies | All three apps load with their own assets on `localhost` |
-| 8 | F-10 spec parity + reverse parity test, F-12, F-13, F-11 decision, `CLAUDE.md` corrections | `pnpm test` green; per-module `go build` and svelte-check still clean |
-| 9 | Full endpoint sweep: exercise all 100 routes with a valid and an invalid payload, against a **production** frontend build | Filled-in status column for every route |
+| 1 | F-1 access log, F-2 API 404 fall-through, F-8 timeout (native gin middleware; SSE exempt) | **Done.** `server_test.go` asserts the 404/401/405 statuses and that the access log actually records them. |
+| 2 | Bring up a healthy stack, capture fresh logs, walk the artisan flow end to end | **Not possible here** — no Docker. Left to whoever runs `make demo-up` next; steps below were verified other ways instead. |
+| 3 | F-3 presigned URL topology | **Done**, and simpler than planned — `pkg/storage` already had the `PublicURL`/`rewriteHost` mechanism; only `docker-compose.yml` needed `S3_PUBLIC_URL` set. No NGINX/vite change needed after all. |
+| 4 | F-4 DEV mock gating | **Partially done.** Fixed the one instance that corrupts persisted state (outbox-send.ts's fabricated artisan id) as a standalone correctness bug, with regression tests. The broader "add a `VITE_USE_MOCKS` flag + visible mock badge across all 19 sites" is a product/UX design question, not applied — needs your input on the flag name and badge design before touching 19 files. |
+| 5 | Decision point (§4), then F-5 / F-9 role work | **Done**, took the recommended option (a): dev-only `dev_role` on `VerifyOtp`, guarded by the same `AUTH_DEV_OTP_ENABLED` flag as the OTP code itself. Admin's forged-JWT hack (which never actually worked, in any environment) replaced with a real call. F-9 (`/companies` public-route gap) fixed alongside it. |
+| 6 | F-6 consumer supervision + readiness | **Supervision done** (reconnect-with-backoff, verified via build/vet across all 5 consuming services — kafka-go's `Reader` isn't practically unit-testable without a broker, flagged rather than glossed over). **Readiness signal not done** — a still-reconnecting consumer is visible in logs only, not in `/readyz`. Real followup, not silently dropped. |
+| 7 | F-7 NGINX/base-path, F-14 dev proxies | F-14 **done and verified** (`pnpm --filter @kalakriti/buyer check`, 0 errors). F-7 **diagnosed, not fixed** — needs a decision (§ its own section) and touches `Dockerfile.web`'s build pipeline, unverifiable without Docker here. |
+| 8 | F-10 spec parity + reverse parity test, F-12, F-13, F-11 decision, `CLAUDE.md` corrections | F-12/F-13 **done and verified** (new `pkg/httpx/middleware_test.go`, 3/3 passing). **F-10 and F-11 not started** — see §6. |
+| 9 | Full endpoint sweep against all ~100 routes with a production frontend build | **Not done** — needs the live stack step 2 also needed. |
 
-Steps 1–2 are strictly sequential. Steps 3, 6, and 7 are independent of one another and can be
-parallelised. Step 9 is the acceptance gate and should not be started until 1–8 are complete.
+Steps actually completed this session, in commit order: F-1, F-2, F-8 → F-3 → F-6 (supervision
+half) → F-9 → F-12, F-13 → F-14 → F-4 (the outbox-send.ts slice) → F-5.
 
 ---
 
@@ -509,3 +520,31 @@ parallelised. Step 9 is the acceptance gate and should not be started until 1–
 - **Implementing the missing buyer/moderator product flows** (option 4b above), unless you pick it.
 - **Any service mesh, Kafka request/reply conversion, or second compose file.** `CLAUDE.md` records
   why each was rejected; nothing in this audit changes that reasoning.
+
+## 7. Not out of scope, just not done — real followups
+
+Unlike §6, these are things this audit should still fix; they just didn't fit in this session.
+
+- **F-10, spec parity.** `POST/GET /webhooks/subscriptions`, `DELETE /webhooks/subscriptions/:id`,
+  `POST/GET /partnerships` are registered in `server.go` and absent from `openapi.json`; nothing
+  catches this (`route-parity.test.ts` only checks the reverse direction). Mechanical, low-risk,
+  worth doing: add the routes to the spec, regenerate `schema.d.ts`, and extend
+  `route-parity.test.ts` to parse `server.go`'s route table and assert both directions.
+- **F-11, `pkg/breaker` decision.** Fully built, wired to nothing — every BFF→gRPC call relies on
+  timeout alone. `logs/bff.log` shows a 10-second `follower-count` call, a full timeout's worth of
+  latency on a route the artisan dashboard blocks on. Either wire it into the BFF's gRPC clients or
+  delete it; a half-built resilience layer sitting unused is worse than its own absence.
+- **F-6's other half.** Reconnect-with-backoff is done and verified at the build/vet level (kafka-go's
+  `Reader` isn't practically unit-testable without a live broker). A per-consumer liveness signal
+  feeding `/readyz` — so a still-reconnecting consumer is visible in health checks, not only in
+  logs — is not.
+- **F-4's broader scope.** The one correctness bug (outbox-send.ts fabricating an artisan id) is
+  fixed. The other ~18 `import.meta.env.DEV` mock-fallback sites across the three apps are a
+  product/UX call (flag name, whether to show a visible "mock data" badge, whether admin's other
+  DEV branches should also go away now that F-5 gives it a real login path) — needs your input,
+  not a unilateral 19-file change.
+- **F-7, NGINX path routing.** Diagnosed fully in its own section above; needs you to pick (a)
+  dual-build, (b) drop path-based access, or (c) separate ports, and (a) needs a real Docker build
+  to verify regardless of who implements it.
+- **Step 9, the full endpoint sweep.** Exercising all ~100 routes with valid/invalid payloads
+  against a running stack needs that stack. Do this once `make demo-up` runs somewhere with Docker.
