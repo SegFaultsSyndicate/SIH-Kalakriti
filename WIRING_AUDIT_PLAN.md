@@ -584,6 +584,21 @@ page's dead forged-JWT hack, + a pre-existing stale test fix unrelated to this b
 
 Unlike §6, these are things this audit should still fix; they just didn't fit in this session.
 
+- **Post-audit find: F-5's `dev_role` regressed admin login in production.** After F-10/F-11/F-7/F-4
+  landed, `login/verify/+page.svelte` was still sending `dev_role: 'MINISTRY'` unconditionally.
+  `VerifyOtp` rejects any non-empty `dev_role` with a 400 when `AUTH_DEV_OTP_ENABLED` is off (the
+  chosen option (a) from §4 is correctly guarded server-side), so this 400'd the whole admin OTP
+  verify on any real deployment — worse than not having `dev_role` at all, since the ordinary
+  ARTISAN-role login path never even got a chance to run. Fixed: the client now only sends
+  `dev_role` in a dev build (`import.meta.env.DEV`); a production build falls through to the
+  ordinary path and logs the caller in as ARTISAN (still blocked on ministry-only routes, same
+  documented F-5 gap, but not blocked at login). Also renamed
+  `TestVerifyOtpDevRoleIsIgnoredWhenDevModeIsOff` → `...IsRejectedWhenDevModeIsOff` — the old name
+  and the admin page's own header comment both claimed core-svc silently ignores an unhonored
+  `dev_role`; it never did, it 400s. Also documented `VITE_USE_MOCKS` in `web/README.md` and
+  `QUICKSTART.md` (was flag-gated by F-4 but undocumented anywhere a developer would find it), and
+  added a comment to `pkg/grpcdial` about the breaker self-tripping during a cold `docker compose
+  up`'s parallel service startup (bounded, recovers via half-open).
 - **F-4's mock-data badge.** All 19+2 sites are now flag-gated (`VITE_USE_MOCKS`) and `console.warn`
   the real error, but the original plan's second half — a persistent visible "mock data" badge on
   the affected panel, so the honesty is visible in the UI itself, not just devtools — is a shared
