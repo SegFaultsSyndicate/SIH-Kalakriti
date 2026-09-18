@@ -52,6 +52,16 @@ func PublicMethods() auth.PublicMethods {
 		"/trends.v1.TrendService/ListTrendLinks",
 		"/b2b.v1.B2BService/ListNearbyBoutiques",
 		"/b2b.v1.B2BService/ListCompanies",
+		// bff mounts POST /companies and GET /companies/:id on its
+		// unauthenticated route group (services/bff/internal/bff/server.go),
+		// and neither service.B2B.RegisterCompany nor .GetCompany calls
+		// auth.RequirePrincipal -- self-service company/boutique
+		// registration is intentionally public, same as ListCompanies
+		// above. This allow-list entry was simply missing, so an anonymous
+		// caller got 401 from the interceptor before ever reaching that
+		// intentionally-public handler. See WIRING_AUDIT_PLAN.md F-9.
+		"/b2b.v1.B2BService/RegisterCompany",
+		"/b2b.v1.B2BService/GetCompany",
 		"/badges.v1.BadgeService/ListBadgeCatalog",
 		"/badges.v1.BadgeService/ListArtisanBadges",
 		"/schemes.v1.SchemeService/ListSchemes",
