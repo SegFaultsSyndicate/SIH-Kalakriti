@@ -135,7 +135,7 @@ func (t *Tx) CreateListing(ctx context.Context, id, artisanID uuid.UUID, in doma
 		ID:                             id,
 		ProductID:                      in.ProductID,
 		ArtisanID:                      artisanID,
-		Type:                           db.ListingType(in.Type),
+		Type:                           listingTypeToRow(in.Type),
 		PricePaise:                     in.PricePaise,
 		StockQuantity:                  in.StockQuantity,
 		MinOrderQuantity:               in.MinOrderQuantity,
@@ -166,6 +166,7 @@ func (t *Tx) UpdateListing(ctx context.Context, in domain.UpsertListingInput) (d
 	}
 	row, err := t.q.UpdateListing(ctx, db.UpdateListingParams{
 		ID:                             *in.ListingID,
+		Type:                           listingTypeToRow(in.Type),
 		PricePaise:                     &in.PricePaise,
 		StockQuantity:                  in.StockQuantity,
 		MinOrderQuantity:               &in.MinOrderQuantity,
@@ -314,12 +315,33 @@ func (r *Repo) ListListingTranslations(ctx context.Context, listingID uuid.UUID)
 	return out, nil
 }
 
+// listingTypeFromRow unwraps the nullable type column: a DRAFT listing may
+// not have chosen a type yet (see migrations/035_listing_draft_type.sql),
+// represented as domain.ListingType("") the same way the gRPC layer already
+// represents LISTING_TYPE_UNSPECIFIED.
+func listingTypeFromRow(t *db.ListingType) domain.ListingType {
+	if t == nil {
+		return ""
+	}
+	return domain.ListingType(*t)
+}
+
+// listingTypeToRow is listingTypeFromRow's inverse, for params going the
+// other way: domain.ListingType("") means "not chosen yet," stored as NULL.
+func listingTypeToRow(t domain.ListingType) *db.ListingType {
+	if t == "" {
+		return nil
+	}
+	v := db.ListingType(t)
+	return &v
+}
+
 func listingFromRow(row db.Listing) domain.Listing {
 	return domain.Listing{
 		ID:               row.ID,
 		ProductID:        row.ProductID,
 		ArtisanID:        row.ArtisanID,
-		Type:             domain.ListingType(row.Type),
+		Type:             listingTypeFromRow(row.Type),
 		State:            domain.ListingState(row.State),
 		PricePaise:       row.PricePaise,
 		CurrencyCode:     row.CurrencyCode,

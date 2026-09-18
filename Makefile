@@ -28,7 +28,7 @@ BFF_BASE_URL       ?= http://localhost:8000
 # Prefer a locally installed binary; otherwise pin the version through `go run`.
 BUF   ?= $(shell command -v buf   2>/dev/null || echo "go run github.com/bufbuild/buf/cmd/buf@v1.34.0")
 GOOSE ?= $(shell command -v goose 2>/dev/null || echo "go run github.com/pressly/goose/v3/cmd/goose@v3.21.1")
-SQLC  ?= $(shell command -v sqlc  2>/dev/null || echo "go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.27.0")
+SQLC  ?= $(shell command -v sqlc  2>/dev/null || echo "go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1")
 LINT  ?= $(shell command -v golangci-lint 2>/dev/null || echo "go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1")
 
 .PHONY: help up down logs ps reset proto proto-go proto-py proto-lint migrate-up migrate-down seed seed-demo seed-data sqlc test test-ml lint tidy build clean check psql services services-stop demo-up demo-reset tags docker-build

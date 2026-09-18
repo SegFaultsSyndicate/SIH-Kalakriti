@@ -376,7 +376,13 @@ func (in UpsertListingInput) Validate() error {
 	if in.ProductID == uuid.Nil {
 		return fmt.Errorf("product_id is required: %w", pkgdomain.ErrInvalidInput)
 	}
-	if !in.Type.Valid() {
+	// "" means not chosen yet -- legal on a DRAFT listing still being
+	// assembled (the artisan wizard's first POST /listings call sends no
+	// type at all; the wizard's pricing step is what sets it). Anything
+	// non-empty must still be a real type. Type being *required* to leave
+	// DRAFT is enforced by SubmitForApproval's own completeness check, not
+	// here, and backstopped by listing_type_required_after_draft_check.
+	if in.Type != "" && !in.Type.Valid() {
 		return fmt.Errorf("listing type %q is not one of MADE_TO_ORDER, READY_STOCK: %w",
 			in.Type, pkgdomain.ErrInvalidInput)
 	}
@@ -396,27 +402,48 @@ func (in UpsertListingInput) Validate() error {
 		return err
 	}
 
-	switch in.Type {
-	case ListingMadeToOrder:
-		if in.LeadTimeDays == nil || *in.LeadTimeDays <= 0 {
-			return fmt.Errorf("a MADE_TO_ORDER listing requires a positive lead_time_days: %w", pkgdomain.ErrInvalidInput)
-		}
-		if in.CapacityPerMonth == nil || *in.CapacityPerMonth <= 0 {
-			return fmt.Errorf("a MADE_TO_ORDER listing requires a positive capacity_per_month: %w", pkgdomain.ErrInvalidInput)
-		}
-	case ListingReadyStock:
-		if in.StockQuantity == nil {
-			return fmt.Errorf("a READY_STOCK listing requires stock_quantity: %w", pkgdomain.ErrInvalidInput)
-		}
-		if *in.StockQuantity < 0 {
-			return fmt.Errorf("stock_quantity must not be negative: %w", pkgdomain.ErrInvalidInput)
-		}
+	// Only sanity-check fields that are actually present here -- a DRAFT
+	// listing is allowed to not have them yet (see the Type comment above).
+	// Whether they're *required* is ValidateComplete's job, at submit time.
+	if in.LeadTimeDays != nil && *in.LeadTimeDays <= 0 {
+		return fmt.Errorf("lead_time_days must be positive: %w", pkgdomain.ErrInvalidInput)
+	}
+	if in.CapacityPerMonth != nil && *in.CapacityPerMonth <= 0 {
+		return fmt.Errorf("capacity_per_month must be positive: %w", pkgdomain.ErrInvalidInput)
+	}
+	if in.StockQuantity != nil && *in.StockQuantity < 0 {
+		return fmt.Errorf("stock_quantity must not be negative: %w", pkgdomain.ErrInvalidInput)
 	}
 
 	for _, t := range in.Translations {
 		if err := t.Validate(); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// ValidateComplete is the stricter check a listing must pass to leave DRAFT:
+// unlike Validate (which only checks fields that are present, since a DRAFT
+// may still be missing them), this requires a chosen type and that type's
+// commercial fields to actually be there. Called from SubmitForApproval, not
+// from UpsertListing -- see migrations/035_listing_draft_type.sql.
+func (l Listing) ValidateComplete() error {
+	switch l.Type {
+	case ListingMadeToOrder:
+		if l.LeadTimeDays == nil || *l.LeadTimeDays <= 0 {
+			return fmt.Errorf("a MADE_TO_ORDER listing requires a positive lead_time_days: %w", pkgdomain.ErrInvalidInput)
+		}
+		if l.CapacityPerMonth == nil || *l.CapacityPerMonth <= 0 {
+			return fmt.Errorf("a MADE_TO_ORDER listing requires a positive capacity_per_month: %w", pkgdomain.ErrInvalidInput)
+		}
+	case ListingReadyStock:
+		if l.StockQuantity == nil {
+			return fmt.Errorf("a READY_STOCK listing requires stock_quantity: %w", pkgdomain.ErrInvalidInput)
+		}
+	default:
+		return fmt.Errorf("listing type %q is not one of MADE_TO_ORDER, READY_STOCK: %w",
+			l.Type, pkgdomain.ErrInvalidInput)
 	}
 	return nil
 }

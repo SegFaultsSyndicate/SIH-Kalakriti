@@ -149,7 +149,7 @@ func (r *Repo) HydrateHits(ctx context.Context, listingIDs []uuid.UUID, language
 			Label:            derefString(row.Title),
 			Description:      derefString(row.Description),
 			GICertified:      row.GiCertified,
-			ListingType:      string(row.ListingType),
+			ListingType:      derefListingType(row.ListingType),
 			MachineGenerated: row.MachineGenerated,
 		})
 	}
@@ -259,7 +259,7 @@ func (r *Repo) LoadIndexSource(ctx context.Context, listingID uuid.UUID) ([]doma
 		out = append(out, domain.IndexSource{
 			ListingID: row.ListingID, Language: string(row.Language),
 			ArtisanID: row.ArtisanID, CraftID: row.CraftID, ClusterID: row.ClusterID,
-			ListingType: string(row.ListingType), PricePaise: row.PricePaise,
+			ListingType: derefListingType(row.ListingType), PricePaise: row.PricePaise,
 			LeadTimeDays: row.LeadTimeDays, GICertified: row.GiCertified,
 			ProvenanceSealed: toBool(row.ProvenanceSealed),
 			StateCode:        row.StateCode, District: row.District,
@@ -318,6 +318,18 @@ func derefString(value *string) string {
 		return ""
 	}
 	return *value
+}
+
+// derefListingType unwraps a row's nullable type column. listing.type is
+// only nullable while a listing is still a DRAFT (see
+// migrations/035_listing_draft_type.sql); search-svc only ever reads
+// PUBLISHED listings, which are guaranteed a real type by that point, but the
+// generated row type doesn't know that.
+func derefListingType(value *db.ListingType) string {
+	if value == nil {
+		return ""
+	}
+	return string(*value)
 }
 
 // toFloat64 handles a computed SQL expression sqlc couldn't type statically

@@ -258,6 +258,36 @@ func TestSubmitForApproval(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, domain.StatePendingArtisanApproval, moved.State)
 	})
+
+	// The artisan wizard's first POST /listings call sends no type at all
+	// (see migrations/035_listing_draft_type.sql) -- UpsertListing must
+	// accept that as a legal draft, but nothing may leave DRAFT without a
+	// real, complete commercial type.
+	t.Run("a draft with no type chosen yet is refused", func(t *testing.T) {
+		t.Parallel()
+		f := newCatalogFixture(t, domain.StateDraft)
+		l := f.store.listings[f.listing]
+		l.Type = ""
+		l.LeadTimeDays, l.CapacityPerMonth = nil, nil
+		f.store.listings[f.listing] = l
+
+		_, err := f.svc.SubmitForApproval(artisanCtx(f.artisan), f.listing, "key-1")
+		require.ErrorIs(t, err, pkgdomain.ErrInvalidInput)
+	})
+
+	// The wizard's pricing step sets type in one call and made_to_order_terms
+	// in a later one -- a listing can genuinely sit with a type but no terms
+	// yet between those two steps.
+	t.Run("a made-to-order draft with a type but no terms yet is refused", func(t *testing.T) {
+		t.Parallel()
+		f := newCatalogFixture(t, domain.StateDraft)
+		l := f.store.listings[f.listing]
+		l.LeadTimeDays, l.CapacityPerMonth = nil, nil
+		f.store.listings[f.listing] = l
+
+		_, err := f.svc.SubmitForApproval(artisanCtx(f.artisan), f.listing, "key-1")
+		require.ErrorIs(t, err, pkgdomain.ErrInvalidInput)
+	})
 }
 
 func TestSuspendAndReinstate(t *testing.T) {
@@ -319,18 +349,27 @@ func TestUpsertListingValidation(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "made to order with terms", mutate: func(*domain.UpsertListingInput) {}},
-		{name: "made to order without lead time", wantErr: true,
+		// A DRAFT listing may still be missing its type-specific commercial
+		// fields -- the artisan wizard's pricing step sets type and price in
+		// one call and made_to_order_terms in a later one. UpsertListing only
+		// rejects a field that's present and malformed; completeness is
+		// SubmitForApproval's job (see TestSubmitForApprovalRequiresACompleteListing).
+		{name: "made to order without lead time is still a legal draft",
 			mutate: func(in *domain.UpsertListingInput) { in.LeadTimeDays = nil }},
 		{name: "made to order with zero lead time", wantErr: true,
 			mutate: func(in *domain.UpsertListingInput) { in.LeadTimeDays = i32(0) }},
-		{name: "made to order without capacity", wantErr: true,
+		{name: "made to order without capacity is still a legal draft",
 			mutate: func(in *domain.UpsertListingInput) { in.CapacityPerMonth = nil }},
+		{name: "no type chosen yet is still a legal draft", mutate: func(in *domain.UpsertListingInput) {
+			in.Type = ""
+			in.LeadTimeDays, in.CapacityPerMonth = nil, nil
+		}},
 		{name: "ready stock with quantity", mutate: func(in *domain.UpsertListingInput) {
 			in.Type = domain.ListingReadyStock
 			in.LeadTimeDays, in.CapacityPerMonth = nil, nil
 			in.StockQuantity = i32(4)
 		}},
-		{name: "ready stock without quantity", wantErr: true, mutate: func(in *domain.UpsertListingInput) {
+		{name: "ready stock without quantity is still a legal draft", mutate: func(in *domain.UpsertListingInput) {
 			in.Type = domain.ListingReadyStock
 			in.LeadTimeDays, in.CapacityPerMonth = nil, nil
 		}},

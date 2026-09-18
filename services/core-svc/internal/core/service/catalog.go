@@ -263,6 +263,12 @@ func (s *Catalog) SubmitForApproval(ctx context.Context, listingID uuid.UUID, id
 		return domain.Listing{}, fmt.Errorf(
 			"listing %s has no copy to review: %w", listingID, pkgdomain.ErrInvalidInput)
 	}
+	// A DRAFT is allowed to still be missing its type and type-specific
+	// commercial fields (see migrations/035_listing_draft_type.sql); leaving
+	// DRAFT is not.
+	if err := listing.ValidateComplete(); err != nil {
+		return domain.Listing{}, err
+	}
 
 	err = s.store.InTx(ctx, func(ctx context.Context, tx CatalogTx) error {
 		_, err := tx.TransitionListingState(ctx, listingID, listing.State, domain.StatePendingArtisanApproval, nil)

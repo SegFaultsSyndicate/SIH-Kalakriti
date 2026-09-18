@@ -38,6 +38,9 @@ WHERE id = @id
 RETURNING *;
 
 -- name: CreateListing :one
+-- type is nullable: the artisan wizard's first POST /listings call (story
+-- step) only knows craft_id/working_title, well before the wizard's pricing
+-- step lets the artisan choose a type. See migrations/035_listing_draft_type.sql.
 INSERT INTO listing (
     id, product_id, artisan_id, type, price_paise, stock_quantity, min_order_quantity,
     lead_time_days, capacity_per_month, accepting_orders, advance_pct,
@@ -45,7 +48,7 @@ INSERT INTO listing (
     packed_length_mm, packed_width_mm, packed_height_mm, packed_weight_g,
     gi_certified, created_by
 ) VALUES (
-    @id, @product_id, @artisan_id, @type, @price_paise, sqlc.narg('stock_quantity'),
+    @id, @product_id, @artisan_id, sqlc.narg('type'), @price_paise, sqlc.narg('stock_quantity'),
     @min_order_quantity, sqlc.narg('lead_time_days'), sqlc.narg('capacity_per_month'),
     @accepting_orders, sqlc.narg('advance_pct'),
     @packaging_fragile, @packaging_oversized, @packaging_requires_custom_crating,
@@ -59,7 +62,8 @@ RETURNING *;
 -- constraint: editing one is a state-machine question, and the service answers it.
 -- name: UpdateListing :one
 UPDATE listing
-SET price_paise                       = COALESCE(sqlc.narg('price_paise'), price_paise),
+SET type                              = COALESCE(sqlc.narg('type'), type),
+    price_paise                       = COALESCE(sqlc.narg('price_paise'), price_paise),
     stock_quantity                    = COALESCE(sqlc.narg('stock_quantity'), stock_quantity),
     min_order_quantity                = COALESCE(sqlc.narg('min_order_quantity'), min_order_quantity),
     lead_time_days                    = COALESCE(sqlc.narg('lead_time_days'), lead_time_days),
