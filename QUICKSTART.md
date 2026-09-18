@@ -72,8 +72,8 @@ tier — check status with `docker compose ps`.
 
 ```
 http://localhost/            buyer marketplace
-http://localhost/artisan/    artisan PWA
-http://localhost/admin/      admin/ministry dashboard
+http://localhost:8081        artisan PWA
+http://localhost:8082        admin/ministry dashboard
 http://localhost/api/v1/*    REST API (proxied to bff)
 http://localhost:8000        REST API (direct to bff)
 http://localhost:16686       Jaeger tracing UI

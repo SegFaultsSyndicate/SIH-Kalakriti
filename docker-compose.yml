@@ -299,6 +299,11 @@ services:
       dockerfile: Dockerfile.web
     ports:
       - "80:80"
+      # Local-development entry points for Artisan Studio and the Ministry
+      # Console -- see deploy/nginx/nginx.conf and WIRING_AUDIT_PLAN.md F-7
+      # for why these are separate ports rather than a path prefix on :80.
+      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - bff
     restart: unless-stopped

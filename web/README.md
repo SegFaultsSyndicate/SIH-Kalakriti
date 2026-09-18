@@ -170,10 +170,14 @@ NGINX reverse proxy (`deploy/nginx/nginx.conf`) exposed on **Port 80**:
   - `kalakriti.in` (default): Buyer Marketplace (`/var/www/buyer`)
   - `artisan.kalakriti.in`: Artisan PWA (`/var/www/artisan`)
   - `admin.kalakriti.in`: Admin Dashboard (`/var/www/admin`)
-- **Path Fallbacks** (for single-host / localhost testing):
+- **Local-development ports** (for single-host / localhost testing --
+  path-prefixing a second app under the buyer host doesn't work here: none
+  of the three apps set `kit.paths.base`, so their built asset URLs are
+  absolute and root-relative, and a path prefix on the buyer host served
+  the wrong app's bundle -- see `deploy/nginx/nginx.conf`):
   - `http://localhost/` → Buyer
-  - `http://localhost/artisan/` → Artisan PWA
-  - `http://localhost/admin/` → Admin Dashboard
+  - `http://localhost:8081` → Artisan PWA
+  - `http://localhost:8082` → Admin Dashboard
 - **API Proxy**: `/api/` requests are reverse-proxied to `bff:8000` with SSE streaming buffers disabled (`proxy_buffering off;`).
 - **PWA Service Worker**: Served with `Cache-Control: no-cache, no-store, must-revalidate` so updates deploy cleanly without worker trapping.
 - **Static Assets**: Precompressed `.br` and `.gz` static assets served with 1-year immutable caching (`_app/immutable/`).

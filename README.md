@@ -135,8 +135,8 @@ The web layer contains three independent SvelteKit applications in `web/apps/`:
 
 In production and full docker-compose mode, all three apps are built and served by NGINX (`Dockerfile.web` and `deploy/nginx/nginx.conf`) exposed on **Port 80**:
 - Buyer: `http://localhost/` (or `kalakriti.in`)
-- Artisan: `http://localhost/artisan/` (or `artisan.kalakriti.in`)
-- Admin: `http://localhost/admin/` (or `admin.kalakriti.in`)
+- Artisan: `http://localhost:8081` (or `artisan.kalakriti.in`)
+- Admin: `http://localhost:8082` (or `admin.kalakriti.in`)
 - API Gateway Proxy: `http://localhost/api/v1/*` (proxies to Go BFF at `:8000` with SSE support)
 - Direct BFF API: `http://localhost:8000/api/v1/*`
 

@@ -40,7 +40,7 @@ COPY --from=builder /app/web/apps/admin/build/ /var/www/admin/
 # Copy custom NGINX configuration
 COPY deploy/nginx/nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 80
+EXPOSE 80 8081 8082
 
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
   CMD wget -q -O - http://localhost/healthz || exit 1
