@@ -320,10 +320,40 @@ There is a second, smaller conflict in the same block: `location ~ ^/(listing/|a
 proxies to the BFF for SEO pages, but nginx gives `^~` prefix matches precedence over regex
 matches, so `^~ /artisan/` wins and the BFF's `GET /artisan/:slug` SEO route is dead on that host.
 
-**Fix:** set `kit.paths.base = '/artisan'` and `'/admin'` in the respective `svelte.config.js`
-(behind an env flag if the subdomain deployment is also wanted), rebuild, and re-check the
-`location` precedence. Rename the SEO artisan route to `/a/:slug` to remove the collision, or
-scope the `^~` blocks to hostnames that don't also serve SEO pages.
+**Status: diagnosed, not fixed — needs a decision, not just a patch.** `/var/www/artisan` and
+`/var/www/admin` are each `root`-served by their own subdomain server block (root-relative build,
+correct) **and** `alias`-served with a `/artisan/`, `/admin/` prefix by the buyer's default block
+(needs a path-prefixed build). adapter-static bakes `kit.paths.base` in at build time — one build
+output cannot correctly serve both cases, so there is no single-file fix. Three real options,
+each a different trade the codebase owner should pick rather than have picked for them silently:
+
+- **(a) Dual-build.** Make `paths.base` and the adapter's output directory read from env
+  (`BASE_PATH`, `BUILD_OUT_DIR`) in both `svelte.config.js` files, and add two extra
+  `pnpm --filter ... build` passes to `Dockerfile.web` (`BASE_PATH=/artisan` → a second output
+  dir → `COPY`'d to a new `/var/www/artisan-path/`, same for admin), then point the buyer block's
+  `alias`es at those new directories instead. Preserves both the subdomain deployment and local
+  path-based access. Most correct, touches the Docker build pipeline, and — like every fix in
+  this pass — **I have no way to build or click through it without Docker available in this
+  sandbox.** Don't take this fix as verified; build the image and open `/artisan/` and `/admin/`
+  by hand before trusting it.
+- **(b) Drop path-based access.** Delete the `^~ /artisan/` / `^~ /admin/` blocks. The
+  subdomain deployment (the one with real `server_name`s, i.e. the actual intended production
+  shape per the apps' own `svelte.config.js` doc comments) is untouched and simplest. Costs the
+  single-container local demo any way to reach Artisan Studio or the Ministry Console except by
+  port (`pnpm preview:artisan` on 4173, `preview:admin` on 4175) instead of through this stack's
+  own `web` container.
+- **(c) Separate ports in compose instead of path prefixes.** Give `web` three exposed ports (or
+  three NGINX server blocks bound to three container ports) instead of trying to path-prefix
+  under one port 80. No SPA-base-path problem at all, since each app is still served from `/`.
+  Changes the demo's URLs from `localhost/artisan/` to `localhost:8081` (or similar).
+
+There is also a second, independent conflict in the same block, only relevant if (a) is chosen:
+`location ~ ^/(listing/|artisan/|v/|...)` proxies `/artisan/:slug` to the BFF's SEO page, but
+nginx gives `^~` prefix matches precedence over regex matches regardless of specificity, so
+`^~ /artisan/` would permanently shadow that SEO route on this host. Fixing that means either
+renaming the public SEO short-link (`/artisan/:slug` → `/a/:slug`, a URL-scheme change with its
+own blast radius — anything already shared) or moving the SPA path-prefix off `/artisan/` (e.g.
+`/studio/`). Not decided here; flagging rather than picking.
 
 ---
 
