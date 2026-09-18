@@ -129,7 +129,8 @@
       const res = await listCrafts();
       crafts = res.crafts ?? [];
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] load crafts:', cause);
         crafts = MOCK_CRAFTS_DATA;
       } else {
         loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');

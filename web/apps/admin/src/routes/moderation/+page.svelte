@@ -118,7 +118,8 @@
       }
       items = resolved;
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] load moderation queue:', cause);
         for (const item of MOCK_MODERATION_ITEMS) {
           if (item.id && reasonDrafts[item.id] === undefined) {
             reasonDrafts[item.id] = '';
@@ -149,7 +150,8 @@
       showToast({ variant: 'success', message: t('moderation.suspended') });
       await load();
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] suspend listing:', cause);
         items = items.map((it) => (it.id === id ? { ...it, state: 'SUSPENDED' } : it));
         showToast({ variant: 'success', message: t('moderation.suspended') });
       } else {
@@ -167,7 +169,8 @@
       showToast({ variant: 'success', message: t('moderation.reinstated') });
       await load();
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] reinstate listing:', cause);
         items = items.map((it) => (it.id === id ? { ...it, state: 'PUBLISHED' } : it));
         showToast({ variant: 'success', message: t('moderation.reinstated') });
       } else {

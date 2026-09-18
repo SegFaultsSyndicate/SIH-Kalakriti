@@ -28,7 +28,8 @@
       const redirect = $page.url.searchParams.get('redirect') ?? '/';
       await goto(`/login/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirect)}`);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] requestOtp:', cause);
         const redirect = $page.url.searchParams.get('redirect') ?? '/';
         await goto(`/login/verify?phone=${encodeURIComponent(phone)}&redirect=${encodeURIComponent(redirect)}`);
         return;

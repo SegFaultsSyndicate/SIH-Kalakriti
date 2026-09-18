@@ -1,9 +1,9 @@
 # Kalakriti — Frontend/Backend Wiring Audit & Remediation Plan
 
-**Status:** 10 commits on branch `fix/api-wiring-audit`. Fixed and verified: F-1, F-2, F-3, F-4
-(partial), F-5, F-6 (reconnect half), F-8, F-9, F-12, F-13, F-14. F-7 diagnosed, needs a decision
-(its own commit, no code change). F-4's broader scope, F-6's readiness half, F-10, and F-11 are
-real, scoped followups, not silently dropped — see §7.
+**Status:** 15 commits on branch `fix/api-wiring-audit`. Fixed and verified: F-1, F-2, F-3, F-4
+(all 19 sites now flag-gated, plus 2 previously-unconditional mock fallbacks found and fixed
+along the way), F-5, F-6 (reconnect half), F-7 (separate ports), F-8, F-9, F-10, F-11, F-12, F-13,
+F-14. Only F-6's readiness half remains a real, scoped followup — see §7.
 **Date:** 2026-09-19
 **Scope:** every request path between the three SvelteKit apps and the Go BFF, and everything
 behind the BFF that a browser request depends on.
@@ -229,16 +229,40 @@ Two concrete consequences already visible in the artefacts:
 the single largest reason the system "seems" more broken in some places and less in others — the
 variation is in the mock coverage, not in the backend.
 
-**Fix:** do not delete the fallbacks outright (they have real value for offline/airplane-mode
-demos, which is a stated product requirement). Instead:
+**Fix applied:** did not delete the fallbacks outright (they have real value for offline/
+airplane-mode demos, which is a stated product requirement). Instead:
 
-1. Gate them behind an explicit opt-in flag — `VITE_USE_MOCKS=1` — rather than `import.meta.env.DEV`,
-   so `pnpm dev` talks to the real backend by default.
-2. Whenever a mock fallback fires, log the real error to the console **and** render a persistent
-   visible "mock data" badge on the affected panel. The project's own stated value is honesty about
-   mock-vs-real; a silent substitution violates it.
-3. Never fabricate an identifier that will be sent back to the server. `outbox-send.ts:70` should
-   leave the entry in the outbox as retryable, not invent an artisan ID.
+1. Gated all 19 sites behind an explicit opt-in flag — `import.meta.env.VITE_USE_MOCKS === '1'` —
+   instead of `import.meta.env.DEV`, so `pnpm dev` talks to the real backend by default.
+2. Every mock fallback now `console.warn`s the real error before substituting mock data, so it's
+   visible in devtools even without the flag being read. A persistent on-panel "mock data" badge
+   (item 2 of the original plan) was **not** built — it's a UI component decision across three
+   apps' design systems, not a wiring fix, and is listed in §7 rather than done silently.
+3. `outbox-send.ts:70`'s fabricated artisan ID was already fixed in an earlier commit this
+   session (F-5's predecessor work).
+
+**Found and fixed along the way — two sites that were never gated at all, not even by
+`DEV`:** `web/apps/admin/src/routes/companies/+page.svelte`'s `loadData()` and
+`web/apps/artisan/src/routes/trends/+page.svelte`'s `loadTrends()`/`handleTogglePin()`/
+`handleCreateTrend()` fell back to mock data (or silently pretended a failed pin/create
+succeeded) on **any** failure, in every environment, including a legitimately-empty real response
+being overwritten by mock rows. These are worse instances of the exact bug this finding
+describes. Fixed the same way: gated behind `VITE_USE_MOCKS`, a real empty result now renders as
+empty rather than as fake data, and a real failure now surfaces an error instead of a silent fake
+success.
+
+**Also found and fixed:** `web/apps/artisan/src/routes/verify/+page.svelte` had the same
+forged-unsigned-JWT DEV fallback the admin app's verify page had (fixed under F-5) — it never
+actually worked in any environment, since `pkg/auth.Issuer.Verify` checks a real HMAC signature
+regardless of environment. Removed; the real dev-mode OTP acceptance (`AUTH_DEV_OTP_ENABLED`,
+code `000000`/`123456`) already goes through the normal `completeOtpVerification` call.
+
+**Also found and fixed, unrelated to this branch's recent work:**
+`web/apps/artisan/src/lib/registration.test.ts` asserted the *old*, pre-fix `POST /artisans`
+contract (`{ display_name, language }`) against `buildRegisterBody`, which has sent the real
+shape (`craft_ids`, `languages`, `region.state_code`, ...) since an earlier commit predating this
+session (`c467079`, per `git log`). The test was failing on `main` before this session started,
+not something introduced here — updated it to assert the real output shape.
 
 ---
 
@@ -323,12 +347,18 @@ There is a second, smaller conflict in the same block: `location ~ ^/(listing/|a
 proxies to the BFF for SEO pages, but nginx gives `^~` prefix matches precedence over regex
 matches, so `^~ /artisan/` wins and the BFF's `GET /artisan/:slug` SEO route is dead on that host.
 
-**Status: diagnosed, not fixed — needs a decision, not just a patch.** `/var/www/artisan` and
-`/var/www/admin` are each `root`-served by their own subdomain server block (root-relative build,
-correct) **and** `alias`-served with a `/artisan/`, `/admin/` prefix by the buyer's default block
-(needs a path-prefixed build). adapter-static bakes `kit.paths.base` in at build time — one build
-output cannot correctly serve both cases, so there is no single-file fix. Three real options,
-each a different trade the codebase owner should pick rather than have picked for them silently:
+**Status: fixed — option (c), separate ports.** `/var/www/artisan` and `/var/www/admin` are each
+`root`-served by their own subdomain server block (root-relative build, correct) **and** were also
+`alias`-served with a `/artisan/`, `/admin/` prefix by the buyer's default block (needs a
+path-prefixed build). adapter-static bakes `kit.paths.base` in at build time — one build output
+cannot correctly serve both cases, so there was no single-file fix. Picked (c) after checking the
+one fact that decides between the three options below: the `artisan.kalakriti.in` and
+`admin.kalakriti.in` server blocks already have their own `/api/` proxy to `bff_upstream`, so
+serving them on their own ports needed no new proxy config, just `listen 8081`/`listen 8082` added
+to the existing blocks and the two `^~` prefix blocks deleted from the buyer default block — which
+also un-shadows the BFF's `/artisan/:slug` SEO route, a free fix. See the commit for the full
+change (`deploy/nginx/nginx.conf`, `docker-compose.yml`, `Dockerfile.web`, and the three docs that
+referenced the old `localhost/artisan/` URL). The three options, for the record:
 
 - **(a) Dual-build.** Make `paths.base` and the adapter's output directory read from env
   (`BASE_PATH`, `BUILD_OUT_DIR`) in both `svelte.config.js` files, and add two extra
@@ -408,29 +438,54 @@ stop the handler from demanding a principal. If no, move both routes under the `
 
 ## 3. Tier 3 — Correctness and hygiene (no user-visible breakage today, but load-bearing)
 
-### F-10. Seven BFF routes exist in no contract
+### F-10. Seven BFF routes exist in no contract — fixed
 
 `POST/GET /webhooks/subscriptions`, `DELETE /webhooks/subscriptions/:id`,
-`POST/GET /partnerships`, `POST /payments/webhook`, `GET /openapi.json` are all registered in
-`server.go` and absent from `openapi.json`. Nothing catches this:
+`POST/GET /partnerships`, `POST /payments/webhook`, `GET /openapi.json` were all registered in
+`server.go` and absent from `openapi.json`. Nothing caught this:
 `web/packages/api/src/route-parity.test.ts` only checks spec → `operations.ts`, never the reverse.
 
 Per `CLAUDE.md`, this exact gap already caused one production bug (the phone-change routes, where
 a hand-rolled `fetch()` missed the `/api/v1` prefix and the auth header, and every attempt 404'd).
 
-**Fix:** add the five real API routes to `openapi.json` with shapes taken from the actual handlers,
-regenerate `schema.d.ts`, add typed wrappers to `operations.ts`, and — the systemic part — extend
-`route-parity.test.ts` to assert **route → spec** parity by parsing `server.go`'s route table.
-`/payments/webhook` (inbound, HMAC-verified, never called by our frontend) and `/openapi.json` can
-be explicitly allow-listed as exempt.
+**Fixed:** added the three real API routes (partnerships, webhook subscriptions CRUD) to
+`openapi.json` with shapes taken from the actual handlers, regenerated `schema.d.ts`, added typed
+wrappers to `operations.ts`. `/payments/webhook` (inbound, HMAC-verified, never called by our
+frontend) and `/openapi.json` are explicitly allow-listed as exempt rather than documented.
 
-### F-11. `pkg/breaker` is fully built and wired to nothing
+The systemic part, done differently than originally planned: rather than extending
+`route-parity.test.ts` to parse `server.go`'s route table in TypeScript, added
+`services/bff/internal/bff/route_parity_test.go`, which diffs gin's own `engine.Routes()` against
+the embedded `openapi.json`. An earlier regex-based path diff in this same audit (the
+`operations.ts` ↔ BFF cross-reference done during discovery) produced real false positives from
+`:id`/`{id}` and nested-route-group normalization bugs — `Routes()` is authoritative and sidesteps
+that whole class of bug. Verified the test actually catches drift, not just passes vacuously
+(temporarily deleted a spec path, confirmed the failure message, restored it).
 
-Zero references to `breaker.` exist anywhere under `services/bff/`. Every downstream gRPC call
-relies solely on a timeout. Notably, `logs/bff.log:21:45:23` shows a
+**Found and fixed along the way:** `ListWebhookSubscriptions` was serializing
+`pkg/webhook.Subscription` directly (no `json` tags), which includes the HMAC signing `Secret` —
+every `GET /webhooks/subscriptions` leaked the caller's own webhook secret back in the response
+body. Fixed by building a redacted response map instead.
+
+### F-11. `pkg/breaker` is fully built and wired to nothing — wired
+
+Zero references to `breaker.` existed anywhere under `services/bff/`. Every downstream gRPC call
+relied solely on a timeout. Notably, `logs/bff.log:21:45:23` shows a
 `GET /artisans/.../follower-count` taking **10,006 ms** — a full timeout's worth of latency on a
-route the artisan dashboard blocks on. Either wire the circuit breaker into the BFF's gRPC
-clients, or delete it; a half-built resilience layer is worse than an honest absence.
+route the artisan dashboard blocks on.
+
+**Fixed — wired rather than deleted**, with the two things that make a breaker safe on a system
+that mixes real outages with ordinary 4xx-shaped business errors: `pkg/breaker/grpc.go`'s
+`tripsBreaker` only counts `codes.Unavailable`/`DeadlineExceeded`/`ResourceExhausted` as breaker
+failures (a `NOT_FOUND`/`INVALID_ARGUMENT`/`PERMISSION_DENIED` passes through untouched and never
+opens the circuit — the trap being that counting business errors would let one caller sending a
+bad request synthesize an outage for every other caller sharing the connection); and
+`pkg/grpcdial.Dial` builds a fresh `*breaker.Breaker` per call, so every dial site gets its own
+circuit rather than one shared breaker blackholing a healthy downstream because a different one is
+down. Verified with a table-driven test over gRPC codes
+(`pkg/breaker/grpc_test.go`): business errors never trip the breaker across repeated calls, N
+consecutive infra failures open it and the next call is short-circuited without touching the
+invoker, and a half-open trial after the timeout reaches the invoker again.
 
 ### F-12. CORS allow-list is missing a header the client actually sends
 
@@ -490,24 +545,28 @@ No Docker in this environment (checked bash and PowerShell, neither has the bina
 below claiming "done" was verified against a live multi-container stack. Every fix was instead
 verified the strongest way available without one: real `go build`/`go vet`/`go test` across all 7
 modules, real `pnpm check`/`vitest` runs, and for the BFF specifically, a real `*bff.Server`
-booted with `httptest` and driven with real HTTP requests (`services/bff/internal/bff/server_test.go`)
-rather than reasoning from a code read. Where that wasn't enough to trust a fix, it was left
-diagnosed-but-not-applied instead (F-7, and F-4's broader scope) rather than shipped unverified.
+booted with `httptest` and driven with real HTTP requests (`services/bff/internal/bff/server_test.go`,
+`route_parity_test.go`) rather than reasoning from a code read. `deploy/nginx/nginx.conf` (F-7) is
+the one change this pass could only review by hand (brace-balanced, mirrored against the existing
+working blocks) — no `nginx -t`, no real request. Everything else below either has a passing test
+or was left as a documented followup (§7) rather than shipped unverified.
 
 | Step | Work | Status |
 |---|---|---|
 | 1 | F-1 access log, F-2 API 404 fall-through, F-8 timeout (native gin middleware; SSE exempt) | **Done.** `server_test.go` asserts the 404/401/405 statuses and that the access log actually records them. |
 | 2 | Bring up a healthy stack, capture fresh logs, walk the artisan flow end to end | **Not possible here** — no Docker. Left to whoever runs `make demo-up` next; steps below were verified other ways instead. |
 | 3 | F-3 presigned URL topology | **Done**, and simpler than planned — `pkg/storage` already had the `PublicURL`/`rewriteHost` mechanism; only `docker-compose.yml` needed `S3_PUBLIC_URL` set. No NGINX/vite change needed after all. |
-| 4 | F-4 DEV mock gating | **Partially done.** Fixed the one instance that corrupts persisted state (outbox-send.ts's fabricated artisan id) as a standalone correctness bug, with regression tests. The broader "add a `VITE_USE_MOCKS` flag + visible mock badge across all 19 sites" is a product/UX design question, not applied — needs your input on the flag name and badge design before touching 19 files. |
-| 5 | Decision point (§4), then F-5 / F-9 role work | **Done**, took the recommended option (a): dev-only `dev_role` on `VerifyOtp`, guarded by the same `AUTH_DEV_OTP_ENABLED` flag as the OTP code itself. Admin's forged-JWT hack (which never actually worked, in any environment) replaced with a real call. F-9 (`/companies` public-route gap) fixed alongside it. |
+| 4 | F-4 DEV mock gating | **Done**, all 19 originally-catalogued sites plus 2 more found unconditional (never even DEV-gated) in `admin/companies` and `artisan/trends`. All now behind `VITE_USE_MOCKS`, each fallback `console.warn`s the real error first, and a real empty/failed result no longer gets silently overwritten with fake data. The visible "mock data" badge (part of the original plan) is deferred — see §7. |
+| 5 | Decision point (§4), then F-5 / F-9 role work | **Done**, took the recommended option (a): dev-only `dev_role` on `VerifyOtp`, guarded by the same `AUTH_DEV_OTP_ENABLED` flag as the OTP code itself. Admin's forged-JWT hack (which never actually worked, in any environment) replaced with a real call; the artisan app had the identical dead hack, found and fixed in the F-4 pass. F-9 (`/companies` public-route gap) fixed alongside it. |
 | 6 | F-6 consumer supervision + readiness | **Supervision done** (reconnect-with-backoff, verified via build/vet across all 5 consuming services — kafka-go's `Reader` isn't practically unit-testable without a broker, flagged rather than glossed over). **Readiness signal not done** — a still-reconnecting consumer is visible in logs only, not in `/readyz`. Real followup, not silently dropped. |
-| 7 | F-7 NGINX/base-path, F-14 dev proxies | F-14 **done and verified** (`pnpm --filter @kalakriti/buyer check`, 0 errors). F-7 **diagnosed, not fixed** — needs a decision (§ its own section) and touches `Dockerfile.web`'s build pipeline, unverifiable without Docker here. |
-| 8 | F-10 spec parity + reverse parity test, F-12, F-13, F-11 decision, `CLAUDE.md` corrections | F-12/F-13 **done and verified** (new `pkg/httpx/middleware_test.go`, 3/3 passing). **F-10 and F-11 not started** — see §6. |
+| 7 | F-7 NGINX/base-path, F-14 dev proxies | **Both done.** F-14 verified (`pnpm --filter @kalakriti/buyer check`, 0 errors). F-7: option (c), separate ports — verified the artisan/admin subdomain blocks already proxied `/api/` before picking it, so it needed no new proxy config; reviewed by hand (no Docker to run `nginx -t`). |
+| 8 | F-10 spec parity + reverse parity test, F-12, F-13, F-11 decision, `CLAUDE.md` corrections | **All done.** F-12/F-13 verified (`pkg/httpx/middleware_test.go`, 3/3 passing). F-10's reverse-parity test is a Go test over gin's `Routes()` rather than the originally-planned TypeScript regex parse (see F-10's own section for why). F-11: wired rather than deleted, verified with a table-driven test over gRPC codes (`pkg/breaker/grpc_test.go`). `CLAUDE.md`'s Idempotency-Key section, which had two contradictory claims, corrected. |
 | 9 | Full endpoint sweep against all ~100 routes with a production frontend build | **Not done** — needs the live stack step 2 also needed. |
 
-Steps actually completed this session, in commit order: F-1, F-2, F-8 → F-3 → F-6 (supervision
-half) → F-9 → F-12, F-13 → F-14 → F-4 (the outbox-send.ts slice) → F-5.
+Steps completed, in commit order: F-1, F-2, F-8 → F-3 → F-6 (supervision half) → F-9 → F-12, F-13
+→ F-14 → F-4 (the outbox-send.ts slice) → F-5 → F-10 (+ webhook secret leak fix) → F-11 → F-7 →
+F-4 (the remaining 18 sites, + 2 unconditional sites found along the way, + the artisan verify
+page's dead forged-JWT hack, + a pre-existing stale test fix unrelated to this branch).
 
 ---
 
@@ -525,26 +584,18 @@ half) → F-9 → F-12, F-13 → F-14 → F-4 (the outbox-send.ts slice) → F-5
 
 Unlike §6, these are things this audit should still fix; they just didn't fit in this session.
 
-- **F-10, spec parity.** `POST/GET /webhooks/subscriptions`, `DELETE /webhooks/subscriptions/:id`,
-  `POST/GET /partnerships` are registered in `server.go` and absent from `openapi.json`; nothing
-  catches this (`route-parity.test.ts` only checks the reverse direction). Mechanical, low-risk,
-  worth doing: add the routes to the spec, regenerate `schema.d.ts`, and extend
-  `route-parity.test.ts` to parse `server.go`'s route table and assert both directions.
-- **F-11, `pkg/breaker` decision.** Fully built, wired to nothing — every BFF→gRPC call relies on
-  timeout alone. `logs/bff.log` shows a 10-second `follower-count` call, a full timeout's worth of
-  latency on a route the artisan dashboard blocks on. Either wire it into the BFF's gRPC clients or
-  delete it; a half-built resilience layer sitting unused is worse than its own absence.
+- **F-4's mock-data badge.** All 19+2 sites are now flag-gated (`VITE_USE_MOCKS`) and `console.warn`
+  the real error, but the original plan's second half — a persistent visible "mock data" badge on
+  the affected panel, so the honesty is visible in the UI itself, not just devtools — is a shared
+  UI component decision across three apps' design systems, not a wiring fix. Worth doing, not done
+  here.
 - **F-6's other half.** Reconnect-with-backoff is done and verified at the build/vet level (kafka-go's
   `Reader` isn't practically unit-testable without a live broker). A per-consumer liveness signal
   feeding `/readyz` — so a still-reconnecting consumer is visible in health checks, not only in
   logs — is not.
-- **F-4's broader scope.** The one correctness bug (outbox-send.ts fabricating an artisan id) is
-  fixed. The other ~18 `import.meta.env.DEV` mock-fallback sites across the three apps are a
-  product/UX call (flag name, whether to show a visible "mock data" badge, whether admin's other
-  DEV branches should also go away now that F-5 gives it a real login path) — needs your input,
-  not a unilateral 19-file change.
-- **F-7, NGINX path routing.** Diagnosed fully in its own section above; needs you to pick (a)
-  dual-build, (b) drop path-based access, or (c) separate ports, and (a) needs a real Docker build
-  to verify regardless of who implements it.
+- **F-7's Docker verification.** The nginx.conf change was reviewed by hand (brace-balanced,
+  mirrored the existing working blocks exactly) but never run through `nginx -t` or a real request
+  — no Docker in this sandbox. Verify with `docker compose up -d --build web` and a request to
+  `:8081`/`:8082` before trusting it in production.
 - **Step 9, the full endpoint sweep.** Exercising all ~100 routes with valid/invalid payloads
   against a running stack needs that stack. Do this once `make demo-up` runs somewhere with Docker.

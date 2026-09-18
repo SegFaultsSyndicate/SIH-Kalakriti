@@ -131,11 +131,18 @@
       const res = await listTrendLinks({ exclude_expired: true });
       if (res.trend_links && res.trend_links.length > 0) {
         trends = res.trend_links;
-      } else {
+      } else if (import.meta.env.VITE_USE_MOCKS === '1') {
         trends = MOCK_TRENDS;
+      } else {
+        trends = [];
       }
-    } catch {
-      trends = MOCK_TRENDS;
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadTrends:', cause);
+        trends = MOCK_TRENDS;
+      } else {
+        trends = [];
+      }
     } finally {
       loading = false;
     }
@@ -171,8 +178,13 @@
         message: next ? t('trends.toast.saved') : t('trends.toast.shared'),
         variant: 'info',
       });
-    } catch {
-      trends = trends.map((item) => (item.id === trend.id ? { ...item, pinned: next } : item));
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] pinTrendLink:', cause);
+        trends = trends.map((item) => (item.id === trend.id ? { ...item, pinned: next } : item));
+      } else {
+        showToast({ message: t('api.error.unknown'), variant: 'error' });
+      }
     }
   }
 
@@ -202,25 +214,29 @@
         message: t('trends.toast.shared'),
         variant: 'success',
       });
-    } catch (err) {
-      // Local fallback in demo mode
-      const mockCreated: TrendLink = {
-        id: 'trend-' + Date.now().toString(36),
-        title: newTitle.trim(),
-        url: newUrl.trim(),
-        source_type: newSourceType,
-        craft_id: newCraftId,
-        curator_name: 'You (Artisan Contributor)',
-        curator_role: 'ARTISAN',
-        pinned: false,
-        created_at: new Date().toISOString(),
-      };
-      trends = [mockCreated, ...trends];
-      submitModalOpen = false;
-      showToast({
-        message: t('trends.toast.saved'),
-        variant: 'info',
-      });
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createTrendLink:', cause);
+        const mockCreated: TrendLink = {
+          id: 'trend-' + Date.now().toString(36),
+          title: newTitle.trim(),
+          url: newUrl.trim(),
+          source_type: newSourceType,
+          craft_id: newCraftId,
+          curator_name: 'You (Artisan Contributor)',
+          curator_role: 'ARTISAN',
+          pinned: false,
+          created_at: new Date().toISOString(),
+        };
+        trends = [mockCreated, ...trends];
+        submitModalOpen = false;
+        showToast({
+          message: t('trends.toast.saved'),
+          variant: 'info',
+        });
+      } else {
+        showToast({ message: t('api.error.unknown'), variant: 'error' });
+      }
     } finally {
       submitting = false;
     }
