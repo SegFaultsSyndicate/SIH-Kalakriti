@@ -64,11 +64,15 @@ async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
     if (response.artisan_id) await setArtisanId(response.artisan_id);
     return { ok: true };
   } catch (cause) {
-    if (import.meta.env.DEV) {
-      const mockId = `artisan-${Date.now()}`;
-      await setArtisanId(mockId);
-      return { ok: true };
-    }
+    // No DEV fallback here (unlike other outbox senders): setArtisanId
+    // writes the app's own identity, and every subsequent authenticated
+    // request -- follower-count, artisans/me, listing creation -- carries
+    // whatever id was last set here. A fabricated `artisan-${Date.now()}`
+    // on a genuinely failed registration used to get treated as success
+    // and stored as that identity, so every later real request the app
+    // made was for an id no backend row would ever match: a fake success
+    // that manufactures real, confusing failures several steps later. A
+    // failed registration reports as failed, in every environment.
     return fromApiError(cause);
   }
 }
