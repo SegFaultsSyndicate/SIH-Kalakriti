@@ -155,6 +155,16 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      // routes/verify/[code]/+page.svelte fetches /v/{code}/verify.json
+      // directly (not through the typed API client, since it's a public,
+      // unauthenticated bff route with its own JSON shape) -- without this,
+      // pnpm dev:buyer never reaches the bff for it: the request hits vite's
+      // own dev server, which has no route for /v/*, and returns its dev
+      // error page instead of proxying through like /api already does.
+      '/v': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
   },
   preview: { port: 4174, strictPort: true },
