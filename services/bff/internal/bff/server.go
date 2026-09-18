@@ -1,6 +1,7 @@
 package bff
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
 	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
@@ -101,6 +103,18 @@ func NewServer(cfg Config) (*Server, error) {
 func (s *Server) mountRoutes() {
 	r := s.router
 	cfg := s.cfg
+
+	// A path that exists under a different verb should be distinguishable
+	// from one that doesn't exist at all -- without this, gin sends both to
+	// NoRoute (the SPA fallback, guarded against /api/* above but still not
+	// the same signal as "wrong method").
+	r.HandleMethodNotAllowed = true
+	r.NoMethod(httpx.WrapHandler(func(w http.ResponseWriter, r *http.Request) {
+		httpx.JSON(w, http.StatusMethodNotAllowed, domain.HTTPErrorBody{
+			Error:   "method_not_allowed",
+			Message: fmt.Sprintf("method %s not allowed for %s", r.Method, r.URL.Path),
+		})
+	}))
 
 	// Build handlers.
 	apiH := handler.NewAPIHandler(

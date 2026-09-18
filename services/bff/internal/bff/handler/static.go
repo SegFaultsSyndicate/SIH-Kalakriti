@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 )
 
 // SPAHandler serves the built Svelte SPA from distDir with correct cache headers
@@ -25,6 +27,17 @@ func NewSPAHandler(distDir string) *SPAHandler {
 
 // ServeHTTP implements the SPA serving logic.
 func (h *SPAHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// An unmatched /api/* path is a caller mistake (wrong path, typo, route
+	// never mounted) or an integration bug, never an SPA route -- it must
+	// never resolve to index.html with a 200. Previously it did: every
+	// caller of a nonexistent API route got HTML back, which fails
+	// response.json() client-side and surfaces as a confusing downstream
+	// TypeError instead of the 404 that actually happened.
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		domain.WriteHTTPError(w, domain.NotFound("no such endpoint"))
+		return
+	}
+
 	path := r.URL.Path
 	if path == "/" {
 		path = "/index.html"
