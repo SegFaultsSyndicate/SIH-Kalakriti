@@ -26,6 +26,13 @@ const roundRobinServiceConfig = `{"loadBalancingConfig": [{"round_robin":{}}]}`
 // WIRING_AUDIT_PLAN.md F-11 -- a 10s follower-count call in a stale log,
 // full timeout's worth of latency on a route the artisan dashboard blocks
 // on); once open, callers fail fast instead.
+// On a cold `docker compose up`, services start in parallel, so the first
+// handful of calls to a not-yet-listening downstream are 5 back-to-back
+// UNAVAILABLE dials -- enough to open the breaker and self-inflict up to
+// breakerOpenTimeout of failing fast on a backend that would otherwise have
+// been reachable within a second or two of binding its port. Bounded (it
+// half-opens and recovers on its own), but worth knowing if `make demo-up`
+// looks slow to come up rather than broken.
 const (
 	breakerFailureThreshold = 5
 	breakerOpenTimeout      = 30 * time.Second

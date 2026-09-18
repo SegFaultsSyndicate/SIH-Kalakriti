@@ -7,10 +7,14 @@
 
   dev_role: 'MINISTRY' requests a real MINISTRY-role token instead of the
   default ARTISAN one -- core-svc only honors it with dev OTP enabled
-  (AUTH_DEV_OTP_ENABLED) and ignores it otherwise, so this is inert against a
-  real deployment. There is currently no other login path anywhere in the
-  product that can mint a MINISTRY token at all (see
-  services/core-svc/internal/core/service/auth.go's VerifyOtp doc comment).
+  (AUTH_DEV_OTP_ENABLED) and *rejects the whole login* with a 400 otherwise
+  (VerifyOtp treats a dev_role it can't honor as invalid input, not a no-op --
+  see services/core-svc/internal/core/service/auth.go). So it's only sent in
+  a dev build (import.meta.env.DEV): a production build omits it and falls
+  through to the ordinary OTP path, which still logs the caller in, just as
+  ARTISAN -- the same "no real MINISTRY issuance path exists yet" gap
+  documented in CLAUDE.md, not a broken login. There is currently no other
+  login path anywhere in the product that can mint a MINISTRY token at all.
   This used to fall back, on any verify failure, to forging an unsigned JWT
   client-side and calling session.establish on it directly -- which never
   actually worked: pkg/auth.Issuer.Verify checks a real HMAC signature
@@ -38,7 +42,11 @@
     verifying = true;
     error = '';
     try {
-      const ok = await completeOtpVerification({ phone, otp, dev_role: 'MINISTRY' });
+      const ok = await completeOtpVerification({
+        phone,
+        otp,
+        ...(import.meta.env.DEV ? { dev_role: 'MINISTRY' } : {}),
+      });
       if (ok) {
         await goto(redirect);
       } else {

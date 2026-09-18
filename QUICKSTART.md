@@ -202,6 +202,10 @@ bff) — so the backend (`make demo-up`, or at least `bff` + its dependencies)
 needs to be running first. Every screen still boots without it (offline-first
 design), but nothing beyond local/cached state resolves.
 
+To see the offline/airplane-mode demo mock fallbacks instead of real errors
+when a call fails, opt in with `VITE_USE_MOCKS=1 pnpm dev:admin` (default off
+— see `web/README.md`).
+
 **Full container stack** (NGINX serving built apps, no hot reload):
 already covered by `make demo-up` above — apps are at `http://localhost`,
 `/artisan/`, `/admin/`.

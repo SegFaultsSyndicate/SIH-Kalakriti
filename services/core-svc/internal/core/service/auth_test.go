@@ -179,7 +179,7 @@ func TestVerifyOtpDevRoleMintsTheRequestedRoleWhenDevModeIsOn(t *testing.T) {
 	}
 }
 
-func TestVerifyOtpDevRoleIsIgnoredWhenDevModeIsOff(t *testing.T) {
+func TestVerifyOtpDevRoleIsRejectedWhenDevModeIsOff(t *testing.T) {
 	store := newFakeStore()
 	tokens := newFakeTokens()
 	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456", devMode: false})

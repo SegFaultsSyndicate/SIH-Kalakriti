@@ -98,6 +98,17 @@ editing. To exercise install and offline behaviour in dev:
 PWA_DEV=1 pnpm dev:artisan
 ```
 
+Every app's DEV-mode mock fallback (offline/airplane-mode demo data, shown
+only when a real API call fails) is opt-in, not automatic: set
+`VITE_USE_MOCKS=1` to enable it.
+
+```bash
+VITE_USE_MOCKS=1 pnpm dev:admin
+```
+
+Without it, `pnpm dev:*` talks to the real backend and a failed call surfaces
+as a real error instead of silently falling back to fabricated data.
+
 ---
 
 ## The artisan bundle stays small
