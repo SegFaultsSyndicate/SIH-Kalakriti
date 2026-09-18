@@ -416,7 +416,7 @@ type StubAuthSvc struct{}
 func (s *StubAuthSvc) RequestOTP(ctx context.Context, phone string) error {
 	return nil
 }
-func (s *StubAuthSvc) VerifyOTP(ctx context.Context, phone, otp string) (string, string, error) {
+func (s *StubAuthSvc) VerifyOTP(ctx context.Context, phone, otp, devRole string) (string, string, error) {
 	return "mock-access-token", "mock-refresh-token", nil
 }
 func (s *StubAuthSvc) RefreshToken(ctx context.Context, refreshToken string) (string, error) {

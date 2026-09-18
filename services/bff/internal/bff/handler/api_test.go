@@ -245,7 +245,7 @@ func (m *mockAuthSvc) RequestOTP(ctx context.Context, phone string) error {
 	return nil
 }
 
-func (m *mockAuthSvc) VerifyOTP(ctx context.Context, phone, otp string) (string, string, error) {
+func (m *mockAuthSvc) VerifyOTP(ctx context.Context, phone, otp, devRole string) (string, string, error) {
 	return "new-access-token", "new-refresh-token", nil
 }
 

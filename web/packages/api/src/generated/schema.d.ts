@@ -72,6 +72,8 @@ export interface paths {
                     "application/json": {
                         phone: string;
                         otp: string;
+                        /** @description Requests a token minted for BUYER, CLUSTER_OFFICER, or MINISTRY instead of the default ARTISAN. Only honored when the server is running with dev OTP enabled (AUTH_DEV_OTP_ENABLED) -- ignored otherwise, so this never does anything against a real deployment. There is currently no other way to obtain a token for any of these three roles. */
+                        dev_role?: string;
                     };
                 };
             };

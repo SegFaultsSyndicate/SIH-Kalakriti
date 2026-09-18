@@ -88,7 +88,7 @@ func (h *Identity) RequestOtp(ctx context.Context, req *identityv1.RequestOtpReq
 
 // VerifyOtp exchanges a challenge and code for a token pair.
 func (h *Identity) VerifyOtp(ctx context.Context, req *identityv1.VerifyOtpRequest) (*identityv1.VerifyOtpResponse, error) {
-	result, err := h.svc.VerifyOtp(ctx, req.GetChallengeId(), req.GetPhoneE164(), req.GetCode())
+	result, err := h.svc.VerifyOtp(ctx, req.GetChallengeId(), req.GetPhoneE164(), req.GetCode(), req.GetDevRole())
 	if err != nil {
 		return nil, pkgdomain.GRPCError(err)
 	}

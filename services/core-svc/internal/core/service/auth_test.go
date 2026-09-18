@@ -62,7 +62,7 @@ func TestVerifyOtpUnregisteredPhoneYieldsPreRegistrationToken(t *testing.T) {
 	tokens := newFakeTokens()
 	svc := newTestIdentity(newFakeStore(), tokens, &fakeOTP{acceptCode: "123456"})
 
-	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456")
+	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "")
 	if err != nil {
 		t.Fatalf("VerifyOtp: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestVerifyOtpRegisteredPhoneYieldsSubjectAndLanguage(t *testing.T) {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
 
-	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456")
+	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "")
 	if err != nil {
 		t.Fatalf("VerifyOtp: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestVerifyOtpRejectsABadCode(t *testing.T) {
 	tokens := newFakeTokens()
 	svc := newTestIdentity(newFakeStore(), tokens, &fakeOTP{acceptCode: "123456"})
 
-	_, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "999999")
+	_, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "999999", "")
 	if !errors.Is(err, pkgdomain.ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
 	}
@@ -148,11 +148,78 @@ func TestVerifyOtpValidatesItsArguments(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := svc.VerifyOtp(context.Background(), tt.challenge, tt.phone, tt.code)
+			_, err := svc.VerifyOtp(context.Background(), tt.challenge, tt.phone, tt.code, "")
 			if !errors.Is(err, pkgdomain.ErrInvalidInput) {
 				t.Fatalf("want ErrInvalidInput, got %v", err)
 			}
 		})
+	}
+}
+
+// Regression coverage for WIRING_AUDIT_PLAN.md F-5: before this, no path in
+// the product could ever mint a BUYER, CLUSTER_OFFICER or MINISTRY token --
+// every one of the 20 bff handlers gating on those roles was unreachable by
+// any real login.
+func TestVerifyOtpDevRoleMintsTheRequestedRoleWhenDevModeIsOn(t *testing.T) {
+	tokens := newFakeTokens()
+	svc := newTestIdentity(newFakeStore(), tokens, &fakeOTP{acceptCode: "123456", devMode: true})
+
+	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "ministry")
+	if err != nil {
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+	if !result.Registered {
+		t.Error("a dev-role login should report registered=true so no client treats it as needing artisan registration")
+	}
+	if len(tokens.issued) != 1 || tokens.issued[0].Role != auth.RoleMinistry {
+		t.Fatalf("expected one MINISTRY subject issued, got %+v", tokens.issued)
+	}
+	if tokens.issued[0].PhoneE164 != testPhone {
+		t.Errorf("issued subject phone = %q, want %q", tokens.issued[0].PhoneE164, testPhone)
+	}
+}
+
+func TestVerifyOtpDevRoleIsIgnoredWhenDevModeIsOff(t *testing.T) {
+	store := newFakeStore()
+	tokens := newFakeTokens()
+	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456", devMode: false})
+
+	_, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "ministry")
+	if !errors.Is(err, pkgdomain.ErrInvalidInput) {
+		t.Fatalf("dev_role without dev OTP enabled should be rejected as invalid input, got %v", err)
+	}
+	if len(tokens.issued) != 0 {
+		t.Fatal("no token should be issued when dev_role is rejected")
+	}
+}
+
+func TestVerifyOtpDevRoleRejectsAnUnknownRole(t *testing.T) {
+	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{acceptCode: "123456", devMode: true})
+
+	_, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "superadmin")
+	if !errors.Is(err, pkgdomain.ErrInvalidInput) {
+		t.Fatalf("unknown dev_role should be rejected as invalid input, got %v", err)
+	}
+}
+
+func TestVerifyOtpDevRoleArtisanFallsThroughToTheOrdinaryLoginPath(t *testing.T) {
+	// "artisan" is a legal dev_role value, but it's also the default --
+	// requesting it explicitly must behave exactly like the ordinary path
+	// (looking up the real profile), not like the short-circuit the other
+	// three roles take.
+	store := newFakeStore()
+	tokens := newFakeTokens()
+	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456", devMode: true})
+
+	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "artisan")
+	if err != nil {
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+	if result.Registered {
+		t.Error("an unregistered phone should still report registered=false via the ordinary path")
+	}
+	if len(tokens.issued) != 1 || tokens.issued[0].Role != auth.RoleArtisan {
+		t.Fatalf("expected one ARTISAN subject issued, got %+v", tokens.issued)
 	}
 }
 

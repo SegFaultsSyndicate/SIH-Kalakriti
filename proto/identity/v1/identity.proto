@@ -147,6 +147,14 @@ message VerifyOtpRequest {
   string phone_e164 = 2;
   // The code the artisan received.
   string code = 3;
+  // Requests a token minted for this role instead of the default ARTISAN
+  // (BUYER, CLUSTER_OFFICER, or MINISTRY -- the short-form Role name).
+  // Honored only when the server is running with dev OTP enabled (the same
+  // flag that makes `code` "000000" always accepted); ignored otherwise, so
+  // this field does nothing outside local/demo builds. There is currently
+  // no other path in the product that can mint a BUYER, CLUSTER_OFFICER or
+  // MINISTRY token at all -- see auth.go's VerifyOtp doc comment.
+  optional string dev_role = 4;
 }
 
 // VerifyOtpResponse carries the token pair and whether a profile exists yet.
