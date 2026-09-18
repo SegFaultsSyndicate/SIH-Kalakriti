@@ -816,3 +816,63 @@ export function upsertScheme(body: UpsertSchemeBody, id?: string, options?: Call
 export function deleteScheme(id: string, options?: CallOptions): Promise<{ status?: string }> {
   return call(`/schemes/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<{ status?: string }>;
 }
+
+// --- Partnership Operations ---
+
+type CreatePartnershipBody = Json<paths['/partnerships']['post']['requestBody']>;
+type PartnershipResponse = Json<paths['/partnerships']['post']['responses'][201]>;
+type PartnershipsListResponse = Json<paths['/partnerships']['get']['responses'][200]>;
+
+export function createPartnership(
+  body: CreatePartnershipBody,
+  options?: CallOptions,
+): Promise<PartnershipResponse> {
+  return call('/partnerships', { ...options, method: 'POST', body }) as Promise<PartnershipResponse>;
+}
+
+export function listPartnerships(
+  filters?: { artisan_id?: string; company_id?: string },
+  options?: CallOptions,
+): Promise<PartnershipsListResponse> {
+  const params = new URLSearchParams();
+  if (filters?.artisan_id) params.set('artisan_id', filters.artisan_id);
+  if (filters?.company_id) params.set('company_id', filters.company_id);
+  const qs = params.toString();
+  return call(`/partnerships${qs ? `?${qs}` : ''}`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<PartnershipsListResponse>;
+}
+
+// --- Webhook Subscription Operations ---
+
+type CreateWebhookSubscriptionBody = Json<paths['/webhooks/subscriptions']['post']['requestBody']>;
+type WebhookSubscriptionResponse = Json<paths['/webhooks/subscriptions']['post']['responses'][201]>;
+type WebhookSubscriptionsListResponse = Json<paths['/webhooks/subscriptions']['get']['responses'][200]>;
+
+export function createWebhookSubscription(
+  body: CreateWebhookSubscriptionBody,
+  options?: CallOptions,
+): Promise<WebhookSubscriptionResponse> {
+  return call('/webhooks/subscriptions', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<WebhookSubscriptionResponse>;
+}
+
+export function listWebhookSubscriptions(
+  options?: CallOptions,
+): Promise<WebhookSubscriptionsListResponse> {
+  return call('/webhooks/subscriptions', {
+    ...options,
+    method: 'GET',
+  }) as Promise<WebhookSubscriptionsListResponse>;
+}
+
+export function deleteWebhookSubscription(id: string, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/webhooks/subscriptions/${encodeURIComponent(id)}`, {
+    ...options,
+    method: 'DELETE',
+  }) as Promise<{ status?: string }>;
+}

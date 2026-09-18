@@ -550,7 +550,23 @@ func (h *APIHandler) ListWebhookSubscriptions(w http.ResponseWriter, r *http.Req
 		httpx.Error(w, err)
 		return
 	}
-	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": subs})
+	// webhook.Subscription carries the signing secret for delivery use; it
+	// must never round-trip back to the caller that already knows it.
+	out := make([]map[string]any, len(subs))
+	for i, s := range subs {
+		out[i] = map[string]any{
+			"id":                   s.ID,
+			"subscriber_id":        s.SubscriberID,
+			"subscriber_type":      s.SubscriberType,
+			"url":                  s.URL,
+			"events":               s.Events,
+			"active":               s.Active,
+			"created_at":           s.CreatedAt,
+			"updated_at":           s.UpdatedAt,
+			"consecutive_failures": s.ConsecutiveFailures,
+		}
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": out})
 }
 
 func (h *APIHandler) DeleteWebhookSubscription(w http.ResponseWriter, r *http.Request) {
