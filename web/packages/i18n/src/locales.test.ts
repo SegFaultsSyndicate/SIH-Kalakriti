@@ -123,3 +123,35 @@ describe('tooltip translations', () => {
   });
 });
 
+describe('app.name localization', () => {
+  it('has localized brand name in every non-English locale and English source in en', () => {
+    expect(en['app.name']).toBe('Kalakriti');
+    expect(catalogues.get('hi')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('bn')?.['app.name']).toBe('কলাকৃতি');
+    expect(catalogues.get('ta')?.['app.name']).toBe('கலாகிருதி');
+    expect(catalogues.get('te')?.['app.name']).toBe('కలాకృతి');
+    expect(catalogues.get('mr')?.['app.name']).toBe('कलाकृती');
+    expect(catalogues.get('gu')?.['app.name']).toBe('કલાકૃતિ');
+    expect(catalogues.get('kn')?.['app.name']).toBe('ಕಲಾಕೃತಿ');
+    expect(catalogues.get('ml')?.['app.name']).toBe('കലാകൃതി');
+    expect(catalogues.get('pa')?.['app.name']).toBe('ਕਲਾਕ੍ਰਿਤੀ');
+    expect(catalogues.get('or')?.['app.name']).toBe('କଳାକୃତି');
+    expect(catalogues.get('as')?.['app.name']).toBe('কলাকৃতি');
+    expect(catalogues.get('ur')?.['app.name']).toBe('کلاکرتی');
+    expect(catalogues.get('ks')?.['app.name']).toBe('کلاکرتی');
+    expect(catalogues.get('sd')?.['app.name']).toBe('ڪلاڪرتي');
+    expect(catalogues.get('kok')?.['app.name']).toBe('कलाकृती');
+    expect(catalogues.get('mai')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('ne')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('sa')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('doi')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('brx')?.['app.name']).toBe('कलाकृति');
+
+    for (const code of NON_EN) {
+      const val = catalogues.get(code)?.['app.name'];
+      expect(val).toBeDefined();
+      expect(val).not.toBe('Kalakriti');
+    }
+  });
+});
+

@@ -26,7 +26,6 @@
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
   import { currency } from '$lib/currency.svelte';
-  import HindiWordmark from '@kalakriti/identity/src/wordmark-horizontal.svg';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -155,13 +154,7 @@
 
     <a class="shell__lockup" href="/">
       <img class="shell__emblem" src="/favicon.svg" alt="" width="32" height="32" />
-      {#if locale.code === 'hi'}
-        <img class="shell__wordmark-img" src={HindiWordmark} alt={t('app.name')} height="24" />
-      {:else}
-        <span class="shell__wordmark">
-          {t('app.name')}
-        </span>
-      {/if}
+      <span class="shell__wordmark">{t('app.name')}</span>
     </a>
 
     <nav class="shell__nav" aria-label={t('nav.shell.mainAriaLabel')}>

@@ -29,7 +29,9 @@ CREATE TYPE language_code_new AS ENUM (
 );
 
 ALTER TABLE artisan
-    ALTER COLUMN languages TYPE language_code_new[] USING languages::text[]::language_code_new[];
+    ALTER COLUMN languages DROP DEFAULT,
+    ALTER COLUMN languages TYPE language_code_new[] USING languages::text[]::language_code_new[],
+    ALTER COLUMN languages SET DEFAULT '{}';
 
 ALTER TABLE craft_alias
     ALTER COLUMN language TYPE language_code_new USING language::text::language_code_new;
@@ -63,7 +65,9 @@ CREATE TYPE language_code_old AS ENUM (
 );
 
 ALTER TABLE artisan
-    ALTER COLUMN languages TYPE language_code_old[] USING languages::text[]::language_code_old[];
+    ALTER COLUMN languages DROP DEFAULT,
+    ALTER COLUMN languages TYPE language_code_old[] USING languages::text[]::language_code_old[],
+    ALTER COLUMN languages SET DEFAULT '{}';
 
 ALTER TABLE craft_alias
     ALTER COLUMN language TYPE language_code_old USING language::text::language_code_old;

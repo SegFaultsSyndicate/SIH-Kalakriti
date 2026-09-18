@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const gu: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "કલાકૃતિ",
   "app.tagline": "ક્રાફ્ટ, સત્યતાપૂર્વક રેકોર્ડ",
   "app.ministry": "સામાજિક ન્યાય અને અધિકારીતા મંત્રાલય, ભારત સરકાર",
   "a11y.skipToContent": "મુખ્ય સામગ્રી પર જાઓ",

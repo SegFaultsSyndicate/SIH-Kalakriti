@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const ta: Messages = {
-  'app.name': 'Kalakriti',
+  'app.name': 'கலாகிருதி',
   'app.tagline': 'கைவினை, உண்மையாக பதிவு செய்யப்பட்டது',
   'app.ministry': 'சமூக நீதி மற்றும் அதிகாரமளிப்பு அமைச்சகம், இந்திய அரசு',
   'a11y.skipToContent': 'முதன்மை உள்ளடக்கத்திற்குச் செல்',

@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const ks: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "کلاکرتی",
   "app.tagline": "کرافٹ، پٔزۍ پٲٹھۍ ریکارڈ کرنہٕ آمُت",
   "app.ministry": "وزارت سماجی انصاف تہٕ بااختیار بنانے، حکومت ہند",
   "a11y.skipToContent": "اَہَم مَضموٗن کُن کٔرِو سِکِپ",

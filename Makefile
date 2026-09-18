@@ -39,7 +39,8 @@ help: ## Show this help
 # --- infrastructure ----------------------------------------------------------
 
 up: proto sqlc ## Generate code, then start infrastructure and wait for it to be healthy
-	$(COMPOSE) up -d --wait
+	$(COMPOSE) up -d --wait postgres redis kafka minio jaeger prometheus
+	$(COMPOSE) up minio-init
 
 down: ## Stop infrastructure, keep volumes
 	$(COMPOSE) down --remove-orphans
