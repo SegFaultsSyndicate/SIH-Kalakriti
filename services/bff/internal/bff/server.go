@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -85,6 +86,7 @@ func NewServer(cfg Config) (*Server, error) {
 	r := httpx.Mux(httpx.Config{
 		Logger:         cfg.Logger,
 		AllowedOrigins: cfg.AllowedOrigins,
+		SelfOrigin:     selfOrigin(cfg.BaseURL),
 		RequestTimeout: 30 * time.Second,
 	})
 
@@ -291,6 +293,21 @@ func (s *Server) mountRoutes() {
 
 	// SPA fallback for everything else.
 	r.NoRoute(httpx.WrapHandler(spaH.ServeHTTP))
+}
+
+// selfOrigin extracts the scheme+host Origin header this server's own
+// public address would present, from its configured BaseURL, for
+// httpx.Config.SelfOrigin. An Origin header never carries a path, so
+// "http://localhost:8000/foo" and "http://localhost:8000" must compare
+// equal to it -- BaseURL is documented as just scheme+host today, but this
+// normalises defensively rather than assuming that never changes. An
+// unparseable or empty BaseURL yields "", the same as never setting it.
+func selfOrigin(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
 }
 
 // withIdempotency wraps a handler with idempotency middleware.

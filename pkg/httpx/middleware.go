@@ -32,6 +32,16 @@ type Config struct {
 	// are then never reflected, per the CORS spec). Empty disables CORS
 	// entirely (no Access-Control-* headers are set).
 	AllowedOrigins []string
+	// SelfOrigin is this server's own public origin (e.g. cfg.BaseURL's
+	// scheme+host), always implicitly allowed by CSRFProtection alongside
+	// AllowedOrigins. Without this, an operator who sets AllowedOrigins to
+	// only a separately-hosted frontend's origin (the documented reason
+	// CORS_ALLOWED_ORIGINS exists at all) unknowingly 403s every mutating
+	// request that arrives same-origin -- through this server's own NGINX
+	// or reverse proxy -- because modern browsers send Origin on
+	// same-origin POSTs too, and CSRFProtection's allow-list previously
+	// had no way to know its own address. See WIRING_AUDIT_PLAN.md F-13.
+	SelfOrigin string
 	// AllowedMethods defaults to a REST-typical set when empty.
 	AllowedMethods []string
 	// AllowedHeaders defaults to a small safe set when empty.
@@ -69,9 +79,17 @@ func Mux(cfg Config) *gin.Engine {
 	r.Use(AccessLogGin(base))
 	if len(cfg.AllowedOrigins) > 0 {
 		r.Use(Wrap(CORS(cfg)))
-		if !cfg.DisableCSRF {
-			r.Use(Wrap(CSRFProtection(cfg, base)))
-		}
+	}
+	// CSRF protection is its own concern from CORS -- it rejects forged
+	// cross-site mutating requests regardless of whether this deployment
+	// also serves cross-origin CORS responses. It used to be nested inside
+	// the same "AllowedOrigins is non-empty" guard as CORS, which meant
+	// the common same-origin deployment (CORS_ALLOWED_ORIGINS left empty,
+	// e.g. docker-compose.yml's default) ran with NO CSRF protection at
+	// all, silently, regardless of DisableCSRF. See WIRING_AUDIT_PLAN.md
+	// F-13.
+	if !cfg.DisableCSRF {
+		r.Use(Wrap(CSRFProtection(cfg, base)))
 	}
 	if cfg.RequestTimeout > 0 {
 		// Also native, for the same reason: http.TimeoutHandler's writer
@@ -307,7 +325,17 @@ func CORS(cfg Config) func(http.Handler) http.Handler {
 	}
 	headers := cfg.AllowedHeaders
 	if len(headers) == 0 {
-		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key"}
+		// web/packages/api/src/transport.ts sends both Idempotency-Key (the
+		// name the server middleware actually reads) and X-Idempotency-Key
+		// (belt-and-suspenders for any proxy that strips unprefixed custom
+		// headers). A CORS preflight allow-list must cover every header the
+		// client will actually send, not just the one the server reads --
+		// X-Idempotency-Key being missing here fails preflight on any
+		// cross-origin deployment (bff's CORS_ALLOWED_ORIGINS set to a
+		// separately-hosted frontend) for every idempotency-protected
+		// mutation, even though the header the server reads is allowed.
+		// See WIRING_AUDIT_PLAN.md F-12.
+		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key", "X-Idempotency-Key"}
 	}
 	allowAll := false
 	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))
@@ -389,9 +417,17 @@ func SecurityHeaders(enableHSTS bool) func(http.Handler) http.Handler {
 // It verifies that cross-site requests have an origin matching the configured allowlist or a valid
 // custom X-CSRF-Token header.
 func CSRFProtection(cfg Config, base *slog.Logger) func(http.Handler) http.Handler {
-	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))
+	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins)+1)
 	for _, o := range cfg.AllowedOrigins {
 		allowed[o] = struct{}{}
+	}
+	// This server's own origin is always implicitly trusted -- a same-origin
+	// mutating request still carries an Origin header in modern browsers, and
+	// without this, setting AllowedOrigins to just a separately-hosted
+	// frontend's origin (CORS_ALLOWED_ORIGINS' documented purpose) would
+	// 403 every same-origin request through this server's own reverse proxy.
+	if cfg.SelfOrigin != "" {
+		allowed[cfg.SelfOrigin] = struct{}{}
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -438,4 +474,3 @@ func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int, isSe
 		SameSite: http.SameSiteStrictMode,
 	})
 }
-
