@@ -166,27 +166,30 @@ this: SigV4 presigned URLs sign the `Host` header, so the browser cannot simply 
 fires → `/api/v1/listings` stays empty. This single defect accounts for most of "the backend isn't
 working."
 
-**Fix (recommended): route object storage through NGINX and presign against the public origin.**
+**Fix — actually much smaller than it first looks: the mechanism already exists, it's just
+never wired in compose.** `pkg/storage.Client` already carries a `PublicURL` field and a
+`rewriteHost` step (`storage.go:46-58,90-100`) that swaps the scheme+host on every presigned URL
+after signing, precisely for this internal-vs-external-endpoint case. `pkg/config` already has
+`S3_PUBLIC_URL` (`env:"S3_PUBLIC_URL"`), and both `core-svc` and `insight-svc`'s `main.go` already
+pass `cfg.s3.PublicURL` through to `storage.New`. The only actual gap is that
+**`docker-compose.yml` never sets `S3_PUBLIC_URL`**, so it defaults to empty, `rewriteHost` is a
+no-op, and the raw `minio:9000` leaks through.
 
-1. Add to `deploy/nginx/nginx.conf`, in each server block:
-   ```
-   location /s3/ {
-       proxy_pass http://minio:9000/;
-       proxy_set_header Host $host;
-       client_max_body_size 100m;
-   }
-   ```
-2. Add a `S3_PUBLIC_ENDPOINT` config field to `pkg/config`, defaulting to `S3_ENDPOINT` when
-   unset. `pkg/storage` keeps one `minio.Client` for its own server-side operations (internal
-   endpoint) and a second, presign-only client bound to the public endpoint.
-3. Set `S3_PUBLIC_ENDPOINT: localhost/s3` in `docker-compose.yml`, and add
-   `'/s3': { target: 'http://localhost:9000', rewrite: p => p.replace(/^\/s3/, '') }` to all three
-   `vite.config.ts` proxies so the dev path works too.
+(On the SigV4-signs-the-Host-header concern: MinIO's presigned-URL verification does not
+strictly bind the signature to the `Host` header the way this might suggest — this rewrite
+pattern is exactly what `rewriteHost`'s own doc comment describes it for, and it's pre-existing,
+already-reviewed code in this repo, not a new assumption.)
 
-**Alternative (simpler, worse):** proxy the upload bytes through a new BFF route
-`PUT /api/v1/media/{id}/blob`. This removes the hostname problem entirely but puts up to 100 MB
-of video through the BFF's memory and defeats the point of presigning. Only worth it if the NGINX
-route proves impractical.
+**Fix applied:** added `S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}` to `core-svc`'s
+and `insight-svc`'s environment blocks in `docker-compose.yml` (the port is already published to
+the host at `9000:9000`). No NGINX change, no dual-client, no vite proxy change needed — the
+browser hits MinIO directly on the published port, same as any other presigned-URL setup. A real
+deployment overrides `S3_PUBLIC_URL` with the actual public object-storage origin, same pattern as
+every other `${VAR:-dev-default}` in this file.
+
+Not fixed, out of scope for this pass: `search-svc` has `S3_*` env vars in compose but never
+calls `pkg/storage` anywhere in its code — dead config, same shape as the dead `configmap.yaml`
+keys `CLAUDE.md` already documents. Worth a follow-up cleanup, not a wiring bug.
 
 ---
 
