@@ -1,9 +1,43 @@
 # Kalakriti — Frontend/Backend Wiring Audit & Remediation Plan
 
-**Status:** 15 commits on branch `fix/api-wiring-audit`. Fixed and verified: F-1, F-2, F-3, F-4
+**Status:** 17 commits on branch `fix/api-wiring-audit`. Fixed and verified: F-1, F-2, F-3, F-4
 (all 19 sites now flag-gated, plus 2 previously-unconditional mock fallbacks found and fixed
 along the way), F-5, F-6 (reconnect half), F-7 (separate ports), F-8, F-9, F-10, F-11, F-12, F-13,
-F-14. Only F-6's readiness half remains a real, scoped followup — see §7.
+F-14, **and F-15 (below) — the actual blocker on the artisan-creates-listing-through-to-buyer-sees-it
+path this plan's own scope was named for.** Only F-6's readiness half remains a real, scoped
+followup — see §7.
+
+### F-15. A listing could never be created, and type could never change — fixed
+
+Traced the full pipeline end to end on request: artisan registers → creates a listing → submits →
+approves → publishes → buyer sees it. Found two compounding bugs that meant **no listing could
+ever leave the wizard's first screen, in any environment, ever**: `UpsertListingInput.Validate()`
+unconditionally required a complete commercial type on every call, including the wizard's
+deliberately-minimal first `POST /listings` (only `craft_id`/`working_title`/`dimensions`/
+`min_order_quantity` — type is chosen three screens later, at pricing); and independently, the
+`UpdateListing` SQL query's `SET` clause never included `type` at all, so even a listing that got
+one couldn't have it changed. Root cause was the DB schema: `listing.type` was `NOT NULL` with no
+DRAFT exemption in its CHECK constraints, so there was no way to store an in-progress draft. Fixed
+via a new migration (`035_listing_draft_type.sql`, nullable `type` + DRAFT-exempted constraints),
+moving the "must be commercially complete" check from every `UpsertListing` call to a new
+`Listing.ValidateComplete()` gate in `SubmitForApproval` (right before leaving DRAFT, where that
+check actually belongs), and fixing `UpdateListing` to actually persist `type`. Two unrelated
+ripples surfaced by the same `sqlc generate` run and fixed alongside it: search-svc's own
+`listing.type` read needed the same nullable-column unwrap, and insight-svc had a genuinely
+pre-existing, unrelated `*db.SocialCategory` build break (this sandbox had apparently never run
+`sqlc generate` before). Also bumped the Makefile's `SQLC` version pin from v1.27.0 to v1.31.1 to
+match what `sqlc.yaml`'s own comments already document tuning against — closes a real codegen-drift
+risk between a fresh CI runner and a machine with `sqlc` pre-installed. No frontend changes needed:
+the wizard was already built correctly against the documented contract.
+
+**Not verified against a live database** — no Postgres in this sandbox, so the migration itself has
+never been applied. Run `make demo-up` (bundles `migrate-up`) before trusting this against a real
+stack; go build/vet/test (service-layer, fake-store-backed) is clean across all 7 modules.
+`web/apps/buyer/src/routes/search/+page.svelte` and `listing/[slug]/+page.svelte` read via
+search-svc's index (`search()`/`getListingSummary()`), not `GET /listings` directly — so "buyer
+sees it" also depends on the outbox relay and search-svc's index consumer both being up, same as
+before this fix; nothing here changes that dependency.
+
 **Date:** 2026-09-19
 **Scope:** every request path between the three SvelteKit apps and the Go BFF, and everything
 behind the BFF that a browser request depends on.
