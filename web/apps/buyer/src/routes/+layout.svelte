@@ -167,6 +167,7 @@
 
     <div class="shell__actions">
       <form class="shell__search-inline" action="/search" role="search">
+        <Icon name="search" size="1rem" class="shell__search-icon" />
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
       <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')} title={tt('tooltip.search')}>

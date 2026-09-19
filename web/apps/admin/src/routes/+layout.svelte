@@ -118,7 +118,7 @@
                 ? 'page'
                 : undefined}
             >
-              <Icon name={item.icon} />
+              <Icon name={item.icon} size={item.iconSize} />
               {t(item.labelKey)}
             </a>
           </li>

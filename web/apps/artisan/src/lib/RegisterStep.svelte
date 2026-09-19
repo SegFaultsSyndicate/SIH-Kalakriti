@@ -15,8 +15,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
-  import { locale, tooltip } from '@kalakriti/i18n';
-  import { LanguageSelector, SpeakButton, Stepper, Tooltip } from '@kalakriti/ui';
+  import { locale } from '@kalakriti/i18n';
+  import { Button, SpeakButton, Stepper } from '@kalakriti/ui';
 
   interface Props {
     /** 0-indexed. */
@@ -49,24 +49,6 @@
     current={index}
   />
 
-  <div class="register-step__top-bar">
-    <Tooltip text={tooltip('tooltip.back')}>
-      {#snippet trigger(props)}
-        <button type="button" class="register-step__back" onclick={() => goto(backHref)} {...props}>
-          ← {t('action.back')}
-        </button>
-      {/snippet}
-    </Tooltip>
-
-    <Tooltip text="Change language / भाषा बदलें">
-      {#snippet trigger(props)}
-        <div class="register-step__lang-wrap" {...props}>
-          <LanguageSelector />
-        </div>
-      {/snippet}
-    </Tooltip>
-  </div>
-
   <h1>{heading}</h1>
   <SpeakButton text={speakText ?? heading} label={t('action.speak')} />
 
@@ -77,7 +59,12 @@
   <p class="register-step__saved">{t('register.saved')}</p>
 
   <div class="register-step__actions">
-    {@render actions()}
+    <Button size="xl" class="register-step__back" onclick={() => goto(backHref)}>
+      ← {t('action.back')}
+    </Button>
+    <div class="register-step__next">
+      {@render actions()}
+    </div>
   </div>
 </div>
 
@@ -89,30 +76,8 @@
     padding-block: var(--k-space-5);
   }
 
-  .register-step__top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--k-space-2);
-  }
-
-  .register-step__lang-wrap {
-    display: flex;
-    align-items: center;
-  }
-
-  .register-step__back {
-    align-self: center;
-    min-block-size: var(--k-touch-min);
-    padding-inline: var(--k-space-4);
-    padding-block: var(--k-space-2);
-    border: none;
-    border-radius: var(--k-radius-md);
-    background-color: var(--k-accent-primary-bg);
-    color: var(--k-text-on-accent);
-    font-size: var(--k-text-sm);
-    cursor: pointer;
-    font-weight: 600;
+  .register-step__actions :global(.register-step__back) {
+    flex: 1;
   }
 
   .register-step h1 {
@@ -131,7 +96,14 @@
   }
 
   .register-step__actions {
+    display: flex;
+    align-items: stretch;
+    gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
+  }
+
+  .register-step__actions .register-step__next {
+    flex: 1;
   }
 
   .register-step__actions :global(button) {

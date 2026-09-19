@@ -45,7 +45,7 @@
   {/snippet}
   {#snippet actions()}
     <Button size="xl" onclick={next} tooltip={tooltip(pehchanId.trim() === '' ? 'tooltip.skip' : 'tooltip.next')}>
-      {pehchanId.trim() === '' ? t('action.skip') : t('action.next')}
+      {pehchanId.trim() === '' ? t('action.skip') : `${t('action.next')} →`}
     </Button>
   {/snippet}
 </RegisterStep>

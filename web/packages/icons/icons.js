@@ -66,6 +66,13 @@ import Icon_play from './src/play.svg';
 import Icon_pause from './src/pause.svg';
 import Icon_volume from './src/volume.svg';
 import Icon_speaker from './src/speaker.svg';
+import Icon_badge_verified from './src/badge-verified.svg';
+import Icon_badge_master from './src/badge-master.svg';
+import Icon_badge_award from './src/badge-award.svg';
+import Icon_badge_gi from './src/badge-gi.svg';
+import Icon_badge_coordinator from './src/badge-coordinator.svg';
+import Icon_badge_milestone from './src/badge-milestone.svg';
+import Icon_badge_locked from './src/badge-locked.svg';
 import Icon_handmade_certified from './src/handmade-certified.svg';
 import Icon_verified_artisan from './src/verified-artisan.svg';
 import Icon_gi_tagged from './src/gi-tagged.svg';
@@ -94,6 +101,7 @@ import Icon_stone from './src/stone.svg';
 import Icon_bamboo from './src/bamboo.svg';
 import Icon_charkha_spinner from './src/charkha-spinner.svg';
 import Icon_upload_zone from './src/upload-zone.svg';
+import Icon_badge from './src/badge.svg';
 
 export const ICON_COMPONENTS = {
   'home': Icon_home,
@@ -159,6 +167,13 @@ export const ICON_COMPONENTS = {
   'pause': Icon_pause,
   'volume': Icon_volume,
   'speaker': Icon_speaker,
+  'badge-verified': Icon_badge_verified,
+  'badge-master': Icon_badge_master,
+  'badge-award': Icon_badge_award,
+  'badge-gi': Icon_badge_gi,
+  'badge-coordinator': Icon_badge_coordinator,
+  'badge-milestone': Icon_badge_milestone,
+  'badge-locked': Icon_badge_locked,
   'handmade-certified': Icon_handmade_certified,
   'verified-artisan': Icon_verified_artisan,
   'gi-tagged': Icon_gi_tagged,
@@ -187,4 +202,5 @@ export const ICON_COMPONENTS = {
   'bamboo': Icon_bamboo,
   'charkha-spinner': Icon_charkha_spinner,
   'upload-zone': Icon_upload_zone,
+  'badge': Icon_badge,
 };
