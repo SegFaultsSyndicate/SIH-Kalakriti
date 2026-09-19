@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const sa: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "कलाकृति",
   "app.tagline": "शिल्पं, सत्यं अभिलेखितम्",
   "app.ministry": "सामाजिक न्याय एवं सशक्तिकरण मन्त्रालय, भारत सरकार",
   "a11y.skipToContent": "मुख्यसामग्रीपर्यन्तं गच्छन्तु",

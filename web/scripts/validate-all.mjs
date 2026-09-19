@@ -53,6 +53,13 @@ const EXCEPTIONS = {
   // per-asset budget case: it bundles every jaali/blockprint/rule tile.
   'packages/ornament/src/patterns.svg': ['sprite'],
 
+  // Hand-authored verified-badge emblem (user-supplied SVG Repo artwork, see
+  // packages/icons/src/badge.svg). Kept verbatim at the user's request: a
+  // 96x96 single-colour currentColor emblem, deliberately NOT a 24x24 stroke
+  // icon, so the icons category's exact-viewBox and 2KB budget rules don't
+  // apply to it. Its shape is re-validated instead by gen-batch4.mjs.
+  'packages/icons/src/badge.svg': ['emblem'],
+
   // Full-lockup identity compositions, not single marks — the 8KB budget
   // was set with individual assets (logomark, seal, app icons) in mind,
   // all of which land under 1KB. These four multi-glyph compositions
@@ -84,7 +91,7 @@ for (const [dir, rules] of Object.entries(CATEGORY)) {
     const geom = raw.replace(/<!--[\s\S]*?-->/g, '');
     const bytes = Buffer.byteLength(raw, 'utf8');
 
-    if (!exceptions.includes('sprite')) {
+    if (!exceptions.includes('sprite') && !exceptions.includes('emblem')) {
       if (!/viewBox="[^"]+"/.test(geom)) fail(rel, 'no viewBox');
       if (rules.viewBoxExact && !geom.includes('viewBox="' + rules.viewBoxExact + '"'))
         fail(rel, 'viewBox is not exactly "' + rules.viewBoxExact + '"');
@@ -120,7 +127,7 @@ for (const [dir, rules] of Object.entries(CATEGORY)) {
       if (colours.size > rules.maxColours) fail(rel, colours.size + ' colours used, ' + rules.maxColours + '-colour maximum');
     }
 
-    if (!exceptions.includes('sprite') && !exceptions.includes('budget') && bytes > rules.budget)
+    if (!exceptions.includes('sprite') && !exceptions.includes('emblem') && !exceptions.includes('budget') && bytes > rules.budget)
       fail(rel, bytes + 'B over the ' + rules.budget + 'B ' + rules.name + ' budget');
   }
 }

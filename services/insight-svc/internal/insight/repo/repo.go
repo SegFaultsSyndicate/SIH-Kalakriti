@@ -208,11 +208,11 @@ func (r *Repo) GetArtisanIncomeStatements(ctx context.Context, artisanID uuid.UU
 	return out, nil
 }
 
-func derefString(s *string) string {
+func derefString[T ~string](s *T) string {
 	if s == nil {
 		return ""
 	}
-	return *s
+	return string(*s)
 }
 
 func derefTime(t *time.Time) time.Time {

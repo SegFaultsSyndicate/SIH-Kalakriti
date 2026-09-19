@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const te: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "కలాకృతి",
   "app.tagline": "క్రాఫ్ట్, నిజాయితీగా రికార్డ్ చేయబడింది",
   "app.ministry": "సామాజిక న్యాయం మరియు సాధికారత మంత్రిత్వ శాఖ, భారత ప్రభుత్వం",
   "a11y.skipToContent": "ప్రధాన కంటెంట్‌కి దాటవేయండి",

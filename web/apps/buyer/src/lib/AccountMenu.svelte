@@ -684,7 +684,7 @@
     min-inline-size: 11rem;
     max-block-size: 14rem;
     overflow-y: auto;
-    background-color: var(--k-surface-card);
+    background-color: var(--k-surface-base);
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md, 8px);
     box-shadow: var(--k-elevation-menu);

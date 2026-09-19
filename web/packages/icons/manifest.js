@@ -318,6 +318,41 @@ export const ICONS = [
     "file": "src/speaker.svg"
   },
   {
+    "name": "badge-verified",
+    "category": "core",
+    "file": "src/badge-verified.svg"
+  },
+  {
+    "name": "badge-master",
+    "category": "core",
+    "file": "src/badge-master.svg"
+  },
+  {
+    "name": "badge-award",
+    "category": "core",
+    "file": "src/badge-award.svg"
+  },
+  {
+    "name": "badge-gi",
+    "category": "core",
+    "file": "src/badge-gi.svg"
+  },
+  {
+    "name": "badge-coordinator",
+    "category": "core",
+    "file": "src/badge-coordinator.svg"
+  },
+  {
+    "name": "badge-milestone",
+    "category": "core",
+    "file": "src/badge-milestone.svg"
+  },
+  {
+    "name": "badge-locked",
+    "category": "core",
+    "file": "src/badge-locked.svg"
+  },
+  {
     "name": "handmade-certified",
     "category": "domain",
     "file": "src/handmade-certified.svg"
@@ -448,41 +483,6 @@ export const ICONS = [
     "file": "src/bamboo.svg"
   },
   {
-    "name": "badge-verified",
-    "category": "domain",
-    "file": "src/badge-verified.svg"
-  },
-  {
-    "name": "badge-master",
-    "category": "domain",
-    "file": "src/badge-master.svg"
-  },
-  {
-    "name": "badge-milestone",
-    "category": "domain",
-    "file": "src/badge-milestone.svg"
-  },
-  {
-    "name": "badge-coordinator",
-    "category": "domain",
-    "file": "src/badge-coordinator.svg"
-  },
-  {
-    "name": "badge-gi",
-    "category": "domain",
-    "file": "src/badge-gi.svg"
-  },
-  {
-    "name": "badge-award",
-    "category": "domain",
-    "file": "src/badge-award.svg"
-  },
-  {
-    "name": "badge-locked",
-    "category": "domain",
-    "file": "src/badge-locked.svg"
-  },
-  {
     "name": "charkha-spinner",
     "category": "core",
     "file": "src/charkha-spinner.svg"
@@ -491,5 +491,10 @@ export const ICONS = [
     "name": "upload-zone",
     "category": "core",
     "file": "src/upload-zone.svg"
+  },
+  {
+    "name": "badge",
+    "category": "core",
+    "file": "src/badge.svg"
   }
 ];

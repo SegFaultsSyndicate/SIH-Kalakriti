@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const ml: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "കലാകൃതി",
   "app.tagline": "ക്രാഫ്റ്റ്, സത്യസന്ധമായി രേഖപ്പെടുത്തി",
   "app.ministry": "സാമൂഹ്യനീതി, ശാക്തീകരണ മന്ത്രാലയം, ഇന്ത്യാ ഗവൺമെൻ്റ്",
   "a11y.skipToContent": "പ്രധാന ഉള്ളടക്കത്തിലേക്ക് പോകുക",

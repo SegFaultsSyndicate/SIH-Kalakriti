@@ -95,7 +95,7 @@
       onclick={next}
       tooltip={tooltip(selected !== '' ? 'tooltip.next' : 'tooltip.skip')}
     >
-      {selected !== '' ? t('action.next') : t('action.skip')}
+      {selected !== '' ? `${t('action.next')} →` : t('action.skip')}
     </Button>
   {/snippet}
 </RegisterStep>

@@ -60,7 +60,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={name.trim() === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
+    <Button size="xl" disabled={name.trim() === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </RegisterStep>
 

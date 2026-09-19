@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const sd: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "ڪلاڪرتي",
   "app.tagline": "ڪرافٽ، سچائي سان رڪارڊ ٿيل",
   "app.ministry": "سماجي انصاف ۽ بااختيارگي واري وزارت، هندستان جي حڪومت",
   "a11y.skipToContent": "مکيه مواد ڏانهن وڃو",

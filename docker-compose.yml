@@ -33,22 +33,24 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: ${KAFKA_CLUSTER_ID:-ja3_hAH_QZy-U4RiCUtuQQ}
     ports:
       - "9092:9092"
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+      interval: 5s
+      timeout: 5s
+      retries: 15
 
   minio:
     image: quay.io/minio/minio:latest
@@ -75,7 +77,8 @@ services:
         condition: service_healthy
     entrypoint: >
       sh -c "mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin} &&
-             mc mb -p local/kalakriti"
+             mc mb -p local/kalakriti &&
+             mc mb -p local/kalakriti-media"
     restart: "no"
 
   # Application Services
@@ -86,7 +89,7 @@ services:
     environment:
       POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       S3_ENDPOINT: minio:9000
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
@@ -130,7 +133,7 @@ services:
     environment:
       POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       # core-svc's gRPC port (main.go default CORE_SVC_GRPC_ADDR :50051) —
       # was pointing at core-svc's HTTP port instead.
       CORE_SVC_ADDR: core-svc:50051
@@ -167,7 +170,7 @@ services:
     environment:
       POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
     ports:
@@ -193,7 +196,7 @@ services:
     environment:
       POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
       CHANNEL_SVC_HTTP_ADDR: ":8084"

@@ -494,27 +494,31 @@
 
 .k-tabs__list {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--k-space-2);
   border-block-end: var(--k-hairline) solid var(--k-border-hairline);
-  /* More tabs, or 200% text, than a 360px screen can hold scrolls
-     horizontally rather than wrapping (which would break the
-     underline-per-tab convention) or forcing the page wider. */
-  overflow-x: auto;
+  /* Tabs wrap instead of scrolling: the selected tab is a compact filled
+     box now (not a per-tab underline), so a second line can't break the
+     style, and there is no horizontal scrollbar — nothing to scroll. */
 }
 .k-tabs__tab {
-  padding: var(--k-space-3) var(--k-space-4);
-  min-block-size: var(--k-touch-min);
+  padding: var(--k-space-1) var(--k-space-3);
+  min-block-size: 2rem;
   background: transparent;
   border: none;
-  border-block-end: var(--k-rule) solid transparent;
-  margin-block-end: calc(var(--k-hairline) * -1);
+  border-radius: var(--k-radius-sm);
   color: var(--k-text-secondary);
   font-weight: var(--k-weight-medium);
   cursor: pointer;
 }
-.k-tabs__tab[aria-selected='true'] {
+.k-tabs__tab:hover,
+.k-tabs__tab:focus-visible {
   color: var(--k-text-primary);
-  border-block-end-color: var(--k-accent-primary-bg);
+}
+.k-tabs__tab[aria-selected='true'] {
+  background: var(--k-accent-primary-bg);
+  color: var(--k-text-on-accent);
+  font-weight: var(--k-weight-semibold);
 }
 .k-tabs__panel { padding-block-start: var(--k-space-4); }
 .k-tabs__panel:focus-visible { outline: none; }

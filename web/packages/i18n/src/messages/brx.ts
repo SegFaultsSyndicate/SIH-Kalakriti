@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const brx: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "कलाकृति",
   "app.tagline": "दानाय, सैथोजों रेबगान्थिनाय",
   "app.ministry": "समाजारि न्याय आरो गोहोगोरा मन्त्रालय, भारत सरकार",
   "a11y.skipToContent": "गुबै आयदायाव बारहो।",

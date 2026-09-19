@@ -7,7 +7,7 @@
 // catalogue-audit's script/sameness checks already tolerate that. Add a key
 // here only when the *whole value* must stay untranslated.
 export const DNT_KEYS: ReadonlySet<string> = new Set<string>([
-  'app.name', // "Kalakriti" -- the product's brand name
+  'app.name', // "Kalakriti" brand name -- localized per script, but exempted from audit same-as-hi checks across Devanagari locales
   'a11y.statement.contact.email', // email address
   'profile.email.placeholder', // example email address
   'login.phone.countryCode', // "+91" -- a dialling code, not prose

@@ -24,20 +24,21 @@
   );
 </script>
 
-<nav aria-label={t('breadcrumb.label')} class="breadcrumb">
-  <ol class="breadcrumb__list">
-    <li><a href="/">{t('nav.dashboard')}</a></li>
-    {#each segments as segment, i (segment.href)}
-      <li aria-current={i === segments.length - 1 ? 'page' : undefined}>
-        {#if i === segments.length - 1}
-          <span>{segment.label}</span>
-        {:else}
-          <a href={segment.href}>{segment.label}</a>
-        {/if}
-      </li>
-    {/each}
-  </ol>
-</nav>
+{#if segments.length > 0}
+  <nav aria-label={t('breadcrumb.label')} class="breadcrumb">
+    <ol class="breadcrumb__list">
+      {#each segments as segment, i (segment.href)}
+        <li aria-current={i === segments.length - 1 ? 'page' : undefined}>
+          {#if i === segments.length - 1}
+            <span>{segment.label}</span>
+          {:else}
+            <a href={segment.href}>{segment.label}</a>
+          {/if}
+        </li>
+      {/each}
+    </ol>
+  </nav>
+{/if}
 
 <style>
   .breadcrumb {

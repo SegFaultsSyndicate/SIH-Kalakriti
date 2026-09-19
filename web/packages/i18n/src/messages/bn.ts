@@ -3,7 +3,7 @@
 import type { Messages } from './en';
 
 export const bn: Messages = {
-  "app.name": "Kalakriti",
+  "app.name": "কলাকৃতি",
   "app.tagline": "নৈপুণ্য, সত্যভাবে রেকর্ড করা হয়েছে",
   "app.ministry": "সামাজিক ন্যায়বিচার ও ক্ষমতায়ন মন্ত্রণালয়, ভারত সরকার",
   "a11y.skipToContent": "প্রধান বিষয়বস্তু এড়িয়ে যান",

@@ -120,9 +120,6 @@
           {listening ? t('ui.voice.recording') : t('register.district.voice')}
         </button>
       {/if}
-      <button type="button" class="text-link" onclick={() => (notListed = false)}>
-        {t('action.back')}
-      </button>
     {:else}
       <div class="district-search">
         <Input
@@ -166,7 +163,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={!canProceed} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
+    <Button size="xl" disabled={!canProceed} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </RegisterStep>
 

@@ -15,6 +15,12 @@ fi
 
 echo "🚀 Starting Kalakriti Backend Microservices..."
 
+# Clean up any lingering backend processes from previous runs
+for svc in core-svc search-svc collab-svc channel-svc insight-svc bff; do
+  pkill -f "./bin/$svc" 2>/dev/null || true
+done
+sleep 0.5
+
 PIDS=()
 
 cleanup() {
