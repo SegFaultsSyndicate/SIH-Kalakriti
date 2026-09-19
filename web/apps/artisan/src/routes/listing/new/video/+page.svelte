@@ -122,7 +122,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" onclick={next} tooltip={tooltip(video ? 'tooltip.next' : 'tooltip.skip')}>{video ? t('action.next') : t('action.skip')}</Button>
+    <Button size="xl" onclick={next} tooltip={tooltip(video ? 'tooltip.next' : 'tooltip.skip')}>{video ? `${t('action.next')} →` : t('action.skip')}</Button>
   {/snippet}
 </ListingStep>
 

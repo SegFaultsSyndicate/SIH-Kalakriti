@@ -170,7 +170,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={photos.length === 0} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
+    <Button size="xl" disabled={photos.length === 0} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </ListingStep>
 

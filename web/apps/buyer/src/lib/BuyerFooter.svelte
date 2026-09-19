@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
   import { locale, tooltip } from '@kalakriti/i18n';
-  import { LanguageSelector, showToast, Tooltip } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -450,10 +450,6 @@
           {t('footer.legal.hosting')}
         </span>
       </div>
-
-      <div class="bottom-controls">
-        <LanguageSelector />
-      </div>
     </div>
   </div>
 </footer>
@@ -861,7 +857,7 @@
     margin-inline: auto;
     padding-inline: 1.5rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
@@ -884,9 +880,5 @@
 
   .dot-sep {
     color: rgba(255, 255, 255, 0.12);
-  }
-
-  .bottom-controls {
-    flex-shrink: 0;
   }
 </style>

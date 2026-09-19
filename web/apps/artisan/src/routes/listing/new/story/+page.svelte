@@ -105,7 +105,7 @@
     </div>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={craftId === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')}</Button>
+    <Button size="xl" disabled={craftId === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </ListingStep>
 
