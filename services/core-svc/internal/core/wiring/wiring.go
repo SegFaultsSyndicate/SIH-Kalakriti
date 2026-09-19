@@ -21,7 +21,6 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
 
-	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
@@ -110,20 +109,6 @@ func NewPipelineStore(r *repo.Repo) PipelineStore { return PipelineStore{Repo: r
 
 // PipelineStore satisfies the pipeline's persistence contract.
 var _ service.PipelineStore = PipelineStore{}
-
-// GetOrCreateProductForMedia runs the insert-if-absent in its own transaction,
-// which is all the atomicity the unique index needs.
-func (s PipelineStore) GetOrCreateProductForMedia(
-	ctx context.Context,
-	in domain.CreateProductInput,
-	mediaID uuid.UUID,
-) (product domain.Product, created bool, err error) {
-	err = s.Repo.InTx(ctx, func(ctx context.Context, tx *repo.Tx) error {
-		product, created, err = tx.GetOrCreateProductForMedia(ctx, in, mediaID)
-		return err
-	})
-	return product, created, err
-}
 
 // ObjectStore binds pkg/storage's MinIO client to service.ObjectStore. The
 // service declares its own ObjectInfo so it does not import a MinIO type; this

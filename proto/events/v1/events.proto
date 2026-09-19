@@ -43,6 +43,23 @@ message MediaUploaded {
   string source = 5;
 }
 
+// ListingMediaAttached is emitted on topic catalog.listing.media_attached once
+// an artisan attaches photos to a listing (AttachListingMedia). This is what
+// triggers the cataloguing pipeline now -- not the raw upload -- because a
+// listing (and its product) already exists by the time photos are attached to
+// it, where a bare media.uploaded event does not yet know which listing, if
+// any, the photo belongs to.
+message ListingMediaAttached {
+  // Envelope; aggregate_id is the listing id.
+  EventHeader header = 1;
+  // Listing whose media set changed.
+  string listing_id = 2;
+  // Item being offered.
+  string product_id = 3;
+  // Maker.
+  string artisan_id = 4;
+}
+
 // MediaEnhanced is emitted on topic media.enhanced after ml-svc cleans an image.
 message MediaEnhanced {
   // Envelope; aggregate_id is the source media id.

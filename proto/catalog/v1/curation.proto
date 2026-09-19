@@ -11,6 +11,9 @@ option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1;catalog
 // CurationService carries the writes that shape a listing after it exists:
 // attributes, copy, media, and the operator's suspend and reinstate.
 service CurationService {
+  // Read a listing's attributes: what the model inferred, and what the
+  // artisan has since overridden.
+  rpc GetListingAttributes(GetListingAttributesRequest) returns (GetListingAttributesResponse);
   // Store typed attribute rows; an artisan value is never overwritten by the model.
   rpc UpsertListingAttributes(UpsertListingAttributesRequest) returns (UpsertListingAttributesResponse);
   // Store buyer-facing copy for one language.
@@ -69,6 +72,18 @@ message ListingMediaItem {
   ListingMediaRole role = 3;
   // Kind of the underlying asset, returned on reads.
   common.v1.MediaKind kind = 4;
+}
+
+// GetListingAttributesRequest reads one listing's attribute rows.
+message GetListingAttributesRequest {
+  // Listing to read.
+  string listing_id = 1;
+}
+
+// GetListingAttributesResponse returns the listing's current attributes.
+message GetListingAttributesResponse {
+  // Every attribute currently stored.
+  repeated ListingAttribute attributes = 1;
 }
 
 // UpsertListingAttributesRequest writes attribute rows from one source.

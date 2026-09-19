@@ -129,6 +129,12 @@ func (s *fakeCatalogStore) ListListingMedia(_ context.Context, listingID uuid.UU
 	return append([]domain.ListingMedia(nil), s.medias[listingID]...), nil
 }
 
+func (s *fakeCatalogStore) ListListingAttributes(_ context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]domain.ListingAttribute(nil), s.attributes[listingID]...), nil
+}
+
 func (s *fakeCatalogStore) ListMediaOwnership(_ context.Context, ids []uuid.UUID) ([]domain.MediaOwnership, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

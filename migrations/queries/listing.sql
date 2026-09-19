@@ -14,19 +14,6 @@ RETURNING *;
 -- name: GetProduct :one
 SELECT * FROM product WHERE id = @id;
 
--- The pipeline's idempotency, enforced by the database rather than by a ledger:
--- a redelivered media.uploaded inserts nothing and the SELECT below returns the
--- product the first delivery made.
--- name: CreateProductForMedia :one
-INSERT INTO product (
-    id, artisan_id, craft_id, working_title, source_media_id, created_by
-) VALUES (@id, @artisan_id, @craft_id, @working_title, @source_media_id, @created_by)
-ON CONFLICT ON CONSTRAINT product_source_media_id_key DO NOTHING
-RETURNING *;
-
--- name: GetProductByMedia :one
-SELECT * FROM product WHERE source_media_id = @source_media_id;
-
 -- name: UpdateProductAttributes :one
 UPDATE product
 SET materials  = @materials,
@@ -102,11 +89,6 @@ RETURNING *;
 
 -- name: GetListing :one
 SELECT * FROM listing WHERE id = @id;
-
--- One listing per product is the pipeline's rule, so this doubles as the
--- "have I already drafted this?" check.
--- name: GetListingByProduct :one
-SELECT * FROM listing WHERE product_id = @product_id ORDER BY id LIMIT 1;
 
 -- name: SetListingNeedsDescription :one
 UPDATE listing SET needs_description = @needs_description, updated_at = now()

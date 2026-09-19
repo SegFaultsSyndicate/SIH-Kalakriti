@@ -20,6 +20,23 @@ type Curation struct {
 // NewCuration builds the curation handler.
 func NewCuration(svc *service.Catalog) *Curation { return &Curation{svc: svc} }
 
+// GetListingAttributes reads a listing's attributes: what the model inferred,
+// and what the artisan has since overridden.
+func (h *Curation) GetListingAttributes(
+	ctx context.Context,
+	req *catalogv1.GetListingAttributesRequest,
+) (*catalogv1.GetListingAttributesResponse, error) {
+	listingID, err := parseUUID("listing_id", req.GetListingId())
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	attrs, err := h.svc.GetListingAttributes(ctx, listingID)
+	if err != nil {
+		return nil, pkgdomain.GRPCError(err)
+	}
+	return &catalogv1.GetListingAttributesResponse{Attributes: attributesToProto(attrs)}, nil
+}
+
 // UpsertListingAttributes stores attribute rows from one source. Which source
 // may overwrite which is decided in the service, not here.
 func (h *Curation) UpsertListingAttributes(

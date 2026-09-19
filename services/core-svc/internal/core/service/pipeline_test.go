@@ -89,7 +89,9 @@ func (f *fakeInference) Translate(_ context.Context, in domain.TranslateRequest)
 }
 
 // fakePipelineStore reads and writes the same maps the catalog and media fakes
-// use, so the pipeline sees one consistent world.
+// use, so the pipeline sees one consistent world. The listing/product/media-
+// attachment reads delegate straight to the catalog fake, which already
+// implements them for the service layer's own tests.
 type fakePipelineStore struct {
 	catalog *fakeCatalogStore
 	media   *fakeMediaStore
@@ -107,40 +109,16 @@ func (s *fakePipelineStore) GetMedia(ctx context.Context, id uuid.UUID) (domain.
 	return s.media.GetMedia(ctx, id)
 }
 
-// GetOrCreateProductForMedia models the unique index on product.source_media_id:
-// the second caller for one media id gets the first caller's product.
-func (s *fakePipelineStore) GetOrCreateProductForMedia(
-	_ context.Context, in domain.CreateProductInput, mediaID uuid.UUID,
-) (domain.Product, bool, error) {
-	s.catalog.mu.Lock()
-	defer s.catalog.mu.Unlock()
-
-	for _, p := range s.catalog.products {
-		if p.VoiceNoteMediaID != nil && *p.VoiceNoteMediaID == mediaID {
-			return p, false, nil
-		}
-	}
-	product := domain.Product{
-		ID:               ids.New(),
-		ArtisanID:        in.ArtisanID,
-		CraftID:          in.CraftID,
-		WorkingTitle:     in.WorkingTitle,
-		VoiceNoteMediaID: &mediaID, // stands in for source_media_id in the fake
-		CreatedBy:        in.CreatedBy,
-	}
-	s.catalog.products[product.ID] = product
-	return product, true, nil
+func (s *fakePipelineStore) GetListing(ctx context.Context, id uuid.UUID) (domain.Listing, error) {
+	return s.catalog.GetListing(ctx, id)
 }
 
-func (s *fakePipelineStore) GetListingByProduct(_ context.Context, productID uuid.UUID) (domain.Listing, error) {
-	s.catalog.mu.Lock()
-	defer s.catalog.mu.Unlock()
-	for _, l := range s.catalog.listings {
-		if l.ProductID == productID {
-			return l, nil
-		}
-	}
-	return domain.Listing{}, fmt.Errorf("listing not found: %w", pkgdomain.ErrNotFound)
+func (s *fakePipelineStore) GetProduct(ctx context.Context, id uuid.UUID) (domain.Product, error) {
+	return s.catalog.GetProduct(ctx, id)
+}
+
+func (s *fakePipelineStore) ListListingMedia(ctx context.Context, listingID uuid.UUID) ([]domain.ListingMedia, error) {
+	return s.catalog.ListListingMedia(ctx, listingID)
 }
 
 func (s *fakePipelineStore) SetListingNeedsDescription(_ context.Context, listingID uuid.UUID, needs bool) error {
@@ -162,27 +140,35 @@ func (s *fakePipelineStore) ListListingTranslations(_ context.Context, listingID
 }
 
 type pipelineFixture struct {
-	pipeline *Pipeline
-	store    *fakePipelineStore
-	catalog  *fakeCatalogStore
-	media    *fakeMediaStore
-	inferrer *fakeInference
-	mediaID  uuid.UUID
-	artisan  uuid.UUID
-	craftID  uuid.UUID
+	pipeline  *Pipeline
+	store     *fakePipelineStore
+	catalog   *fakeCatalogStore
+	media     *fakeMediaStore
+	inferrer  *fakeInference
+	mediaID   uuid.UUID
+	artisan   uuid.UUID
+	craftID   uuid.UUID
+	productID uuid.UUID
+	listingID uuid.UUID
 }
 
+// newPipelineFixture builds a product and a DRAFT listing exactly as the
+// artisan wizard would (via CreateProduct + UpsertListing), with one photo
+// already attached to the listing -- the state AttachListingMedia leaves
+// behind and what triggers Pipeline.Run in production.
 func newPipelineFixture(t *testing.T, inferrer *fakeInference) pipelineFixture {
 	t.Helper()
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	f := pipelineFixture{
-		catalog:  newFakeCatalogStore(),
-		media:    newFakeMediaStore(),
-		inferrer: inferrer,
-		mediaID:  ids.New(),
-		artisan:  ids.New(),
-		craftID:  ids.New(),
+		catalog:   newFakeCatalogStore(),
+		media:     newFakeMediaStore(),
+		inferrer:  inferrer,
+		mediaID:   ids.New(),
+		artisan:   ids.New(),
+		craftID:   ids.New(),
+		productID: ids.New(),
+		listingID: ids.New(),
 	}
 
 	crafts := fakeCraftIndex{crafts: map[uuid.UUID]domain.Craft{
@@ -206,6 +192,20 @@ func newPipelineFixture(t *testing.T, inferrer *fakeInference) pipelineFixture {
 		ObjectKey: "artisans/x/y.jpg", State: domain.MediaUploaded, SizeBytes: 4096,
 	}
 
+	// The wizard's own listing-creation flow: a product, and a DRAFT listing
+	// offering it.
+	f.catalog.products[f.productID] = domain.Product{
+		ID: f.productID, ArtisanID: f.artisan, CraftID: f.craftID, WorkingTitle: "Ajrakh stole",
+	}
+	f.catalog.listings[f.listingID] = domain.Listing{
+		ID: f.listingID, ProductID: f.productID, ArtisanID: f.artisan,
+		Type: domain.ListingMadeToOrder, State: domain.StateDraft, MinOrderQuantity: 1,
+	}
+	// AttachListingMedia's effect: the photo is now on the listing.
+	f.catalog.medias[f.listingID] = []domain.ListingMedia{
+		{ListingID: f.listingID, MediaID: f.mediaID, Ordinal: 0, Role: domain.MediaRolePrimaryImage, Kind: domain.MediaImage},
+	}
+
 	catalogSvc := NewCatalog(f.catalog, crafts, log)
 	mediaSvc := NewMedia(f.media, newFakeObjectStore(), nil, "bucket", testMediaLimits(), log)
 	f.pipeline = NewPipeline(f.store, catalogSvc, mediaSvc, crafts, inferrer,
@@ -215,24 +215,20 @@ func newPipelineFixture(t *testing.T, inferrer *fakeInference) pipelineFixture {
 
 func (f pipelineFixture) listing(t *testing.T) domain.Listing {
 	t.Helper()
-	require.Len(t, f.catalog.listings, 1)
-	for _, l := range f.catalog.listings {
-		return l
-	}
-	return domain.Listing{}
+	l, ok := f.catalog.listings[f.listingID]
+	require.True(t, ok)
+	return l
 }
 
-// TestPipelineDraftsAListing is the happy path end to end.
-func TestPipelineDraftsAListing(t *testing.T) {
+// TestPipelineEnrichesTheListing is the happy path end to end.
+func TestPipelineEnrichesTheListing(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
 
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	listing := f.listing(t)
-	require.Equal(t, domain.StatePendingArtisanApproval, listing.State)
 	require.False(t, listing.NeedsDescription)
-	require.Equal(t, f.craftID, f.catalog.products[listing.ProductID].CraftID)
 
 	// The copy is in the artisan's own language, not the buyer's.
 	require.Len(t, listing.Translations, 1)
@@ -254,19 +250,20 @@ func TestPipelineDraftsAListing(t *testing.T) {
 	require.NotNil(t, stored.EnhancedObjectKey)
 }
 
-// TestPipelineReplayProducesOneListing is the first acceptance criterion.
-func TestPipelineReplayProducesOneListing(t *testing.T) {
+// TestPipelineReplayConvergesOnTheSameListing is the first acceptance
+// criterion, restated for a listing that already exists: a redelivery must
+// not create anything new.
+func TestPipelineReplayConvergesOnTheSameListing(t *testing.T) {
 	t.Parallel()
 	inferrer := newFakeInference("ajrakh-block-printing")
 	f := newPipelineFixture(t, inferrer)
 
 	for i := 0; i < 3; i++ {
-		require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID), "delivery %d", i)
+		require.NoError(t, f.pipeline.Run(context.Background(), f.listingID), "delivery %d", i)
 	}
 
 	require.Len(t, f.catalog.products, 1)
 	require.Len(t, f.catalog.listings, 1)
-	require.Equal(t, domain.StatePendingArtisanApproval, f.listing(t).State)
 
 	// Enhancement is the expensive call and it ran once: the second delivery saw
 	// the enhanced key already on the row.
@@ -282,76 +279,112 @@ func TestPipelineResumesAfterACrashMidChain(t *testing.T) {
 		fail(stepDescribe, errors.New("ml-svc connection reset"))
 	f := newPipelineFixture(t, inferrer)
 
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 	crashed := f.listing(t)
 	require.True(t, crashed.NeedsDescription)
 	require.NotEmpty(t, f.catalog.attributes[crashed.ID])
 
 	// The consumer restarts and the message is redelivered.
 	inferrer.failStep = ""
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	require.Len(t, f.catalog.products, 1)
 	resumed := f.listing(t)
 	require.Equal(t, crashed.ID, resumed.ID)
 	require.False(t, resumed.NeedsDescription)
-	require.Equal(t, domain.StatePendingArtisanApproval, resumed.State)
 	require.Equal(t, 1, inferrer.calls[stepEnhance])
 }
 
-// TestPipelineFailsClosedOnAnUnknownCraft is the third acceptance criterion.
-func TestPipelineFailsClosedOnAnUnknownCraft(t *testing.T) {
+// TestPipelineToleratesACraftMismatch: the model no longer decides which craft
+// a listing belongs to -- that was fixed by the artisan at listing creation.
+// A model craft outside what it was told is logged, not fatal.
+func TestPipelineToleratesACraftMismatch(t *testing.T) {
 	t.Parallel()
-	// The model answers with a craft this artisan does not practise.
 	f := newPipelineFixture(t, newFakeInference("banarasi-brocade-weaving"))
 
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
+
+	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
+	require.NoError(t, err)
+	require.Equal(t, domain.MediaReady, stored.State)
+	require.Nil(t, stored.FailureReason)
+
+	// Enrichment still happened -- attributes and copy stored as usual.
+	require.NotEmpty(t, f.catalog.attributes[f.listingID])
+	require.NotEmpty(t, f.listing(t).Translations)
+}
+
+// TestPipelineSkipsAttributesOnATerminalExtractionError: a terminal extraction
+// error (bad input) is logged and skipped -- there is no longer a single photo
+// to blame it on, and the listing itself is already valid regardless.
+func TestPipelineSkipsAttributesOnATerminalExtractionError(t *testing.T) {
+	t.Parallel()
+	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
+		fail(stepExtract, fmt.Errorf("the image is unreadable: %w", pkgdomain.ErrInvalidInput)))
+
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
+
+	require.Empty(t, f.catalog.attributes[f.listingID])
+	// Describe still ran, off the zero-value attributes.
+	require.NotEmpty(t, f.listing(t).Translations)
+}
+
+// A transient extraction failure is returned so the consumer retries it.
+func TestPipelineRetriesATransientExtractionFailure(t *testing.T) {
+	t.Parallel()
+	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
+		fail(stepExtract, errors.New("ml-svc unavailable")))
+
+	err := f.pipeline.Run(context.Background(), f.listingID)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), stepExtract)
+
+	require.Empty(t, f.catalog.attributes[f.listingID])
+}
+
+// A terminal enhancement failure is recorded on that one photo's row and does
+// not stop the run (it just has nothing left to enrich from, here, since it's
+// the only photo).
+func TestPipelineRecordsATerminalEnhancementFailureOnThePhoto(t *testing.T) {
+	t.Parallel()
+	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
+		fail(stepEnhance, fmt.Errorf("corrupt image: %w", pkgdomain.ErrInvalidInput)))
+
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
 	require.NoError(t, err)
 	require.Equal(t, domain.MediaFailed, stored.State)
 	require.NotNil(t, stored.FailureReason)
-	require.Contains(t, *stored.FailureReason, "banarasi-brocade-weaving")
 
-	require.Empty(t, f.catalog.listings)
-	require.Empty(t, f.catalog.products)
+	// Nothing left to enrich from -- extract/describe never ran.
+	require.Empty(t, f.catalog.attributes[f.listingID])
+	require.Equal(t, 0, f.inferrer.calls[stepExtract])
 }
 
-func TestPipelineFailsClosedOnATerminalExtractionError(t *testing.T) {
+// A transient enhancement failure is returned so the consumer retries it, and
+// nothing is marked failed on the way past.
+func TestPipelineRetriesATransientEnhancementFailure(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
-		fail(stepExtract, fmt.Errorf("the image is unreadable: %w", pkgdomain.ErrInvalidInput)))
+		fail(stepEnhance, errors.New("ml-svc unavailable")))
 
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
-
-	stored, _ := f.media.GetMedia(context.Background(), f.mediaID)
-	require.Equal(t, domain.MediaFailed, stored.State)
-	require.Empty(t, f.catalog.listings)
-}
-
-// A transient failure is returned so the consumer retries it, and nothing is
-// marked failed on the way past.
-func TestPipelineRetriesATransientFailure(t *testing.T) {
-	t.Parallel()
-	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
-		fail(stepExtract, errors.New("ml-svc unavailable")))
-
-	err := f.pipeline.Run(context.Background(), f.mediaID)
+	err := f.pipeline.Run(context.Background(), f.listingID)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), stepExtract)
+	require.Contains(t, err.Error(), stepEnhance)
 
 	stored, _ := f.media.GetMedia(context.Background(), f.mediaID)
 	require.NotEqual(t, domain.MediaFailed, stored.State)
 }
 
-// TestPipelineRecordFailureIsWhatTheDeadLetterHookCalls covers the path from a
-// message that ran out of retries to a reason the artisan can read.
+// TestPipelineRecordFailureIsIdempotent covers the path from a photo whose
+// enhancement ran out of retries to a reason the artisan can read.
 func TestPipelineRecordFailureIsIdempotent(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
 
-	require.NoError(t, f.pipeline.RecordFailure(context.Background(), f.mediaID, "extract: gave up after 3 attempts"))
-	require.NoError(t, f.pipeline.RecordFailure(context.Background(), f.mediaID, "extract: gave up after 3 attempts"))
+	require.NoError(t, f.pipeline.RecordFailure(context.Background(), f.mediaID, "enhance: gave up after 3 attempts"))
+	require.NoError(t, f.pipeline.RecordFailure(context.Background(), f.mediaID, "enhance: gave up after 3 attempts"))
 
 	stored, _ := f.media.GetMedia(context.Background(), f.mediaID)
 	require.Equal(t, domain.MediaFailed, stored.State)
@@ -364,9 +397,10 @@ func TestPipelineIgnoresNonImageMedia(t *testing.T) {
 	voice := f.media.media[f.mediaID]
 	voice.Kind = domain.MediaAudio
 	f.media.media[f.mediaID] = voice
+	f.catalog.medias[f.listingID][0].Kind = domain.MediaAudio
 
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
-	require.Empty(t, f.catalog.listings)
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
+	require.Empty(t, f.catalog.attributes[f.listingID])
 	require.Equal(t, 0, f.inferrer.calls[stepEnhance])
 }
 
@@ -375,7 +409,7 @@ func TestPipelineIgnoresNonImageMedia(t *testing.T) {
 func TestTranslateFansOutToBuyerLanguages(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	listing := f.listing(t)
 	require.NoError(t, f.pipeline.Translate(context.Background(), listing.ID, f.artisan, f.craftID))
@@ -392,7 +426,7 @@ func TestTranslateFansOutToBuyerLanguages(t *testing.T) {
 func TestTranslateNeverOverwritesTheArtisansOwnWords(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	listing := f.listing(t)
 	edited := "मैंने यह खुद लिखा है"
@@ -418,7 +452,7 @@ func TestTranslateNeverOverwritesTheArtisansOwnWords(t *testing.T) {
 func TestTranslateProtectsCraftTerms(t *testing.T) {
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+	require.NoError(t, f.pipeline.Run(context.Background(), f.listingID))
 
 	listing := f.listing(t)
 	source := listing.Translations[0]
