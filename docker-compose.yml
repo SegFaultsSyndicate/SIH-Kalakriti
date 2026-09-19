@@ -178,6 +178,7 @@ services:
       KAFKA_BROKERS: kafka:9092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
     ports:
       - "8083:8083"
       # collab-svc's own gRPC port (main.go default :50053) — the old 9093
