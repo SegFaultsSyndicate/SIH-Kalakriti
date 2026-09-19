@@ -62,6 +62,8 @@ export {
   updateListing,
   submitListing,
   approveListing,
+  attachListingMedia,
+  getListingAttributes,
   generateUploadUrl,
   confirmUpload,
   advisePricing,

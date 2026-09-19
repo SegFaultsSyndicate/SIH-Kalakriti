@@ -437,6 +437,98 @@ export interface paths {
         };
         trace?: never;
     };
+    "/listings/{id}/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a listing's attributes
+         * @description What the model inferred (source MODEL) and what the artisan has since overridden (source ARTISAN). Same visibility as the listing itself: public once PUBLISHED, otherwise only the owning artisan or a curator.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Attributes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            attributes?: components["schemas"]["ListingAttribute"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach photos to a listing
+         * @description Replaces the listing's media set wholesale, ordered, with at most one primary image and one process video. Triggers the cataloguing pipeline (enhance/extract attributes/generate description) once photos land on the listing.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ListingMediaItem"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description The listing's media, ordered */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["ListingMediaItem"][];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/listings/{id}/submit": {
         parameters: {
             query?: never;
@@ -4174,6 +4266,26 @@ export interface components {
             download_url?: string;
             /** Format: date-time */
             created_at?: string;
+        };
+        ListingAttribute: {
+            name?: string;
+            value?: string;
+            /** @description In [0,1]; an artisan's own answer is always 1. */
+            confidence?: number;
+            /** @enum {string} */
+            source?: "MODEL" | "ARTISAN" | "CURATOR";
+        };
+        ListingMediaItem: {
+            media_id: string;
+            /** @description Display position; unique within the listing. */
+            ordinal: number;
+            /** @enum {string} */
+            role: "GALLERY" | "PRIMARY_IMAGE" | "PROCESS_VIDEO";
+            /**
+             * @description Kind of the underlying asset; returned on reads, ignored on writes.
+             * @enum {string}
+             */
+            kind?: "IMAGE" | "VIDEO" | "AUDIO" | "DOCUMENT";
         };
         CreateListingRequest: {
             craft_id: string;

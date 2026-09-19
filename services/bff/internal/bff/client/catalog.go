@@ -277,6 +277,82 @@ func (c *Catalog) ReinstateListing(ctx context.Context, listingID, idempotencyKe
 		Price: l.GetPrice().GetAmountPaise(), Currency: l.GetPrice().GetCurrencyCode()}, nil
 }
 
+// AttachListingMedia replaces a listing's media set, ordered, with its
+// designated primary image and process video -- what triggers the
+// cataloguing pipeline (enhance/extract/describe) once photos land on a
+// listing. items carries {media_id, ordinal, role}; role is the short form
+// ("GALLERY"/"PRIMARY_IMAGE"/"PROCESS_VIDEO"), same convention as every other
+// enum this client trims.
+func (c *Catalog) AttachListingMedia(ctx context.Context, listingID, idempotencyKey string, items []map[string]any) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	protoItems := make([]*catalogv1.ListingMediaItem, 0, len(items))
+	for _, item := range items {
+		mediaID, _ := item["media_id"].(string)
+		if mediaID == "" {
+			return nil, domain.InvalidInput("items[].media_id: is required")
+		}
+		ordinal, _ := item["ordinal"].(float64)
+		role, _ := item["role"].(string)
+		protoItems = append(protoItems, &catalogv1.ListingMediaItem{
+			MediaId: mediaID,
+			Ordinal: int32(ordinal),
+			Role:    mediaRoleFromString(role),
+		})
+	}
+
+	resp, err := c.curation.AttachListingMedia(ctx, &catalogv1.AttachListingMediaRequest{
+		ListingId: listingID, Items: protoItems, IdempotencyKey: idempotencyKey,
+	})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	return listingMediaItemsToMaps(resp.GetItems()), nil
+}
+
+// GetListingAttributes reads what the model inferred for a listing, and what
+// the artisan has since overridden.
+func (c *Catalog) GetListingAttributes(ctx context.Context, listingID string) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
+
+	resp, err := c.curation.GetListingAttributes(ctx, &catalogv1.GetListingAttributesRequest{ListingId: listingID})
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+	out := make([]map[string]any, 0, len(resp.GetAttributes()))
+	for _, a := range resp.GetAttributes() {
+		out = append(out, map[string]any{
+			"name":       a.GetName(),
+			"value":      a.GetValue(),
+			"confidence": a.GetConfidence(),
+			"source":     trimEnumPrefix(a.GetSource().String(), "ATTRIBUTE_SOURCE_"),
+		})
+	}
+	return out, nil
+}
+
+func mediaRoleFromString(name string) catalogv1.ListingMediaRole {
+	if v, ok := catalogv1.ListingMediaRole_value["LISTING_MEDIA_ROLE_"+name]; ok {
+		return catalogv1.ListingMediaRole(v)
+	}
+	return catalogv1.ListingMediaRole_LISTING_MEDIA_ROLE_UNSPECIFIED
+}
+
+func listingMediaItemsToMaps(items []*catalogv1.ListingMediaItem) []map[string]any {
+	out := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		out = append(out, map[string]any{
+			"media_id": item.GetMediaId(),
+			"ordinal":  item.GetOrdinal(),
+			"role":     trimEnumPrefix(item.GetRole().String(), "LISTING_MEDIA_ROLE_"),
+			"kind":     trimEnumPrefix(item.GetKind().String(), "MEDIA_KIND_"),
+		})
+	}
+	return out
+}
+
 // RefreshCraftIndex rebuilds the ontology alias index from Postgres.
 func (c *Catalog) RefreshCraftIndex(ctx context.Context, idempotencyKey string) (map[string]any, error) {
 	ctx, cancel := withTimeout(ctx)

@@ -807,6 +807,43 @@ func (h *APIHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
 	httpx.NoContent(w)
 }
 
+// AttachListingMedia replaces a listing's media set -- what triggers the
+// cataloguing pipeline (enhance/extract/describe) once photos land on a
+// listing. Any authenticated principal may call this; the service layer
+// enforces that only the listing's own artisan (or staff) may actually write.
+func (h *APIHandler) AttachListingMedia(w http.ResponseWriter, r *http.Request) {
+	if _, err := auth.RequirePrincipal(r.Context()); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	var req struct {
+		Items []map[string]any `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	items, err := h.catalogSvc.AttachListingMedia(r.Context(), httpx.URLParam(r, "id"), idempotencyKeyFrom(r), req.Items)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// GetListingAttributes reads what the model inferred for a listing, and what
+// the artisan has since overridden.
+func (h *APIHandler) GetListingAttributes(w http.ResponseWriter, r *http.Request) {
+	attrs, err := h.catalogSvc.GetListingAttributes(r.Context(), httpx.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"attributes": attrs})
+}
+
 func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {
 	_, err := auth.RequirePrincipal(r.Context())
 	if err != nil {

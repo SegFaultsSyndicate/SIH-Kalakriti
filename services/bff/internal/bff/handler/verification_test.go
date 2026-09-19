@@ -121,6 +121,12 @@ func (f *fakeCatalogClient) SuspendListing(ctx context.Context, listingID, reaso
 func (f *fakeCatalogClient) ReinstateListing(ctx context.Context, listingID, idempotencyKey string) (Listing, error) {
 	return Listing{}, nil
 }
+func (f *fakeCatalogClient) AttachListingMedia(ctx context.Context, listingID, idempotencyKey string, items []map[string]any) ([]map[string]any, error) {
+	return nil, nil
+}
+func (f *fakeCatalogClient) GetListingAttributes(ctx context.Context, listingID string) ([]map[string]any, error) {
+	return nil, nil
+}
 func (f *fakeCatalogClient) RefreshCraftIndex(ctx context.Context, idempotencyKey string) (map[string]any, error) {
 	return nil, nil
 }

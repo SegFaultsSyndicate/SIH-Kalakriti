@@ -495,6 +495,104 @@
         }
       }
     },
+    "/listings/{id}/attributes": {
+      "get": {
+        "summary": "Get a listing's attributes",
+        "description": "What the model inferred (source MODEL) and what the artisan has since overridden (source ARTISAN). Same visibility as the listing itself: public once PUBLISHED, otherwise only the owning artisan or a curator.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attributes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingAttribute"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/media": {
+      "post": {
+        "summary": "Attach photos to a listing",
+        "description": "Replaces the listing's media set wholesale, ordered, with at most one primary image and one process video. Triggers the cataloguing pipeline (enhance/extract attributes/generate description) once photos land on the listing.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ListingMediaItem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The listing's media, ordered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingMediaItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/listings/{id}/submit": {
       "post": {
         "summary": "Submit listing for the artisan's own review",
@@ -4872,6 +4970,64 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ListingAttribute": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "In [0,1]; an artisan's own answer is always 1."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "MODEL",
+              "ARTISAN",
+              "CURATOR"
+            ]
+          }
+        }
+      },
+      "ListingMediaItem": {
+        "type": "object",
+        "required": [
+          "media_id",
+          "ordinal",
+          "role"
+        ],
+        "properties": {
+          "media_id": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "description": "Display position; unique within the listing."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "GALLERY",
+              "PRIMARY_IMAGE",
+              "PROCESS_VIDEO"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Kind of the underlying asset; returned on reads, ignored on writes.",
+            "enum": [
+              "IMAGE",
+              "VIDEO",
+              "AUDIO",
+              "DOCUMENT"
+            ]
           }
         }
       },

@@ -168,6 +168,7 @@ func (s *Server) mountRoutes() {
 	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
 	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
+	api.GET("/listings/:id/attributes", httpx.WrapHandler(apiH.GetListingAttributes))
 
 	// Public craft ontology, artisan storefront and process feed reads.
 	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
@@ -232,6 +233,7 @@ func (s *Server) mountRoutes() {
 	// Listing mutations.
 	authed.POST("/listings", httpx.WrapHandler(withIdempotency(apiH.CreateListing, cfg.IdempStore)))
 	authed.PATCH("/listings/:id", httpx.WrapHandler(apiH.UpdateListing))
+	authed.POST("/listings/:id/media", httpx.WrapHandler(withIdempotency(apiH.AttachListingMedia, cfg.IdempStore)))
 	authed.POST("/listings/:id/submit", httpx.WrapHandler(apiH.SubmitListing))
 	authed.POST("/listings/:id/approve", httpx.WrapHandler(apiH.ApproveListing))
 	authed.POST("/listings/:id/seal-provenance", httpx.WrapHandler(apiH.SealProvenance))

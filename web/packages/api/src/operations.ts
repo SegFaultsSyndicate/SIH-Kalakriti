@@ -208,6 +208,30 @@ export function approveListing(
   }) as Promise<void>;
 }
 
+type AttachListingMediaBody = Json<paths['/listings/{id}/media']['post']['requestBody']>;
+type AttachListingMediaResponse = Json<paths['/listings/{id}/media']['post']['responses'][200]>;
+
+export function attachListingMedia(
+  id: string,
+  body: AttachListingMediaBody,
+  options?: CallOptions,
+): Promise<AttachListingMediaResponse> {
+  return call(`/listings/${encodeURIComponent(id)}/media`, {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<AttachListingMediaResponse>;
+}
+
+type GetListingAttributesResponse = Json<paths['/listings/{id}/attributes']['get']['responses'][200]>;
+
+export function getListingAttributes(id: string, options?: CallOptions): Promise<GetListingAttributesResponse> {
+  return call(`/listings/${encodeURIComponent(id)}/attributes`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<GetListingAttributesResponse>;
+}
+
 type UploadUrlBody = Json<paths['/media/upload-url']['post']['requestBody']>;
 type UploadUrlResponse = Json<paths['/media/upload-url']['post']['responses'][200]>;
 
