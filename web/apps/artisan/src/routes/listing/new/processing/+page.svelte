@@ -10,6 +10,13 @@
   enrichment hasn't finished by the time polling gives up, the review screen
   just shows fewer attributes and the artisan writes the description
   themselves, same as core-svc's own needs_description fallback.
+
+  waitForOutboxKind only counts an entry "still pending" while it's actually
+  retryable (db.ts: pending/syncing/failed). An entry that lands in
+  needsAttention or blocked has stopped retrying -- per db.ts's own contract
+  that's the artisan's problem to fix, not something more waiting resolves --
+  so the wait ends there too, rather than looping on a count that would
+  otherwise never reach zero and permanently disable Next.
 -->
 <script lang="ts">
   import { liveQuery } from 'dexie';
@@ -42,6 +49,7 @@
   let stage = $state<Stage>('enhance');
   let stageStatus = $state<'active' | 'done'>('active');
   let done = $state(false);
+  let stuck = $state(false);
   let started = false;
 
   // Bounded so a slow or unreachable ml-svc never traps the artisan on this
@@ -67,47 +75,64 @@
     void run();
   });
 
-  async function waitForOutboxKind(kind: string): Promise<void> {
+  // A row that reaches needsAttention/blocked has stopped retrying (see
+  // db.ts) -- waiting longer never resolves it, so treat that the same as
+  // "nothing left to wait for" rather than looping on it forever. WAIT_MAX_MS
+  // is only a backstop for anything that slips through that check.
+  const WAIT_MAX_MS = 5 * 60 * 1000;
+
+  async function waitForOutboxKind(kind: string): Promise<'done' | 'stuck'> {
+    const deadline = Date.now() + WAIT_MAX_MS;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const remaining = await db.outbox
+      const entries = await db.outbox
         .where('draftId')
         .equals(draftId)
         .and((e) => e.kind === kind)
-        .count();
-      if (remaining === 0) return;
+        .toArray();
+      if (entries.length === 0) return 'done';
+      if (entries.every((e) => e.status === 'needsAttention' || e.status === 'blocked')) return 'stuck';
+      if (Date.now() > deadline) return 'stuck';
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
   async function run(): Promise<void> {
-    await waitForOutboxKind('media.upload');
+    if ((await waitForOutboxKind('media.upload')) === 'stuck') {
+      stuck = true;
+      return;
+    }
 
     await ensureListingMediaAttachQueued(draftId);
-    await waitForOutboxKind('listing.media.attach');
+    if ((await waitForOutboxKind('listing.media.attach')) === 'stuck') {
+      stuck = true;
+      return;
+    }
     stage = 'describe';
     stageStatus = 'active';
 
     const remoteId = (await getDraft(draftId))?.remoteId;
     if (remoteId) {
-      let attributes: Awaited<ReturnType<typeof getListingAttributes>>['attributes'] = [];
+      let attributes: Awaited<ReturnType<typeof getListingAttributes>>['attributes'] | undefined;
       for (let i = 0; i < POLL_MAX_TRIES; i++) {
         const response = await getListingAttributes(remoteId).catch(() => undefined);
-        attributes = response?.attributes ?? [];
-        if (attributes.length > 0) break;
+        if (response) attributes = response.attributes ?? [];
+        if (attributes && attributes.length > 0) break;
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       }
 
       const listing = await getListing(remoteId).catch(() => undefined);
-      await patchFields(draftId, {
-        translations: listing?.translations ?? [],
-        attributes: (attributes ?? []).map((a) => ({
+      const patch: Parameters<typeof patchFields>[1] = {};
+      if (listing?.translations) patch.translations = listing.translations;
+      if (attributes) {
+        patch.attributes = attributes.map((a) => ({
           name: a.name ?? '',
           value: a.value ?? '',
           confidence: a.confidence ?? 0,
           source: (a.source ?? 'MODEL') as 'MODEL' | 'ARTISAN' | 'CURATOR',
-        })),
-      });
+        }));
+      }
+      if (Object.keys(patch).length > 0) await patchFields(draftId, patch);
     }
 
     stageStatus = 'done';
@@ -133,7 +158,12 @@
 
 <ListingStep index={4} heading={t('listing.processing.heading')} backHref="/listing/new/story?d={draftId}">
   {#snippet children()}
-    {#if uploadRemaining > 0}
+    {#if stuck}
+      <p class="processing-stuck" role="alert">
+        <Icon name="warning" />
+        {t('sync.attention')}
+      </p>
+    {:else if uploadRemaining > 0}
       <p class="processing-status" role="status">
         <Icon name="sync" class="processing-status__icon" />
         {t('listing.processing.uploading', { count: uploadRemaining })}
@@ -171,6 +201,13 @@
     align-items: center;
     gap: var(--k-space-2);
     color: var(--k-accent-success, var(--k-text-primary));
+  }
+
+  .processing-stuck {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    color: var(--k-accent-danger);
   }
 
   @keyframes spin {
