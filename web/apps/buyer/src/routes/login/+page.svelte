@@ -12,10 +12,11 @@
 <script lang="ts">
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
+  import { requestOtp, completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { showToast, Tooltip } from '@kalakriti/ui';
+  import { isValidIndianMobile, toE164 } from '$lib/phone';
 
   const t = $derived(locale.t);
 
@@ -23,9 +24,11 @@
   let activePortal = $state<'buyer' | 'artisan' | 'admin'>('buyer');
   let authMode = $state<'signin' | 'register'>('signin');
 
-  // Form states
-  let identifier = $state(''); // email or mobile
-  let password = $state('');
+  // Form states. There is no backend password or email auth -- POST
+  // /auth/otp/request and /verify only ever take a phone (see
+  // services/bff/openapi.json) -- so "identifier" only ever means a 10-digit
+  // Indian mobile number in practice, whatever the label still promises.
+  let identifier = $state('');
   let fullName = $state('');
   let otpCode = $state('');
   let otpSent = $state(false);
@@ -44,42 +47,67 @@
     }
   });
 
-  function handleRequestOtp(e: Event): void {
-    e.preventDefault();
-    if (!identifier.trim()) {
-      showToast({ message: t('login.toast.enterIdentifier'), variant: 'error' });
-      return;
-    }
-    isSubmitting = true;
-    setTimeout(() => {
-      isSubmitting = false;
-      otpSent = true;
-      showToast({ message: t('login.toast.otpSent'), variant: 'success' });
-    }, 600);
+  function digitsOf(value: string): string {
+    return value.replace(/\D/g, '').slice(-10);
   }
 
-  function handleBuyerSubmit(e: Event): void {
+  async function handleRequestOtp(e: Event): Promise<void> {
     e.preventDefault();
-    if (!identifier.trim()) {
-      showToast({ message: t('login.toast.enterIdentifier'), variant: 'error' });
+    const digits = digitsOf(identifier);
+    if (!isValidIndianMobile(digits)) {
+      showToast({ message: t('login.phone.invalid'), variant: 'error' });
       return;
     }
+    isSubmitting = true;
+    try {
+      await requestOtp({ phone: toE164(digits) });
+      otpSent = true;
+      showToast({ message: t('login.toast.otpSent'), variant: 'success' });
+    } catch (cause) {
+      const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      showToast({ message, variant: 'error' });
+    } finally {
+      isSubmitting = false;
+    }
+  }
+
+  async function handleBuyerSubmit(e: Event): Promise<void> {
+    e.preventDefault();
+    const digits = digitsOf(identifier);
+    if (!isValidIndianMobile(digits)) {
+      showToast({ message: t('login.phone.invalid'), variant: 'error' });
+      return;
+    }
+    if (!otpSent || otpCode.trim().length === 0 || isSubmitting) return;
 
     isSubmitting = true;
-    setTimeout(() => {
-      isSubmitting = false;
-      // Simulate JWT establishment with mock token for demo
-      const mockToken = 'mock.jwt.token.aarav';
-      setAccessToken(mockToken);
-      setRefreshToken('mock.refresh.token');
-      session.establish(mockToken);
-
+    try {
+      // dev_role: 'BUYER' requests a real BUYER-role token instead of the
+      // default ARTISAN one -- core-svc only honors it with dev OTP enabled
+      // and rejects the whole login otherwise (see
+      // services/core-svc/internal/core/service/auth.go's VerifyOtp), so
+      // it's only sent in a dev build. A production build falls through to
+      // the ordinary path, same as the admin app's login/verify/+page.svelte.
+      const ok = await completeOtpVerification({
+        phone: toE164(digits),
+        otp: otpCode,
+        ...(import.meta.env.DEV ? { dev_role: 'BUYER' } : {}),
+      });
+      if (!ok) {
+        showToast({ message: t('verify.invalid'), variant: 'error' });
+        return;
+      }
       showToast({
         message: authMode === 'signin' ? t('login.toast.welcomeBack') : t('login.toast.registered'),
         variant: 'success',
       });
       void goto('/account');
-    }, 700);
+    } catch (cause) {
+      const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
+      showToast({ message, variant: 'error' });
+    } finally {
+      isSubmitting = false;
+    }
   }
 </script>
 
@@ -253,23 +281,6 @@
                 required
               />
             </div>
-          {:else}
-            <div class="form-field">
-              <div class="label-row">
-                <label for="buyer-pw" class="field-label">{t('login.passwordLabel')}</label>
-                {#if authMode === 'signin'}
-                  <a href="/login?reset=1" class="forgot-link">{t('login.forgotPassword')}</a>
-                {/if}
-              </div>
-              <input
-                id="buyer-pw"
-                type="password"
-                class="field-input"
-                placeholder="••••••••••••"
-                bind:value={password}
-                required
-              />
-            </div>
           {/if}
 
           <div class="form-actions-row">
@@ -284,7 +295,7 @@
             <button
               type="submit"
               class="submit-primary-btn"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !otpSent || otpCode.trim().length === 0}
               {...tp}
             >
               {#if isSubmitting}
