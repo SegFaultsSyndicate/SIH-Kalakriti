@@ -28,6 +28,7 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
@@ -88,6 +89,16 @@ func run() error {
 		}
 	}()
 
+	issuer, err := auth.NewIssuer(auth.Config{
+		Secret:     cfg.auth.JWTSecret,
+		Issuer:     cfg.auth.Issuer,
+		AccessTTL:  cfg.auth.AccessTTL,
+		RefreshTTL: cfg.auth.RefreshTTL,
+	})
+	if err != nil {
+		return fmt.Errorf("configuring token issuer: %w", err)
+	}
+
 	// --- wiring ------------------------------------------------------------------
 
 	repository := repo.New(pool)
@@ -99,7 +110,20 @@ func run() error {
 
 	// --- gRPC server ---------------------------------------------------------------
 
-	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recoveryInterceptor(log)))
+	// Every fulfilment RPC requires a caller identity (buyer creating an
+	// order, artisan responding to a lot) -- none are public, unlike
+	// core-svc's ontology/catalog reads. The bff already forwards the
+	// caller's original JWT on every call via client.go's withAuth, so this
+	// only needs to start verifying what was already being sent.
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recoveryInterceptor(log),
+			auth.UnaryServerInterceptor(issuer, auth.NewPublicMethods()),
+		),
+		grpc.ChainStreamInterceptor(
+			auth.StreamServerInterceptor(issuer, auth.NewPublicMethods()),
+		),
+	)
 	fulfilmentv1.RegisterFulfilmentServiceServer(grpcServer, fulfilmentHandler)
 
 	healthSrv := health.NewServer()
@@ -109,28 +133,6 @@ func run() error {
 
 	if cfg.server.Env != "production" {
 		reflection.Register(grpcServer)
-	}
-
-	// --- HTTP health server ----------------------------------------------------------
-
-	ready := &readyState{}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
-		if !ready.get() {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-		if err := pool.Ping(context.Background()); err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-	httpServer := &http.Server{
-		Addr:              cfg.httpAddr,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	// --- run -----------------------------------------------------------------------
@@ -178,6 +180,41 @@ func run() error {
 	reofferConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
 		Brokers: cfg.kafka.Brokers, Topic: topics.OrderLotDeclined, GroupID: reofferGroup,
 	}, log)
+
+	// --- HTTP health server ----------------------------------------------------------
+
+	ready := &readyState{}
+	watchConsumers := []*pkgkafka.ConsumerGroup{
+		lotOfferedConsumer, lotAcceptedConsumer, lotDeclinedConsumer,
+		lotProgressedConsumer, orderConfirmedConsumer, orderCancelledConsumer, reofferConsumer,
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		if !ready.get() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		if err := pool.Ping(context.Background()); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		// See WIRING_AUDIT_PLAN.md F-6: a consumer reconnects forever after a
+		// disconnect rather than dying, which used to make it invisible to
+		// readiness (it only ever pinged Postgres).
+		for _, c := range watchConsumers {
+			if !c.Healthy() {
+				http.Error(w, "consumer for "+c.Topic()+" is reconnecting", http.StatusServiceUnavailable)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+	httpServer := &http.Server{
+		Addr:              cfg.httpAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)
@@ -335,6 +372,7 @@ type appConfig struct {
 	server     config.Server
 	postgres   config.Postgres
 	kafka      config.Kafka
+	auth       config.Auth
 	fulfilment fulfilmentConfig
 	grpcAddr   string
 	httpAddr   string
@@ -367,6 +405,9 @@ func loadConfig() (appConfig, error) {
 		return cfg, err
 	}
 	if cfg.kafka, err = config.Load[config.Kafka](); err != nil {
+		return cfg, err
+	}
+	if cfg.auth, err = config.Load[config.Auth](); err != nil {
 		return cfg, err
 	}
 	if cfg.fulfilment, err = config.Load[fulfilmentConfig](); err != nil {

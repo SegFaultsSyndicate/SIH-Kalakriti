@@ -231,7 +231,6 @@ func run() error {
 	badgesHandler := handler.NewBadges(badgesSvc)
 	schemesSvc := service.NewSchemes(repository, log)
 	schemesHandler := handler.NewSchemes(schemesSvc)
-	healthHandler := handler.NewHealth(pool, rdb)
 
 	// --- gRPC server ---------------------------------------------------------
 
@@ -265,20 +264,6 @@ func run() error {
 		// Reflection makes grpcurl work against a local stack; it is left off in
 		// production so the service does not advertise its whole schema.
 		reflection.Register(grpcServer)
-	}
-
-	// --- HTTP health server --------------------------------------------------
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
-	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
-	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
-	// hands it to the private health server rather than exposing it publicly.
-	mux.Handle("/debug/vars", http.DefaultServeMux)
-	httpServer := &http.Server{
-		Addr:              cfg.httpAddr,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	// --- run -----------------------------------------------------------------
@@ -340,6 +325,25 @@ func run() error {
 		Topic:   topics.OrderLotCompleted,
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-completed",
 	}, log)
+
+	// --- HTTP health server --------------------------------------------------
+
+	healthHandler := handler.NewHealth(pool, rdb,
+		enhancedConsumer, pipelineConsumer, translationConsumer,
+		badgeListingConsumer, badgeProvenanceConsumer, badgeLotAcceptedConsumer, badgeLotCompletedConsumer,
+	)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
+	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
+	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
+	// hands it to the private health server rather than exposing it publicly.
+	mux.Handle("/debug/vars", http.DefaultServeMux)
+	httpServer := &http.Server{
+		Addr:              cfg.httpAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)

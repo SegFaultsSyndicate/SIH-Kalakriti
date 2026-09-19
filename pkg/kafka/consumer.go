@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -43,7 +44,23 @@ type ConsumerGroup struct {
 	dlqWriter *Producer
 	cfg       ConsumerConfig
 	log       *slog.Logger
+	// healthy is false while Run is between connections (backing off after a
+	// fetch/commit/dead-letter error) and true while it holds a live reader.
+	// /readyz handlers read this via Healthy() -- see WIRING_AUDIT_PLAN.md
+	// F-6: Run reconnecting forever means the goroutine never exits, so a
+	// dead consumer no longer crashes the process, but it was still
+	// invisible to readiness, which only ever pinged Postgres/Redis.
+	healthy atomic.Bool
 }
+
+// Healthy reports whether this consumer currently holds a live connection
+// (mid fetch/handle/commit loop), as opposed to backing off after a
+// disconnect and about to reconnect.
+func (c *ConsumerGroup) Healthy() bool { return c.healthy.Load() }
+
+// Topic names which topic this consumer reads, for a /readyz body that says
+// which one is down rather than just "a consumer is down".
+func (c *ConsumerGroup) Topic() string { return c.cfg.Topic }
 
 // NewConsumerGroup builds a runner. kafka-go's Reader with GroupID set already
 // speaks the consumer group protocol (join, sync, heartbeat, rebalance), so no
@@ -98,12 +115,15 @@ const (
 // Run now only returns (nil) on a genuine ctx cancellation/shutdown.
 func (c *ConsumerGroup) Run(ctx context.Context, handle HandlerFunc) error {
 	backoff := initialReconnectBackoff
+	c.healthy.Store(true)
 
 	for {
 		err := c.runOnce(ctx, handle)
 		if err == nil {
+			c.healthy.Store(false)
 			return nil
 		}
+		c.healthy.Store(false)
 
 		c.log.Error("consumer disconnected, reconnecting",
 			"topic", c.cfg.Topic, "error", err, "backoff", backoff)
@@ -122,6 +142,7 @@ func (c *ConsumerGroup) Run(ctx context.Context, handle HandlerFunc) error {
 		// whatever failed may have left them unusable, so this consumer
 		// gets fresh ones rather than retrying on the same connection.
 		c.reader, c.dlqWriter = c.newReaderAndDLQ()
+		c.healthy.Store(true)
 	}
 }
 

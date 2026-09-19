@@ -4,28 +4,35 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+
+	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 )
 
 // Health reports liveness and readiness over both gRPC (via grpc_health_v1,
 // registered in main) and plain HTTP for container probes and load balancers.
 type Health struct {
-	pool  *pgxpool.Pool
-	redis redis.Cmdable
+	pool      *pgxpool.Pool
+	redis     redis.Cmdable
+	consumers []*pkgkafka.ConsumerGroup
 	// ready flips to false the moment shutdown begins, so a load balancer stops
 	// sending new work before the server actually stops accepting it.
 	ready atomic.Bool
 }
 
 // NewHealth builds the health reporter. It starts not-ready; call SetReady once
-// dependencies are up.
-func NewHealth(pool *pgxpool.Pool, rdb redis.Cmdable) *Health {
-	return &Health{pool: pool, redis: rdb}
+// dependencies are up. consumers is every background Kafka consumer this
+// service runs -- see WIRING_AUDIT_PLAN.md F-6: without this, a consumer
+// stuck reconnecting after a broker disconnect was invisible to /readyz,
+// which only ever checked Postgres/Redis.
+func NewHealth(pool *pgxpool.Pool, rdb redis.Cmdable, consumers ...*pkgkafka.ConsumerGroup) *Health {
+	return &Health{pool: pool, redis: rdb, consumers: consumers}
 }
 
 // SetReady marks the service ready or draining.
@@ -46,7 +53,15 @@ func (h *Health) Check(ctx context.Context) error {
 	if err := h.pool.Ping(ctx); err != nil {
 		return err
 	}
-	return h.redis.Ping(ctx).Err()
+	if err := h.redis.Ping(ctx).Err(); err != nil {
+		return err
+	}
+	for _, c := range h.consumers {
+		if !c.Healthy() {
+			return fmt.Errorf("consumer for %s is reconnecting", c.Topic())
+		}
+	}
+	return nil
 }
 
 // LiveHandler answers whether the process is running at all. It deliberately
