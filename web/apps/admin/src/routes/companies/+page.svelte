@@ -148,15 +148,23 @@
 
       if (compRes.status === 'fulfilled' && compRes.value?.companies && compRes.value.companies.length > 0) {
         companies = compRes.value.companies;
-      } else {
+      } else if (import.meta.env.VITE_USE_MOCKS === '1') {
+        if (compRes.status === 'rejected') console.warn('[mock fallback] listCompanies:', compRes.reason);
         companies = MOCK_COMPANIES;
+      } else {
+        companies = [];
       }
 
       if (statsRes.status === 'fulfilled' && statsRes.value) {
         stats = statsRes.value;
       }
-    } catch {
-      companies = MOCK_COMPANIES;
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadData companies:', cause);
+        companies = MOCK_COMPANIES;
+      } else {
+        companies = [];
+      }
     } finally {
       loading = false;
     }

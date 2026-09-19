@@ -156,6 +156,7 @@ export const en = {
   'offline.conflict.keepMine': 'Keep my version',
   'offline.conflict.useTheirs': 'Use their version',
   'outbox.kind.listing.create': 'New listing',
+  'outbox.kind.listing.media.attach': 'Photos attached',
   'outbox.kind.listing.update': 'Listing edit',
   'outbox.kind.listing.submit': 'Listing sent for review',
   'outbox.kind.listing.approve': 'Listing published',

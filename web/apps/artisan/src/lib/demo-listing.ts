@@ -118,34 +118,23 @@ export async function launchDemoListing(): Promise<string> {
     },
     attributes: [
       {
-        key: 'craft',
-        labelKey: 'listing.attribute.craft',
+        name: 'craft',
         value: 'Kutch Ajrakh Hand-Block Print (GI-72)',
         source: 'MODEL',
         confidence: 0.96,
-        needs_artisan_input: false,
       },
       {
-        key: 'material',
-        labelKey: 'listing.attribute.material',
+        name: 'material',
         value: 'Pure Modal Silk with Botanical Indigofera Tinctoria & Madder Root',
         source: 'MODEL',
         confidence: 0.91,
-        needs_artisan_input: false,
       },
       {
-        key: 'technique',
-        labelKey: 'listing.attribute.technique',
+        name: 'technique',
         value: '16-Stage Mud-Resist Hand-Block Printing using Carved Teak Blocks',
         source: 'MODEL',
         confidence: 0.88,
-        needs_artisan_input: false,
       },
-    ],
-    claims: [
-      { sentenceIndex: 0, attributeKey: 'craft' },
-      { sentenceIndex: 1, attributeKey: 'technique' },
-      { sentenceIndex: 2, attributeKey: 'material' },
     ],
     translations: [
       {

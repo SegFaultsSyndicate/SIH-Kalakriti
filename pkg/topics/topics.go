@@ -6,10 +6,19 @@ package topics
 
 // Topic names. Each maps to exactly one envelope message in events/v1/events.proto.
 const (
-	// MediaUploaded carries events.v1.MediaUploaded.
+	// MediaUploaded carries events.v1.MediaUploaded. Currently unconsumed: the
+	// cataloguing pipeline used to trigger off this (one product per photo,
+	// created before any listing existed) but now triggers off
+	// CatalogListingMediaAttached instead, once photos are actually attached
+	// to a listing -- see WIRING_AUDIT_PLAN.md.
 	MediaUploaded = "media.uploaded"
 	// MediaEnhanced carries events.v1.MediaEnhanced.
 	MediaEnhanced = "media.enhanced"
+
+	// CatalogListingMediaAttached carries events.v1.ListingMediaAttached, and is
+	// what triggers the cataloguing pipeline: enhance every attached photo,
+	// extract attributes, draft a description.
+	CatalogListingMediaAttached = "catalog.listing.media_attached"
 
 	// CatalogAttributesExtracted carries events.v1.CatalogAttributesExtracted.
 	CatalogAttributesExtracted = "catalog.attributes.extracted"
@@ -97,6 +106,7 @@ const DLQSuffix = ".dlq"
 var All = []string{
 	MediaUploaded,
 	MediaEnhanced,
+	CatalogListingMediaAttached,
 	CatalogAttributesExtracted,
 	CatalogListingDrafted,
 	CatalogListingPublished,

@@ -96,6 +96,14 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
+      # pkg/storage already rewrites a presigned URL's host to this before
+      # handing it to a caller (see Client.rewriteHost) -- without it, every
+      # presigned PUT/GET URL core-svc hands the browser points at
+      # S3_ENDPOINT (minio:9000, a Docker-internal DNS name the browser
+      # can't resolve), and every media upload fails silently client-side.
+      # minio's 9000 is published to the host below; a real deployment sets
+      # this to the actual public object-storage origin.
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
       # Without this, OTP login is unusable in local/demo: there is no real
@@ -173,6 +181,7 @@ services:
       KAFKA_BROKERS: kafka:29092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
     ports:
       - "8083:8083"
       # collab-svc's own gRPC port (main.go default :50053) — the old 9093
@@ -226,6 +235,10 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
+      # Same reasoning as core-svc's S3_PUBLIC_URL above -- insight-svc's
+      # presigned URLs (e.g. report/export downloads) reach the browser via
+      # the bff, and are equally unresolvable without this.
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
       OTLP_ENDPOINT: jaeger:4317
     ports:
       # insight-svc's only listener (main.go default GRPC_ADDR :8085) — the
@@ -290,6 +303,11 @@ services:
       dockerfile: Dockerfile.web
     ports:
       - "80:80"
+      # Local-development entry points for Artisan Studio and the Ministry
+      # Console -- see deploy/nginx/nginx.conf and WIRING_AUDIT_PLAN.md F-7
+      # for why these are separate ports rather than a path prefix on :80.
+      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - bff
     restart: unless-stopped

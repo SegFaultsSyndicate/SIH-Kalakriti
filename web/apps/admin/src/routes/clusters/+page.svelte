@@ -91,7 +91,8 @@
       members = m.members ?? [];
       clusterIdInput = targetId;
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadCluster:', cause);
         const mock = MOCK_CLUSTERS[targetId] ?? {
           cluster: {
             id: targetId,
@@ -118,7 +119,7 @@
   }
 
   $effect(() => {
-    if (authorized && import.meta.env.DEV && !cluster && !clusterIdInput) {
+    if (authorized && import.meta.env.VITE_USE_MOCKS === '1' && !cluster && !clusterIdInput) {
       void loadCluster('kutch-weavers');
     }
   });
@@ -134,7 +135,8 @@
       showToast({ variant: 'success', message: t('clusters.created') });
       if (created.id) await loadCluster(created.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createNewCluster:', cause);
         const generatedId = `cluster-${Date.now().toString(36)}`;
         MOCK_CLUSTERS[generatedId] = {
           cluster: {
@@ -175,7 +177,8 @@
       newMemberArtisanId = '';
       await loadCluster(cluster.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] addMember:', cause);
         members = [
           ...members,
           {
@@ -199,7 +202,8 @@
       await removeClusterMember(cluster.id, artisanId);
       await loadCluster(cluster.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] removeMember:', cause);
         members = members.filter((m) => m.artisan_id !== artisanId);
         showToast({ variant: 'success', message: t('action.remove') });
       } else {
@@ -246,7 +250,8 @@
         });
         commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: true, message: t('clusters.onboarded') }];
       } catch (cause) {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.VITE_USE_MOCKS === '1') {
+          console.warn('[mock fallback] commitSheet row', row.rowNumber, ':', cause);
           members = [
             ...members,
             {
@@ -292,7 +297,8 @@
       const existing = (shg as { members?: ShareRow[] }).members ?? [];
       shareRows = existing.length > 0 ? existing.map((m) => ({ artisan_id: m.artisan_id, share_pct: m.share_pct })) : [{ artisan_id: '', share_pct: 0 }];
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadShg:', cause);
         shg = {
           id,
           name: id === 'shg-1' ? 'Maa Saraswati Mahila Bachat Gat' : `Self Help Group ${id}`,
@@ -327,7 +333,8 @@
       showToast({ variant: 'success', message: t('clusters.shgCreated') });
       if (created.id) await loadShg(created.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createNewShg:', cause);
         const genId = `shg-${Date.now().toString(36)}`;
         showToast({ variant: 'success', message: t('clusters.shgCreated') });
         await loadShg(genId);
@@ -346,7 +353,8 @@
       showToast({ variant: 'success', message: t('clusters.shgSaved') });
       await loadShg(shg.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] saveShgMembers:', cause);
         showToast({ variant: 'success', message: t('clusters.shgSaved') });
       } else {
         showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });

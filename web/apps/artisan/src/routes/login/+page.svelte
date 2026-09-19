@@ -39,7 +39,8 @@
       await setPref('login.phone', value);
       await goto('/verify');
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] requestOtp:', cause);
         await setPref('login.phone', value);
         await goto('/verify');
         return;

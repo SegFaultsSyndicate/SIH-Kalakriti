@@ -11,6 +11,7 @@ import {
   registerArtisan,
   createListing,
   updateListing,
+  attachListingMedia,
   submitListing,
   approveListing,
   generateUploadUrl,
@@ -30,6 +31,8 @@ export async function sendOutboxEntry(entry: OutboxEntry): Promise<SendResult> {
       return sendMediaUpload(entry);
     case 'listing.create':
       return sendListingCreate(entry);
+    case 'listing.media.attach':
+      return sendListingMediaAttach(entry);
     case 'listing.update':
       return sendListingUpdate(entry);
     case 'listing.submit':
@@ -64,11 +67,15 @@ async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
     if (response.artisan_id) await setArtisanId(response.artisan_id);
     return { ok: true };
   } catch (cause) {
-    if (import.meta.env.DEV) {
-      const mockId = `artisan-${Date.now()}`;
-      await setArtisanId(mockId);
-      return { ok: true };
-    }
+    // No DEV fallback here (unlike other outbox senders): setArtisanId
+    // writes the app's own identity, and every subsequent authenticated
+    // request -- follower-count, artisans/me, listing creation -- carries
+    // whatever id was last set here. A fabricated `artisan-${Date.now()}`
+    // on a genuinely failed registration used to get treated as success
+    // and stored as that identity, so every later real request the app
+    // made was for an id no backend row would ever match: a fake success
+    // that manufactures real, confusing failures several steps later. A
+    // failed registration reports as failed, in every environment.
     return fromApiError(cause);
   }
 }
@@ -138,6 +145,41 @@ async function sendListingCreate(entry: OutboxEntry): Promise<SendResult> {
       { idempotencyKey: entry.idempotencyKey },
     );
     if (response.listing_id) await db.drafts.update(draftId, { remoteId: response.listing_id, updatedAt: Date.now() });
+    return { ok: true };
+  } catch (cause) {
+    return fromApiError(cause);
+  }
+}
+
+interface ListingMediaAttachPayload {
+  draftId: string;
+  items: { localMediaId: string; ordinal: number; role: 'PRIMARY_IMAGE' | 'GALLERY' | 'PROCESS_VIDEO' }[];
+}
+
+/** Triggers the cataloguing pipeline server-side -- see listing-draft.ts's ensureListingMediaAttachQueued. */
+async function sendListingMediaAttach(entry: OutboxEntry): Promise<SendResult> {
+  const { draftId, items } = entry.payload as ListingMediaAttachPayload;
+  const listingId = await remoteListingId(draftId);
+  if (!listingId) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
+
+  try {
+    const media = await db.media.bulkGet(items.map((i) => i.localMediaId));
+    const remoteItems = items.map((item, i) => ({
+      media_id: media[i]?.remoteId,
+      ordinal: item.ordinal,
+      role: item.role,
+    }));
+    if (remoteItems.some((i) => !i.media_id)) {
+      // dependsOn should make this unreachable; treat as transient rather
+      // than blocked, since the media entry may simply not have drained yet.
+      return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
+    }
+
+    await attachListingMedia(
+      listingId,
+      { items: remoteItems as Parameters<typeof attachListingMedia>[1]['items'] },
+      { idempotencyKey: entry.idempotencyKey },
+    );
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);

@@ -12,15 +12,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import {
-    requestOtp,
-    completeOtpVerification,
-    setAccessToken,
-    setRefreshToken,
-    session,
-    ApiError,
-    messageKeyFor,
-  } from '@kalakriti/api';
+  import { requestOtp, completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
 
@@ -65,15 +57,13 @@
         code = '';
       }
     } catch (cause) {
-      if (import.meta.env.DEV && (otp === '000000' || otp === '123456')) {
-        const devToken =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZXYtYXJ0aXNhbiIsInJvbGUiOiJBUlRJU0FOIn0.devsignature';
-        setAccessToken(devToken);
-        setRefreshToken(devToken);
-        session.establish(devToken);
-        await goto('/');
-        return;
-      }
+      // core-svc's real dev-mode OTP acceptance (AUTH_DEV_OTP_ENABLED, code
+      // 000000/123456) already goes through completeOtpVerification above --
+      // this used to also forge an unsigned client-side JWT on any failure,
+      // which never actually worked in any environment: pkg/auth.Issuer.Verify
+      // checks a real HMAC signature regardless of environment, so it just
+      // failed one request later than the honest error would have. See the
+      // admin app's login/verify/+page.svelte for the same fix.
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
       code = '';
     } finally {

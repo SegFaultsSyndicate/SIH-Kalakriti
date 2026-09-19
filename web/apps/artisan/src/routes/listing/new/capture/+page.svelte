@@ -4,9 +4,12 @@
   Photo capture, step 1 of 7. A native <input type="file" capture> rather
   than getUserMedia: it works offline, needs no explicit camera permission
   dance in a PWA, and hands back the exact same Blob either way -- the
-  simplest thing that gets a photo off the device. Each photo runs through
-  the (mocked, see ml_wiring.md) quality gate before it is queued for
-  upload, so a bad shot is caught before it ever reaches the outbox.
+  simplest thing that gets a photo off the device. There is no synchronous
+  photo-quality check -- nothing server-side can assess a photo before it
+  reaches the bucket, so a fabricated blob-size heuristic used to stand in
+  for one; it's gone. The real signal for a bad photo is asynchronous (the
+  cataloguing pipeline's enhancement step failing and recording a reason on
+  that media row) and isn't surfaced on this screen yet.
 -->
 <script lang="ts">
   import { liveQuery } from 'dexie';
@@ -19,7 +22,6 @@
   import ListingStep from '$lib/ListingStep.svelte';
   import SahayakTooltip from '$lib/SahayakTooltip.svelte';
   import { addCapturedMedia, removeCapturedMedia } from '$lib/listing-draft';
-  import { assessPhotoQuality, type QualityIssue } from '$lib/ml-mock';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
@@ -27,8 +29,6 @@
   let fileInput: HTMLInputElement;
   let photos = $state<MediaRecord[]>([]);
   let photoUrls = $state<Record<string, string>>({});
-  let checking = $state(false);
-  let issue = $state<QualityIssue | undefined>(undefined);
   let locked = $state(false);
 
   $effect(() => {
@@ -82,21 +82,7 @@
     input.value = '';
     if (!file || !draftId) return;
 
-    checking = true;
-    issue = undefined;
-    const assessment = await assessPhotoQuality(file);
-    checking = false;
-
-    if (!assessment.passed) {
-      issue = assessment.issues[0];
-      return;
-    }
     await addCapturedMedia(draftId, file, file.type || 'image/jpeg', 'photo', photos.length);
-  }
-
-  function retake(): void {
-    issue = undefined;
-    openPicker();
   }
 
   async function remove(id: string): Promise<void> {
@@ -147,17 +133,6 @@
       <p class="capture-status" role="status">{t('listing.capture.locked')}</p>
     {/if}
 
-    {#if checking}
-      <p class="capture-status" role="status">{t('listing.capture.checking')}</p>
-    {/if}
-
-    {#if issue}
-      <div class="photo-issue" role="alert">
-        <Icon name="warning" />
-        <p>{t(issue.messageKey)}</p>
-        <Button size="sm" onclick={retake} tooltip={tooltip('tooltip.retakePhoto')}>{t('listing.capture.retake')}</Button>
-      </div>
-    {/if}
 
     {#if !locked}
       <button type="button" class="add-photo" onclick={openPicker}>
@@ -211,17 +186,6 @@
   .capture-status {
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
-  }
-
-  .photo-issue {
-    display: flex;
-    flex-direction: column;
-    gap: var(--k-space-2);
-    align-items: start;
-    padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-accent-danger);
-    border-radius: var(--k-radius-md);
-    color: var(--k-accent-danger);
   }
 
   .add-photo {

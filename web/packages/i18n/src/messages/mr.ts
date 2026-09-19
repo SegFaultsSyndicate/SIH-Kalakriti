@@ -147,6 +147,7 @@ export const mr: Messages = {
   "offline.conflict.keepMine": "माझी आवृत्ती ठेवा",
   "offline.conflict.useTheirs": "त्यांची आवृत्ती वापरा",
   "outbox.kind.listing.create": "नवीन सूची",
+  "outbox.kind.listing.media.attach": "छायाचित्रे जोडली",
   "outbox.kind.listing.update": "सूची संपादन",
   "outbox.kind.listing.submit": "सूची पुनरावलोकनासाठी पाठवली",
   "outbox.kind.listing.approve": "सूची प्रकाशित",

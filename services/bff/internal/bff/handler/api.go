@@ -64,7 +64,9 @@ func (h *APIHandler) SetWebhookManager(mgr *webhook.Manager) {
 // AuthService is the auth-svc gRPC client interface.
 type AuthService interface {
 	RequestOTP(ctx context.Context, phone string) error
-	VerifyOTP(ctx context.Context, phone, otp string) (accessToken, refreshToken string, err error)
+	// devRole requests a token minted for a role other than ARTISAN; core-svc
+	// only honors it with dev OTP enabled. Pass "" for the ordinary flow.
+	VerifyOTP(ctx context.Context, phone, otp, devRole string) (accessToken, refreshToken string, err error)
 	RefreshToken(ctx context.Context, refreshToken string) (accessToken string, err error)
 }
 
@@ -301,6 +303,13 @@ func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Phone string `json:"phone"`
 		OTP   string `json:"otp"`
+		// DevRole requests a token for BUYER/CLUSTER_OFFICER/MINISTRY
+		// instead of the default ARTISAN. core-svc ignores it unless the
+		// server is running with dev OTP enabled -- see
+		// WIRING_AUDIT_PLAN.md F-5. Never read by any other route; this is
+		// the only login path in the product, so it's the only place this
+		// needs to exist.
+		DevRole string `json:"dev_role"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpx.Error(w, domain.InvalidInput("invalid JSON"))
@@ -308,6 +317,7 @@ func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Phone = strings.TrimSpace(req.Phone)
 	req.OTP = strings.TrimSpace(req.OTP)
+	req.DevRole = strings.TrimSpace(req.DevRole)
 	if req.Phone == "" || req.OTP == "" {
 		httpx.Error(w, domain.InvalidInput("phone and otp are required"))
 		return
@@ -321,7 +331,7 @@ func (h *APIHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.Phone, req.OTP)
+	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.Phone, req.OTP, req.DevRole)
 	if err != nil {
 		if h.redis != nil {
 			locked := middleware.RecordFailedLogin(r.Context(), h.redis, req.Phone)
@@ -406,7 +416,7 @@ func (h *APIHandler) VerifyPhoneChangeOTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.NewPhone, req.OTP)
+	accessToken, refreshToken, err := h.authSvc.VerifyOTP(r.Context(), req.NewPhone, req.OTP, "")
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -540,7 +550,23 @@ func (h *APIHandler) ListWebhookSubscriptions(w http.ResponseWriter, r *http.Req
 		httpx.Error(w, err)
 		return
 	}
-	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": subs})
+	// webhook.Subscription carries the signing secret for delivery use; it
+	// must never round-trip back to the caller that already knows it.
+	out := make([]map[string]any, len(subs))
+	for i, s := range subs {
+		out[i] = map[string]any{
+			"id":                   s.ID,
+			"subscriber_id":        s.SubscriberID,
+			"subscriber_type":      s.SubscriberType,
+			"url":                  s.URL,
+			"events":               s.Events,
+			"active":               s.Active,
+			"created_at":           s.CreatedAt,
+			"updated_at":           s.UpdatedAt,
+			"consecutive_failures": s.ConsecutiveFailures,
+		}
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"subscriptions": out})
 }
 
 func (h *APIHandler) DeleteWebhookSubscription(w http.ResponseWriter, r *http.Request) {
@@ -779,6 +805,43 @@ func (h *APIHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpx.NoContent(w)
+}
+
+// AttachListingMedia replaces a listing's media set -- what triggers the
+// cataloguing pipeline (enhance/extract/describe) once photos land on a
+// listing. Any authenticated principal may call this; the service layer
+// enforces that only the listing's own artisan (or staff) may actually write.
+func (h *APIHandler) AttachListingMedia(w http.ResponseWriter, r *http.Request) {
+	if _, err := auth.RequirePrincipal(r.Context()); err != nil {
+		httpx.Error(w, err)
+		return
+	}
+
+	var req struct {
+		Items []map[string]any `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.Error(w, domain.InvalidInput("invalid JSON"))
+		return
+	}
+
+	items, err := h.catalogSvc.AttachListingMedia(r.Context(), httpx.URLParam(r, "id"), idempotencyKeyFrom(r), req.Items)
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"items": items})
+}
+
+// GetListingAttributes reads what the model inferred for a listing, and what
+// the artisan has since overridden.
+func (h *APIHandler) GetListingAttributes(w http.ResponseWriter, r *http.Request) {
+	attrs, err := h.catalogSvc.GetListingAttributes(r.Context(), httpx.URLParam(r, "id"))
+	if err != nil {
+		httpx.Error(w, err)
+		return
+	}
+	httpx.JSON(w, http.StatusOK, map[string]any{"attributes": attrs})
 }
 
 func (h *APIHandler) SubmitListing(w http.ResponseWriter, r *http.Request) {

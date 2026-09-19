@@ -147,6 +147,7 @@ export const ml: Messages = {
   "offline.conflict.keepMine": "എൻ്റെ പതിപ്പ് സൂക്ഷിക്കുക",
   "offline.conflict.useTheirs": "അവരുടെ പതിപ്പ് ഉപയോഗിക്കുക",
   "outbox.kind.listing.create": "പുതിയ ലിസ്റ്റിംഗ്",
+  "outbox.kind.listing.media.attach": "ഫോട്ടോകൾ ചേർത്തു",
   "outbox.kind.listing.update": "ലിസ്റ്റിംഗ് എഡിറ്റ്",
   "outbox.kind.listing.submit": "ലിസ്‌റ്റിംഗ് അവലോകനത്തിനായി അയച്ചു",
   "outbox.kind.listing.approve": "പട്ടിക പ്രസിദ്ധീകരിച്ചു",

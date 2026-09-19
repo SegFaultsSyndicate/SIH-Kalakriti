@@ -4,19 +4,30 @@
   Second step of the same real OTP flow as /login: POST /auth/otp/verify via
   completeOtpVerification (packages/api/src/auth-flow.ts), which stores the
   token and establishes the session in one call.
+
+  dev_role: 'MINISTRY' requests a real MINISTRY-role token instead of the
+  default ARTISAN one -- core-svc only honors it with dev OTP enabled
+  (AUTH_DEV_OTP_ENABLED) and *rejects the whole login* with a 400 otherwise
+  (VerifyOtp treats a dev_role it can't honor as invalid input, not a no-op --
+  see services/core-svc/internal/core/service/auth.go). So it's only sent in
+  a dev build (import.meta.env.DEV): a production build omits it and falls
+  through to the ordinary OTP path, which still logs the caller in, just as
+  ARTISAN -- the same "no real MINISTRY issuance path exists yet" gap
+  documented in CLAUDE.md, not a broken login. There is currently no other
+  login path anywhere in the product that can mint a MINISTRY token at all.
+  This used to fall back, on any verify failure, to forging an unsigned JWT
+  client-side and calling session.establish on it directly -- which never
+  actually worked: pkg/auth.Issuer.Verify checks a real HMAC signature
+  regardless of environment, so the very first real API call the admin
+  console made with that forged token 401'd. It just failed one request
+  later than the honest error would have, in every environment, not just
+  production.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { locale } from '@kalakriti/i18n';
-  import {
-    completeOtpVerification,
-    setAccessToken,
-    setRefreshToken,
-    session,
-    ApiError,
-    messageKeyFor,
-  } from '@kalakriti/api';
+  import { completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
   import { Button, Input, FieldGroup } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
@@ -31,22 +42,17 @@
     verifying = true;
     error = '';
     try {
-      const ok = await completeOtpVerification({ phone, otp });
+      const ok = await completeOtpVerification({
+        phone,
+        otp,
+        ...(import.meta.env.DEV ? { dev_role: 'MINISTRY' } : {}),
+      });
       if (ok) {
         await goto(redirect);
       } else {
         error = t('verify.invalid');
       }
     } catch (cause) {
-      if (import.meta.env.DEV && (otp === '000000' || otp === '123456')) {
-        const adminPayload = btoa(JSON.stringify({ sub: 'admin-officer', role: 'MINISTRY' }));
-        const devToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${adminPayload}.devsignature`;
-        setAccessToken(devToken);
-        setRefreshToken(devToken);
-        session.establish(devToken);
-        await goto(redirect);
-        return;
-      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
     } finally {
       verifying = false;

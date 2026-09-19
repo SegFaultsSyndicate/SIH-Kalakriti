@@ -147,6 +147,7 @@ export const brx: Messages = {
   "offline.conflict.keepMine": "आंनि रोखोमखौ लाखि",
   "offline.conflict.useTheirs": "बिसोरनि रोखोमखौ बाहाय",
   "outbox.kind.listing.create": "गोदान फारिलाइ",
+  "outbox.kind.listing.media.attach": "सावगारि होदो जागायनाय",
   "outbox.kind.listing.update": "फारिलाइनि एडिट",
   "outbox.kind.listing.submit": "फारिलाइखौ बिजिरनो थाखाय दैथाय हरनाय",
   "outbox.kind.listing.approve": "फारिलाइ फोसावनाय",

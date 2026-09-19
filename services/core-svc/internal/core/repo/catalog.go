@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
-	"github.com/ZoroNewbie00/kalakriti/pkg/ids"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo/db"
@@ -64,37 +63,6 @@ func (t *Tx) AttachProductMedia(ctx context.Context, productID, artisanID uuid.U
 	return nil
 }
 
-// GetOrCreateProductForMedia is the pipeline's idempotency: the unique index on
-// product.source_media_id means a redelivered media.uploaded inserts nothing and
-// gets back the product the first delivery made. created says which happened.
-func (t *Tx) GetOrCreateProductForMedia(
-	ctx context.Context,
-	in domain.CreateProductInput,
-	mediaID uuid.UUID,
-) (domain.Product, bool, error) {
-	row, err := t.q.CreateProductForMedia(ctx, db.CreateProductForMediaParams{
-		ID:            ids.New(),
-		ArtisanID:     in.ArtisanID,
-		CraftID:       in.CraftID,
-		WorkingTitle:  in.WorkingTitle,
-		SourceMediaID: &mediaID,
-		CreatedBy:     in.CreatedBy,
-	})
-	if err == nil {
-		return productFromRow(row), true, nil
-	}
-	if !errors.Is(err, pgx.ErrNoRows) {
-		return domain.Product{}, false, translate(err, "product")
-	}
-
-	// DO NOTHING returned no row, so this media already has a product.
-	existing, err := t.q.GetProductByMedia(ctx, &mediaID)
-	if err != nil {
-		return domain.Product{}, false, translate(err, "product for media")
-	}
-	return productFromRow(existing), false, nil
-}
-
 // GetProduct reads one product by id.
 func (r *Repo) GetProduct(ctx context.Context, id uuid.UUID) (domain.Product, error) {
 	row, err := r.q.GetProduct(ctx, id)
@@ -135,7 +103,7 @@ func (t *Tx) CreateListing(ctx context.Context, id, artisanID uuid.UUID, in doma
 		ID:                             id,
 		ProductID:                      in.ProductID,
 		ArtisanID:                      artisanID,
-		Type:                           db.ListingType(in.Type),
+		Type:                           listingTypeToRow(in.Type),
 		PricePaise:                     in.PricePaise,
 		StockQuantity:                  in.StockQuantity,
 		MinOrderQuantity:               in.MinOrderQuantity,
@@ -166,6 +134,7 @@ func (t *Tx) UpdateListing(ctx context.Context, in domain.UpsertListingInput) (d
 	}
 	row, err := t.q.UpdateListing(ctx, db.UpdateListingParams{
 		ID:                             *in.ListingID,
+		Type:                           listingTypeToRow(in.Type),
 		PricePaise:                     &in.PricePaise,
 		StockQuantity:                  in.StockQuantity,
 		MinOrderQuantity:               &in.MinOrderQuantity,
@@ -282,16 +251,6 @@ func (r *Repo) ListListings(ctx context.Context, filter domain.ListingFilter, pa
 	return out, nil
 }
 
-// GetListingByProduct finds the listing already drafted for a product, which is
-// how a redelivered pipeline run avoids drafting a second one.
-func (r *Repo) GetListingByProduct(ctx context.Context, productID uuid.UUID) (domain.Listing, error) {
-	row, err := r.q.GetListingByProduct(ctx, productID)
-	if err != nil {
-		return domain.Listing{}, translate(err, "listing for product")
-	}
-	return listingFromRow(row), nil
-}
-
 // SetListingNeedsDescription flags a draft as waiting on the artisan's own words.
 func (r *Repo) SetListingNeedsDescription(ctx context.Context, listingID uuid.UUID, needs bool) error {
 	_, err := r.q.SetListingNeedsDescription(ctx, db.SetListingNeedsDescriptionParams{
@@ -314,12 +273,33 @@ func (r *Repo) ListListingTranslations(ctx context.Context, listingID uuid.UUID)
 	return out, nil
 }
 
+// listingTypeFromRow unwraps the nullable type column: a DRAFT listing may
+// not have chosen a type yet (see migrations/035_listing_draft_type.sql),
+// represented as domain.ListingType("") the same way the gRPC layer already
+// represents LISTING_TYPE_UNSPECIFIED.
+func listingTypeFromRow(t *db.ListingType) domain.ListingType {
+	if t == nil {
+		return ""
+	}
+	return domain.ListingType(*t)
+}
+
+// listingTypeToRow is listingTypeFromRow's inverse, for params going the
+// other way: domain.ListingType("") means "not chosen yet," stored as NULL.
+func listingTypeToRow(t domain.ListingType) *db.ListingType {
+	if t == "" {
+		return nil
+	}
+	v := db.ListingType(t)
+	return &v
+}
+
 func listingFromRow(row db.Listing) domain.Listing {
 	return domain.Listing{
 		ID:               row.ID,
 		ProductID:        row.ProductID,
 		ArtisanID:        row.ArtisanID,
-		Type:             domain.ListingType(row.Type),
+		Type:             listingTypeFromRow(row.Type),
 		State:            domain.ListingState(row.State),
 		PricePaise:       row.PricePaise,
 		CurrencyCode:     row.CurrencyCode,
@@ -404,6 +384,21 @@ func (r *Repo) GetListingAttributes(ctx context.Context, listingID uuid.UUID) ([
 // deciding what a model write may touch.
 func (t *Tx) ListListingAttributes(ctx context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error) {
 	rows, err := t.q.GetListingAttributes(ctx, listingID)
+	if err != nil {
+		return nil, translate(err, "listing attributes")
+	}
+	out := make([]domain.ListingAttribute, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, attributeFromRow(row))
+	}
+	return out, nil
+}
+
+// ListListingAttributes reads a listing's attributes outside any write
+// transaction, for a plain GET -- the review screen showing what the model
+// inferred (and what the artisan has since overridden) doesn't need a Tx.
+func (r *Repo) ListListingAttributes(ctx context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error) {
+	rows, err := r.q.GetListingAttributes(ctx, listingID)
 	if err != nil {
 		return nil, translate(err, "listing attributes")
 	}

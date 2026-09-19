@@ -1,14 +1,17 @@
 package bff
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
 	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
@@ -83,6 +86,7 @@ func NewServer(cfg Config) (*Server, error) {
 	r := httpx.Mux(httpx.Config{
 		Logger:         cfg.Logger,
 		AllowedOrigins: cfg.AllowedOrigins,
+		SelfOrigin:     selfOrigin(cfg.BaseURL),
 		RequestTimeout: 30 * time.Second,
 	})
 
@@ -101,6 +105,18 @@ func NewServer(cfg Config) (*Server, error) {
 func (s *Server) mountRoutes() {
 	r := s.router
 	cfg := s.cfg
+
+	// A path that exists under a different verb should be distinguishable
+	// from one that doesn't exist at all -- without this, gin sends both to
+	// NoRoute (the SPA fallback, guarded against /api/* above but still not
+	// the same signal as "wrong method").
+	r.HandleMethodNotAllowed = true
+	r.NoMethod(httpx.WrapHandler(func(w http.ResponseWriter, r *http.Request) {
+		httpx.JSON(w, http.StatusMethodNotAllowed, domain.HTTPErrorBody{
+			Error:   "method_not_allowed",
+			Message: fmt.Sprintf("method %s not allowed for %s", r.Method, r.URL.Path),
+		})
+	}))
 
 	// Build handlers.
 	apiH := handler.NewAPIHandler(
@@ -152,6 +168,7 @@ func (s *Server) mountRoutes() {
 	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
 	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
+	api.GET("/listings/:id/attributes", httpx.WrapHandler(apiH.GetListingAttributes))
 
 	// Public craft ontology, artisan storefront and process feed reads.
 	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
@@ -216,6 +233,7 @@ func (s *Server) mountRoutes() {
 	// Listing mutations.
 	authed.POST("/listings", httpx.WrapHandler(withIdempotency(apiH.CreateListing, cfg.IdempStore)))
 	authed.PATCH("/listings/:id", httpx.WrapHandler(apiH.UpdateListing))
+	authed.POST("/listings/:id/media", httpx.WrapHandler(withIdempotency(apiH.AttachListingMedia, cfg.IdempStore)))
 	authed.POST("/listings/:id/submit", httpx.WrapHandler(apiH.SubmitListing))
 	authed.POST("/listings/:id/approve", httpx.WrapHandler(apiH.ApproveListing))
 	authed.POST("/listings/:id/seal-provenance", httpx.WrapHandler(apiH.SealProvenance))
@@ -277,6 +295,21 @@ func (s *Server) mountRoutes() {
 
 	// SPA fallback for everything else.
 	r.NoRoute(httpx.WrapHandler(spaH.ServeHTTP))
+}
+
+// selfOrigin extracts the scheme+host Origin header this server's own
+// public address would present, from its configured BaseURL, for
+// httpx.Config.SelfOrigin. An Origin header never carries a path, so
+// "http://localhost:8000/foo" and "http://localhost:8000" must compare
+// equal to it -- BaseURL is documented as just scheme+host today, but this
+// normalises defensively rather than assuming that never changes. An
+// unparseable or empty BaseURL yields "", the same as never setting it.
+func selfOrigin(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
 }
 
 // withIdempotency wraps a handler with idempotency middleware.

@@ -147,6 +147,7 @@ export const or: Messages = {
   "offline.conflict.keepMine": "ମୋର ସଂସ୍କରଣ ରଖ |",
   "offline.conflict.useTheirs": "ସେମାନଙ୍କର ସଂସ୍କରଣ ବ୍ୟବହାର କରନ୍ତୁ |",
   "outbox.kind.listing.create": "ନୂତନ ତାଲିକା |",
+  "outbox.kind.listing.media.attach": "ଫଟୋ ଯୋଡ଼ାଗଲା |",
   "outbox.kind.listing.update": "ତାଲିକାଭୁକ୍ତ ସମ୍ପାଦନା |",
   "outbox.kind.listing.submit": "ସମୀକ୍ଷା ପାଇଁ ପଠାଯାଇଥିବା ତାଲିକା |",
   "outbox.kind.listing.approve": "ତାଲିକା ପ୍ରକାଶିତ |",

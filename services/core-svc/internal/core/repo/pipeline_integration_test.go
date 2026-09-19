@@ -74,94 +74,75 @@ func countOutbox(ctx context.Context, t *testing.T, repo *Repo, topic string) in
 	return count
 }
 
-// TestPipelineProductIsUniquePerMedia is the constraint the whole pipeline's
-// idempotency rests on: two deliveries, one product.
-func TestPipelineProductIsUniquePerMedia(t *testing.T) {
+// TestAttachListingMediaReplaysAreIdempotentAtTheStorageLayer walks the writes
+// AttachListingMedia makes, twice, and asserts the parts that must not double:
+// the media set converges (ReplaceListingMedia replaces, not appends) and
+// repeated attribute upserts leave one row per value. The pipeline no longer
+// creates the product or listing itself -- that's the artisan wizard's job,
+// done once, here -- it only enriches what's already there.
+func TestAttachListingMediaReplaysAreIdempotentAtTheStorageLayer(t *testing.T) {
 	ctx := context.Background()
 	repo := New(startPostgres(ctx, t))
 	artisanID, craftID, mediaID := seedPipelineFixture(ctx, t, repo)
 
-	input := domain.CreateProductInput{
-		ArtisanID: artisanID, CraftID: craftID,
-		WorkingTitle: "indigo cotton ajrakh", CreatedBy: "pipeline",
-	}
-
-	var first, second domain.Product
-	var createdFirst, createdSecond bool
+	// The wizard's own listing-creation flow: a product, a listing offering it,
+	// done exactly once.
+	var listingID uuid.UUID
 	require.NoError(t, repo.InTx(ctx, func(ctx context.Context, tx *Tx) error {
-		var err error
-		first, createdFirst, err = tx.GetOrCreateProductForMedia(ctx, input, mediaID)
+		product, err := tx.CreateProduct(ctx, ids.New(), domain.CreateProductInput{
+			ArtisanID: artisanID, CraftID: craftID,
+			WorkingTitle: "indigo cotton ajrakh", CreatedBy: artisanID.String(),
+		})
+		if err != nil {
+			return err
+		}
+		if err := tx.AttachProductMedia(ctx, product.ID, artisanID, []uuid.UUID{mediaID}); err != nil {
+			return err
+		}
+		leadTime, capacity := int32(21), int32(4)
+		listing, err := tx.CreateListing(ctx, ids.New(), artisanID, domain.UpsertListingInput{
+			ProductID: product.ID, Type: domain.ListingMadeToOrder, PricePaise: 0,
+			MinOrderQuantity: 1, LeadTimeDays: &leadTime, CapacityPerMonth: &capacity,
+			CreatedBy: artisanID.String(),
+		})
+		listingID = listing.ID
 		return err
 	}))
-	require.NoError(t, repo.InTx(ctx, func(ctx context.Context, tx *Tx) error {
-		var err error
-		second, createdSecond, err = tx.GetOrCreateProductForMedia(ctx, input, mediaID)
-		return err
-	}))
 
-	require.True(t, createdFirst)
-	require.False(t, createdSecond, "the second delivery must not create a product")
-	require.Equal(t, first.ID, second.ID)
-
-	var products int
-	require.NoError(t, repo.Pool().QueryRow(ctx,
-		`SELECT count(*) FROM product WHERE source_media_id = $1`, mediaID).Scan(&products))
-	require.Equal(t, 1, products)
-}
-
-// TestPipelineDraftAndRedeliveryEmitsOneEventPerTopic walks the writes the
-// pipeline makes, twice, and asserts nothing doubles.
-func TestPipelineDraftAndRedeliveryEmitsOneEventPerTopic(t *testing.T) {
-	ctx := context.Background()
-	repo := New(startPostgres(ctx, t))
-	artisanID, craftID, mediaID := seedPipelineFixture(ctx, t, repo)
-
-	draft := func() domain.Listing {
-		var listing domain.Listing
+	// AttachListingMedia's write, run twice -- once for the initial capture,
+	// once for a retried/duplicate request. Each attach fires the trigger the
+	// pipeline consumes.
+	attach := func() {
 		require.NoError(t, repo.InTx(ctx, func(ctx context.Context, tx *Tx) error {
-			product, _, err := tx.GetOrCreateProductForMedia(ctx, domain.CreateProductInput{
-				ArtisanID: artisanID, CraftID: craftID,
-				WorkingTitle: "indigo cotton ajrakh", CreatedBy: "pipeline",
-			}, mediaID)
-			if err != nil {
+			if err := tx.ReplaceListingMedia(ctx, listingID, []domain.ListingMedia{
+				{ListingID: listingID, MediaID: mediaID, Ordinal: 0, Role: domain.MediaRolePrimaryImage, Kind: domain.MediaImage},
+			}); err != nil {
 				return err
 			}
-
-			// Enhancement, exactly as the media service applies it.
-			enhanced := "enhanced/" + mediaID.String() + ".webp"
-			if _, err := tx.TransitionMediaState(ctx, mediaID, domain.MediaUploaded,
-				domain.MediaProcessing, domain.MediaTransition{}); err == nil {
-				if _, err := tx.SetMediaEnhanced(ctx, mediaID, domain.MediaProcessing, enhanced, nil); err != nil {
-					return err
-				}
-				if err := outboxOnce(ctx, tx, mediaID, topics.MediaEnhanced); err != nil {
-					return err
-				}
-			}
-
-			existing, err := repo.GetListingByProduct(ctx, product.ID)
-			if err == nil {
-				listing = existing
-				return nil
-			}
-
-			leadTime, capacity := int32(21), int32(4)
-			listing, err = tx.CreateListing(ctx, ids.New(), artisanID, domain.UpsertListingInput{
-				ProductID: product.ID, Type: domain.ListingMadeToOrder, PricePaise: 0,
-				MinOrderQuantity: 1, LeadTimeDays: &leadTime, CapacityPerMonth: &capacity,
-				CreatedBy: "pipeline",
-			})
-			if err != nil {
-				return err
-			}
-			return outboxOnce(ctx, tx, listing.ID, topics.CatalogListingDrafted)
+			return outboxOnce(ctx, tx, listingID, topics.CatalogListingMediaAttached)
 		}))
-		return listing
 	}
+	attach()
+	attach()
 
-	first := draft()
-	second := draft()
-	require.Equal(t, first.ID, second.ID, "a redelivery must reuse the listing")
+	media, err := repo.ListListingMedia(ctx, listingID)
+	require.NoError(t, err)
+	require.Len(t, media, 1, "the media set converges, it does not append")
+
+	// Enhancement, exactly as the media service applies it -- guarded by the
+	// state transition, so a redelivery is a no-op regardless of how many
+	// times enrichment runs.
+	enhanced := "enhanced/" + mediaID.String() + ".webp"
+	require.NoError(t, repo.InTx(ctx, func(ctx context.Context, tx *Tx) error {
+		if _, err := tx.TransitionMediaState(ctx, mediaID, domain.MediaUploaded,
+			domain.MediaProcessing, domain.MediaTransition{}); err != nil {
+			return err
+		}
+		if _, err := tx.SetMediaEnhanced(ctx, mediaID, domain.MediaProcessing, enhanced, nil); err != nil {
+			return err
+		}
+		return outboxOnce(ctx, tx, mediaID, topics.MediaEnhanced)
+	}))
 
 	// Attributes are upserts, so writing them twice leaves one row per value.
 	for i := 0; i < 2; i++ {
@@ -170,7 +151,7 @@ func TestPipelineDraftAndRedeliveryEmitsOneEventPerTopic(t *testing.T) {
 				CraftCode: "ajrakh-block-printing", Material: "cotton",
 				Technique: "hand-block-printing", Colours: []string{"indigo"},
 			}).ToListingAttributes() {
-				a.ID, a.ListingID, a.Source = ids.New(), first.ID, domain.SourceModel
+				a.ID, a.ListingID, a.Source = ids.New(), listingID, domain.SourceModel
 				if err := tx.UpsertListingAttribute(ctx, a); err != nil {
 					return err
 				}
@@ -179,16 +160,17 @@ func TestPipelineDraftAndRedeliveryEmitsOneEventPerTopic(t *testing.T) {
 		}))
 	}
 
-	attributes, err := repo.GetListingDetail(ctx, first.ID)
+	attributes, err := repo.GetListingDetail(ctx, listingID)
 	require.NoError(t, err)
 	require.Len(t, attributes.Attributes, 4, "one row per attribute value, not two")
 
 	var listings int
 	require.NoError(t, repo.Pool().QueryRow(ctx, `SELECT count(*) FROM listing`).Scan(&listings))
-	require.Equal(t, 1, listings)
+	require.Equal(t, 1, listings, "the wizard creates exactly one listing; the pipeline creates none")
 
 	require.Equal(t, 1, countOutbox(ctx, t, repo, topics.MediaEnhanced))
-	require.Equal(t, 1, countOutbox(ctx, t, repo, topics.CatalogListingDrafted))
+	require.Equal(t, 2, countOutbox(ctx, t, repo, topics.CatalogListingMediaAttached),
+		"unlike media.enhanced, an attach event fires on every successful attach, not just the first")
 }
 
 // TestPipelineFailureIsRecordedOnTheMediaRow is the third acceptance criterion's

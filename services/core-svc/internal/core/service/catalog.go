@@ -53,6 +53,7 @@ type CatalogStore interface {
 	GetListingDetail(ctx context.Context, id uuid.UUID) (domain.Listing, error)
 	ListListings(ctx context.Context, filter domain.ListingFilter, page domain.Page) ([]domain.Listing, error)
 	ListListingMedia(ctx context.Context, listingID uuid.UUID) ([]domain.ListingMedia, error)
+	ListListingAttributes(ctx context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error)
 	ListMediaOwnership(ctx context.Context, mediaIDs []uuid.UUID) ([]domain.MediaOwnership, error)
 	GetSHGForArtisan(ctx context.Context, artisanID uuid.UUID) (domain.SelfHelpGroup, error)
 }
@@ -75,6 +76,14 @@ type Catalog struct {
 // NewCatalog builds the catalog service.
 func NewCatalog(store CatalogStore, crafts CraftIndex, log *slog.Logger) *Catalog {
 	return &Catalog{store: store, crafts: crafts, log: log, now: time.Now}
+}
+
+// listingMediaAttached mirrors events.v1.ListingMediaAttached's payload
+// fields -- what triggers the cataloguing pipeline.
+type listingMediaAttached struct {
+	ListingID string `json:"listing_id"`
+	ProductID string `json:"product_id"`
+	ArtisanID string `json:"artisan_id"`
 }
 
 // listingPublished mirrors events.v1.CatalogListingPublished's payload fields.
@@ -262,6 +271,12 @@ func (s *Catalog) SubmitForApproval(ctx context.Context, listingID uuid.UUID, id
 	if len(listing.Translations) == 0 {
 		return domain.Listing{}, fmt.Errorf(
 			"listing %s has no copy to review: %w", listingID, pkgdomain.ErrInvalidInput)
+	}
+	// A DRAFT is allowed to still be missing its type and type-specific
+	// commercial fields (see migrations/035_listing_draft_type.sql); leaving
+	// DRAFT is not.
+	if err := listing.ValidateComplete(); err != nil {
+		return domain.Listing{}, err
 	}
 
 	err = s.store.InTx(ctx, func(ctx context.Context, tx CatalogTx) error {
@@ -486,6 +501,26 @@ func (s *Catalog) GetListing(ctx context.Context, listingID uuid.UUID) (domain.L
 	return listing, nil
 }
 
+// GetListingAttributes reads a listing's attributes -- what the model
+// inferred, and what the artisan has since overridden. Same visibility rule
+// as the listing itself: public once PUBLISHED, otherwise only the owning
+// artisan or a curator.
+func (s *Catalog) GetListingAttributes(ctx context.Context, listingID uuid.UUID) ([]domain.ListingAttribute, error) {
+	if listingID == uuid.Nil {
+		return nil, fmt.Errorf("listing_id is required: %w", pkgdomain.ErrInvalidInput)
+	}
+	listing, err := s.store.GetListing(ctx, listingID)
+	if err != nil {
+		return nil, err
+	}
+	if listing.State != domain.StatePublished {
+		if _, err := s.authoriseFor(ctx, listing.ArtisanID, auth.RoleClusterOfficer, auth.RoleMinistry); err != nil {
+			return nil, fmt.Errorf("listing %s not found: %w", listingID, pkgdomain.ErrNotFound)
+		}
+	}
+	return s.store.ListListingAttributes(ctx, listingID)
+}
+
 // ListListings pages listings under the usual filters. Anything other than a
 // published-only query is an operator or owner view and is authorised as one.
 func (s *Catalog) ListListings(ctx context.Context, filter domain.ListingFilter, page domain.Page) ([]domain.Listing, error) {
@@ -702,7 +737,24 @@ func (s *Catalog) AttachListingMedia(ctx context.Context, in domain.AttachMediaI
 	}
 
 	err = s.store.InTx(ctx, func(ctx context.Context, tx CatalogTx) error {
-		return tx.ReplaceListingMedia(ctx, in.ListingID, items)
+		if err := tx.ReplaceListingMedia(ctx, in.ListingID, items); err != nil {
+			return err
+		}
+		// Triggers the cataloguing pipeline: enhance every attached photo,
+		// extract attributes, draft a description. Fired on every successful
+		// attach (not just the first), since re-attaching media is itself a
+		// reasonable signal to re-enrich, and every pipeline step downstream
+		// is an idempotent upsert.
+		return outbox.Enqueue(ctx, tx,
+			ids.New().String(),
+			in.ListingID.String(),
+			topics.CatalogListingMediaAttached,
+			idempotencyKey,
+			s.newCatalogEvent(in.ListingID, idempotencyKey, listingMediaAttached{
+				ListingID: in.ListingID.String(),
+				ProductID: listing.ProductID.String(),
+				ArtisanID: listing.ArtisanID.String(),
+			}))
 	})
 	if err != nil {
 		return nil, err

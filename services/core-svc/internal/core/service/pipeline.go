@@ -29,13 +29,15 @@ type Inference interface {
 }
 
 // PipelineStore is what the pipeline needs beyond the catalog and media
-// services: the two insert-if-absent reads that make its steps replayable, and
-// the artisan's crafts, which are the allowlist the extractor is held to.
+// services: reads for a listing that already exists (created by the artisan's
+// own wizard, or by a cluster officer) and whatever media has been attached to
+// it -- the pipeline enriches that listing, it no longer creates one.
 type PipelineStore interface {
 	GetArtisan(ctx context.Context, id uuid.UUID) (domain.Artisan, error)
 	GetMedia(ctx context.Context, id uuid.UUID) (domain.Media, error)
-	GetOrCreateProductForMedia(ctx context.Context, in domain.CreateProductInput, mediaID uuid.UUID) (domain.Product, bool, error)
-	GetListingByProduct(ctx context.Context, productID uuid.UUID) (domain.Listing, error)
+	GetListing(ctx context.Context, id uuid.UUID) (domain.Listing, error)
+	GetProduct(ctx context.Context, id uuid.UUID) (domain.Product, error)
+	ListListingMedia(ctx context.Context, listingID uuid.UUID) ([]domain.ListingMedia, error)
 	SetListingNeedsDescription(ctx context.Context, listingID uuid.UUID, needs bool) error
 	ListListingTranslations(ctx context.Context, listingID uuid.UUID) ([]domain.ListingTranslation, error)
 }
@@ -52,17 +54,23 @@ const (
 	stepEnhance   = "enhance"
 	stepExtract   = "extract"
 	stepDescribe  = "describe"
-	stepDraft     = "draft"
 	stepTranslate = "translate"
 )
 
-// Pipeline turns an uploaded photograph into a listing waiting for its artisan.
+// Pipeline enriches a listing an artisan (or a cluster officer) already
+// created, once photos are attached to it: enhances each photo, extracts
+// attributes, and drafts a description in the artisan's language. It used to
+// create its own listing straight from a raw upload -- one product per photo,
+// unique on source_media_id -- which raced the artisan wizard's own
+// listing-creation flow and silently produced a second, orphaned listing per
+// photo (see WIRING_AUDIT_PLAN.md). It no longer creates products or listings;
+// it only enriches whichever one the media was attached to.
 //
 // Each step is replayable rather than ledgered: enhancement is a guarded state
-// change, the product insert is unique on its source media, attributes and copy
-// are upserts. A redelivery therefore converges on the same listing instead of
-// building a second one, and a process killed mid-chain resumes by re-running
-// the steps that left no trace.
+// change per photo, attributes and copy are upserts keyed on the listing. A
+// redelivery therefore converges on the same result instead of duplicating
+// anything, and a process killed mid-chain resumes by re-running the steps
+// that left no trace.
 type Pipeline struct {
 	store    PipelineStore
 	catalog  *Catalog
@@ -105,186 +113,149 @@ func asArtisan(ctx context.Context, artisanID uuid.UUID) context.Context {
 	})
 }
 
-// Run drives the whole chain for one uploaded asset.
+// Run enriches one listing: enhances every attached photo, extracts
+// attributes across all of them, and drafts a description in the artisan's
+// language. Triggered once photos are attached to an existing listing (see
+// AttachListingMedia), not by the raw upload -- a listing (and its product)
+// already exists by the time this runs.
 //
-// The returned error is for the consumer's retry: a transient failure comes back
-// so the message is redelivered, and a terminal one is recorded on the media row
-// and swallowed, because retrying it three more times would only delay the
-// artisan being told.
-func (p *Pipeline) Run(ctx context.Context, mediaID uuid.UUID) error {
-	media, err := p.store.GetMedia(ctx, mediaID)
+// Every step below degrades gracefully -- logged and skipped, never failing
+// the whole run -- because the listing the artisan is building already exists
+// and is valid regardless of whether AI enrichment succeeds; only a genuine
+// store/db error propagates for the consumer's retry. The one exception is a
+// single photo's enhancement failing terminally, which is recorded on that
+// photo's own row (RecordFailure) so the artisan sees a reason to retake it,
+// without blocking enrichment from the artisan's other photos.
+func (p *Pipeline) Run(ctx context.Context, listingID uuid.UUID) error {
+	listing, err := p.store.GetListing(ctx, listingID)
 	if err != nil {
 		return err
 	}
-	if media.Kind != domain.MediaImage {
-		// Video and audio have their own paths; nothing to catalogue here.
-		return nil
-	}
-	if media.State == domain.MediaFailed {
-		return nil // already given up on, and the artisan has been told why
-	}
+	ctx = asArtisan(ctx, listing.ArtisanID)
 
-	ctx = asArtisan(ctx, media.ArtisanID)
+	artisan, err := p.store.GetArtisan(ctx, listing.ArtisanID)
+	if err != nil {
+		return err
+	}
+	product, err := p.store.GetProduct(ctx, listing.ProductID)
+	if err != nil {
+		return err
+	}
+	craft, _ := p.crafts.Craft(product.CraftID)
 
-	artisan, err := p.store.GetArtisan(ctx, media.ArtisanID)
+	items, err := p.store.ListListingMedia(ctx, listingID)
 	if err != nil {
 		return err
 	}
 
-	// 1. Enhance, and record the enhanced rendition on the media row. The media
-	//    service emits media.enhanced from inside that transaction.
-	enhancedKey := ""
-	if media.EnhancedObjectKey != nil {
-		enhancedKey = *media.EnhancedObjectKey // a previous delivery got this far
-	} else {
-		enhancedKey, err = timed(ctx, stepEnhance, func() (string, error) {
+	// 1. Enhance every attached photo, and record each enhanced rendition on
+	//    its own media row.
+	enhancedKeys := make([]string, 0, len(items))
+	for _, item := range items {
+		if item.Kind != domain.MediaImage {
+			continue
+		}
+		media, err := p.store.GetMedia(ctx, item.MediaID)
+		if err != nil {
+			return err
+		}
+		if media.State == domain.MediaFailed {
+			continue // already given up on, and the artisan has been told why
+		}
+		if media.EnhancedObjectKey != nil {
+			enhancedKeys = append(enhancedKeys, *media.EnhancedObjectKey) // a previous delivery got this far
+			continue
+		}
+
+		enhancedKey, err := timed(ctx, stepEnhance, func() (string, error) {
 			return p.inferrer.EnhanceImage(ctx, media.ObjectKey)
 		})
 		if err != nil {
-			return p.fail(ctx, media, stepEnhance, err)
+			if !terminal(err) {
+				return fmt.Errorf("%s: %w", stepEnhance, err) // let the consumer retry
+			}
+			if failErr := p.RecordFailure(ctx, media.ID, fmt.Sprintf("%s: %v", stepEnhance, err)); failErr != nil {
+				return failErr
+			}
+			continue
 		}
-		if media, err = p.media.ApplyEnhancement(ctx, EnhancementResult{
-			MediaID:           mediaID,
+		if _, err := p.media.ApplyEnhancement(ctx, EnhancementResult{
+			MediaID:           media.ID,
 			EnhancedObjectKey: enhancedKey,
 			ModelVersion:      &p.modelVersion,
-			IdempotencyKey:    "pipeline:" + stepEnhance + ":" + mediaID.String(),
+			IdempotencyKey:    "pipeline:" + stepEnhance + ":" + media.ID.String(),
 		}); err != nil {
+			return err
+		}
+		enhancedKeys = append(enhancedKeys, enhancedKey)
+	}
+	if len(enhancedKeys) == 0 {
+		return nil // nothing usable to enrich from yet
+	}
+
+	// 2. Extract attributes across every photo together. The craft is already
+	//    the artisan's own choice from listing creation, not the model's
+	//    guess -- a mismatch is logged, not fatal, since nothing here still
+	//    decides which craft the listing belongs to. A transient failure (e.g.
+	//    ml-svc unreachable) is returned for the consumer's retry, same as
+	//    enhance; a terminal one (bad input) is logged and skipped, since
+	//    there is no longer a single photo to blame it on.
+	attributes, err := timed(ctx, stepExtract, func() (domain.InferredAttributes, error) {
+		return p.inferrer.ExtractAttributes(ctx, enhancedKeys, craft.Code, deref(artisan.Bio))
+	})
+	if err != nil && !terminal(err) {
+		return fmt.Errorf("%s: %w", stepExtract, err) // let the consumer retry
+	}
+	if err != nil {
+		p.log.WarnContext(ctx, "attribute extraction failed, leaving the listing without model attributes",
+			"listing_id", listingID, "error", err)
+	} else {
+		if attributes.CraftCode != "" && attributes.CraftCode != craft.Code {
+			p.log.WarnContext(ctx, "model attributes disagree with the listing's declared craft",
+				"listing_id", listingID, "declared", craft.Code, "model", attributes.CraftCode)
+		}
+		if _, err := p.catalog.UpsertListingAttributes(ctx, listingID,
+			attributes.ToListingAttributes(), domain.SourceModel,
+			"pipeline:"+stepExtract+":"+listingID.String()); err != nil {
 			return err
 		}
 	}
 
-	// 2. Extract, constrained to the crafts this artisan actually practises.
-	//    Anything outside that list is the model guessing, and a wrong craft
-	//    poisons search and provenance alike.
-	allowlist := p.craftCodes(artisan.CraftIDs)
-	attributes, err := timed(ctx, stepExtract, func() (domain.InferredAttributes, error) {
-		return p.inferrer.ExtractAttributes(ctx, []string{enhancedKey}, allowlist.declared, deref(artisan.Bio))
-	})
-	if err != nil {
-		return p.fail(ctx, media, stepExtract, err)
-	}
-	craftID, ok := allowlist.resolve(attributes.CraftCode)
-	if !ok {
-		return p.fail(ctx, media, stepExtract, fmt.Errorf(
-			"the model returned craft %q, which is not one of this artisan's crafts: %w",
-			attributes.CraftCode, pkgdomain.ErrInvalidInput))
-	}
-
-	// 3. Product and listing, created once per uploaded photograph.
-	product, created, err := p.store.GetOrCreateProductForMedia(ctx, domain.CreateProductInput{
-		ArtisanID:    media.ArtisanID,
-		CraftID:      craftID,
-		WorkingTitle: workingTitle(attributes),
-		Materials:    nonEmpty(attributes.Material),
-		Techniques:   nonEmpty(attributes.Technique),
-		Colours:      attributes.Colours,
-		Motifs:       attributes.Motifs,
-		MediaIDs:     []uuid.UUID{mediaID},
-		CreatedBy:    "pipeline",
-	}, mediaID)
-	if err != nil {
-		return err
-	}
-	p.log.InfoContext(ctx, "pipeline product",
-		"media_id", mediaID, "product_id", product.ID, "created", created)
-
-	listing, err := p.draftListing(ctx, product, attributes)
-	if err != nil {
-		return err
-	}
-
-	// The attributes are written before the copy is attempted, so a failure in
-	// step 4 leaves the artisan a listing that already knows what it is.
-	if _, err := p.catalog.UpsertListingAttributes(ctx, listing.ID,
-		attributes.ToListingAttributes(), domain.SourceModel,
-		"pipeline:"+stepExtract+":"+mediaID.String()); err != nil {
-		return err
-	}
-
-	// 4. Copy. A failure here is compensated, not rolled back: everything above
-	//    is worth keeping, so the listing stays a DRAFT flagged for the artisan
-	//    to write the description themselves.
+	// 3. Copy. A failure here is compensated, not rolled back: the listing
+	//    stays usable and is flagged for the artisan to write the description
+	//    themselves.
 	language := firstOr(artisan.Languages, "ENGLISH")
 	generated, err := timed(ctx, stepDescribe, func() (domain.GeneratedCopy, error) {
 		return p.inferrer.GenerateDescription(ctx, domain.CopyRequest{
 			Attributes:  attributes,
-			CraftID:     craftID,
-			CraftCode:   attributes.CraftCode,
+			CraftID:     product.CraftID,
+			CraftCode:   craft.Code,
 			Language:    language,
 			ArtisanNote: "",
 		})
 	})
 	if err != nil {
 		p.log.WarnContext(ctx, "description generation failed, leaving the draft to the artisan",
-			"listing_id", listing.ID, "error", err)
-		return p.store.SetListingNeedsDescription(ctx, listing.ID, true)
+			"listing_id", listingID, "error", err)
+		return p.store.SetListingNeedsDescription(ctx, listingID, true)
 	}
 
-	if _, err := p.catalog.UpsertListingTranslation(ctx, listing.ID, domain.ListingTranslation{
+	if _, err := p.catalog.UpsertListingTranslation(ctx, listingID, domain.ListingTranslation{
 		Language:         language,
 		Title:            generated.Title,
 		Description:      generated.Description,
 		Highlights:       generated.Highlights,
 		MachineGenerated: true,
-	}, "pipeline:"+stepDescribe+":"+mediaID.String()); err != nil {
+	}, "pipeline:"+stepDescribe+":"+listingID.String()); err != nil {
 		return err
 	}
-	if err := p.store.SetListingNeedsDescription(ctx, listing.ID, false); err != nil {
+	if err := p.store.SetListingNeedsDescription(ctx, listingID, false); err != nil {
 		return err
 	}
 
-	// 5. Hand it to the artisan. Submitting an already-submitted listing is an
-	//    illegal transition, which on a redelivery is the correct no-op.
-	if listing.State == domain.StateDraft {
-		if _, err := p.catalog.SubmitForApproval(ctx, listing.ID,
-			"pipeline:"+stepDraft+":"+mediaID.String()); err != nil && !errors.Is(err, pkgdomain.ErrInvalidInput) {
-			return err
-		}
-	}
-
-	p.log.InfoContext(ctx, "listing drafted",
-		"media_id", mediaID, "listing_id", listing.ID, "craft_id", craftID, "language", language)
+	p.log.InfoContext(ctx, "listing enriched",
+		"listing_id", listingID, "photos", len(enhancedKeys), "language", language)
 	return nil
-}
-
-// draftListing creates the offer for a product, or returns the one an earlier
-// delivery created.
-func (p *Pipeline) draftListing(
-	ctx context.Context,
-	product domain.Product,
-	attributes domain.InferredAttributes,
-) (domain.Listing, error) {
-	existing, err := p.store.GetListingByProduct(ctx, product.ID)
-	if err == nil {
-		return existing, nil
-	}
-	if !errors.Is(err, pkgdomain.ErrNotFound) {
-		return domain.Listing{}, err
-	}
-
-	// Made to order with a conservative lead time: the artisan sets the real
-	// price and terms at approval, and nothing goes on sale before they do.
-	leadTime, capacity := int32(21), int32(4)
-	return p.catalog.UpsertListing(ctx, domain.UpsertListingInput{
-		ProductID:        product.ID,
-		Type:             domain.ListingMadeToOrder,
-		PricePaise:       0,
-		MinOrderQuantity: 1,
-		LeadTimeDays:     &leadTime,
-		CapacityPerMonth: &capacity,
-		AcceptingOrders:  false,
-		CreatedBy:        "pipeline",
-	}, "pipeline:"+stepDraft+":"+product.ID.String())
-}
-
-// fail records a terminal failure on the media row so the artisan sees a reason
-// rather than a photograph that silently never became anything, and returns nil
-// so the message is committed instead of retried into the same wall.
-func (p *Pipeline) fail(ctx context.Context, media domain.Media, step string, cause error) error {
-	if !terminal(cause) {
-		return fmt.Errorf("%s: %w", step, cause) // let the consumer retry
-	}
-	return p.RecordFailure(ctx, media.ID, fmt.Sprintf("%s: %v", step, cause))
 }
 
 // RecordFailure marks an asset terminally failed with the reason on the row. It
@@ -521,52 +492,6 @@ func terminal(err error) bool {
 	return errors.Is(err, pkgdomain.ErrInvalidInput) ||
 		errors.Is(err, pkgdomain.ErrForbidden) ||
 		errors.Is(err, pkgdomain.ErrNotFound)
-}
-
-// craftAllowlist is the set of crafts one artisan may have their work catalogued
-// under, indexed by the slug the model answers with.
-type craftAllowlist struct {
-	byCode   map[string]uuid.UUID
-	declared string
-}
-
-func (a craftAllowlist) resolve(code string) (uuid.UUID, bool) {
-	id, ok := a.byCode[code]
-	return id, ok
-}
-
-func (p *Pipeline) craftCodes(craftIDs []uuid.UUID) craftAllowlist {
-	out := craftAllowlist{byCode: make(map[string]uuid.UUID, len(craftIDs))}
-	for i, id := range craftIDs {
-		craft, ok := p.crafts.Craft(id)
-		if !ok {
-			continue
-		}
-		out.byCode[craft.Code] = id
-		if i == 0 {
-			out.declared = craft.Code // the artisan's primary craft is the prior
-		}
-	}
-	return out
-}
-
-func workingTitle(a domain.InferredAttributes) string {
-	parts := make([]string, 0, 3)
-	if len(a.Colours) > 0 {
-		parts = append(parts, a.Colours[0])
-	}
-	if a.Material != "" {
-		parts = append(parts, a.Material)
-	}
-	parts = append(parts, strings.ReplaceAll(a.CraftCode, "-", " "))
-	return strings.TrimSpace(strings.Join(parts, " "))
-}
-
-func nonEmpty(value string) []string {
-	if value == "" {
-		return nil
-	}
-	return []string{value}
 }
 
 func firstOr(values []string, fallback string) string {

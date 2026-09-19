@@ -21,7 +21,7 @@ func TestAllTopicsAreUniqueAndKnown(t *testing.T) {
 		}
 	}
 
-	if got, want := len(All), 27; got != want {
+	if got, want := len(All), 35; got != want {
 		t.Errorf("len(All) = %d, want %d", got, want)
 	}
 }

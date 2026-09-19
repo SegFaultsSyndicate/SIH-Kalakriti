@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -43,7 +44,23 @@ type ConsumerGroup struct {
 	dlqWriter *Producer
 	cfg       ConsumerConfig
 	log       *slog.Logger
+	// healthy is false while Run is between connections (backing off after a
+	// fetch/commit/dead-letter error) and true while it holds a live reader.
+	// /readyz handlers read this via Healthy() -- see WIRING_AUDIT_PLAN.md
+	// F-6: Run reconnecting forever means the goroutine never exits, so a
+	// dead consumer no longer crashes the process, but it was still
+	// invisible to readiness, which only ever pinged Postgres/Redis.
+	healthy atomic.Bool
 }
+
+// Healthy reports whether this consumer currently holds a live connection
+// (mid fetch/handle/commit loop), as opposed to backing off after a
+// disconnect and about to reconnect.
+func (c *ConsumerGroup) Healthy() bool { return c.healthy.Load() }
+
+// Topic names which topic this consumer reads, for a /readyz body that says
+// which one is down rather than just "a consumer is down".
+func (c *ConsumerGroup) Topic() string { return c.cfg.Topic }
 
 // NewConsumerGroup builds a runner. kafka-go's Reader with GroupID set already
 // speaks the consumer group protocol (join, sync, heartbeat, rebalance), so no
@@ -55,25 +72,84 @@ func NewConsumerGroup(cfg ConsumerConfig, log *slog.Logger) *ConsumerGroup {
 	if cfg.RetryBackoff <= 0 {
 		cfg.RetryBackoff = time.Second
 	}
+	c := &ConsumerGroup{cfg: cfg, log: log}
+	c.reader, c.dlqWriter = c.newReaderAndDLQ()
+	return c
+}
+
+// newReaderAndDLQ builds a fresh reader and dead-letter producer from cfg.
+// Split out of NewConsumerGroup so Run's reconnect path can rebuild both
+// after a fatal fetch/commit error without duplicating the construction
+// logic.
+func (c *ConsumerGroup) newReaderAndDLQ() (*kafka.Reader, *Producer) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  cfg.Brokers,
-		Topic:    cfg.Topic,
-		GroupID:  cfg.GroupID,
+		Brokers:  c.cfg.Brokers,
+		Topic:    c.cfg.Topic,
+		GroupID:  c.cfg.GroupID,
 		MinBytes: 1,
 		MaxBytes: 10e6,
 	})
-	return &ConsumerGroup{
-		reader:    reader,
-		dlqWriter: NewProducer(cfg.Brokers),
-		cfg:       cfg,
-		log:       log,
+	return reader, NewProducer(c.cfg.Brokers)
+}
+
+// initialReconnectBackoff and reconnectBackoffCap bound Run's reconnect
+// pacing after a fetch/commit/dead-letter error. Deliberately separate from
+// ConsumerConfig.RetryBackoff, which paces per-message handler retries on
+// an already-connected reader -- a different concern with a different
+// tuning knob, even though both happen to default to the same value.
+const (
+	initialReconnectBackoff = time.Second
+	reconnectBackoffCap     = 30 * time.Second
+)
+
+// Run consumes until ctx is cancelled, transparently reconnecting with
+// exponential backoff on any fetch/commit/dead-letter error instead of
+// returning it to the caller. It previously returned that error, and every
+// caller (see each service's main.go) only logged it and let the consumer's
+// goroutine exit for good -- a single transient Kafka disconnect
+// permanently killed that consumer for the remaining life of the process,
+// while /healthz stayed green and pkg/outbox's relay (the equivalent
+// long-lived job elsewhere in this codebase) kept retrying correctly the
+// whole time. See WIRING_AUDIT_PLAN.md F-6.
+//
+// Run now only returns (nil) on a genuine ctx cancellation/shutdown.
+func (c *ConsumerGroup) Run(ctx context.Context, handle HandlerFunc) error {
+	backoff := initialReconnectBackoff
+	c.healthy.Store(true)
+
+	for {
+		err := c.runOnce(ctx, handle)
+		if err == nil {
+			c.healthy.Store(false)
+			return nil
+		}
+		c.healthy.Store(false)
+
+		c.log.Error("consumer disconnected, reconnecting",
+			"topic", c.cfg.Topic, "error", err, "backoff", backoff)
+
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(backoff):
+		}
+		backoff *= 2
+		if backoff > reconnectBackoffCap {
+			backoff = reconnectBackoffCap
+		}
+
+		// runOnce's defer already closed the previous reader/dlqWriter --
+		// whatever failed may have left them unusable, so this consumer
+		// gets fresh ones rather than retrying on the same connection.
+		c.reader, c.dlqWriter = c.newReaderAndDLQ()
+		c.healthy.Store(true)
 	}
 }
 
-// Run consumes until ctx is cancelled. A cancelled context is treated as a
-// normal shutdown: the reader and dead-letter writer are closed and Run returns
-// nil, not an error.
-func (c *ConsumerGroup) Run(ctx context.Context, handle HandlerFunc) error {
+// runOnce is the fetch/handle/commit loop for one reader connection. It
+// returns nil only on a genuine ctx cancellation (Run then stops entirely);
+// any other error means the connection needs to be rebuilt, which Run does.
+func (c *ConsumerGroup) runOnce(ctx context.Context, handle HandlerFunc) error {
 	defer func() {
 		_ = c.reader.Close()
 		_ = c.dlqWriter.Close()

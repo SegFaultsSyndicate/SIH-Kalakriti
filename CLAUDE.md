@@ -452,10 +452,17 @@ unless someone runs `pnpm api:gen` after every bff route change.
 
 ## Idempotency header mismatch — now fixed (was: found, not yet fixed)
 
-`web/packages/api/src/transport.ts` now sends `X-Idempotency-Key`, matching
-`services/bff/internal/bff/middleware/idempotency.go`. (Previously documented
-here as sending the bare `Idempotency-Key` — that entry is superseded by this
-one; the fix has shipped.)
+`services/bff/internal/bff/middleware/idempotency.go` reads the bare
+`Idempotency-Key` header — that has not changed. `web/packages/api/src/transport.ts`
+sends **both** `Idempotency-Key` and `X-Idempotency-Key` on every mutating
+request, so the middleware always sees the one it reads regardless of which
+name a future refactor favors. The CORS allow-list
+(`pkg/httpx/middleware.go`) was missing `X-Idempotency-Key` — same-origin
+traffic never preflights so this was latent, but any cross-origin deployment
+would fail preflight on every mutating request. Fixed by adding it alongside
+the existing bare-name entry. (The two earlier versions of this entry
+contradicted each other on which header name is canonical — this replaces
+both; canonical is the bare `Idempotency-Key`.)
 
 ## Internationalization (i18n) verification and ratchet convention
 

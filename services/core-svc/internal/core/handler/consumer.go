@@ -30,10 +30,11 @@ type envelope struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-// mediaUploaded mirrors events.v1.MediaUploaded's payload fields; the pipeline
-// only needs to know which asset landed.
-type mediaUploaded struct {
-	MediaID string `json:"media_id"`
+// listingMediaAttached mirrors events.v1.ListingMediaAttached's payload
+// fields; the pipeline only needs to know which listing to enrich, which is
+// the envelope's aggregate_id.
+type listingMediaAttached struct {
+	ListingID string `json:"listing_id"`
 }
 
 // listingPublished mirrors the fields the translation fan-out needs.
@@ -99,37 +100,38 @@ func MediaEnhancedHandler(svc *service.Media, log *slog.Logger) kafka.HandlerFun
 	}
 }
 
-// MediaUploadedHandler runs the cataloguing pipeline for one uploaded asset.
+// ListingMediaAttachedHandler runs the cataloguing pipeline for one listing.
 // Retries, backoff and the dead-letter hop are pkg/kafka's; idempotency is the
 // pipeline's, so a redelivery here is safe by construction.
-func MediaUploadedHandler(pipeline *service.Pipeline, log *slog.Logger) kafka.HandlerFunc {
+func ListingMediaAttachedHandler(pipeline *service.Pipeline, log *slog.Logger) kafka.HandlerFunc {
 	return func(ctx context.Context, msg segmentio.Message) error {
-		var payload mediaUploaded
-		mediaID, err := decodeAggregate(msg, &payload)
+		var payload listingMediaAttached
+		listingID, err := decodeAggregate(msg, &payload)
 		if err != nil {
 			return err
 		}
-		if err := pipeline.Run(ctx, mediaID); err != nil {
-			return fmt.Errorf("cataloguing media %s: %w", mediaID, err)
+		if err := pipeline.Run(ctx, listingID); err != nil {
+			return fmt.Errorf("enriching listing %s: %w", listingID, err)
 		}
-		log.DebugContext(ctx, "pipeline run", "media_id", mediaID)
+		log.DebugContext(ctx, "pipeline run", "listing_id", listingID)
 		return nil
 	}
 }
 
-// MediaUploadedDeadLetter records why an asset was given up on, so a message
-// that ran out of retries leaves the artisan a reason rather than silence.
-func MediaUploadedDeadLetter(pipeline *service.Pipeline, log *slog.Logger) func(context.Context, segmentio.Message, error) {
+// ListingMediaAttachedDeadLetter records why enrichment was given up on. A
+// single photo's own enhancement failure is already recorded on that photo's
+// row by the pipeline itself (RecordFailure) before this ever fires; this is
+// only reached by a genuine store/db error surviving every retry, which has
+// no single photo to blame -- logged for a human to look at.
+func ListingMediaAttachedDeadLetter(log *slog.Logger) func(context.Context, segmentio.Message, error) {
 	return func(ctx context.Context, msg segmentio.Message, cause error) {
-		var payload mediaUploaded
-		mediaID, err := decodeAggregate(msg, &payload)
+		var payload listingMediaAttached
+		listingID, err := decodeAggregate(msg, &payload)
 		if err != nil {
 			log.ErrorContext(ctx, "dead-lettered a message we cannot attribute", "error", err)
 			return
 		}
-		if err := pipeline.RecordFailure(ctx, mediaID, cause.Error()); err != nil {
-			log.ErrorContext(ctx, "recording a dead-lettered failure", "media_id", mediaID, "error", err)
-		}
+		log.ErrorContext(ctx, "listing enrichment dead-lettered", "listing_id", listingID, "error", cause)
 	}
 }
 

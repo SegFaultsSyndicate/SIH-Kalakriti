@@ -1,13 +1,22 @@
 <!--
   apps/artisan/src/routes/listing/new/processing/+page.svelte
 
-  Step 4 of 7. The upload phase is real state -- it reads this draft's
-  media.upload outbox rows directly, so "uploading" only shows while
-  something is actually queued. The four stages after that (enhance,
-  attributes, describe, translate) are MOCK: ml_wiring.md explains why, and
-  ml-mock.ts is the only place that fabricates them. Both are real state
-  machines driving PipelineProgress -- see that component's own header on
-  why it accepts no internal timer.
+  Step 4 of 7. Three real, observable stages: photos uploading (media.upload
+  outbox draining), photos attaching to the listing (listing.media.attach
+  outbox draining -- this is what triggers the cataloguing pipeline
+  server-side), then enrichment (polling GET /listings/{id}/attributes until
+  the pipeline has written something, bounded so a slow or down ml-svc never
+  blocks the artisan indefinitely). Nothing here fabricates a result: if
+  enrichment hasn't finished by the time polling gives up, the review screen
+  just shows fewer attributes and the artisan writes the description
+  themselves, same as core-svc's own needs_description fallback.
+
+  waitForOutboxKind only counts an entry "still pending" while it's actually
+  retryable (db.ts: pending/syncing/failed). An entry that lands in
+  needsAttention or blocked has stopped retrying -- per db.ts's own contract
+  that's the artisan's problem to fix, not something more waiting resolves --
+  so the wait ends there too, rather than looping on a count that would
+  otherwise never reach zero and permanently disable Next.
 -->
 <script lang="ts">
   import { liveQuery } from 'dexie';
@@ -18,30 +27,35 @@
   import { Button } from '@kalakriti/ui';
   import { PipelineProgress } from '@kalakriti/motion';
   import { db } from '@kalakriti/offline';
+  import { getListing, getListingAttributes } from '@kalakriti/api';
   import ListingStep from '$lib/ListingStep.svelte';
-  import { getDraft, patchFields, queueListingUpdate } from '$lib/listing-draft';
-  import { runMockPipeline, type PipelineStageState, type PipelineStageKey } from '$lib/ml-mock';
+  import { getDraft, patchFields, ensureListingMediaAttachQueued } from '$lib/listing-draft';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
 
+  // 'enhance'/'describe' double as PipelineProgress's own icon keys, not just
+  // an i18n choice -- see @kalakriti/motion's PipelineProgress.svelte ICONS
+  // map. Reusing two of its four existing stage keys/labels rather than
+  // adding new ones -- close enough in meaning, and every new i18n key needs
+  // all 21 locale catalogues populated to keep the audit at zero (CLAUDE.md).
+  type Stage = 'enhance' | 'describe';
+  const STAGE_LABEL_KEY: Record<Stage, MessageKey> = {
+    enhance: 'listing.processing.stage.enhance',
+    describe: 'listing.processing.stage.describe',
+  };
+
   let uploadRemaining = $state(0);
-  let stages = $state<PipelineStageState[]>([]);
+  let stage = $state<Stage>('enhance');
+  let stageStatus = $state<'active' | 'done'>('active');
   let done = $state(false);
+  let stuck = $state(false);
   let started = false;
 
-  const STAGE_LABEL_KEY: Record<Exclude<PipelineStageKey, 'upload'>, MessageKey> = {
-    enhance: 'listing.processing.stage.enhance',
-    attributes: 'listing.processing.stage.attributes',
-    describe: 'listing.processing.stage.describe',
-    translate: 'listing.processing.stage.translate',
-  };
-  const MOTION_STATE: Record<PipelineStageState['status'], 'pending' | 'active' | 'complete' | 'failed'> = {
-    pending: 'pending',
-    active: 'active',
-    done: 'complete',
-    error: 'failed',
-  };
+  // Bounded so a slow or unreachable ml-svc never traps the artisan on this
+  // screen -- see the header note.
+  const POLL_INTERVAL_MS = 1500;
+  const POLL_MAX_TRIES = 10;
 
   $effect(() => {
     if (!draftId) return;
@@ -61,37 +75,77 @@
     void run();
   });
 
-  async function run(): Promise<void> {
-    const draft = await getDraft(draftId);
-    const craftId = draft?.fields.craftId as string | undefined;
-    const workingTitle = draft?.fields.workingTitle as string | undefined;
+  // A row that reaches needsAttention/blocked has stopped retrying (see
+  // db.ts) -- waiting longer never resolves it, so treat that the same as
+  // "nothing left to wait for" rather than looping on it forever. WAIT_MAX_MS
+  // is only a backstop for anything that slips through that check.
+  const WAIT_MAX_MS = 5 * 60 * 1000;
 
-    const uploadDone = async (): Promise<boolean> => {
-      const n = await db.outbox
+  async function waitForOutboxKind(kind: string): Promise<'done' | 'stuck'> {
+    const deadline = Date.now() + WAIT_MAX_MS;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const entries = await db.outbox
         .where('draftId')
         .equals(draftId)
-        .and((e) => e.kind === 'media.upload')
-        .count();
-      return n === 0;
-    };
+        .and((e) => e.kind === kind)
+        .toArray();
+      if (entries.length === 0) return 'done';
+      if (entries.every((e) => e.status === 'needsAttention' || e.status === 'blocked')) return 'stuck';
+      if (Date.now() > deadline) return 'stuck';
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
 
-    const result = await runMockPipeline(craftId, workingTitle, uploadDone, (s) => (stages = s));
+  async function run(): Promise<void> {
+    if ((await waitForOutboxKind('media.upload')) === 'stuck') {
+      stuck = true;
+      return;
+    }
 
-    await patchFields(draftId, {
-      translations: result.translations,
-      attributes: result.attributes,
-      claims: result.claims,
-    });
-    await queueListingUpdate(draftId, { translations: result.translations });
+    await ensureListingMediaAttachQueued(draftId);
+    if ((await waitForOutboxKind('listing.media.attach')) === 'stuck') {
+      stuck = true;
+      return;
+    }
+    stage = 'describe';
+    stageStatus = 'active';
+
+    const remoteId = (await getDraft(draftId))?.remoteId;
+    if (remoteId) {
+      let attributes: Awaited<ReturnType<typeof getListingAttributes>>['attributes'] | undefined;
+      for (let i = 0; i < POLL_MAX_TRIES; i++) {
+        const response = await getListingAttributes(remoteId).catch(() => undefined);
+        if (response) attributes = response.attributes ?? [];
+        if (attributes && attributes.length > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      }
+
+      const listing = await getListing(remoteId).catch(() => undefined);
+      const patch: Parameters<typeof patchFields>[1] = {};
+      if (listing?.translations) patch.translations = listing.translations;
+      if (attributes) {
+        patch.attributes = attributes.map((a) => ({
+          name: a.name ?? '',
+          value: a.value ?? '',
+          confidence: a.confidence ?? 0,
+          source: (a.source ?? 'MODEL') as 'MODEL' | 'ARTISAN' | 'CURATOR',
+        }));
+      }
+      if (Object.keys(patch).length > 0) await patchFields(draftId, patch);
+    }
+
+    stageStatus = 'done';
     done = true;
   }
 
-  const uploading = $derived(stages.find((s) => s.key === 'upload')?.status !== 'done');
-  const pipelineStages = $derived(
-    stages
-      .filter((s): s is PipelineStageState & { key: Exclude<PipelineStageKey, 'upload'> } => s.key !== 'upload')
-      .map((s) => ({ key: s.key, label: t(STAGE_LABEL_KEY[s.key]), state: MOTION_STATE[s.status] })),
-  );
+  const pipelineStages = $derived([
+    {
+      key: stage,
+      label: t(STAGE_LABEL_KEY[stage]),
+      state: (stageStatus === 'done' ? 'complete' : 'active') as 'complete' | 'active',
+    },
+  ]);
 
   async function next(): Promise<void> {
     await goto(`/listing/new/review?d=${draftId}`);
@@ -104,12 +158,15 @@
 
 <ListingStep index={4} heading={t('listing.processing.heading')} backHref="/listing/new/story?d={draftId}">
   {#snippet children()}
-    {#if uploading}
+    {#if stuck}
+      <p class="processing-stuck" role="alert">
+        <Icon name="warning" />
+        {t('sync.attention')}
+      </p>
+    {:else if uploadRemaining > 0}
       <p class="processing-status" role="status">
         <Icon name="sync" class="processing-status__icon" />
-        {uploadRemaining > 0
-          ? t('listing.processing.uploading', { count: uploadRemaining })
-          : t('listing.processing.uploadingStart')}
+        {t('listing.processing.uploading', { count: uploadRemaining })}
       </p>
     {:else}
       <PipelineProgress stages={pipelineStages} label={t('listing.processing.heading')} />
@@ -144,6 +201,13 @@
     align-items: center;
     gap: var(--k-space-2);
     color: var(--k-accent-success, var(--k-text-primary));
+  }
+
+  .processing-stuck {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    color: var(--k-accent-danger);
   }
 
   @keyframes spin {

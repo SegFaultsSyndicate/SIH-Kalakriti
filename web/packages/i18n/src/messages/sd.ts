@@ -147,6 +147,7 @@ export const sd: Messages = {
   "offline.conflict.keepMine": "منهنجو نسخو رکو",
   "offline.conflict.useTheirs": "ان جو نسخو استعمال ڪريو",
   "outbox.kind.listing.create": "نئين لسٽنگ",
+  "outbox.kind.listing.media.attach": "ڦوٽا شامل ڪيا ويا",
   "outbox.kind.listing.update": "لسٽنگ جي تبديلي",
   "outbox.kind.listing.submit": "نظرثاني لاءِ لسٽ موڪلي وئي",
   "outbox.kind.listing.approve": "لسٽ شايع ڪئي وئي",

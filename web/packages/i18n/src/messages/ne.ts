@@ -147,6 +147,7 @@ export const ne: Messages = {
   "offline.conflict.keepMine": "मेरो संस्करण राख्नुहोस्",
   "offline.conflict.useTheirs": "तिनीहरूको संस्करण प्रयोग गर्नुहोस्",
   "outbox.kind.listing.create": "नयाँ सूचीकरण",
+  "outbox.kind.listing.media.attach": "फोटोहरू थपियो",
   "outbox.kind.listing.update": "सूची सम्पादन",
   "outbox.kind.listing.submit": "सूची समीक्षाको लागि पठाइयो",
   "outbox.kind.listing.approve": "सूचि प्रकाशित",

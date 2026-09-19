@@ -72,6 +72,10 @@
                   },
                   "otp": {
                     "type": "string"
+                  },
+                  "dev_role": {
+                    "type": "string",
+                    "description": "Requests a token minted for BUYER, CLUSTER_OFFICER, or MINISTRY instead of the default ARTISAN. Only honored when the server is running with dev OTP enabled (AUTH_DEV_OTP_ENABLED) -- ignored otherwise, so this never does anything against a real deployment. There is currently no other way to obtain a token for any of these three roles."
                   }
                 }
               }
@@ -487,6 +491,104 @@
         "responses": {
           "204": {
             "description": "Listing updated"
+          }
+        }
+      }
+    },
+    "/listings/{id}/attributes": {
+      "get": {
+        "summary": "Get a listing's attributes",
+        "description": "What the model inferred (source MODEL) and what the artisan has since overridden (source ARTISAN). Same visibility as the listing itself: public once PUBLISHED, otherwise only the owning artisan or a curator.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attributes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingAttribute"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/media": {
+      "post": {
+        "summary": "Attach photos to a listing",
+        "description": "Replaces the listing's media set wholesale, ordered, with at most one primary image and one process video. Triggers the cataloguing pipeline (enhance/extract attributes/generate description) once photos land on the listing.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ListingMediaItem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The listing's media, ordered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingMediaItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -4080,6 +4182,308 @@
           }
         }
       }
+    },
+    "/partnerships": {
+      "post": {
+        "summary": "Form a supply partnership between a company and an artisan",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "company_id",
+                  "artisan_id",
+                  "craft_id"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string"
+                  },
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "craft_id": {
+                    "type": "string"
+                  },
+                  "terms": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    },
+                    "artisan_id": {
+                      "type": "string"
+                    },
+                    "craft_id": {
+                      "type": "string"
+                    },
+                    "terms": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "company_name": {
+                      "type": "string"
+                    },
+                    "artisan_name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List supply partnerships, optionally filtered by artisan or company",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artisan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "partnerships": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "company_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "craft_id": {
+                            "type": "string"
+                          },
+                          "terms": {
+                            "type": "string"
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "company_name": {
+                            "type": "string"
+                          },
+                          "artisan_name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions": {
+      "post": {
+        "summary": "Create an outbound webhook subscription for the caller",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "secret",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "secret": {
+                    "type": "string"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the caller's outbound webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscriptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "subscriber_id": {
+                            "type": "string"
+                          },
+                          "subscriber_type": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "events": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          },
+                          "consecutive_failures": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions/{id}": {
+      "delete": {
+        "summary": "Delete one of the caller's outbound webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4566,6 +4970,64 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ListingAttribute": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "In [0,1]; an artisan's own answer is always 1."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "MODEL",
+              "ARTISAN",
+              "CURATOR"
+            ]
+          }
+        }
+      },
+      "ListingMediaItem": {
+        "type": "object",
+        "required": [
+          "media_id",
+          "ordinal",
+          "role"
+        ],
+        "properties": {
+          "media_id": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "description": "Display position; unique within the listing."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "GALLERY",
+              "PRIMARY_IMAGE",
+              "PROCESS_VIDEO"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Kind of the underlying asset; returned on reads, ignored on writes.",
+            "enum": [
+              "IMAGE",
+              "VIDEO",
+              "AUDIO",
+              "DOCUMENT"
+            ]
           }
         }
       },

@@ -133,8 +133,8 @@
       craftRows = craftMonth.data ?? [];
       dyingRows = [...(dying.data ?? [])].sort((a, b) => Math.abs(b.decline_rate ?? 0) - Math.abs(a.decline_rate ?? 0));
     } catch (cause) {
-      if (import.meta.env.DEV) {
-        // Fallback mock data during development when the backend server is offline
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] load insights:', cause);
         const filtered = MOCK_DISTRICT_DATA.filter((d) => {
           const matchState = !stateCode || d.stateCode.toLowerCase().includes(stateCode.trim().toLowerCase());
           const matchDistrict = !district || d.district.toLowerCase().includes(district.trim().toLowerCase());

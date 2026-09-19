@@ -231,7 +231,6 @@ func run() error {
 	badgesHandler := handler.NewBadges(badgesSvc)
 	schemesSvc := service.NewSchemes(repository, log)
 	schemesHandler := handler.NewSchemes(schemesSvc)
-	healthHandler := handler.NewHealth(pool, rdb)
 
 	// --- gRPC server ---------------------------------------------------------
 
@@ -267,20 +266,6 @@ func run() error {
 		reflection.Register(grpcServer)
 	}
 
-	// --- HTTP health server --------------------------------------------------
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
-	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
-	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
-	// hands it to the private health server rather than exposing it publicly.
-	mux.Handle("/debug/vars", http.DefaultServeMux)
-	httpServer := &http.Server{
-		Addr:              cfg.httpAddr,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
-	}
-
 	// --- run -----------------------------------------------------------------
 
 	// bgCtx is cancelled at the start of shutdown so the background loops stop
@@ -301,14 +286,14 @@ func run() error {
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".media-enhanced",
 	}, log)
 
-	// The cataloguing pipeline. A message that exhausts its retries is recorded
-	// against the media row on its way to the dead-letter topic, so the artisan
-	// sees a reason rather than a photograph that quietly became nothing.
+	// The cataloguing pipeline: enriches a listing once photos are attached to
+	// it. Triggered by AttachListingMedia, not the raw upload -- a listing
+	// (and its product) already exist by then.
 	pipelineConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
 		Brokers:      cfg.kafka.Brokers,
-		Topic:        topics.MediaUploaded,
+		Topic:        topics.CatalogListingMediaAttached,
 		GroupID:      cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".pipeline",
-		OnDeadLetter: handler.MediaUploadedDeadLetter(pipelineSvc, log),
+		OnDeadLetter: handler.ListingMediaAttachedDeadLetter(log),
 	}, log)
 
 	translationConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
@@ -341,6 +326,25 @@ func run() error {
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-completed",
 	}, log)
 
+	// --- HTTP health server --------------------------------------------------
+
+	healthHandler := handler.NewHealth(pool, rdb,
+		enhancedConsumer, pipelineConsumer, translationConsumer,
+		badgeListingConsumer, badgeProvenanceConsumer, badgeLotAcceptedConsumer, badgeLotCompletedConsumer,
+	)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
+	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
+	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
+	// hands it to the private health server rather than exposing it publicly.
+	mux.Handle("/debug/vars", http.DefaultServeMux)
+	httpServer := &http.Server{
+		Addr:              cfg.httpAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)
 
@@ -364,8 +368,8 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Info("cataloguing pipeline started", "topic", topics.MediaUploaded)
-		if err := pipelineConsumer.Run(bgCtx, handler.MediaUploadedHandler(pipelineSvc, log)); err != nil {
+		log.Info("cataloguing pipeline started", "topic", topics.CatalogListingMediaAttached)
+		if err := pipelineConsumer.Run(bgCtx, handler.ListingMediaAttachedHandler(pipelineSvc, log)); err != nil {
 			log.Error("cataloguing pipeline stopped", "error", err)
 		}
 	}()

@@ -72,8 +72,8 @@ tier — check status with `docker compose ps`.
 
 ```
 http://localhost/            buyer marketplace
-http://localhost/artisan/    artisan PWA
-http://localhost/admin/      admin/ministry dashboard
+http://localhost:8081        artisan PWA
+http://localhost:8082        admin/ministry dashboard
 http://localhost/api/v1/*    REST API (proxied to bff)
 http://localhost:8000        REST API (direct to bff)
 http://localhost:16686       Jaeger tracing UI
@@ -201,6 +201,10 @@ Each app's Vite dev server proxies `/api` to `http://localhost:8000` (the
 bff) — so the backend (`make demo-up`, or at least `bff` + its dependencies)
 needs to be running first. Every screen still boots without it (offline-first
 design), but nothing beyond local/cached state resolves.
+
+To see the offline/airplane-mode demo mock fallbacks instead of real errors
+when a call fails, opt in with `VITE_USE_MOCKS=1 pnpm dev:admin` (default off
+— see `web/README.md`).
 
 **Full container stack** (NGINX serving built apps, no hot reload):
 already covered by `make demo-up` above — apps are at `http://localhost`,

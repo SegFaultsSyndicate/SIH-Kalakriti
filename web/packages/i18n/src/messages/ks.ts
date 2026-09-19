@@ -147,6 +147,7 @@ export const ks: Messages = {
   "offline.conflict.keepMine": "میون ورژن تھاو",
   "offline.conflict.useTheirs": "تِہُنٛد ورژن استعمال کٔرِو",
   "outbox.kind.listing.create": "نٔو لِسٹنگ",
+  "outbox.kind.listing.media.attach": "فوٹو گراف جوڑ کرنہٕ آمُت",
   "outbox.kind.listing.update": "لِسٹِنٛگ اؠڈِٹ کَرنہٕ آمُت",
   "outbox.kind.listing.submit": "فہرستُک جٲیزٕ خٲطرٕ سوزنہٕ آمُت",
   "outbox.kind.listing.approve": "لِسٹنگ شایع کرنہٕ آمٕژ",

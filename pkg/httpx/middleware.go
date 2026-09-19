@@ -14,11 +14,13 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 )
 
@@ -30,6 +32,16 @@ type Config struct {
 	// are then never reflected, per the CORS spec). Empty disables CORS
 	// entirely (no Access-Control-* headers are set).
 	AllowedOrigins []string
+	// SelfOrigin is this server's own public origin (e.g. cfg.BaseURL's
+	// scheme+host), always implicitly allowed by CSRFProtection alongside
+	// AllowedOrigins. Without this, an operator who sets AllowedOrigins to
+	// only a separately-hosted frontend's origin (the documented reason
+	// CORS_ALLOWED_ORIGINS exists at all) unknowingly 403s every mutating
+	// request that arrives same-origin -- through this server's own NGINX
+	// or reverse proxy -- because modern browsers send Origin on
+	// same-origin POSTs too, and CSRFProtection's allow-list previously
+	// had no way to know its own address. See WIRING_AUDIT_PLAN.md F-13.
+	SelfOrigin string
 	// AllowedMethods defaults to a REST-typical set when empty.
 	AllowedMethods []string
 	// AllowedHeaders defaults to a small safe set when empty.
@@ -58,15 +70,32 @@ func Mux(cfg Config) *gin.Engine {
 	r.Use(Wrap(SecurityHeaders(!cfg.DisableHSTS)))
 	r.Use(Wrap(Recoverer(base)))
 	r.Use(Wrap(logger.Middleware(base)))
-	r.Use(Wrap(AccessLog(base)))
+	// AccessLogGin runs natively on gin, not through Wrap: it must read the
+	// status actually written through c.Writer, and Wrap's inner handler
+	// always calls c.Next() rather than writing through whatever decorated
+	// writer it was given -- see Wrap's doc comment. A net/http-style
+	// ResponseWriter decorator (the old statusRecorder) is silently inert
+	// there, which is why every access-log line used to say 200.
+	r.Use(AccessLogGin(base))
 	if len(cfg.AllowedOrigins) > 0 {
 		r.Use(Wrap(CORS(cfg)))
-		if !cfg.DisableCSRF {
-			r.Use(Wrap(CSRFProtection(cfg, base)))
-		}
+	}
+	// CSRF protection is its own concern from CORS -- it rejects forged
+	// cross-site mutating requests regardless of whether this deployment
+	// also serves cross-origin CORS responses. It used to be nested inside
+	// the same "AllowedOrigins is non-empty" guard as CORS, which meant
+	// the common same-origin deployment (CORS_ALLOWED_ORIGINS left empty,
+	// e.g. docker-compose.yml's default) ran with NO CSRF protection at
+	// all, silently, regardless of DisableCSRF. See WIRING_AUDIT_PLAN.md
+	// F-13.
+	if !cfg.DisableCSRF {
+		r.Use(Wrap(CSRFProtection(cfg, base)))
 	}
 	if cfg.RequestTimeout > 0 {
-		r.Use(Wrap(Timeout(cfg.RequestTimeout)))
+		// Also native, for the same reason: http.TimeoutHandler's writer
+		// wrapper would be discarded by Wrap and never actually bound
+		// anything.
+		r.Use(TimeoutGin(cfg.RequestTimeout))
 	}
 	return r
 }
@@ -131,13 +160,116 @@ func RequestID(base *slog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// Timeout bounds how long a handler may run before the request context is
-// cancelled and a 503 is returned, mirroring chi/v5/middleware.Timeout.
-// http.TimeoutHandler already does exactly this — no chi-specific behaviour
-// was actually in play here.
-func Timeout(d time.Duration) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.TimeoutHandler(next, d, "request timed out")
+// timeoutWriter guards a gin.ResponseWriter with a "timed out" latch so a
+// handler goroutine that keeps running past its deadline can never write
+// conflicting bytes alongside the 503 TimeoutGin already wrote. Mirrors
+// http.TimeoutHandler's own internal writer, reimplemented natively for gin
+// because http.TimeoutHandler's writer is discarded by Wrap (see Mux).
+type timeoutWriter struct {
+	gin.ResponseWriter
+	mu       sync.Mutex
+	timedOut bool
+}
+
+func (tw *timeoutWriter) WriteHeader(code int) {
+	tw.mu.Lock()
+	defer tw.mu.Unlock()
+	if tw.timedOut {
+		return
+	}
+	tw.ResponseWriter.WriteHeader(code)
+}
+
+func (tw *timeoutWriter) Write(b []byte) (int, error) {
+	tw.mu.Lock()
+	defer tw.mu.Unlock()
+	if tw.timedOut {
+		return len(b), nil
+	}
+	return tw.ResponseWriter.Write(b)
+}
+
+// markTimedOut latches the writer closed and reports whether it won the
+// race -- false means the real handler had already started writing a real
+// response, so the deadline should not also try to write a 503 on top of it.
+func (tw *timeoutWriter) markTimedOut() bool {
+	tw.mu.Lock()
+	defer tw.mu.Unlock()
+	if tw.ResponseWriter.Written() {
+		return false
+	}
+	tw.timedOut = true
+	return true
+}
+
+// TimeoutGin bounds how long a handler may run before the request context is
+// cancelled and a 503 is returned. Native gin.HandlerFunc, not run through
+// Wrap -- see Mux's comment; http.TimeoutHandler's writer wrapper is
+// silently discarded there and never actually bounds anything.
+//
+// SSE routes (path ending "/events") are exempt: a long-lived event stream
+// is meant to outlive this deadline, not be cut by it.
+//
+// Same caveat as http.TimeoutHandler and every other goroutine-based Go
+// HTTP timeout: the handler goroutine is not killed on deadline, only
+// disconnected from the response. It keeps running (and c is not safe for
+// concurrent access by it and the timeout path at once, mirroring gin's own
+// documented c.Copy() caveat for such goroutines) until it returns on its
+// own; TimeoutGin waits for it before returning, so it never outlives the
+// request, but a handler that ignores context cancellation can still hold
+// the connection's resources for longer than d.
+func TimeoutGin(d time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.HasSuffix(c.FullPath(), "/events") {
+			c.Next()
+			return
+		}
+
+		tw := &timeoutWriter{ResponseWriter: c.Writer}
+		c.Writer = tw
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), d)
+		defer cancel()
+		c.Request = c.Request.WithContext(ctx)
+
+		done := make(chan struct{})
+		panicked := make(chan any, 1)
+		go func() {
+			defer close(done)
+			defer func() {
+				// Recoverer runs earlier in the chain, in the ORIGINAL
+				// goroutine -- its own recover() only catches panics on its
+				// own call stack, which this goroutine is not on. Without
+				// this, a panic here would be unrecovered and would crash
+				// the whole process instead of becoming a 500.
+				if p := recover(); p != nil {
+					panicked <- p
+				}
+			}()
+			c.Next()
+		}()
+
+		select {
+		case <-done:
+			select {
+			case p := <-panicked:
+				panic(p)
+			default:
+			}
+		case <-ctx.Done():
+			if tw.markTimedOut() {
+				c.AbortWithStatusJSON(http.StatusServiceUnavailable, domain.HTTPErrorBody{
+					Error:   "unavailable",
+					Message: "request timed out",
+				})
+			}
+			<-done
+			select {
+			case p := <-panicked:
+				panic(p)
+			default:
+			}
+		}
 	}
 }
 
@@ -162,48 +294,24 @@ func Recoverer(base *slog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// statusRecorder captures the status code written to a ResponseWriter so
-// AccessLog can report it after the handler returns.
-type statusRecorder struct {
-	http.ResponseWriter
-	status      int
-	wroteHeader bool
-}
-
-func (s *statusRecorder) WriteHeader(code int) {
-	if !s.wroteHeader {
-		s.status = code
-		s.wroteHeader = true
-	}
-	s.ResponseWriter.WriteHeader(code)
-}
-
-func (s *statusRecorder) Write(b []byte) (int, error) {
-	if !s.wroteHeader {
-		s.status = http.StatusOK
-		s.wroteHeader = true
-	}
-	return s.ResponseWriter.Write(b)
-}
-
-// AccessLog emits one structured log line per completed request: method,
+// AccessLogGin emits one structured log line per completed request: method,
 // path, status, duration, and the request/trace ids logger.Middleware
-// attached to the context.
-func AccessLog(base *slog.Logger) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
-			next.ServeHTTP(rec, r)
+// attached to the context. It is a native gin.HandlerFunc (not run through
+// Wrap) because gin's own c.Writer.Status() is the only reliable source of
+// the real status code here -- see Mux's comment on why a net/http-style
+// ResponseWriter decorator doesn't work through Wrap.
+func AccessLogGin(base *slog.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
 
-			logger.FromContext(r.Context(), base).Info("http request",
-				"method", r.Method,
-				"path", r.URL.Path,
-				"status", rec.status,
-				"duration_ms", time.Since(start).Milliseconds(),
-				"remote_addr", r.RemoteAddr,
-			)
-		})
+		logger.FromContext(c.Request.Context(), base).Info("http request",
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"status", c.Writer.Status(),
+			"duration_ms", time.Since(start).Milliseconds(),
+			"remote_addr", c.Request.RemoteAddr,
+		)
 	}
 }
 
@@ -217,7 +325,17 @@ func CORS(cfg Config) func(http.Handler) http.Handler {
 	}
 	headers := cfg.AllowedHeaders
 	if len(headers) == 0 {
-		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key"}
+		// web/packages/api/src/transport.ts sends both Idempotency-Key (the
+		// name the server middleware actually reads) and X-Idempotency-Key
+		// (belt-and-suspenders for any proxy that strips unprefixed custom
+		// headers). A CORS preflight allow-list must cover every header the
+		// client will actually send, not just the one the server reads --
+		// X-Idempotency-Key being missing here fails preflight on any
+		// cross-origin deployment (bff's CORS_ALLOWED_ORIGINS set to a
+		// separately-hosted frontend) for every idempotency-protected
+		// mutation, even though the header the server reads is allowed.
+		// See WIRING_AUDIT_PLAN.md F-12.
+		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key", "X-Idempotency-Key"}
 	}
 	allowAll := false
 	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))
@@ -299,9 +417,17 @@ func SecurityHeaders(enableHSTS bool) func(http.Handler) http.Handler {
 // It verifies that cross-site requests have an origin matching the configured allowlist or a valid
 // custom X-CSRF-Token header.
 func CSRFProtection(cfg Config, base *slog.Logger) func(http.Handler) http.Handler {
-	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))
+	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins)+1)
 	for _, o := range cfg.AllowedOrigins {
 		allowed[o] = struct{}{}
+	}
+	// This server's own origin is always implicitly trusted -- a same-origin
+	// mutating request still carries an Origin header in modern browsers, and
+	// without this, setting AllowedOrigins to just a separately-hosted
+	// frontend's origin (CORS_ALLOWED_ORIGINS' documented purpose) would
+	// 403 every same-origin request through this server's own reverse proxy.
+	if cfg.SelfOrigin != "" {
+		allowed[cfg.SelfOrigin] = struct{}{}
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -348,4 +474,3 @@ func SetSecureCookie(w http.ResponseWriter, name, value string, maxAge int, isSe
 		SameSite: http.SameSiteStrictMode,
 	})
 }
-

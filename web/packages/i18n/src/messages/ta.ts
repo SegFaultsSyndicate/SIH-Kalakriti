@@ -147,6 +147,7 @@ export const ta: Messages = {
   'offline.conflict.keepMine': 'என் பதிப்பை வைத்திரு',
   'offline.conflict.useTheirs': 'அவர்கள் பதிப்பைப் பயன்படுத்து',
   'outbox.kind.listing.create': 'புதிய பட்டியல்',
+  'outbox.kind.listing.media.attach': 'புகைப்படங்கள் இணைக்கப்பட்டன',
   'outbox.kind.listing.update': 'பட்டியல் திருத்தம்',
   'outbox.kind.listing.submit': 'பட்டியல் மதிப்பாய்வுக்கு அனுப்பப்பட்டது',
   'outbox.kind.listing.approve': 'பட்டியல் வெளியிடப்பட்டது',
