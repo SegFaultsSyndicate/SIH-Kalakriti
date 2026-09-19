@@ -261,11 +261,10 @@ export function isLocaleCode(value: string): value is LocaleCode {
 
 /**
  * Whether a `listing_translation.language` value matches a UI locale. The
- * real backend stores the trimmed proto enum name (e.g. "HINDI"); a listing
- * drafted offline before syncing may instead carry the mock pipeline's
- * lowercase locale code (e.g. "hi", see apps/artisan/src/lib/ml-mock.ts) --
- * this matches either, so display code works regardless of which one wrote
- * the row.
+ * real backend stores the trimmed proto enum name (e.g. "HINDI"); this also
+ * matches a bare lowercase locale code (e.g. "hi") for any row written
+ * before the artisan app's now-removed mock ML pipeline was replaced with
+ * the real cataloguing pipeline, so old offline-synced rows still display.
  */
 export function matchesLocale(language: string, locale: LocaleCode): boolean {
   return language === locale || language === LOCALES[locale].englishName.toUpperCase();

@@ -147,6 +147,7 @@ export const bn: Messages = {
   "offline.conflict.keepMine": "আমার সংস্করণ রাখুন",
   "offline.conflict.useTheirs": "তাদের সংস্করণ ব্যবহার করুন",
   "outbox.kind.listing.create": "নতুন তালিকা",
+  "outbox.kind.listing.media.attach": "ছবি সংযুক্তি",
   "outbox.kind.listing.update": "তালিকা সম্পাদনা",
   "outbox.kind.listing.submit": "তালিকা পর্যালোচনার জন্য পাঠানো হয়েছে",
   "outbox.kind.listing.approve": "তালিকা প্রকাশিত হয়েছে",

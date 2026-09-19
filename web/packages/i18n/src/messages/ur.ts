@@ -147,6 +147,7 @@ export const ur: Messages = {
   "offline.conflict.keepMine": "میرا ورژن رکھیں",
   "offline.conflict.useTheirs": "ان کا ورژن استعمال کریں۔",
   "outbox.kind.listing.create": "نئی لسٹنگ",
+  "outbox.kind.listing.media.attach": "تصاویر منسلک کر دی گئیں",
   "outbox.kind.listing.update": "فہرست سازی میں ترمیم",
   "outbox.kind.listing.submit": "فہرست جائزہ کے لیے بھیجی گئی۔",
   "outbox.kind.listing.approve": "فہرست شائع کر دی گئی۔",

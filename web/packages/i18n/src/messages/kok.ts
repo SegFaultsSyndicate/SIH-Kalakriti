@@ -147,6 +147,7 @@ export const kok: Messages = {
   "offline.conflict.keepMine": "म्हजी आवृत्ती दवरात",
   "offline.conflict.useTheirs": "तांची आवृत्ती वापरात",
   "outbox.kind.listing.create": "नवी वळेरी",
+  "outbox.kind.listing.media.attach": "फोटो जोडले",
   "outbox.kind.listing.update": "यादी संपादन करप",
   "outbox.kind.listing.submit": "पुनरावलोकना खातीर धाडिल्ली वळेरी",
   "outbox.kind.listing.approve": "यादी उजवाडाक आयल्या",

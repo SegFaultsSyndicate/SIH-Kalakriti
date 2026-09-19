@@ -11,7 +11,6 @@
 
 import { liveQuery } from 'dexie';
 import { db, enqueue, type DraftRecord, type MediaRecord } from '@kalakriti/offline';
-import type { MessageKey } from '@kalakriti/i18n';
 
 export type ListingWizardStep =
   | 'capture'
@@ -67,17 +66,19 @@ export interface ListingDraftFields {
   packaging?: { fragile?: boolean; oversized?: boolean; requires_custom_crating?: boolean };
   translations?: ListingTranslation[];
   studioConfig?: StudioConfig;
-  /** MOCK, from ml-mock.ts's pipeline result -- local-only, never sent. See ml_wiring.md. */
+  /**
+   * Cached copy of GET /listings/{id}/attributes -- what the cataloguing
+   * pipeline (triggered by ensureListingMediaAttachQueued below) actually
+   * inferred, or what the artisan has since overridden server-side. Kept
+   * locally too so the review screen has something to show offline right
+   * after enrichment.
+   */
   attributes?: {
-    key: string;
-    labelKey: MessageKey;
+    name: string;
     value: string;
-    source: 'MODEL' | 'ARTISAN';
     confidence: number;
-    needs_artisan_input: boolean;
+    source: 'MODEL' | 'ARTISAN' | 'CURATOR';
   }[];
-  /** MOCK, from ml-mock.ts -- sentence-to-attribute pairs for the review screen's tap-highlight. */
-  claims?: { sentenceIndex: number; attributeKey: string }[];
   /** Local selection used to keep the artisan's chosen primary image first. */
   primaryPhotoId?: string;
   reviewApproved?: boolean;
@@ -265,10 +266,51 @@ export async function ensureListingCreateQueued(draftId: string): Promise<void> 
 }
 
 /**
- * Queues a PATCH against the listing this draft becomes -- pricing, terms,
- * and (from the mock ML pipeline) translations. Depends on the create entry
- * so it can never arrive first even if the artisan finishes the whole
- * wizard offline in one sitting.
+ * Queues attaching this draft's captured photos (and process video, if any)
+ * to the listing's own media set -- separate from the product-level media
+ * CreateListing already sent, and what actually triggers the cataloguing
+ * pipeline (enhance/extract attributes/generate description) server-side.
+ * Depends on the create entry (needs the remote listing id) and every
+ * media.upload (needs each photo's remote media id), same dependency shape
+ * as ensureListingCreateQueued. A second call is a no-op, same guard.
+ */
+export async function ensureListingMediaAttachQueued(draftId: string): Promise<void> {
+  const draft = await db.drafts.get(draftId);
+  if (!draft) return;
+  if ((await pendingEntries(draftId, 'listing.media.attach')).length > 0) return;
+
+  const media = await db.media.bulkGet(draft.mediaIds);
+  const photos = media
+    .filter((m): m is MediaRecord => !!m && m.kind === 'photo')
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const video = media.find((m): m is MediaRecord => !!m && m.kind === 'video');
+  if (photos.length === 0 && !video) return;
+
+  const f = fieldsOf(draft);
+  const items = [
+    ...photos.map((p, i) => ({
+      localMediaId: p.id,
+      ordinal: i,
+      role: p.id === f.primaryPhotoId ? ('PRIMARY_IMAGE' as const) : ('GALLERY' as const),
+    })),
+    ...(video ? [{ localMediaId: video.id, ordinal: photos.length, role: 'PROCESS_VIDEO' as const }] : []),
+  ];
+
+  const createEntry = (await pendingEntries(draftId, 'listing.create'))[0];
+  const mediaEntries = await pendingEntries(draftId, 'media.upload');
+  await enqueue({
+    kind: 'listing.media.attach',
+    draftId,
+    mediaIds: items.map((i) => i.localMediaId),
+    dependsOn: [...(createEntry ? [createEntry.id] : []), ...mediaEntries.map((e) => e.id)],
+    payload: { draftId, items },
+  });
+}
+
+/**
+ * Queues a PATCH against the listing this draft becomes -- pricing and terms.
+ * Depends on the create entry so it can never arrive first even if the
+ * artisan finishes the whole wizard offline in one sitting.
  */
 export async function queueListingUpdate(
   draftId: string,
@@ -287,9 +329,10 @@ export async function queueListingUpdate(
  * The wizard's final action: submit for the artisan's own review, then
  * approve. Two real backend steps collapsed into one client action, since
  * this app never shows the DRAFT/PENDING split to anyone but the artisan
- * who both submits and approves it. Depends on every create/update queued
- * so far -- in particular the translations update the mock pipeline queued,
- * since core-svc refuses to submit a listing with no copy to review.
+ * who both submits and approves it. Depends on every create/media-attach/
+ * update queued so far -- in particular the media attach, since core-svc
+ * refuses to submit a listing with no copy to review, and the copy only
+ * exists once the pipeline the attach triggers has run.
  */
 export async function publishListing(draftId: string): Promise<void> {
   const draft = await db.drafts.get(draftId);
@@ -298,6 +341,7 @@ export async function publishListing(draftId: string): Promise<void> {
   }
   const blockers = [
     ...(await pendingEntries(draftId, 'listing.create')),
+    ...(await pendingEntries(draftId, 'listing.media.attach')),
     ...(await pendingEntries(draftId, 'listing.update')),
   ];
   const submitEntry = await enqueue({

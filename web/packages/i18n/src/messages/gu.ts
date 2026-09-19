@@ -147,6 +147,7 @@ export const gu: Messages = {
   "offline.conflict.keepMine": "મારું સંસ્કરણ રાખો",
   "offline.conflict.useTheirs": "તેમના સંસ્કરણનો ઉપયોગ કરો",
   "outbox.kind.listing.create": "નવી સૂચિ",
+  "outbox.kind.listing.media.attach": "ફોટા જોડાયા",
   "outbox.kind.listing.update": "સૂચિ સંપાદન",
   "outbox.kind.listing.submit": "સૂચિ સમીક્ષા માટે મોકલવામાં આવી છે",
   "outbox.kind.listing.approve": "સૂચિ પ્રકાશિત",

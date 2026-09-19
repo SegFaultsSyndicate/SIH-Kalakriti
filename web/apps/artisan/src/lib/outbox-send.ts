@@ -11,6 +11,7 @@ import {
   registerArtisan,
   createListing,
   updateListing,
+  attachListingMedia,
   submitListing,
   approveListing,
   generateUploadUrl,
@@ -30,6 +31,8 @@ export async function sendOutboxEntry(entry: OutboxEntry): Promise<SendResult> {
       return sendMediaUpload(entry);
     case 'listing.create':
       return sendListingCreate(entry);
+    case 'listing.media.attach':
+      return sendListingMediaAttach(entry);
     case 'listing.update':
       return sendListingUpdate(entry);
     case 'listing.submit':
@@ -142,6 +145,41 @@ async function sendListingCreate(entry: OutboxEntry): Promise<SendResult> {
       { idempotencyKey: entry.idempotencyKey },
     );
     if (response.listing_id) await db.drafts.update(draftId, { remoteId: response.listing_id, updatedAt: Date.now() });
+    return { ok: true };
+  } catch (cause) {
+    return fromApiError(cause);
+  }
+}
+
+interface ListingMediaAttachPayload {
+  draftId: string;
+  items: { localMediaId: string; ordinal: number; role: 'PRIMARY_IMAGE' | 'GALLERY' | 'PROCESS_VIDEO' }[];
+}
+
+/** Triggers the cataloguing pipeline server-side -- see listing-draft.ts's ensureListingMediaAttachQueued. */
+async function sendListingMediaAttach(entry: OutboxEntry): Promise<SendResult> {
+  const { draftId, items } = entry.payload as ListingMediaAttachPayload;
+  const listingId = await remoteListingId(draftId);
+  if (!listingId) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
+
+  try {
+    const media = await db.media.bulkGet(items.map((i) => i.localMediaId));
+    const remoteItems = items.map((item, i) => ({
+      media_id: media[i]?.remoteId,
+      ordinal: item.ordinal,
+      role: item.role,
+    }));
+    if (remoteItems.some((i) => !i.media_id)) {
+      // dependsOn should make this unreachable; treat as transient rather
+      // than blocked, since the media entry may simply not have drained yet.
+      return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
+    }
+
+    await attachListingMedia(
+      listingId,
+      { items: remoteItems as Parameters<typeof attachListingMedia>[1]['items'] },
+      { idempotencyKey: entry.idempotencyKey },
+    );
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);

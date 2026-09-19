@@ -147,6 +147,7 @@ export const pa: Messages = {
   "offline.conflict.keepMine": "ਮੇਰਾ ਸੰਸਕਰਣ ਰੱਖੋ",
   "offline.conflict.useTheirs": "ਉਹਨਾਂ ਦੇ ਸੰਸਕਰਣ ਦੀ ਵਰਤੋਂ ਕਰੋ",
   "outbox.kind.listing.create": "ਨਵੀਂ ਸੂਚੀ",
+  "outbox.kind.listing.media.attach": "ਫੋਟੋਆਂ ਜੋੜੀਆਂ ਗਈਆਂ",
   "outbox.kind.listing.update": "ਸੂਚੀ ਸੰਪਾਦਨ",
   "outbox.kind.listing.submit": "ਸੂਚੀ ਸਮੀਖਿਆ ਲਈ ਭੇਜੀ ਗਈ",
   "outbox.kind.listing.approve": "ਸੂਚੀ ਪ੍ਰਕਾਸ਼ਿਤ ਕੀਤੀ ਗਈ",

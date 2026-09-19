@@ -147,6 +147,7 @@ export const te: Messages = {
   "offline.conflict.keepMine": "నా సంస్కరణను ఉంచండి",
   "offline.conflict.useTheirs": "వారి సంస్కరణను ఉపయోగించండి",
   "outbox.kind.listing.create": "కొత్త జాబితా",
+  "outbox.kind.listing.media.attach": "ఫోటోలు జోడించబడ్డాయి",
   "outbox.kind.listing.update": "జాబితా సవరణ",
   "outbox.kind.listing.submit": "జాబితా సమీక్ష కోసం పంపబడింది",
   "outbox.kind.listing.approve": "జాబితా ప్రచురించబడింది",

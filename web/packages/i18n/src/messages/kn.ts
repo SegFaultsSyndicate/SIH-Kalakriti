@@ -147,6 +147,7 @@ export const kn: Messages = {
   "offline.conflict.keepMine": "ನನ್ನ ಆವೃತ್ತಿಯನ್ನು ಇರಿಸಿಕೊಳ್ಳಿ",
   "offline.conflict.useTheirs": "ಅವರ ಆವೃತ್ತಿಯನ್ನು ಬಳಸಿ",
   "outbox.kind.listing.create": "ಹೊಸ ಪಟ್ಟಿ",
+  "outbox.kind.listing.media.attach": "ಫೋಟೋಗಳನ್ನು ಲಗತ್ತಿಸಲಾಗಿದೆ",
   "outbox.kind.listing.update": "ಪಟ್ಟಿ ಸಂಪಾದನೆ",
   "outbox.kind.listing.submit": "ಪಟ್ಟಿಯನ್ನು ಪರಿಶೀಲನೆಗೆ ಕಳುಹಿಸಲಾಗಿದೆ",
   "outbox.kind.listing.approve": "ಪಟ್ಟಿ ಪ್ರಕಟಿಸಲಾಗಿದೆ",

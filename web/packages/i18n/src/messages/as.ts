@@ -147,6 +147,7 @@ export const as: Messages = {
   "offline.conflict.keepMine": "মোৰ সংস্কৰণটো ৰাখক",
   "offline.conflict.useTheirs": "তেওঁলোকৰ সংস্কৰণ ব্যৱহাৰ কৰক",
   "outbox.kind.listing.create": "নতুন তালিকা",
+  "outbox.kind.listing.media.attach": "ফটো সংযুক্তি",
   "outbox.kind.listing.update": "তালিকা সম্পাদনা কৰক",
   "outbox.kind.listing.submit": "পৰ্যালোচনাৰ বাবে প্ৰেৰণ কৰা তালিকা",
   "outbox.kind.listing.approve": "তালিকা প্ৰকাশ কৰা হৈছে",
