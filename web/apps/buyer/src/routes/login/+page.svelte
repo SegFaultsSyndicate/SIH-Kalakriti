@@ -12,7 +12,13 @@
 <script lang="ts">
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { requestOtp, completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
+  import {
+    requestOtp,
+    completeOtpVerification,
+    establishMockSession,
+    ApiError,
+    messageKeyFor,
+  } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { showToast, Tooltip } from '@kalakriti/ui';
@@ -64,6 +70,12 @@
       otpSent = true;
       showToast({ message: t('login.toast.otpSent'), variant: 'success' });
     } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] requestOtp:', cause);
+        otpSent = true;
+        showToast({ message: t('login.toast.otpSent'), variant: 'success' });
+        return;
+      }
       const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
       showToast({ message, variant: 'error' });
     } finally {
@@ -103,6 +115,19 @@
       });
       void goto('/account');
     } catch (cause) {
+      // VITE_USE_MOCKS=1 fakes the session locally when there is no backend
+      // at all to hit -- see packages/api/src/mock-session.ts for why this
+      // is safe to gate this way and the older, unconditional version was not.
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] completeOtpVerification:', cause);
+        establishMockSession('BUYER', toE164(digits));
+        showToast({
+          message: authMode === 'signin' ? t('login.toast.welcomeBack') : t('login.toast.registered'),
+          variant: 'success',
+        });
+        void goto('/account');
+        return;
+      }
       const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
       showToast({ message, variant: 'error' });
     } finally {

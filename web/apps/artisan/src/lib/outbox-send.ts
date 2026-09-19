@@ -76,6 +76,18 @@ async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
     // made was for an id no backend row would ever match: a fake success
     // that manufactures real, confusing failures several steps later. A
     // failed registration reports as failed, in every environment.
+    //
+    // VITE_USE_MOCKS=1 is the deliberate, opt-in exception: with no backend
+    // reachable there is no real row to mismatch yet, so this stores an
+    // obviously-fake `mock:<uuid>` id (not `artisan-${Date.now()}`, so it's
+    // unmistakable in devtools) instead of rolling back to unregistered.
+    // Clear IndexedDB/localStorage before pointing this app at a real
+    // backend, or that fake id will 404/403 on every real authenticated call.
+    if (import.meta.env.VITE_USE_MOCKS === '1') {
+      console.warn('[mock fallback] registerArtisan:', cause);
+      await setArtisanId(`mock:${crypto.randomUUID()}`);
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }

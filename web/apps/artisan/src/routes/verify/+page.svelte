@@ -12,7 +12,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { requestOtp, completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
+  import {
+    requestOtp,
+    completeOtpVerification,
+    establishMockSession,
+    ApiError,
+    messageKeyFor,
+  } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
 
@@ -64,6 +70,18 @@
       // checks a real HMAC signature regardless of environment, so it just
       // failed one request later than the honest error would have. See the
       // admin app's login/verify/+page.svelte for the same fix.
+      //
+      // VITE_USE_MOCKS=1 is the one exception, and only because it's opt-in:
+      // with no backend reachable at all there is no real request to fail
+      // later, so a local-only fake session is the only way to get past this
+      // screen for UI work. Same fake token shape, gated so it can't hide a
+      // real backend problem.
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] completeOtpVerification:', cause);
+        establishMockSession('ARTISAN', phone);
+        await goto('/');
+        return;
+      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
       code = '';
     } finally {

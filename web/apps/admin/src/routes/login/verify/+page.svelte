@@ -22,12 +22,22 @@
   console made with that forged token 401'd. It just failed one request
   later than the honest error would have, in every environment, not just
   production.
+
+  VITE_USE_MOCKS=1 is the one deliberate exception (see
+  packages/api/src/mock-session.ts): with no backend reachable there is no
+  real request to fail later, so it's opt-in-only and can't mask a live
+  backend issue.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { locale } from '@kalakriti/i18n';
-  import { completeOtpVerification, ApiError, messageKeyFor } from '@kalakriti/api';
+  import {
+    completeOtpVerification,
+    establishMockSession,
+    ApiError,
+    messageKeyFor,
+  } from '@kalakriti/api';
   import { Button, Input, FieldGroup } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
@@ -53,6 +63,12 @@
         error = t('verify.invalid');
       }
     } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] completeOtpVerification:', cause);
+        establishMockSession('MINISTRY', phone);
+        await goto(redirect);
+        return;
+      }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
     } finally {
       verifying = false;

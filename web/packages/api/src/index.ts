@@ -45,6 +45,7 @@ export { session, type SessionStatus } from './session.svelte';
 export { requireRole, type RequireRoleOptions } from './requireRole';
 export { createLoginRedirectHandler, type LoginRedirectOptions } from './unauthorized-redirect';
 export { completeOtpVerification } from './auth-flow';
+export { establishMockSession } from './mock-session';
 export { refreshSession } from './session-refresh';
 export { messageKeyFor } from './errors';
 export {
