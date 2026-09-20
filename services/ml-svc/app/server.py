@@ -25,6 +25,7 @@ from prometheus_client import Counter, Histogram, start_http_server
 from app import registry as registry_module
 from app.batching import MicroBatcher
 from app.config import Config
+from app.features.assess_image_quality import ImageQualityAssessor
 from app.features.detect_handloom import HandloomDetector
 from app.features.embed import Embedder
 from app.features.enhance import ImageEnhancer
@@ -149,6 +150,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
     def __init__(self, cfg: Config) -> None:
         self._cfg = cfg
         self._version = cfg.model_version
+        self._quality: ImageQualityAssessor | None = None
         self._enhancer: ImageEnhancer | None = None
         self._extractor: AttributeExtractor | None = None
         self._describer: DescriptionGenerator | None = None
@@ -179,6 +181,7 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
         `registry.load_all()` finishes and before the health check flips to
         SERVING."""
         vlm_cfg = VLMConfig.from_env()
+        self._quality = ImageQualityAssessor(registry.image_quality, registry.storage)
         self._enhancer = ImageEnhancer(registry.storage, registry.lighting, registry.background)
         self._extractor = AttributeExtractor(registry.vlm, registry.storage, self._cfg.craft_allowlist_path)
         self._describer = DescriptionGenerator(registry.vlm)
@@ -206,6 +209,18 @@ class InferenceServicer(inference_pb2_grpc.InferenceServiceServicer):
         await self._extract_batcher.close()
 
     # --- RPCs ---------------------------------------------------------------
+
+    async def AssessImageQuality(self, request, context):
+        verdict = await self._quality.assess(request.media.object_key)
+        return inference_pb2.AssessImageQualityResponse(
+            passed=verdict["passed"],
+            issues=[
+                inference_pb2.ImageQualityIssue(code=i["code"], message=i["message"])
+                for i in verdict["issues"]
+            ],
+            blur_score=verdict["blur_score"],
+            model_version=self._version,
+        )
 
     async def EnhanceImage(self, request, context):
         key, ops = await self._enhancer.enhance(

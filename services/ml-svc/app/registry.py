@@ -26,6 +26,7 @@ from app.models import (
     handloom_texture,
     image_background,
     image_lighting,
+    image_quality,
     reranking,
     storage,
     translation,
@@ -36,6 +37,7 @@ from app.models.embedding import TextEmbedder
 from app.models.handloom_texture import HandloomTexture
 from app.models.image_background import BackgroundRemover
 from app.models.image_lighting import ImageLighting
+from app.models.image_quality import ImageQuality
 from app.models.reranking import TextReranker
 from app.models.storage import ObjectStorage
 from app.models.translation import TranslationModel
@@ -48,6 +50,7 @@ class Registry:
     storage: ObjectStorage
     background: BackgroundRemover
     lighting: ImageLighting
+    image_quality: ImageQuality
     vlm: VisionLanguageModel
     embedder: TextEmbedder
     reranker: TextReranker
@@ -93,6 +96,7 @@ async def load_all(cfg: Config) -> Registry:
         storage_backend,
         background,
         lighting,
+        quality,
         vlm_backend,
         embedder,
         reranker,
@@ -103,6 +107,7 @@ async def load_all(cfg: Config) -> Registry:
         load(storage, cfg),
         load(image_background, cfg),
         load(image_lighting, cfg),
+        load(image_quality, cfg),
         load(vlm, cfg),
         load(embedding, cfg),
         load(reranking, cfg),
@@ -114,6 +119,7 @@ async def load_all(cfg: Config) -> Registry:
         storage=storage_backend,
         background=background,
         lighting=lighting,
+        image_quality=quality,
         vlm=vlm_backend,
         embedder=embedder,
         reranker=reranker,

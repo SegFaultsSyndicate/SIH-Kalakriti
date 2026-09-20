@@ -21,22 +21,39 @@ import (
 // fakeInference is ml-svc: canned answers, a call counter, and a switch to make
 // any one step fail.
 type fakeInference struct {
-	calls     map[string]int
-	craftCode string
-	failStep  string
-	failWith  error
+	calls          map[string]int
+	craftCode      string
+	failStep       string
+	failWith       error
+	qualityVerdict domain.ImageQualityVerdict
 	// noteSeen is the last artisan_note handed to GenerateDescription, which is
 	// how the do-not-translate masking is observed.
 	noteSeen string
 }
 
 func newFakeInference(craftCode string) *fakeInference {
-	return &fakeInference{calls: map[string]int{}, craftCode: craftCode}
+	return &fakeInference{calls: map[string]int{}, craftCode: craftCode, qualityVerdict: domain.ImageQualityVerdict{Passed: true}}
 }
 
 func (f *fakeInference) fail(step string, err error) *fakeInference {
 	f.failStep, f.failWith = step, err
 	return f
+}
+
+// failQuality makes AssessImageQuality return a normal (non-error) rejected
+// verdict, as opposed to fail(stepAssessQuality, ...) which simulates a
+// transport-level error.
+func (f *fakeInference) failQuality(issues ...domain.ImageQualityIssue) *fakeInference {
+	f.qualityVerdict = domain.ImageQualityVerdict{Passed: false, Issues: issues}
+	return f
+}
+
+func (f *fakeInference) AssessImageQuality(_ context.Context, _ string) (domain.ImageQualityVerdict, error) {
+	f.calls[stepAssessQuality]++
+	if f.failStep == stepAssessQuality {
+		return domain.ImageQualityVerdict{}, f.failWith
+	}
+	return f.qualityVerdict, nil
 }
 
 func (f *fakeInference) EnhanceImage(_ context.Context, objectKey string) (string, error) {
@@ -362,9 +379,52 @@ func TestPipelineRecordsATerminalEnhancementFailureOnThePhoto(t *testing.T) {
 	require.Equal(t, 0, f.inferrer.calls[stepExtract])
 }
 
+<<<<<<< Updated upstream
 // A transient enhancement failure is returned so the consumer retries it, and
 // nothing is marked failed on the way past.
 func TestPipelineRetriesATransientEnhancementFailure(t *testing.T) {
+=======
+// TestPipelineFailsClosedOnPoorImageQuality is the quality gate: a genuine
+// quality failure (blur, here) fails closed before EnhanceImage or
+// ExtractAttributes ever run.
+func TestPipelineFailsClosedOnPoorImageQuality(t *testing.T) {
+	t.Parallel()
+	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
+		failQuality(domain.ImageQualityIssue{Code: "BLURRY", Message: "image is too blurred to be usable"}))
+
+	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+
+	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
+	require.NoError(t, err)
+	require.Equal(t, domain.MediaFailed, stored.State)
+	require.NotNil(t, stored.FailureReason)
+	require.Contains(t, *stored.FailureReason, "BLURRY")
+	require.Contains(t, *stored.FailureReason, "too blurred")
+
+	require.Empty(t, f.catalog.listings)
+	require.Empty(t, f.catalog.products)
+	require.Equal(t, 0, f.inferrer.calls[stepEnhance], "a rejected image must never reach EnhanceImage")
+	require.Equal(t, 0, f.inferrer.calls[stepExtract], "a rejected image must never reach ExtractAttributes")
+}
+
+// TestPipelineOnlyRejectsGenuineQualityFailures confirms a passing quality
+// verdict (the only kind mock/real ml-svc ever returns for a subject outside
+// the craft ontology) never blocks the pipeline -- recognition failure is
+// handled downstream by ExtractAttributes abstaining, not by this gate.
+func TestPipelineOnlyRejectsGenuineQualityFailures(t *testing.T) {
+	t.Parallel()
+	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
+
+	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
+
+	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
+	require.NoError(t, err)
+	require.NotEqual(t, domain.MediaFailed, stored.State)
+	require.Equal(t, 1, f.inferrer.calls[stepAssessQuality])
+}
+
+func TestPipelineFailsClosedOnATerminalExtractionError(t *testing.T) {
+>>>>>>> Stashed changes
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
 		fail(stepEnhance, errors.New("ml-svc unavailable")))

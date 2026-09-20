@@ -20,30 +20,11 @@ import logging
 import re
 
 from app.models.vlm import VLMConfig
+from app.models.vlm.prompts import EXTRACT_PROMPT as _EXTRACT_PROMPT
+from app.models.vlm.prompts import POLISH_PROMPT as _POLISH_PROMPT
+from app.models.vlm.prompts import technique_prompt as _technique_prompt
 
 log = logging.getLogger(__name__)
-
-_EXTRACT_PROMPT = """You are cataloguing an Indian handicraft for a marketplace.
-Answer with JSON only, matching this schema exactly:
-{{"craft_id": str, "material": str, "technique": str, "colours": [str], "motifs": [str],
- "confidence": {{"craft_id": float, "material": float, "technique": float, "colours": float, "motifs": float}}}}
-
-craft_id MUST be one of these exact codes, or "" if none of them fit:
-{allowlist}
-
-The artisan says this is: {declared}
-The artisan adds: {hint}{vocab_hint}
-Do not guess beyond what you can see. Use "" or [] where you are unsure."""
-
-_POLISH_PROMPT = """Rewrite this marketplace product description with a warmer,
-more persuasive tone. State only the facts already in it — do not add any
-material, technique, colour, motif, region, age, award or other claim that is
-not already present in the text below.
-
-{template}
-
-Write in {language}, under {max_chars} characters. Reply with the rewritten
-description only: no JSON, no preamble, no quotation marks."""
 
 
 class RealVisionLanguageModel:
@@ -177,11 +158,7 @@ class RealVisionLanguageModel:
 
         raw = self._ask(
             frames[:video_frames],
-            f"These frames show a craftsperson working on a {craft_id.replace('-', ' ')} piece.\n"
-            f"Answer JSON only: {{\"observed\": str, \"matches\": bool, \"confidence\": float, "
-            f'"explanation": str}}\n'
-            f"observed is the technique you actually see. matches is whether it is "
-            f"{claimed.replace('-', ' ')}. One sentence of explanation.",
+            _technique_prompt(craft_id, claimed),
             max_new_tokens=256,
         )
         parsed = _parse_json(raw)

@@ -164,6 +164,20 @@ func (m Media) ServableObjectKey() string {
 	return m.ObjectKey
 }
 
+// ImageQualityIssue is one reason a raw upload failed the pre-VLM quality
+// gate -- corrupt, too small, blank or blurred. Never about whether the
+// subject matches anything in the craft ontology.
+type ImageQualityIssue struct {
+	Code    string
+	Message string
+}
+
+// ImageQualityVerdict is ml-svc's AssessImageQuality answer.
+type ImageQualityVerdict struct {
+	Passed bool
+	Issues []ImageQualityIssue
+}
+
 // RequestUploadInput is what the service needs to mint an upload ticket.
 type RequestUploadInput struct {
 	ArtisanID   uuid.UUID

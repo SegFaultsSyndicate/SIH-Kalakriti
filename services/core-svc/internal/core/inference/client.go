@@ -34,6 +34,24 @@ func (c *Client) ref(objectKey string) *commonv1.MediaRef {
 	return &commonv1.MediaRef{Bucket: c.bucket, ObjectKey: objectKey, Kind: commonv1.MediaKind_MEDIA_KIND_IMAGE}
 }
 
+// AssessImageQuality checks whether a raw upload is even worth processing --
+// corrupt, too small, blank or blurred. It never judges whether the subject
+// matches anything in the craft ontology.
+func (c *Client) AssessImageQuality(ctx context.Context, objectKey string) (domain.ImageQualityVerdict, error) {
+	resp, err := c.stub.AssessImageQuality(ctx, &inferencev1.AssessImageQualityRequest{
+		Media: c.ref(objectKey),
+	})
+	if err != nil {
+		return domain.ImageQualityVerdict{}, fmt.Errorf("assessing image quality of %s: %w", objectKey, err)
+	}
+
+	issues := make([]domain.ImageQualityIssue, 0, len(resp.GetIssues()))
+	for _, i := range resp.GetIssues() {
+		issues = append(issues, domain.ImageQualityIssue{Code: i.GetCode(), Message: i.GetMessage()})
+	}
+	return domain.ImageQualityVerdict{Passed: resp.GetPassed(), Issues: issues}, nil
+}
+
 // EnhanceImage returns the object key of the enhanced rendition.
 func (c *Client) EnhanceImage(ctx context.Context, objectKey string) (string, error) {
 	resp, err := c.stub.EnhanceImage(ctx, &inferencev1.EnhanceImageRequest{
