@@ -21,6 +21,7 @@
   } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
+  import { toE164 } from '$lib/phone';
 
   const RESEND_SECONDS = 30;
 
@@ -55,7 +56,7 @@
     verifying = true;
     error = '';
     try {
-      const ok = await completeOtpVerification({ phone, otp });
+      const ok = await completeOtpVerification({ phone: toE164(phone), otp });
       if (ok) {
         await goto('/');
       } else {
@@ -78,7 +79,7 @@
       // real backend problem.
       if (import.meta.env.VITE_USE_MOCKS === '1') {
         console.warn('[mock fallback] completeOtpVerification:', cause);
-        establishMockSession('ARTISAN', phone);
+        establishMockSession('ARTISAN', toE164(phone));
         await goto('/');
         return;
       }
@@ -93,7 +94,7 @@
     if (resendIn > 0 || resending || !network.online) return;
     resending = true;
     try {
-      await requestOtp({ phone });
+      await requestOtp({ phone: toE164(phone) });
       resendIn = RESEND_SECONDS;
     } catch (cause) {
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
