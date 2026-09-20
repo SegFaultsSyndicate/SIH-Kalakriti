@@ -338,6 +338,24 @@ services:
       # to that one component (app/models/translation), not a global var --
       # read from the host shell/.env; other RPCs work fine with this unset.
       ML_SVC_TRANSLATION_HF_TOKEN: "${HF_TOKEN:-}"
+<<<<<<< Updated upstream
+=======
+      # Zero-DCE++ has no pip package or HF repo (see net.py's docstring) --
+      # its one checkpoint is a raw .pth bind-mounted from the host below,
+      # not pulled through hf-cache. Container path, not the host path
+      # (services/ml-svc/checkpoints/zero_dce_pp/, gitignored -- see that
+      # dir's fetch command in services/ml-svc/CLAUDE.md). Inert while
+      # ML_SVC_MOCK_MODE is "true" above; only read once real mode loads
+      # the image_lighting component.
+      ML_SVC_IMAGE_LIGHTING_MODEL: /models/zero_dce_pp/Epoch99.pth
+      # "transformers" (in-process, the only path this stack ran before) or
+      # "llamacpp" (HTTP client to the llama-server service below). Inert
+      # while ML_SVC_MOCK_MODE is "true"; see docs/ML_SETUP.md for how to
+      # flip both to real/llamacpp together. Default stays "transformers"
+      # until the llama.cpp path is validated on your hardware.
+      ML_SVC_VLM_BACKEND: ${ML_SVC_VLM_BACKEND:-transformers}
+      ML_SVC_VLM_LLAMACPP_URL: http://llama-server:8080
+>>>>>>> Stashed changes
     volumes:
       - hf-cache:/root/.cache/huggingface
     ports:
@@ -348,6 +366,46 @@ services:
     depends_on:
       minio-init:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  # llama-server backs ml-svc's VLM component when ML_SVC_VLM_BACKEND=llamacpp
+  # (see app/models/vlm/llamacpp.py). Only started if you actually run it --
+  # `make up`/`make demo-up` don't depend on this service at all, since mock
+  # mode never calls the VLM. GGUF files are bind-mounted, not baked into the
+  # image or pulled through hf-cache: gitignored, fetched once per machine
+  # (see docs/ML_SETUP.md's llama.cpp section). CPU image (`server`, no
+  # `-cuda` suffix) is available too, for a host with no NVIDIA GPU.
+  llama-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    command:
+      - -m
+      - /models/llama_vlm/model.gguf
+      - --mmproj
+      - /models/llama_vlm/mmproj.gguf
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      # Conservative defaults for a 4GB-class card -- see docs/ML_SETUP.md
+      # for the flags to add (--no-mmproj-offload, lower --image-max-tokens)
+      # if this OOMs on your GPU, and for the 8GB-class flags that trade this
+      # headroom for quality/concurrency instead.
+      - -c
+      - "8192"
+      - -np
+      - "2"
+      - -ngl
+      - "99"
+      - -ctk
+      - q8_0
+      - -ctv
+      - q8_0
+      - --image-max-tokens
+      - "1024"
+    volumes:
+      - ./services/ml-svc/checkpoints/llama_vlm:/models/llama_vlm:ro
+    ports:
+      - "8090:8080"
     restart: unless-stopped
 
   # Observability

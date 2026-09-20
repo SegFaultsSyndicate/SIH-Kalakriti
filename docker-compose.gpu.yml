@@ -46,3 +46,15 @@ services:
     environment:
       ML_SVC_TEXT_EMBEDDING_DEVICE: "cpu"
       ML_SVC_TEXT_RERANKING_DEVICE: "cpu"
+
+  # Only relevant once ML_SVC_VLM_BACKEND=llamacpp -- the server-cuda image
+  # needs the GPU reservation below to see the card at all (its CPU-only
+  # `-ngl 99` flag in docker-compose.yml is a no-op without this).
+  llama-server:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

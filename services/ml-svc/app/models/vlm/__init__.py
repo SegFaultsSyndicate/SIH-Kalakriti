@@ -51,7 +51,14 @@ class VLMConfig:
     """One repo id serves all three RPCs above -- see the three canonical env
     var names below, which all default to it. A deployment that wants a
     different model per RPC (e.g. a bigger model just for description polish)
-    sets the specific var; nothing here forces them to be the same repo."""
+    sets the specific var; nothing here forces them to be the same repo.
+
+    `backend` picks which real implementation actually runs the model:
+    "transformers" (`real.py`, in-process HF/bitsandbytes -- the only path
+    that ever ran on a small/no-GPU box) or "llamacpp" (`llamacpp.py`, an
+    HTTP client to a separate `llama-server` sidecar). See
+    `services/ml-svc/CLAUDE.md` for why both are kept rather than one
+    replacing the other."""
 
     attribute_extraction_model: str = "Qwen/Qwen2.5-VL-3B-Instruct"
     technique_verification_model: str = "Qwen/Qwen2.5-VL-3B-Instruct"
@@ -60,6 +67,8 @@ class VLMConfig:
     # processing knob for that one feature, not a model identity, but it
     # lives here because it is only ever read alongside this component.
     video_frames: int = 8
+    backend: str = "transformers"
+    llamacpp_base_url: str = "http://llama-server:8080"
 
     @classmethod
     def from_env(cls) -> "VLMConfig":
@@ -69,6 +78,8 @@ class VLMConfig:
             technique_verification_model=os.getenv("ML_SVC_TECHNIQUE_VERIFICATION_MODEL", default),
             description_model=os.getenv("ML_SVC_IMAGE_DESCRIPTION_MODEL", default),
             video_frames=int(os.getenv("ML_SVC_VIDEO_FRAMES", "8")),
+            backend=os.getenv("ML_SVC_VLM_BACKEND", "transformers"),
+            llamacpp_base_url=os.getenv("ML_SVC_VLM_LLAMACPP_URL", "http://llama-server:8080"),
         )
 
 
@@ -78,6 +89,12 @@ def build(cfg: Config) -> VisionLanguageModel:
 
         return MockVisionLanguageModel()
 
+    vlm_cfg = VLMConfig.from_env()
+    if vlm_cfg.backend == "llamacpp":
+        from app.models.vlm.llamacpp import LlamaCppVisionLanguageModel
+
+        return LlamaCppVisionLanguageModel(vlm_cfg)
+
     from app.models.vlm.real import RealVisionLanguageModel
 
-    return RealVisionLanguageModel(VLMConfig.from_env())
+    return RealVisionLanguageModel(vlm_cfg)

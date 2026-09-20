@@ -11,9 +11,9 @@ modularization pass (see git log for "Modularize ml-svc's model layer").
 
 Kalakriti's ML gRPC inference service (`inference.v1.InferenceService`, see
 `proto/inference/v1/inference.proto` at the repo root), called synchronously
-by the bff/core-svc. Eight RPCs: `EnhanceImage`, `ExtractAttributes`,
-`GenerateDescription`, `VerifyTechnique`, `DetectHandloom`, `Embed`,
-`Rerank`, `Transcribe`.
+by the bff/core-svc. Nine RPCs: `AssessImageQuality`, `EnhanceImage`,
+`ExtractAttributes`, `GenerateDescription`, `VerifyTechnique`,
+`DetectHandloom`, `Embed`, `Rerank`, `Transcribe`.
 
 ## Architecture: three layers below the wire
 
@@ -50,7 +50,7 @@ loop, in `serve()`), then `servicer.attach(registry)` builds every
 flips to `SERVING`. Every RPC method below that point calls into exactly one
 feature object; `server.py` never imports a model component directly.
 
-## The 8 model components (`app/models/<component>/`)
+## The 9 model components (`app/models/<component>/`)
 
 Each directory has the same shape:
 
@@ -66,14 +66,15 @@ app/models/image_background/
 every component) picks `mock.py` or `real.py` off `cfg.mock_mode`, calling
 its own component-level `Config.from_env()` for whatever env vars it owns.
 This is the one idiom every component follows -- copy it exactly when adding
-a ninth.
+a tenth.
 
 | Component | Backs | Real implementation | Canonical env var(s) |
 |---|---|---|---|
 | `storage` | every RPC that touches media | MinIO | `ML_SVC_OBJECT_STORAGE_ENDPOINT`/`_ACCESS_KEY`/`_SECRET_KEY`; bucket is `ML_SVC_OBJECT_STORAGE_BUCKET`, read into the *global* `Config.media_bucket` |
+| `image_quality` | `AssessImageQuality` | Classical CV, no model weights: PIL decode + Laplacian-variance blur score | `ML_SVC_IMAGE_QUALITY_MIN_WIDTH_PX`/`_MIN_HEIGHT_PX`/`_MIN_BLUR_VARIANCE`/`_MAX_BLANK_STDDEV` |
 | `image_background` | `EnhanceImage` | rembg / BiRefNet | `ML_SVC_IMAGE_BACKGROUND_MODEL` |
 | `image_lighting` | `EnhanceImage` | Zero-DCE++ (`net.py`, the old top-level `zero_dce.py`) | `ML_SVC_IMAGE_LIGHTING_MODEL` (a checkpoint path; empty = optional, degrades to unavailable) |
-| `vlm` | `ExtractAttributes`, `VerifyTechnique`, `GenerateDescription`'s polish | Qwen2.5-VL, one checkpoint backs all three | `ML_SVC_IMAGE_ATTRIBUTE_EXTRACTION_MODEL`, `ML_SVC_TECHNIQUE_VERIFICATION_MODEL`, `ML_SVC_IMAGE_DESCRIPTION_MODEL` (all default to the same repo id; see `vlm/real.py`'s docstring for what happens if they diverge), `ML_SVC_VIDEO_FRAMES` |
+| `vlm` | `ExtractAttributes`, `VerifyTechnique`, `GenerateDescription`'s polish | Qwen2.5-VL, one checkpoint backs all three; two interchangeable backends (`real.py`, in-process transformers+bitsandbytes; `llamacpp.py`, an HTTP client to a `llama-server` sidecar over GGUF -- see `ML_SETUP.md` §5 for why both exist) | `ML_SVC_IMAGE_ATTRIBUTE_EXTRACTION_MODEL`, `ML_SVC_TECHNIQUE_VERIFICATION_MODEL`, `ML_SVC_IMAGE_DESCRIPTION_MODEL` (all default to the same repo id; see `vlm/real.py`'s docstring for what happens if they diverge), `ML_SVC_VIDEO_FRAMES`, `ML_SVC_VLM_BACKEND` (`transformers`\|`llamacpp`), `ML_SVC_VLM_LLAMACPP_URL` |
 | `embedding` | `Embed` | SentenceTransformer (e5), ONNX Runtime by default | `ML_SVC_TEXT_EMBEDDING_MODEL`, `ML_SVC_TEXT_EMBEDDING_BACKEND` (`onnx`\|`torch`) |
 | `reranking` | `Rerank` | CrossEncoder (bge), ONNX Runtime by default | `ML_SVC_TEXT_RERANKING_MODEL`, `ML_SVC_TEXT_RERANKING_BACKEND` (`onnx`\|`torch`) |
 | `handloom_texture` | `DetectHandloom` | FFT peak-ratio + an optional, never-yet-trained texture CNN (loader now wired, no checkpoint exists yet) | `ML_SVC_HANDLOOM_DETECTION_MODEL` (checkpoint path; empty = optional, degrades to FFT-only, same pattern as `image_lighting`) |
@@ -241,6 +242,12 @@ instead of a monolithic registry.
   that needs no torch at all (unconfigured checkpoint -> unavailable).
 - `tests/models/test_handloom_texture_net.py` / `test_handloom_texture_real.py`
   -- same two-test split as `image_lighting`'s pair, same reasons.
+- `tests/models/test_image_quality_real.py` -- exercises every real check
+  (corrupt, empty, too-small, blank, blurry, sharp-passes) against actual
+  generated images, `importorskip`d on PIL/numpy/cv2 same as the pairs above.
+- `tests/models/test_vlm_llamacpp.py` -- request-shape and response-parsing
+  tests against a monkeypatched `httpx.post`, `importorskip`d on httpx; no
+  real `llama-server` needed.
 - `tests/features/test_<feature>.py` -- one per feature, using hand-written
   fake Protocol implementations, not any component's real mock. Mirrors what
   `tests/test_real_helpers.py` used to cover as one flat file of pure-function
@@ -270,11 +277,24 @@ to be generated before the suite can import `app.pb`/run
   `reranking`**: those two are static-graph encoders; the VLM is
   autoregressive generation over a vision tower plus a decoder with a
   dynamic KV cache, a shape ONNX Runtime and Optimum's export tooling don't
-  handle well for Qwen2.5-VL as of `transformers==4.49.0`. If VLM throughput
-  ever needs to improve, look at a dedicated serving runtime (e.g. vLLM,
-  which loads HF safetensors checkpoints directly -- no export step, so a
-  future fine-tuned or LoRA-adapted checkpoint drops straight in) rather
-  than ONNX.
+  handle well for Qwen2.5-VL as of `transformers==4.49.0`.
+- **The VLM's dedicated-serving-runtime path is `vlm/llamacpp.py`, not
+  vLLM.** vLLM was evaluated first and rejected for this project's actual
+  hardware: it pre-allocates a fixed fraction of *total* GPU memory before a
+  single request (PagedAttention/continuous batching's whole point is high
+  concurrency, which this service doesn't need locally), and even a 4-bit
+  AWQ checkpoint of this exact model doesn't fit a 4GB card -- AWQ quantizes
+  only the LLM body, leaving the ~0.67B vision tower at fp16, so weights
+  alone (~3.4GB) exceed usable VRAM before any KV cache exists. llama.cpp's
+  GGUF format is the only one of the runtimes evaluated (vLLM, SGLang,
+  llama.cpp) that can quantize the vision tower itself
+  (`mmproj-...-Q8_0.gguf`) and evict it to CPU entirely
+  (`--no-mmproj-offload`) -- see `docs/ML_SETUP.md` §5 for the actual setup
+  and the small-card tuning flags. `real.py` (transformers+bitsandbytes)
+  stays the default and the better fit for genuinely tiny cards; `llamacpp.py`
+  is what to reach for once real GPU headroom (8GB+) is available, or to get
+  llama.cpp's `response_format: json_schema` structured-output guarantee
+  instead of `real.py`'s regex-based `_parse_json`.
 - **Adding a ninth component**: new `app/models/<name>/` package following the
   shape above, one `load(...)` call added to `app/registry.py`'s `load_all`
   and one field added to `Registry`, a new or extended `features/<rpc>.py`.
