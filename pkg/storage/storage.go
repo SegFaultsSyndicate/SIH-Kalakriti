@@ -52,12 +52,31 @@ type Config struct {
 
 // Client wraps a MinIO client scoped to one bucket.
 type Client struct {
-	mc         *minio.Client
-	bucket     string
-	publicHost *url.URL // non-nil when presigned URLs must be rewritten to a public host
+	mc     *minio.Client
+	bucket string
+	// presign is a second client, identical except for its Endpoint, used
+	// only to build presigned URLs. Non-nil when PublicURL differs from
+	// Endpoint -- see New's doc comment for why this can't just be one
+	// client with the host swapped after the fact.
+	presign *minio.Client
 }
 
 // New builds a Client and verifies the configured bucket exists.
+//
+// A presigned URL's signature covers its Host header (AWS SigV4 with
+// SignedHeaders=host), so it can only ever be valid for the exact host it
+// was computed against. When the server reaches MinIO over one address
+// (e.g. a docker-compose service name) but PublicURL names a different one
+// a browser can resolve, swapping the URL's host string after presigning --
+// the previous approach -- produces a URL whose signature no longer matches
+// the Host the browser will actually send, and MinIO rejects the PUT with
+// SignatureDoesNotMatch. Confirmed live: every real upload failed this way
+// once anything (browser, curl) actually followed through on a presigned
+// URL, which nothing had before this was caught. The fix is a second
+// *minio.Client constructed with PublicURL as its Endpoint, used only for
+// presigning -- minio-go computes a presigned URL by pure local signing, no
+// network round trip to that endpoint, so this needs no connectivity to the
+// public address from inside the container.
 func New(ctx context.Context, cfg Config) (*Client, error) {
 	mc, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
@@ -68,11 +87,19 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("constructing minio client for %s: %w", cfg.Endpoint, err)
 	}
 
-	var publicHost *url.URL
+	presign := mc
 	if cfg.PublicURL != "" {
-		publicHost, err = url.Parse(cfg.PublicURL)
+		publicHost, err := url.Parse(cfg.PublicURL)
 		if err != nil {
 			return nil, fmt.Errorf("parsing storage public URL %q: %w", cfg.PublicURL, err)
+		}
+		presign, err = minio.New(publicHost.Host, &minio.Options{
+			Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+			Secure: publicHost.Scheme == "https",
+			Region: cfg.Region,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("constructing minio presign client for %s: %w", publicHost.Host, err)
 		}
 	}
 
@@ -84,19 +111,7 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		return nil, fmt.Errorf("bucket %s does not exist", cfg.Bucket)
 	}
 
-	return &Client{mc: mc, bucket: cfg.Bucket, publicHost: publicHost}, nil
-}
-
-// rewriteHost substitutes the client's configured public host/scheme into u,
-// so a server that reaches MinIO over an internal address (e.g. a
-// docker-compose service name) can still hand out URLs a browser can reach.
-func (c *Client) rewriteHost(u *url.URL) string {
-	if c.publicHost == nil {
-		return u.String()
-	}
-	u.Scheme = c.publicHost.Scheme
-	u.Host = c.publicHost.Host
-	return u.String()
+	return &Client{mc: mc, bucket: cfg.Bucket, presign: presign}, nil
 }
 
 // PresignedPutURL returns a time-limited URL the caller can PUT an object's
@@ -106,21 +121,21 @@ func (c *Client) PresignedPutURL(ctx context.Context, objectKey, contentType str
 	if !IsAllowedContentType(contentType) {
 		return "", fmt.Errorf("presigning PUT for %s (content-type %s): %w", objectKey, contentType, ErrContentTypeNotAllowed)
 	}
-	u, err := c.mc.PresignedPutObject(ctx, c.bucket, objectKey, expiry)
+	u, err := c.presign.PresignedPutObject(ctx, c.bucket, objectKey, expiry)
 	if err != nil {
 		return "", fmt.Errorf("presigning PUT for %s: %w", objectKey, err)
 	}
-	return c.rewriteHost(u), nil
+	return u.String(), nil
 }
 
 // PresignedGetURL returns a time-limited URL the caller can GET an object's
 // bytes from directly.
 func (c *Client) PresignedGetURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.mc.PresignedGetObject(ctx, c.bucket, objectKey, expiry, url.Values{})
+	u, err := c.presign.PresignedGetObject(ctx, c.bucket, objectKey, expiry, url.Values{})
 	if err != nil {
 		return "", fmt.Errorf("presigning GET for %s: %w", objectKey, err)
 	}
-	return c.rewriteHost(u), nil
+	return u.String(), nil
 }
 
 // ObjectInfo describes a stored object's basic metadata.
