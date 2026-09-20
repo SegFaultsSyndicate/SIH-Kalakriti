@@ -291,10 +291,18 @@ services:
       BASE_URL: ${BASE_URL:-http://localhost:8000}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       OTLP_ENDPOINT: jaeger:4317
-      # Empty disables CORS entirely (fine for same-origin nginx serving both
-      # web + bff). Set to your Vercel frontend's origin(s) if the frontend
-      # is deployed separately and calls this bff cross-origin.
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      # NOT actually same-origin: the browser sees three distinct origins
+      # (port is part of an origin) -- http://localhost (buyer, :80),
+      # :8081 (artisan), :8082 (admin) -- all proxied by the same NGINX to
+      # this bff's :8000, which is a different origin again. Without this,
+      # pkg/httpx's CSRFProtection middleware only ever trusts BASE_URL's
+      # origin (:8000) and 403s every mutating request (POST/PUT/PATCH/
+      # DELETE) from any of the three real frontend apps with "forbidden:
+      # cross-site request forgery protection" -- confirmed live: OTP
+      # request from the artisan PWA at :8081 403'd until these were added.
+      # Also set to your Vercel frontend's origin(s) if the frontend is
+      # deployed separately and calls this bff cross-origin.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:8081,http://localhost:8082}
     ports:
       - "8000:8000"
       - "9095:9095"
