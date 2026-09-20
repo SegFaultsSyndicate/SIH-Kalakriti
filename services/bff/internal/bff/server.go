@@ -176,9 +176,17 @@ func (s *Server) mountRoutes() {
 	api.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
 	api.GET("/listings", httpx.WrapHandler(apiH.ListListings))
 	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
-	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
+	// OptionalAuth: both handlers call authoriseFor server-side to show a
+	// DRAFT/PENDING listing back to the artisan who owns it (core-svc's own
+	// PublicMethods() list has both RPCs for exactly this reason) -- without
+	// it, a token-carrying request here never reaches core-svc with any
+	// identity at all, and authoriseFor always sees an anonymous caller.
+	// Confirmed live: an artisan reading back the listing they had just
+	// created 404'd, every time, with the row correctly present and
+	// correctly owned in Postgres.
+	api.GET("/listings/:id", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
-	api.GET("/listings/:id/attributes", httpx.WrapHandler(apiH.GetListingAttributes))
+	api.GET("/listings/:id/attributes", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListingAttributes))
 
 	// Public craft ontology, artisan storefront and process feed reads.
 	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
