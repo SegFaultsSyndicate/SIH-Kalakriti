@@ -139,11 +139,14 @@ func (h *Identity) RegisterArtisan(ctx context.Context, req *identityv1.Register
 		SocialCategory:    req.SocialCategory,
 	}
 
-	artisan, err := h.svc.RegisterArtisan(ctx, in, req.GetIdempotencyKey())
+	artisan, tokens, err := h.svc.RegisterArtisan(ctx, in, req.GetIdempotencyKey())
 	if err != nil {
 		return nil, pkgdomain.GRPCError(err)
 	}
-	return &identityv1.RegisterArtisanResponse{Artisan: artisanToProto(artisan)}, nil
+	return &identityv1.RegisterArtisanResponse{
+		Artisan: artisanToProto(artisan),
+		Tokens:  tokensToProto(tokens),
+	}, nil
 }
 
 // GetArtisan fetches one artisan by id.

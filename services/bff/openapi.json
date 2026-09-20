@@ -325,13 +325,19 @@
         },
         "responses": {
           "201": {
-            "description": "Artisan created",
+            "description": "Artisan created. The caller's prior token (minted at OTP-verify time, before this profile existed) has no subject and cannot authenticate further calls -- switch to access_token/refresh_token immediately, the same as after /auth/otp/verify.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "artisan_id": {
+                      "type": "string"
+                    },
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
                       "type": "string"
                     }
                   }

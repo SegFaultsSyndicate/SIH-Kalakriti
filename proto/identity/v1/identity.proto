@@ -211,6 +211,12 @@ message RegisterArtisanRequest {
 message RegisterArtisanResponse {
   // The registered artisan.
   catalog.v1.Artisan artisan = 1;
+  // Fresh tokens bound to the new artisan id. The caller's prior access
+  // token (minted at OTP-verify time, before this profile existed) has no
+  // subject and can never authenticate a subsequent call -- every caller
+  // must switch to these immediately after registering, the same way
+  // VerifyOtp's own response is used.
+  TokenPair tokens = 2;
 }
 
 // GetArtisanRequest fetches one artisan by id.

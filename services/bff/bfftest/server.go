@@ -140,8 +140,8 @@ func (m *MockIdempStore) SaveResponse(ctx context.Context, scope, key string, re
 
 type StubArtisanSvc struct{}
 
-func (s *StubArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
-	return "artisan-1", nil
+func (s *StubArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, string, string, error) {
+	return "artisan-1", "stub-access-token", "stub-refresh-token", nil
 }
 func (s *StubArtisanSvc) GetProfile(ctx context.Context, artisanID string) (map[string]any, error) {
 	return map[string]any{

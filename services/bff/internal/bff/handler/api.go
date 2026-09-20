@@ -72,7 +72,7 @@ type AuthService interface {
 
 // ArtisanService is the artisan-svc gRPC client interface.
 type ArtisanService interface {
-	Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (artisanID string, err error)
+	Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (artisanID, accessToken, refreshToken string, err error)
 	GetProfile(ctx context.Context, artisanID string) (map[string]any, error)
 	UpdateProfile(ctx context.Context, artisanID string, updates map[string]any) error
 }
@@ -641,13 +641,22 @@ func (h *APIHandler) RegisterArtisan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	artisanID, err := h.artisanSvc.Register(r.Context(), p.PhoneE164, idempotencyKeyFrom(r), fields)
+	artisanID, accessToken, refreshToken, err := h.artisanSvc.Register(r.Context(), p.PhoneE164, idempotencyKeyFrom(r), fields)
 	if err != nil {
 		httpx.Error(w, err)
 		return
 	}
 
-	httpx.JSON(w, http.StatusCreated, map[string]string{"artisan_id": artisanID})
+	// The caller's existing token was minted at OTP-verify time, before this
+	// profile existed, so it has no subject and can never authenticate
+	// another call. Every authenticated request after registration needs
+	// these fresh, artisan-scoped tokens instead -- see auth-flow.ts's
+	// completeOtpVerification for the client-side counterpart.
+	httpx.JSON(w, http.StatusCreated, map[string]string{
+		"artisan_id":    artisanID,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 
 func (h *APIHandler) GetArtisanProfile(w http.ResponseWriter, r *http.Request) {

@@ -258,10 +258,10 @@ type mockArtisanSvc struct {
 	nextID string
 }
 
-func (m *mockArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
+func (m *mockArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, string, string, error) {
 	id := m.nextID
 	m.nextID = "art-" + id[4:] + "1" // increment for next call
-	return id, nil
+	return id, "mock-access-token", "mock-refresh-token", nil
 }
 
 func (m *mockArtisanSvc) GetProfile(ctx context.Context, artisanID string) (map[string]any, error) {

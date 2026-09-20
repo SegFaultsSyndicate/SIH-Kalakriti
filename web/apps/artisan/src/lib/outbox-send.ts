@@ -19,6 +19,9 @@ import {
   respondToLot,
   ApiError,
   messageKeyFor,
+  setAccessToken,
+  setRefreshToken,
+  session,
 } from '@kalakriti/api';
 import { locale } from '@kalakriti/i18n';
 import { setArtisanId, type RegisterBody } from './registration';
@@ -65,6 +68,16 @@ async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
   try {
     const response = await registerArtisan(body, { idempotencyKey: entry.idempotencyKey });
     if (response.artisan_id) await setArtisanId(response.artisan_id);
+    // The token held until now was minted at OTP-verify time, before this
+    // profile existed -- it has no subject and can never authenticate
+    // another call. Switch to the fresh, artisan-scoped pair the same way
+    // completeOtpVerification does, or every request after this one 400s
+    // with "artisan_id is not a valid uuid".
+    if (response.access_token) {
+      setAccessToken(response.access_token);
+      setRefreshToken(response.refresh_token);
+      session.establish(response.access_token);
+    }
     return { ok: true };
   } catch (cause) {
     // No DEV fallback here (unlike other outbox senders): setArtisanId

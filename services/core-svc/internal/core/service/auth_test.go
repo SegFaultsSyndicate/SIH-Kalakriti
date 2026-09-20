@@ -44,7 +44,7 @@ func TestRequestOtpDoesNotRevealWhetherThePhoneIsRegistered(t *testing.T) {
 	}
 
 	// Now register a number and ask again.
-	if _, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1"); err != nil {
+	if _, _, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1"); err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}
 	known, err := svc.RequestOtp(context.Background(), testPhone, "HINDI")
@@ -95,7 +95,7 @@ func TestVerifyOtpRegisteredPhoneYieldsSubjectAndLanguage(t *testing.T) {
 	tokens := newFakeTokens()
 	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456"})
 
-	created, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
+	created, _, err := svc.RegisterArtisan(artisanPhoneCtx("", testPhone), validRegisterInput(), "idem-1")
 	if err != nil {
 		t.Fatalf("RegisterArtisan: %v", err)
 	}

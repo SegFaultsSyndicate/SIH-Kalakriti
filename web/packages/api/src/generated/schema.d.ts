@@ -278,7 +278,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Artisan created */
+                /** @description Artisan created. The caller's prior token (minted at OTP-verify time, before this profile existed) has no subject and cannot authenticate further calls -- switch to access_token/refresh_token immediately, the same as after /auth/otp/verify. */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -286,6 +286,8 @@ export interface paths {
                     content: {
                         "application/json": {
                             artisan_id?: string;
+                            access_token?: string;
+                            refresh_token?: string;
                         };
                     };
                 };
