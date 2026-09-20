@@ -36,6 +36,7 @@ var routeParityExempt = map[string]bool{
 	"GET /robots.txt":               true,
 	"POST /api/v1/payments/webhook": true,
 	"GET /api/v1/openapi.json":      true,
+	"GET /healthz":                  true,
 }
 
 func TestOpenAPISpecHasEveryAPIRoute(t *testing.T) {
