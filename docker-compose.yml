@@ -372,7 +372,15 @@ services:
   # image or pulled through hf-cache: gitignored, fetched once per machine
   # (see docs/ML_SETUP.md's llama.cpp section). CPU image (`server`, no
   # `-cuda` suffix) is available too, for a host with no NVIDIA GPU.
+  #
+  # `profiles` keeps this out of a bare `docker compose up`/`up --build`/
+  # `make demo-up` (all of which start every service with no profile) -- it
+  # was pulling the multi-GB server-cuda image and trying to start on hosts
+  # with no NVIDIA GPU at all, contradicting the doc comment above. Explicit
+  # invocation only: `docker compose up -d llama-server` or the two-file form
+  # in ML_SETUP.md's llama.cpp section.
   llama-server:
+    profiles: ["llamacpp"]
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
     command:
       - -m
