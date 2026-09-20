@@ -119,8 +119,15 @@ services:
       # main.go defaults: CORE_SVC_GRPC_ADDR :50051, CORE_SVC_HTTP_ADDR :8081
       # (the old 8080/9090 mapping matched neither port core-svc actually
       # listens on, and 9090 collided with prometheus's own port below).
+      # Host side remapped to 18081: web's NGINX container also publishes
+      # host 8081 (the documented Artisan Studio entry point) -- both
+      # binding host 8081 makes `docker compose up` fail with "port is
+      # already allocated" the moment both containers are up together.
+      # Nothing reaches core-svc's healthz via this host mapping except a
+      # developer's own curl; every in-cluster caller uses core-svc:50051
+      # over the Docker network, unaffected by this.
       - "50051:50051"
-      - "8081:8081"
+      - "18081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -153,7 +160,11 @@ services:
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
     ports:
-      - "8082:8082"
+      # Host side remapped to 18082, same reason as core-svc's 18081 above:
+      # web's NGINX container also publishes host 8082 (the documented
+      # Ministry Console entry point), and both binding host 8082 fails
+      # "port is already allocated" the moment both are up together.
+      - "18082:8082"
       # search-svc's own gRPC port (main.go default SEARCH_SVC_GRPC_ADDR
       # :50052) — the old 9092 mapping didn't correspond to anything
       # search-svc listens on, and collided with kafka's own 9092.
