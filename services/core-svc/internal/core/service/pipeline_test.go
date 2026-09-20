@@ -379,52 +379,9 @@ func TestPipelineRecordsATerminalEnhancementFailureOnThePhoto(t *testing.T) {
 	require.Equal(t, 0, f.inferrer.calls[stepExtract])
 }
 
-<<<<<<< Updated upstream
 // A transient enhancement failure is returned so the consumer retries it, and
 // nothing is marked failed on the way past.
 func TestPipelineRetriesATransientEnhancementFailure(t *testing.T) {
-=======
-// TestPipelineFailsClosedOnPoorImageQuality is the quality gate: a genuine
-// quality failure (blur, here) fails closed before EnhanceImage or
-// ExtractAttributes ever run.
-func TestPipelineFailsClosedOnPoorImageQuality(t *testing.T) {
-	t.Parallel()
-	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
-		failQuality(domain.ImageQualityIssue{Code: "BLURRY", Message: "image is too blurred to be usable"}))
-
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
-
-	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
-	require.NoError(t, err)
-	require.Equal(t, domain.MediaFailed, stored.State)
-	require.NotNil(t, stored.FailureReason)
-	require.Contains(t, *stored.FailureReason, "BLURRY")
-	require.Contains(t, *stored.FailureReason, "too blurred")
-
-	require.Empty(t, f.catalog.listings)
-	require.Empty(t, f.catalog.products)
-	require.Equal(t, 0, f.inferrer.calls[stepEnhance], "a rejected image must never reach EnhanceImage")
-	require.Equal(t, 0, f.inferrer.calls[stepExtract], "a rejected image must never reach ExtractAttributes")
-}
-
-// TestPipelineOnlyRejectsGenuineQualityFailures confirms a passing quality
-// verdict (the only kind mock/real ml-svc ever returns for a subject outside
-// the craft ontology) never blocks the pipeline -- recognition failure is
-// handled downstream by ExtractAttributes abstaining, not by this gate.
-func TestPipelineOnlyRejectsGenuineQualityFailures(t *testing.T) {
-	t.Parallel()
-	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing"))
-
-	require.NoError(t, f.pipeline.Run(context.Background(), f.mediaID))
-
-	stored, err := f.media.GetMedia(context.Background(), f.mediaID)
-	require.NoError(t, err)
-	require.NotEqual(t, domain.MediaFailed, stored.State)
-	require.Equal(t, 1, f.inferrer.calls[stepAssessQuality])
-}
-
-func TestPipelineFailsClosedOnATerminalExtractionError(t *testing.T) {
->>>>>>> Stashed changes
 	t.Parallel()
 	f := newPipelineFixture(t, newFakeInference("ajrakh-block-printing").
 		fail(stepEnhance, errors.New("ml-svc unavailable")))

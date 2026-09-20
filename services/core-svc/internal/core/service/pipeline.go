@@ -52,19 +52,11 @@ var stepTiming = expvar.NewMap("pipeline_steps")
 
 // step names, which are also the metric keys.
 const (
-<<<<<<< Updated upstream
-	stepEnhance   = "enhance"
-	stepExtract   = "extract"
-	stepDescribe  = "describe"
-	stepTranslate = "translate"
-=======
 	stepAssessQuality = "assess_quality"
 	stepEnhance       = "enhance"
 	stepExtract       = "extract"
 	stepDescribe      = "describe"
-	stepDraft         = "draft"
 	stepTranslate     = "translate"
->>>>>>> Stashed changes
 )
 
 // Pipeline enriches a listing an artisan (or a cluster officer) already
@@ -158,7 +150,6 @@ func (p *Pipeline) Run(ctx context.Context, listingID uuid.UUID) error {
 		return err
 	}
 
-<<<<<<< Updated upstream
 	// 1. Enhance every attached photo, and record each enhanced rendition on
 	//    its own media row.
 	enhancedKeys := make([]string, 0, len(items))
@@ -179,31 +170,6 @@ func (p *Pipeline) Run(ctx context.Context, listingID uuid.UUID) error {
 		}
 
 		enhancedKey, err := timed(ctx, stepEnhance, func() (string, error) {
-=======
-	// 1. Quality-gate the raw upload before spending anything else on it. Only
-	//    a genuine quality failure (corrupt/too-small/blank/blurred) fails
-	//    this -- it never rejects a valid, in-focus photo just because it
-	//    doesn't match anything in the craft ontology; that is step 3's job,
-	//    and it already abstains rather than failing when nothing matches.
-	verdict, err := timed(ctx, stepAssessQuality, func() (domain.ImageQualityVerdict, error) {
-		return p.inferrer.AssessImageQuality(ctx, media.ObjectKey)
-	})
-	if err != nil {
-		return p.fail(ctx, media, stepAssessQuality, err)
-	}
-	if !verdict.Passed {
-		return p.fail(ctx, media, stepAssessQuality, fmt.Errorf(
-			"image failed the quality gate (%s): %w", issueSummary(verdict.Issues), pkgdomain.ErrInvalidInput))
-	}
-
-	// 2. Enhance, and record the enhanced rendition on the media row. The media
-	//    service emits media.enhanced from inside that transaction.
-	enhancedKey := ""
-	if media.EnhancedObjectKey != nil {
-		enhancedKey = *media.EnhancedObjectKey // a previous delivery got this far
-	} else {
-		enhancedKey, err = timed(ctx, stepEnhance, func() (string, error) {
->>>>>>> Stashed changes
 			return p.inferrer.EnhanceImage(ctx, media.ObjectKey)
 		})
 		if err != nil {
@@ -257,63 +223,9 @@ func (p *Pipeline) Run(ctx context.Context, listingID uuid.UUID) error {
 		}
 	}
 
-<<<<<<< Updated upstream
 	// 3. Copy. A failure here is compensated, not rolled back: the listing
 	//    stays usable and is flagged for the artisan to write the description
 	//    themselves.
-=======
-	// 3. Extract, constrained to the crafts this artisan actually practises.
-	//    Anything outside that list is the model guessing, and a wrong craft
-	//    poisons search and provenance alike.
-	allowlist := p.craftCodes(artisan.CraftIDs)
-	attributes, err := timed(ctx, stepExtract, func() (domain.InferredAttributes, error) {
-		return p.inferrer.ExtractAttributes(ctx, []string{enhancedKey}, allowlist.declared, deref(artisan.Bio))
-	})
-	if err != nil {
-		return p.fail(ctx, media, stepExtract, err)
-	}
-	craftID, ok := allowlist.resolve(attributes.CraftCode)
-	if !ok {
-		return p.fail(ctx, media, stepExtract, fmt.Errorf(
-			"the model returned craft %q, which is not one of this artisan's crafts: %w",
-			attributes.CraftCode, pkgdomain.ErrInvalidInput))
-	}
-
-	// 4. Product and listing, created once per uploaded photograph.
-	product, created, err := p.store.GetOrCreateProductForMedia(ctx, domain.CreateProductInput{
-		ArtisanID:    media.ArtisanID,
-		CraftID:      craftID,
-		WorkingTitle: workingTitle(attributes),
-		Materials:    nonEmpty(attributes.Material),
-		Techniques:   nonEmpty(attributes.Technique),
-		Colours:      attributes.Colours,
-		Motifs:       attributes.Motifs,
-		MediaIDs:     []uuid.UUID{mediaID},
-		CreatedBy:    "pipeline",
-	}, mediaID)
-	if err != nil {
-		return err
-	}
-	p.log.InfoContext(ctx, "pipeline product",
-		"media_id", mediaID, "product_id", product.ID, "created", created)
-
-	listing, err := p.draftListing(ctx, product, attributes)
-	if err != nil {
-		return err
-	}
-
-	// The attributes are written before the copy is attempted, so a failure in
-	// step 4 leaves the artisan a listing that already knows what it is.
-	if _, err := p.catalog.UpsertListingAttributes(ctx, listing.ID,
-		attributes.ToListingAttributes(), domain.SourceModel,
-		"pipeline:"+stepExtract+":"+mediaID.String()); err != nil {
-		return err
-	}
-
-	// 5. Copy. A failure here is compensated, not rolled back: everything above
-	//    is worth keeping, so the listing stays a DRAFT flagged for the artisan
-	//    to write the description themselves.
->>>>>>> Stashed changes
 	language := firstOr(artisan.Languages, "ENGLISH")
 	generated, err := timed(ctx, stepDescribe, func() (domain.GeneratedCopy, error) {
 		return p.inferrer.GenerateDescription(ctx, domain.CopyRequest{
@@ -343,22 +255,8 @@ func (p *Pipeline) Run(ctx context.Context, listingID uuid.UUID) error {
 		return err
 	}
 
-<<<<<<< Updated upstream
 	p.log.InfoContext(ctx, "listing enriched",
 		"listing_id", listingID, "photos", len(enhancedKeys), "language", language)
-=======
-	// 6. Hand it to the artisan. Submitting an already-submitted listing is an
-	//    illegal transition, which on a redelivery is the correct no-op.
-	if listing.State == domain.StateDraft {
-		if _, err := p.catalog.SubmitForApproval(ctx, listing.ID,
-			"pipeline:"+stepDraft+":"+mediaID.String()); err != nil && !errors.Is(err, pkgdomain.ErrInvalidInput) {
-			return err
-		}
-	}
-
-	p.log.InfoContext(ctx, "listing drafted",
-		"media_id", mediaID, "listing_id", listing.ID, "craft_id", craftID, "language", language)
->>>>>>> Stashed changes
 	return nil
 }
 

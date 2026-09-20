@@ -75,8 +75,8 @@ docker compose exec -e PGPASSWORD=kalakriti postgres \
 # Redis
 docker compose exec redis redis-cli ping                    # PONG
 
-# Kafka (KRaft, single broker)
-docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+# Kafka (KRaft, single broker; confluentinc/confluent-local ships kafka-topics on PATH, no .sh/opt path)
+docker compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
 
 # MinIO
 docker compose exec minio mc ready local

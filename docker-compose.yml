@@ -338,8 +338,6 @@ services:
       # to that one component (app/models/translation), not a global var --
       # read from the host shell/.env; other RPCs work fine with this unset.
       ML_SVC_TRANSLATION_HF_TOKEN: "${HF_TOKEN:-}"
-<<<<<<< Updated upstream
-=======
       # Zero-DCE++ has no pip package or HF repo (see net.py's docstring) --
       # its one checkpoint is a raw .pth bind-mounted from the host below,
       # not pulled through hf-cache. Container path, not the host path
@@ -355,7 +353,6 @@ services:
       # until the llama.cpp path is validated on your hardware.
       ML_SVC_VLM_BACKEND: ${ML_SVC_VLM_BACKEND:-transformers}
       ML_SVC_VLM_LLAMACPP_URL: http://llama-server:8080
->>>>>>> Stashed changes
     volumes:
       - hf-cache:/root/.cache/huggingface
     ports:
