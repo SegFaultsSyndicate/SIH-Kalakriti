@@ -98,18 +98,60 @@ func TestRegisterArtisanWritesArtisanAndOutboxEventInOneTx(t *testing.T) {
 	}
 }
 
-func TestRegisterArtisanTwiceWithSamePhoneReturnsConflict(t *testing.T) {
+// A second self-registration with the same phone is a recovery path, not an
+// error: the phone-ownership check earlier in RegisterArtisan already proves
+// this exact caller controls testPhone, so the existing profile under that
+// phone can only be their own -- e.g. a client that registered once, lost
+// the response, and is retrying while still holding its now-useless
+// pre-registration token. It must come back as success with fresh tokens
+// for the artisan that already exists, not ErrConflict, or that client has
+// no way back to a working session.
+func TestRegisterArtisanTwiceWithSamePhoneIsIdempotent(t *testing.T) {
 	store := newFakeStore()
 	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
 	ctx := artisanPhoneCtx("", testPhone)
 
-	if _, _, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-1"); err != nil {
+	first, firstTokens, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-1")
+	if err != nil {
+		t.Fatalf("first registration should succeed: %v", err)
+	}
+	if firstTokens.AccessToken == "" {
+		t.Fatal("first registration should mint tokens")
+	}
+
+	second, secondTokens, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-2")
+	if err != nil {
+		t.Fatalf("second registration with the same self-verified phone should succeed, got %v", err)
+	}
+	if second.ID != first.ID {
+		t.Fatalf("second registration returned a different artisan: %v vs %v", second.ID, first.ID)
+	}
+	if secondTokens.AccessToken == "" {
+		t.Fatal("second registration should also mint tokens, so the caller has a way back to a working session")
+	}
+
+	// The recovered attempt must not have written a second outbox row --
+	// nothing was actually (re-)created.
+	if len(store.outbox) != 1 {
+		t.Fatalf("expected 1 outbox row after a recovered duplicate, got %d", len(store.outbox))
+	}
+}
+
+// A cluster officer proxy-registering someone else still gets the real
+// conflict: "already registered" is actionable information for them (don't
+// re-onboard this person), not a race to silently recover from.
+func TestRegisterArtisanByProxyTwiceWithSamePhoneReturnsConflict(t *testing.T) {
+	store := newFakeStore()
+	svc := newTestIdentity(store, newFakeTokens(), &fakeOTP{})
+	in := validRegisterInput()
+
+	if _, _, err := svc.RegisterArtisan(officerSubjectCtx("officer-1"), in, "idem-1"); err != nil {
 		t.Fatalf("first registration should succeed: %v", err)
 	}
 
-	_, _, err := svc.RegisterArtisan(ctx, validRegisterInput(), "idem-2")
+	_, _, err := svc.RegisterArtisan(officerSubjectCtx("officer-1"), in, "idem-2")
 	if err == nil {
-		t.Fatal("second registration with the same phone should fail")
+		t.Fatal("second proxy registration with the same phone should fail")
 	}
 	if !errors.Is(err, pkgdomain.ErrConflict) {
 		t.Fatalf("want ErrConflict, got %v", err)
@@ -118,7 +160,6 @@ func TestRegisterArtisanTwiceWithSamePhoneReturnsConflict(t *testing.T) {
 		t.Errorf("error should name the phone number, got %q", err)
 	}
 
-	// The failed attempt must not have written a second outbox row.
 	if len(store.outbox) != 1 {
 		t.Fatalf("expected 1 outbox row after a rejected duplicate, got %d", len(store.outbox))
 	}
