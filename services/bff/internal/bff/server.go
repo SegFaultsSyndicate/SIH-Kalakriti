@@ -118,6 +118,16 @@ func (s *Server) mountRoutes() {
 		})
 	}))
 
+	// Liveness only -- bff has no single dependency whose failure should flip
+	// this (unlike core-svc's /readyz, which checks its own Postgres pool).
+	// Documented in QUICKSTART.md's smoke test; without this it fell through
+	// to NoRoute -> the SPA handler -> "index.html not found", since bff's
+	// own container never has a built frontend at cfg.WebDist (that's the
+	// separate `web` NGINX container's job in docker-compose.yml).
+	r.GET("/healthz", func(c *gin.Context) {
+		httpx.JSON(c.Writer, http.StatusOK, map[string]string{"status": "ok"})
+	})
+
 	// Build handlers.
 	apiH := handler.NewAPIHandler(
 		cfg.AuthSvc, cfg.ArtisanSvc, cfg.MediaSvc, cfg.ListingSvc,
