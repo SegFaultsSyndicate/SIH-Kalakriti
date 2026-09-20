@@ -105,12 +105,33 @@ func Mux(cfg Config) *gin.Engine {
 // package took a router dependency — needs no rewrite for gin: the inner
 // handler c.Next()s to continue gin's own chain, letting mw's post-next logic
 // (status logging, recover()) still run after the rest of the chain returns.
+//
+// A net/http middleware signals "stop here" by simply not calling next and
+// returning -- gin's chain does not work that way: gin.Context.Next() is one
+// loop over every remaining handler, driven by c.index, and a handler that
+// returns without advancing it does NOT stop that loop on its own, only
+// c.Abort() does (it pushes c.index past the end). Without the explicit
+// Abort below, every wrapped middleware that rejects a request (CSRFProtection,
+// RateLimit, RateLimitEndpoint, ...) still had its written response silently
+// followed by the real handler running anyway and writing its own response
+// on top -- two concatenated JSON bodies in one HTTP response, and, far worse
+// for CSRFProtection specifically, the mutation it was supposed to block
+// happened regardless of the 403 shown to the caller. Confirmed live: an
+// OTP-endpoint rate-limit rejection produced a single response with both the
+// rate-limit error and the real "otp_sent" success body concatenated
+// (Content-Length matched the sum of both), and a CSRF-rejected mutating
+// request still ran its handler.
 func Wrap(mw func(http.Handler) http.Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		calledNext := false
 		mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			calledNext = true
 			c.Request = r
 			c.Next()
 		})).ServeHTTP(c.Writer, c.Request)
+		if !calledNext {
+			c.Abort()
+		}
 	}
 }
 
