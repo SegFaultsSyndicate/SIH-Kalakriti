@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -121,9 +122,6 @@ func (s *Catalog) newCatalogEvent(aggregateID uuid.UUID, idempotencyKey string, 
 // checked against the in-memory ontology rather than the database, so an unknown
 // craft fails before a transaction opens.
 func (s *Catalog) CreateProduct(ctx context.Context, in domain.CreateProductInput, idempotencyKey string) (domain.Product, error) {
-	if err := in.Validate(); err != nil {
-		return domain.Product{}, err
-	}
 	if idempotencyKey == "" {
 		return domain.Product{}, fmt.Errorf("idempotency_key is required: %w", pkgdomain.ErrInvalidInput)
 	}
@@ -131,8 +129,26 @@ func (s *Catalog) CreateProduct(ctx context.Context, in domain.CreateProductInpu
 	if err != nil {
 		return domain.Product{}, err
 	}
-	if _, ok := s.crafts.Craft(in.CraftID); !ok {
+	craft, ok := s.crafts.Craft(in.CraftID)
+	if !ok {
 		return domain.Product{}, fmt.Errorf("craft %s is not in the ontology: %w", in.CraftID, pkgdomain.ErrInvalidInput)
+	}
+	// The artisan app's story step (Batch 8's UI) deliberately marks this
+	// field optional -- the whole product leans on AI-assisted copy rather
+	// than asking a low-literacy artisan to type one -- but Validate below
+	// still hard-required it, matching neither the frontend's own UI nor
+	// maxWorkingTitle's doc comment ("bounds the artisan's own title before
+	// AI copy replaces it", implying a missing one is expected and meant to
+	// be replaced, not rejected). Confirmed live: leaving it blank left the
+	// listing-creation step permanently stuck with no visible error.
+	// Defaulting to the craft's own display name keeps every downstream
+	// consumer of WorkingTitle (search indexing, the artisan's own listing
+	// list) meaningful until GenerateDescription's copy replaces it.
+	if strings.TrimSpace(in.WorkingTitle) == "" {
+		in.WorkingTitle = craft.DisplayName
+	}
+	if err := in.Validate(); err != nil {
+		return domain.Product{}, err
 	}
 	if in.CreatedBy == "" {
 		in.CreatedBy = principal.Subject
