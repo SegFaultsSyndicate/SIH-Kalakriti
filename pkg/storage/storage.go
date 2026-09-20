@@ -17,7 +17,16 @@ import (
 var ErrContentTypeNotAllowed = errors.New("storage: content type not allowed")
 
 // allowedContentTypes is the set of MIME types Kalakriti accepts for
-// artisan-uploaded media (product photography and short process videos).
+// artisan-uploaded media (product photography and short process videos) and
+// server-generated documents presigned for upload the same way (insight-svc's
+// income-statement PDFs). Keep in sync with bff's own allowedMIMETypes
+// (services/bff/internal/bff/handler/api.go) -- that one gates the
+// artisan-facing upload flow first, this one gates every PresignedPutURL
+// caller, including insight-svc's hardcoded "application/pdf", which had no
+// audio types and was missing "application/pdf" itself until this pass:
+// insight-svc's own PDF presigning had never worked, and neither had a
+// voice-note upload from any browser, since neither type was allowed here
+// at all.
 var allowedContentTypes = map[string]struct{}{
 	"image/jpeg":      {},
 	"image/png":       {},
@@ -26,6 +35,12 @@ var allowedContentTypes = map[string]struct{}{
 	"video/mp4":       {},
 	"video/quicktime": {},
 	"video/webm":      {},
+	"application/pdf": {},
+	"audio/webm":      {},
+	"audio/ogg":       {},
+	"audio/mp4":       {},
+	"audio/mpeg":      {},
+	"audio/wav":       {},
 }
 
 // IsAllowedContentType reports whether contentType may be uploaded to

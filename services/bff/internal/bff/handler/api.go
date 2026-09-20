@@ -698,6 +698,13 @@ func (h *APIHandler) UpdateArtisanProfile(w http.ResponseWriter, r *http.Request
 
 // Media endpoints
 
+// Keep in sync with pkg/storage's allowedContentTypes -- GenerateUploadURL's
+// content_type flows straight through to PresignedPutURL, which checks that
+// separate map. Audio entries cover MediaRecorder's real, browser-chosen
+// defaults for the story step's voice note (VoiceInput.svelte constructs
+// `new MediaRecorder(stream)` with no explicit mimeType) -- confirmed live
+// that recording a voice note 400'd with none of these allowed at all, in
+// every browser, since the list had no audio type whatsoever.
 var allowedMIMETypes = map[string]bool{
 	"image/jpeg":      true,
 	"image/png":       true,
@@ -705,6 +712,11 @@ var allowedMIMETypes = map[string]bool{
 	"video/mp4":       true,
 	"video/webm":      true,
 	"application/pdf": true,
+	"audio/webm":      true,
+	"audio/ogg":       true,
+	"audio/mp4":       true,
+	"audio/mpeg":      true,
+	"audio/wav":       true,
 }
 
 func (h *APIHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
@@ -723,12 +735,18 @@ func (h *APIHandler) GenerateUploadURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.ContentType = strings.ToLower(strings.TrimSpace(req.ContentType))
+	// MediaRecorder's real mimeType (recorder.mimeType, which VoiceInput.svelte
+	// feeds straight into content_type) is browser-chosen and typically
+	// carries a codec parameter, e.g. "audio/webm;codecs=opus" -- an exact-match
+	// allowlist against the bare type would reject that regardless of which
+	// audio type is added, so the parameter is stripped before the lookup.
+	req.ContentType, _, _ = strings.Cut(strings.ToLower(strings.TrimSpace(req.ContentType)), ";")
+	req.ContentType = strings.TrimSpace(req.ContentType)
 	if !allowedMIMETypes[req.ContentType] {
 		if h.logger != nil {
 			h.logger.Warn("security audit: rejected unwhitelisted upload MIME type", "type", req.ContentType, "actor", p.Subject)
 		}
-		httpx.Error(w, domain.InvalidInput(fmt.Sprintf("unsupported media content-type %q; allowed: jpeg, png, webp, mp4, webm, pdf", req.ContentType)))
+		httpx.Error(w, domain.InvalidInput(fmt.Sprintf("unsupported media content-type %q; allowed: jpeg, png, webp, mp4, webm, pdf, audio/webm, audio/ogg, audio/mp4, audio/mpeg, audio/wav", req.ContentType)))
 		return
 	}
 
