@@ -18,8 +18,12 @@ import (
 // pricingLanguage is the search-projection row the advisory reads. Pricing
 // signals (craft, size, materials, GI, embedding) do not vary by language, so
 // any indexed row will do; English is guaranteed to exist per batch 9's
-// buyer-language fan-out.
-const pricingLanguage = "en"
+// buyer-language fan-out. Must be one of the language_code Postgres enum's
+// values (full uppercase names, e.g. "ENGLISH") -- confirmed live that the
+// ISO-style "en" this held before fails every Advise call outright with
+// `invalid input value for enum language_code: "en"` (SQLSTATE 22P02),
+// before ml-svc is ever reached.
+const pricingLanguage = "ENGLISH"
 
 // PricingStore is the read-only persistence port the pricing advisory needs.
 // Nothing here writes: the advisory never touches a listing's stored price.
