@@ -17,6 +17,24 @@
   that's the artisan's problem to fix, not something more waiting resolves --
   so the wait ends there too, rather than looping on a count that would
   otherwise never reach zero and permanently disable Next.
+
+  syncEngine.syncNow() is called explicitly at the start of each wait below,
+  not left to its own passive triggers (online/visibility/the 45s timer --
+  see sync-engine.svelte.ts). Confirmed live with a real upload: media.upload
+  sat in the outbox with attempts:0 for the full 45s until the periodic timer
+  happened to fire. This page is exactly the place an artisan is staring at
+  a spinner waiting on this specific work, so it earns an explicit kick that
+  a passive background trigger does not need to provide.
+
+  ensureListingMediaAttachQueued below is now a second, defensive call --
+  the story step (leaving /listing/new/story) queues it for real, in the
+  same synchronous breath as ensureListingCreateQueued, specifically so the
+  local media blob stays referenced continuously through media.upload ->
+  listing.create -> listing.media.attach (see that page's own header
+  comment for the premature-deletion bug this fixed). Calling it again here
+  is a no-op once it's already queued -- kept only to cover a draft that
+  reaches this screen without having gone through the story step's queueing
+  (e.g. a resumed draft from before this fix shipped).
 -->
 <script lang="ts">
   import { liveQuery } from 'dexie';
@@ -30,6 +48,7 @@
   import { getListing, getListingAttributes } from '@kalakriti/api';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields, ensureListingMediaAttachQueued } from '$lib/listing-draft';
+  import { syncEngine } from '$lib/sync';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
@@ -93,6 +112,12 @@
       if (entries.length === 0) return 'done';
       if (entries.every((e) => e.status === 'needsAttention' || e.status === 'blocked')) return 'stuck';
       if (Date.now() > deadline) return 'stuck';
+      // Kicks a drain pass on every poll tick rather than waiting on
+      // syncEngine's passive triggers -- see this file's header comment for
+      // why that passive wait alone reliably starved this exact screen.
+      // syncNow() collapses concurrent calls to one in-flight drain and is a
+      // no-op while offline, so polling it every 500ms costs nothing extra.
+      void syncEngine.syncNow();
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
