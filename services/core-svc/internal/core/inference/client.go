@@ -52,12 +52,18 @@ func (c *Client) AssessImageQuality(ctx context.Context, objectKey string) (doma
 	return domain.ImageQualityVerdict{Passed: resp.GetPassed(), Issues: issues}, nil
 }
 
-// EnhanceImage returns the object key of the enhanced rendition.
+// EnhanceImage returns the object key of the enhanced rendition. Every photo
+// gets the same three treatments -- background removal, white balance, and
+// lighting correction -- CorrectLighting was never actually set here despite
+// pipeline.go's own docs describing "enhances every attached photo": the
+// image_lighting component (Zero-DCE++) was reachable end to end but never
+// once requested, so it silently never ran on a single real upload.
 func (c *Client) EnhanceImage(ctx context.Context, objectKey string) (string, error) {
 	resp, err := c.stub.EnhanceImage(ctx, &inferencev1.EnhanceImageRequest{
 		Source:           c.ref(objectKey),
 		RemoveBackground: true,
 		AutoWhiteBalance: true,
+		CorrectLighting:  true,
 	})
 	if err != nil {
 		return "", fmt.Errorf("enhancing %s: %w", objectKey, err)
@@ -112,8 +118,17 @@ func (c *Client) ExtractAttributes(
 func (c *Client) GenerateDescription(ctx context.Context, in domain.CopyRequest) (domain.GeneratedCopy, error) {
 	req := &inferencev1.GenerateDescriptionRequest{
 		Attributes: attributesToProto(in.Attributes),
-		CraftId:    in.CraftID.String(),
-		Language:   languageToProto(in.Language),
+		// craft_id on this RPC's wire contract is the ontology CODE/slug
+		// ("ajrakh-block-printing"), not the row's UUID -- ExtractAttributes'
+		// declared_craft_id already sends craft.Code (see pipeline.go), and
+		// ml-svc's template layer (templates.py's _template_title/_sentence)
+		// derives the human-readable craft name straight from this string
+		// via craft_id.replace("-", " ").title(). Sending in.CraftID.String()
+		// here instead sent the raw UUID every time, so every mock-mode
+		// generated title/description read like "Turmeric Yellow Cotton
+		// 01A08746 A764 7Dec B7D2 1B071370F6B5" -- confirmed live.
+		CraftId:  in.CraftCode,
+		Language: languageToProto(in.Language),
 	}
 	if in.ArtisanNote != "" {
 		req.ArtisanNote = &in.ArtisanNote
