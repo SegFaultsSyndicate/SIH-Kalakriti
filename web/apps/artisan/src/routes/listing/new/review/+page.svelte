@@ -88,7 +88,16 @@
         <div class="review-attributes">
           <h3>{t('listing.review.attributesHeading')}</h3>
           <ul role="list">
-            {#each attributes as attribute (attribute.name)}
+            <!--
+              Keyed on name+value, not name alone: core-svc's
+              InferredAttributes.ToListingAttributes flattens every detected
+              colour/motif into its own row all sharing the same bare "colour"
+              or "motif" name (ml-svc/inference.go) -- any listing with more
+              than one of either (the normal case) crashed this whole screen
+              with Svelte's each_key_duplicate, caught by the outer error
+              boundary as an opaque "Something went wrong". Confirmed live.
+            -->
+            {#each attributes as attribute (`${attribute.name}:${attribute.value}`)}
               <li class="review-attribute">
                 <span class="review-attribute__label">
                   {humanize(attribute.name)}

@@ -73,9 +73,20 @@
     loading = true;
     loadError = undefined;
     try {
-      listing = await fetchListing(listingId);
-      translations = structuredClone(listing.translations ?? []);
-      priceRupees = listing.price?.amount_paise ? String(listing.price.amount_paise / 100) : '';
+      // structuredClone the plain, just-awaited value's translations, not
+      // `listing.translations` -- once `listing` (a `$state`) is assigned,
+      // Svelte wraps it (and every nested array/object) in a reactive Proxy,
+      // and structuredClone cannot clone a Proxy: every listing that had any
+      // translations at all (i.e. every enriched or artisan-edited one)
+      // threw `DataCloneError: ... could not be cloned` here, unconditionally,
+      // caught below and shown as the generic "Something went wrong."
+      // Confirmed live -- this is the "clicking on the listing just says
+      // some error occurred" bug. Cloning before the $state assignment
+      // avoids the proxy entirely.
+      const fetched = await fetchListing(listingId);
+      translations = structuredClone(fetched.translations ?? []);
+      priceRupees = fetched.price?.amount_paise ? String(fetched.price.amount_paise / 100) : '';
+      listing = fetched;
     } catch (cause) {
       loadError = cause instanceof ApiError ? cause.message : t('api.error.unknown');
     } finally {
@@ -243,7 +254,15 @@
         <h2>{t('listings.detail.attributesHeading')}</h2>
         <p class="listing-detail__attributes-note">{t('listings.detail.attributesNote')}</p>
         <ul class="listing-detail__attributes" role="list">
-          {#each attributes as attribute (attribute.name)}
+          <!--
+            Keyed on name+value, not name alone: core-svc flattens every
+            detected colour/motif into its own row sharing the same bare
+            "colour"/"motif" name (InferredAttributes.ToListingAttributes) --
+            any listing with more than one of either crashed this whole
+            screen with Svelte's each_key_duplicate. Confirmed live: this is
+            the "clicking on the listing just says some error occurred" bug.
+          -->
+          {#each attributes as attribute (`${attribute.name}:${attribute.value}`)}
             <li class="listing-detail__attribute">
               <div class="listing-detail__attribute-label">
                 <p>{humanize(attribute.name)}</p>
