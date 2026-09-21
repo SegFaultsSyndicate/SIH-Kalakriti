@@ -29,6 +29,22 @@ func NewProducer(brokers []string) *Producer {
 			Balancer:     &kafka.Hash{},
 			RequiredAcks: kafka.RequireAll,
 			WriteTimeout: 10 * time.Second,
+			// kafka-go's Writer defaults this false regardless of the
+			// broker's own KAFKA_AUTO_CREATE_TOPICS_ENABLE -- it never asks
+			// the broker to create a topic on first publish, it just fails
+			// outright with "Unknown Topic Or Partition". A topic a
+			// consumer has already subscribed to exists by the time
+			// anything publishes to it (Reader triggers creation on
+			// subscribe), but the first-ever publish to any topic with no
+			// consumer yet (or one that hasn't started) always failed this
+			// way. Confirmed live: this permanently stuck the outbox relay
+			// on its very first row (artisan.registered has no consumer),
+			// which -- since the relay processes rows strictly in order --
+			// silently blocked every subsequent outbox row for every
+			// topic, for the entire session: no cataloguing pipeline, no
+			// search indexing, no channel-svc sync, nothing downstream of
+			// the outbox ever ran.
+			AllowAutoTopicCreation: true,
 		},
 	}
 }
