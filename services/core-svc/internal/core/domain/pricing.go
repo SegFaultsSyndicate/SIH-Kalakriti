@@ -60,6 +60,12 @@ type MarketBand struct {
 	// class, GI match) fell short of MinComparables and the search was
 	// widened to craft-only.
 	Widened bool
+	// Synthetic is true when there was no comparable-listing data to draw
+	// from at all -- a still-DRAFT listing has never been indexed into
+	// listing_search (search-svc only projects a PUBLISHED one), so the band
+	// is estimated from the cost floor instead of real market prices. See
+	// Pricing.syntheticMarketBand.
+	Synthetic bool
 }
 
 // TimingSignal is the seasonality multiplier and its named driver. Festival is
@@ -176,6 +182,12 @@ func BuildAdvisory(floor money.Money, wage WageRate, band MarketBand, timing Tim
 		drivers = append(drivers, Driver{
 			Name: "market_widened", Value: "craft_only",
 			ExplanationKey: "pricing.driver.market_widened",
+		})
+	}
+	if band.Synthetic {
+		drivers = append(drivers, Driver{
+			Name: "market_synthetic", Value: "estimated",
+			ExplanationKey: "pricing.driver.market_synthetic",
 		})
 	}
 	if timing.Festival != "" {

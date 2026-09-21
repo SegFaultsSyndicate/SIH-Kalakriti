@@ -2683,6 +2683,7 @@ export const en = {
   'pricing.driver.cost_floor': 'Your materials plus a fair wage for your time — the floor no suggestion goes below.',
   'pricing.driver.timing_multiplier': 'Adjustment for the current season or an upcoming festival.',
   'pricing.driver.market_widened': 'Not enough similar listings nearby, so this looked across your whole craft instead.',
+  'pricing.driver.market_synthetic': 'No comparable listings exist yet, so this is a rough estimate based on your cost floor.',
   'provenance.intro': 'Add a few photos or a short video showing the piece being made, then confirm the technique. This becomes permanent, printable proof for buyers.',
   'provenance.hashNote': 'The exact record — this evidence, this technique, this time — gets hashed and signed once you seal. That hash doesn\'t exist until then.',
   'provenance.technique.insufficientEvidenceDetail': 'This is common with unusual angles or lighting — it is not a rejection. You can seal anyway, or add clearer close-ups first.',

@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/money"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
@@ -21,9 +23,10 @@ import (
 // is set directly rather than reused from the catalog/media fakes, since
 // pricing reads nothing those fakes model.
 type fakePricingStore struct {
-	source domain.PricingSource
-	wage   domain.WageRate
-	timing domain.TimingSignal
+	source    domain.PricingSource
+	sourceErr error
+	wage      domain.WageRate
+	timing    domain.TimingSignal
 
 	// strictBand/widenedBand let a test give the strict and the craft-only
 	// widened pass different sample sizes; comparableCalls records how many
@@ -31,10 +34,31 @@ type fakePricingStore struct {
 	strictBand      domain.MarketBand
 	widenedBand     domain.MarketBand
 	comparableCalls []bool
+
+	// listing/product/artisan back unindexedSource's fallback path, exercised
+	// only when sourceErr makes PricingSource fail as "not indexed yet".
+	listing domain.Listing
+	product domain.Product
+	artisan domain.Artisan
 }
 
 func (f *fakePricingStore) PricingSource(context.Context, uuid.UUID, string) (domain.PricingSource, error) {
+	if f.sourceErr != nil {
+		return domain.PricingSource{}, f.sourceErr
+	}
 	return f.source, nil
+}
+
+func (f *fakePricingStore) GetListing(context.Context, uuid.UUID) (domain.Listing, error) {
+	return f.listing, nil
+}
+
+func (f *fakePricingStore) GetProduct(context.Context, uuid.UUID) (domain.Product, error) {
+	return f.product, nil
+}
+
+func (f *fakePricingStore) GetArtisan(context.Context, uuid.UUID) (domain.Artisan, error) {
+	return f.artisan, nil
 }
 
 func (f *fakePricingStore) MinimumWage(context.Context, string, time.Time) (domain.WageRate, error) {
@@ -279,4 +303,56 @@ func TestAdviseRejectsInvalidInput(t *testing.T) {
 	require.Error(t, err)
 
 	require.Empty(t, store.comparableCalls, "an invalid request must not reach the store")
+}
+
+// TestAdviseFallsBackWhenNotIndexed covers a listing pricing is requested for
+// before it has ever been published: PricingSource has nothing to join
+// against (search-svc only projects a PUBLISHED listing), and Advise must
+// degrade to unindexedSource + a synthetic band rather than surfacing that as
+// a 404 to the artisan mid-wizard.
+func TestAdviseFallsBackWhenNotIndexed(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		err  error
+	}{
+		{"never indexed at all", pkgdomain.NotFound("listing pricing source")},
+		{"indexed but not yet embedded", pkgdomain.Unavailable("listing has not been indexed for search yet")},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			craftID := uuid.Must(uuid.NewRandom())
+			listingID := uuid.Must(uuid.NewRandom())
+			store := &fakePricingStore{
+				sourceErr: tc.err,
+				wage:      domain.WageRate{StateCode: "IN-UP", PaisePerHour: 6800},
+				timing:    domain.TimingSignal{Multiplier: 1.0},
+				listing:   domain.Listing{ArtisanID: uuid.Must(uuid.NewRandom())},
+				product:   domain.Product{CraftID: craftID},
+				artisan:   domain.Artisan{Region: domain.Region{StateCode: "IN-UP"}},
+			}
+
+			advisory, _, err := newTestPricing(store).Advise(context.Background(), baseAdviseInput(listingID))
+			require.NoError(t, err)
+			require.True(t, advisory.Band.Synthetic, "a not-yet-indexed listing must get a synthetic band, not an error")
+			require.Zero(t, advisory.Band.SampleSize)
+			require.True(t, advisory.RecommendedMin.Paise() >= advisory.Floor.Paise())
+			require.True(t, advisory.RecommendedMax.Paise() >= advisory.RecommendedMin.Paise())
+			require.Empty(t, store.comparableCalls, "the synthetic path must never query real comparables")
+		})
+	}
+}
+
+// TestAdvisePropagatesOtherPricingSourceErrors makes sure the not-indexed
+// fallback does not swallow a genuine failure (e.g. the database being
+// unreachable) -- only ErrNotFound/ErrUnavailable from PricingSource route to
+// unindexedSource.
+func TestAdvisePropagatesOtherPricingSourceErrors(t *testing.T) {
+	t.Parallel()
+	listingID := uuid.Must(uuid.NewRandom())
+	store := &fakePricingStore{sourceErr: errors.New("connection refused")}
+
+	_, _, err := newTestPricing(store).Advise(context.Background(), baseAdviseInput(listingID))
+	require.Error(t, err)
 }
