@@ -1,5 +1,11 @@
 # BATCH 14 — Provenance Sealing and Public Verification
 
+> **Historical, still mostly accurate for its scope.** Point-in-time batch
+> report from 2026-08-27; internally coherent and references files that still
+> exist (`pkg/crypto`, `pkg/canonical`, `pkg/shortcode`, `migrations/022_provenance.sql`).
+> Not maintained going forward — for current provenance-sealing behavior, see
+> `docs/BACKEND_FLOW.md` §3.
+
 **Status:** Complete  
 **Date:** 2026-08-27
 

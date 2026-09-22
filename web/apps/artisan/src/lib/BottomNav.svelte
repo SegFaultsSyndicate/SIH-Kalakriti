@@ -50,6 +50,8 @@
     grid-template-columns: repeat(4, 1fr);
     border-block-start: var(--k-hairline) solid var(--k-border-hairline);
     background-color: var(--k-surface-raised);
+    max-inline-size: 100%;
+    overflow-x: hidden;
   }
 
   .bottom-nav__item {

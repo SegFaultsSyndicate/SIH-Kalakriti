@@ -21,7 +21,6 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
 
-	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/repo"
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/service"
 )
@@ -110,20 +109,6 @@ func NewPipelineStore(r *repo.Repo) PipelineStore { return PipelineStore{Repo: r
 
 // PipelineStore satisfies the pipeline's persistence contract.
 var _ service.PipelineStore = PipelineStore{}
-
-// GetOrCreateProductForMedia runs the insert-if-absent in its own transaction,
-// which is all the atomicity the unique index needs.
-func (s PipelineStore) GetOrCreateProductForMedia(
-	ctx context.Context,
-	in domain.CreateProductInput,
-	mediaID uuid.UUID,
-) (product domain.Product, created bool, err error) {
-	err = s.Repo.InTx(ctx, func(ctx context.Context, tx *repo.Tx) error {
-		product, created, err = tx.GetOrCreateProductForMedia(ctx, in, mediaID)
-		return err
-	})
-	return product, created, err
-}
 
 // ObjectStore binds pkg/storage's MinIO client to service.ObjectStore. The
 // service declares its own ObjectInfo so it does not import a MinIO type; this
@@ -269,4 +254,22 @@ func (t TechniqueVerifier) Verify(ctx context.Context, listingID uuid.UUID, clai
 		return false, nil
 	}
 	return strings.EqualFold(observed, claimedTechnique), nil
+}
+
+// B2BStore binds the repository to service.B2BStore.
+type B2BStore struct {
+	*repo.Repo
+}
+
+// NewB2BStore wraps a repository as the B2B service's persistence port.
+func NewB2BStore(r *repo.Repo) B2BStore { return B2BStore{Repo: r} }
+
+// B2BStore satisfies the B2B service's persistence contract.
+var _ service.B2BStore = B2BStore{}
+
+// InTx adapts the repository's concrete transaction type to the B2BTx interface.
+func (s B2BStore) InTx(ctx context.Context, fn func(ctx context.Context, tx service.B2BTx) error) error {
+	return s.Repo.InTx(ctx, func(ctx context.Context, tx *repo.Tx) error {
+		return fn(ctx, tx)
+	})
 }

@@ -1,16 +1,25 @@
 // packages/i18n/src/locales.ts
 //
-// The locale set is fixed at build time because the artisan service worker
-// precaches exactly one message bundle -- the one for the selected language --
-// and it cannot precache a language it has never heard of.
+// The locale set is fixed at build time. Each translated locale ships as its
+// own dynamically-imported chunk (see locale.svelte.ts's CATALOGUE_LOADERS),
+// so a phone downloads only the language it actually selects -- that saving
+// holds regardless of the PWA service worker's own precache behaviour. (A
+// generated Workbox worker does exist -- via vite-plugin-pwa, configured in
+// each app's vite.config.ts, not a hand-written file -- but its build-time
+// `globPatterns` glob the whole build output with no runtime notion of "the
+// selected language"; the vite.config.ts comment claiming it precaches only
+// the active locale's chunk has not been verified against an actual build
+// and should not be trusted without checking the generated sw.js.)
 //
 // Scripts are recorded alongside the tag so the font layer can bind a face per
 // script without a second lookup table, and `dir` is carried explicitly rather
 // than inferred: Urdu is the RTL case this product will hit, and inferring
 // direction from the tag is exactly the kind of guess that breaks it.
 //
-// All 22 languages of the Eighth Schedule are listed here, per the batch
-// spec's requirement that every scheduled language resolve to *something*.
+// 20 of the 22 languages of the Eighth Schedule are listed here (Manipuri and
+// Santali were dropped -- weakest script/font support of the 22, and neither
+// had a real translated catalogue), per the batch spec's requirement that
+// every supported language resolve to *something*.
 // `coverage` records which ones actually have a translated catalogue --
 // see messages/ -- versus which fall back through Hindi to English. Adding
 // a real translation later is a messages/<code>.ts file plus one loader
@@ -29,13 +38,20 @@ export interface LocaleMeta {
   /** Locale used for number, currency and date formatting. */
   readonly numberLocale: string;
   /**
-   * 'complete': messages/<code>.ts exists and is the source (en) or a full
-   * translation (hi). 'fallback': no catalogue yet; resolves through the
-   * hi -> en chain. Intl-driven formatting (numbers, dates) still works for
-   * every locale regardless of this value -- it only describes the message
-   * catalogue.
+   * 'complete': messages/<code>.ts exists and is a human-authored source (en)
+   * or full translation. 'machine': messages/<code>.ts exists but was
+   * produced by translation rather than a human reviewer -- correct enough to
+   * ship, but not yet verified the way 'complete' catalogues are. 'fallback':
+   * messages/<code>.ts may exist, but catalogue-audit.ts finds it incomplete
+   * (missing keys, untranslated pasted-Hindi values, or wrong script) --
+   * lookups fall through the hi -> en chain for whatever it's missing.
+   * catalogue-audit.ts is what actually gates 'complete'/'machine' vs
+   * 'fallback' (see locales.test.ts); this field must never claim better
+   * than the audit measures. Intl-driven formatting (numbers, dates) still
+   * works for every locale regardless of this value -- it only describes the
+   * message catalogue.
    */
-  readonly coverage: 'complete' | 'fallback';
+  readonly coverage: 'complete' | 'machine' | 'fallback';
 }
 
 export const LOCALES = {
@@ -55,7 +71,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'hi-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   as: {
     tag: 'as-IN',
@@ -73,7 +89,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Beng',
     numberLocale: 'bn-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   brx: {
     tag: 'brx-IN',
@@ -100,7 +116,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Gujr',
     numberLocale: 'gu-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   kn: {
     tag: 'kn-IN',
@@ -147,15 +163,6 @@ export const LOCALES = {
     numberLocale: 'ml-IN',
     coverage: 'fallback',
   },
-  mni: {
-    tag: 'mni-IN',
-    endonym: 'ꯃꯤꯇꯩꯂꯣꯟ',
-    englishName: 'Manipuri',
-    dir: 'ltr',
-    script: 'Mtei',
-    numberLocale: 'mni-IN',
-    coverage: 'fallback',
-  },
   mr: {
     tag: 'mr-IN',
     endonym: 'मराठी',
@@ -163,7 +170,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'mr-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ne: {
     tag: 'ne-IN',
@@ -181,7 +188,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Orya',
     numberLocale: 'or-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   pa: {
     tag: 'pa-IN',
@@ -190,7 +197,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Guru',
     numberLocale: 'pa-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   sa: {
     tag: 'sa-IN',
@@ -201,15 +208,6 @@ export const LOCALES = {
     numberLocale: 'sa-IN',
     coverage: 'fallback',
   },
-  sat: {
-    tag: 'sat-IN',
-    endonym: 'ᱥᱟᱱᱛᱟᱲᱤ',
-    englishName: 'Santali',
-    dir: 'ltr',
-    script: 'Olck',
-    numberLocale: 'sat-IN',
-    coverage: 'fallback',
-  },
   sd: {
     tag: 'sd-IN',
     endonym: 'سنڌي',
@@ -217,7 +215,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'sd-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ta: {
     tag: 'ta-IN',
@@ -226,7 +224,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Taml',
     numberLocale: 'ta-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   te: {
     tag: 'te-IN',
@@ -235,7 +233,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Telu',
     numberLocale: 'te-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
   ur: {
     tag: 'ur-IN',
@@ -244,7 +242,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'ur-IN',
-    coverage: 'complete',
+    coverage: 'fallback',
   },
 } as const satisfies Record<string, LocaleMeta>;
 
@@ -252,13 +250,24 @@ export type LocaleCode = keyof typeof LOCALES;
 
 export const LOCALE_CODES = Object.keys(LOCALES) as LocaleCode[];
 
-/** The 22 constitutionally scheduled languages (English is the source locale). */
+/** The 20 supported scheduled languages (English is the source locale). */
 export const SUPPORTED_LOCALES = LOCALE_CODES.filter((code) => code !== 'en');
 
 export const DEFAULT_LOCALE: LocaleCode = 'hi';
 
 export function isLocaleCode(value: string): value is LocaleCode {
   return Object.prototype.hasOwnProperty.call(LOCALES, value);
+}
+
+/**
+ * Whether a `listing_translation.language` value matches a UI locale. The
+ * real backend stores the trimmed proto enum name (e.g. "HINDI"); this also
+ * matches a bare lowercase locale code (e.g. "hi") for any row written
+ * before the artisan app's now-removed mock ML pipeline was replaced with
+ * the real cataloguing pipeline, so old offline-synced rows still display.
+ */
+export function matchesLocale(language: string, locale: LocaleCode): boolean {
+  return language === locale || language === LOCALES[locale].englishName.toUpperCase();
 }
 
 /**

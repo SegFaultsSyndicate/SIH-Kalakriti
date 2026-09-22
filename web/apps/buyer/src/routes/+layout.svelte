@@ -19,11 +19,13 @@
     setSessionRefreshHandler,
     setUnauthorizedHandler,
     createLoginRedirectHandler,
+    setAcceptLanguage,
   } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import BuyerFooter from '$lib/BuyerFooter.svelte';
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
+  import { currency } from '$lib/currency.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -32,6 +34,15 @@
   let { children }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
+
+  // Gates {@render children()} below: locale.init() is async (it awaits a
+  // dynamic catalogue import), so without this a page's first paint runs
+  // with an empty catalogue -- every t() call falls through to English --
+  // then re-renders in the real language a tick later. That flash is what
+  // "some things are getting changed their wordings upon changing the
+  // language" was actually describing; see I18N_PLAN.md's F-1.
+  let localeReady = $state(false);
 
   let mobileNavOpen = $state(false);
 
@@ -58,7 +69,16 @@
   });
 
   $effect(() => {
-    void locale.init();
+    setAcceptLanguage(locale.meta.tag);
+  });
+
+  $effect(() => {
+    void locale.init().then(() => {
+      localeReady = true;
+    });
+  });
+  $effect(() => {
+    void currency.init();
   });
   $effect(() => {
     void a11y.init();
@@ -92,7 +112,7 @@
 
 <svelte:head>
   <title>{t('app.name')}</title>
-  <meta name="description" content="Kalakriti is India's national AI cataloging, cryptographic GI provenance, and collective fulfillment marketplace for master artisans and heritage looms." />
+  <meta name="description" content={t('app.metaDescription')} />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -126,69 +146,80 @@
       onclick={toggleMobileNav}
       aria-expanded={mobileNavOpen}
       aria-controls="shell-mobile-nav"
-      aria-label={mobileNavOpen ? 'Close main navigation' : 'Open main navigation'}
+      aria-label={mobileNavOpen ? t('nav.shell.closeMenu') : t('nav.shell.openMenu')}
+      title={tt('tooltip.mobileNav')}
     >
       <Icon name="menu" size="1.25rem" />
     </button>
 
     <a class="shell__lockup" href="/">
       <img class="shell__emblem" src="/favicon.svg" alt="" width="32" height="32" />
-      <span class="shell__wordmark">
-        {t('app.name')}
-      </span>
+      <span class="shell__wordmark">{t('app.name')}</span>
     </a>
 
-    <nav class="shell__nav" aria-label="Main Navigation">
-      <a class="shell__nav-link" href="/catalog">Craft Directory</a>
-      <a class="shell__nav-link" href="/gi-tagged">GI Heritage</a>
-      <a class="shell__nav-link" href="/fairs">Exhibitions & Melas</a>
-      <a class="shell__nav-link" href="/case-studies">Impact Studies</a>
+    <nav class="shell__nav" aria-label={t('nav.shell.mainAriaLabel')}>
+      <a class="shell__nav-link" href="/catalog">{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__nav-link" href="/gi-tagged">{t('nav.shell.giHeritage')}</a>
+      <a class="shell__nav-link" href="/fairs">{t('nav.shell.exhibitions')}</a>
+      <a class="shell__nav-link" href="/company/register">{t('nav.shell.enterprise')}</a>
+      <a class="shell__nav-link" href="/case-studies">{t('nav.shell.impactStudies')}</a>
     </nav>
 
     <div class="shell__actions">
       <form class="shell__search-inline" action="/search" role="search">
+        <Icon name="search" size="1rem" class="shell__search-icon" />
         <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
       </form>
-      <a class="shell__icon-link" href="/search" aria-label={t('nav.search')}>
-        <Icon name="search" />
+      <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')} title={tt('tooltip.search')}>
+        <Icon name="search" size="1.1rem" />
       </a>
-      <a class="shell__icon-link" href="/orders" aria-label={t('buyer.orders.heading')}>
-        <Icon name="package" />
-      </a>
-
+      <!-- AccountMenu last: its popover anchors flush to *its own* right
+           edge (inset-inline-end: 0 relative to the trigger), so it only
+           avoids running off the left edge of a phone screen if nothing
+           sits to its right pushing it away from the header's true right
+           edge. -->
+      <LanguageSelector triggerSize="lg" />
+      <AccessibilityControl statementHref="/accessibility" triggerSize="lg" />
       <AccountMenu />
-
-      <LanguageSelector />
-      <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
 
   {#if mobileNavOpen}
-    <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label="Main Navigation (mobile)">
-      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>Craft Directory</a>
-      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>GI Heritage</a>
-      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>Impact Studies</a>
+    <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label={t('nav.shell.mainMobileAriaLabel')}>
+      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>{t('nav.shell.giHeritage')}</a>
+      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>{t('nav.shell.impactStudies')}</a>
     </nav>
   {/if}
 
   <CategorySubnav />
 
   <main class="shell__main" id="main-content" tabindex="-1">
-    <ErrorBoundary
-      source="buyer-shell"
-      dsn={env.PUBLIC_SENTRY_DSN}
-      title={t('error.boundary.title')}
-      body={t('error.boundary.body')}
-      retryLabel={t('error.boundary.retry')}
-    >
-      {@render children()}
-    </ErrorBoundary>
+    {#if localeReady}
+      <ErrorBoundary
+        source="buyer-shell"
+        dsn={env.PUBLIC_SENTRY_DSN}
+        title={t('error.boundary.title')}
+        body={t('error.boundary.body')}
+        retryLabel={t('error.boundary.retry')}
+      >
+        {@render children()}
+      </ErrorBoundary>
+    {:else}
+      <p class="shell__boot" role="status" aria-live="polite">{t('state.loading')}</p>
+    {/if}
   </main>
 
   <BuyerFooter />
 </div>
 
 <style>
+  .shell__boot {
+    padding-block: var(--k-space-6);
+    text-align: center;
+    color: var(--k-text-secondary);
+  }
+
   /* Hamburger: mobile only. */
   .shell__menu-toggle {
     display: none;
@@ -262,7 +293,7 @@
   .shell__nav-link {
     font-size: var(--k-text-sm, 0.875rem);
     font-weight: 600;
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     border-radius: var(--k-radius-sm, 4px);
@@ -271,7 +302,7 @@
   }
 
   .shell__nav-link:hover {
-    color: var(--k-ink-700);
+    color: var(--k-text-secondary);
     background-color: rgba(244, 240, 234, 0.9);
   }
 </style>

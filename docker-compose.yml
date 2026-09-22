@@ -1,5 +1,4 @@
 # docker-compose.yml
-version: '3.8'
 
 services:
   # Infrastructure
@@ -8,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: kalakriti
       POSTGRES_USER: kalakriti
-      POSTGRES_PASSWORD: kalakriti
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kalakriti}
     ports:
       - "5432:5432"
     volumes:
@@ -34,29 +33,31 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      CLUSTER_ID: ja3_hAH_QZy-U4RiCUtuQQ
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-ja3_hAH_QZy-U4RiCUtuQQ}
     ports:
       - "9092:9092"
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+      interval: 5s
+      timeout: 5s
+      retries: 15
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -70,13 +71,14 @@ services:
 
   # One-shot: creates the bucket the services expect (S3_BUCKET) before they start.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
-      sh -c "mc alias set local http://minio:9000 minioadmin minioadmin &&
-             mc mb -p local/kalakriti"
+      sh -c "mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin} &&
+             mc mb -p local/kalakriti &&
+             mc mb -p local/kalakriti-media"
     restart: "no"
 
   # Application Services
@@ -85,15 +87,23 @@ services:
       context: .
       dockerfile: Dockerfile.core-svc
     environment:
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
-      JWT_SECRET: dev-secret-change-in-prod-32bytes-minimum
+      KAFKA_BROKERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       S3_ENDPOINT: minio:9000
-      S3_ACCESS_KEY: minioadmin
-      S3_SECRET_KEY: minioadmin
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
+      # pkg/storage already rewrites a presigned URL's host to this before
+      # handing it to a caller (see Client.rewriteHost) -- without it, every
+      # presigned PUT/GET URL core-svc hands the browser points at
+      # S3_ENDPOINT (minio:9000, a Docker-internal DNS name the browser
+      # can't resolve), and every media upload fails silently client-side.
+      # minio's 9000 is published to the host below; a real deployment sets
+      # this to the actual public object-storage origin.
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
       # Without this, OTP login is unusable in local/demo: there is no real
@@ -101,13 +111,23 @@ services:
       # doesn't even log the code -- 000000 is rejected and the real code is
       # nowhere a developer can see it. main.go refuses this flag when
       # APP_ENV=production (unset here, defaults to "local"), so it's safe.
-      AUTH_DEV_OTP_ENABLED: "true"
+      # Set APP_ENV=production in .env for a real deploy -- main.go then
+      # refuses AUTH_DEV_OTP_ENABLED outright regardless of this value.
+      AUTH_DEV_OTP_ENABLED: ${AUTH_DEV_OTP_ENABLED:-true}
+      APP_ENV: ${APP_ENV:-local}
     ports:
       # main.go defaults: CORE_SVC_GRPC_ADDR :50051, CORE_SVC_HTTP_ADDR :8081
       # (the old 8080/9090 mapping matched neither port core-svc actually
       # listens on, and 9090 collided with prometheus's own port below).
+      # Host side remapped to 18081: web's NGINX container also publishes
+      # host 8081 (the documented Artisan Studio entry point) -- both
+      # binding host 8081 makes `docker compose up` fail with "port is
+      # already allocated" the moment both containers are up together.
+      # Nothing reaches core-svc's healthz via this host mapping except a
+      # developer's own curl; every in-cluster caller uses core-svc:50051
+      # over the Docker network, unaffected by this.
       - "50051:50051"
-      - "8081:8081"
+      - "18081:8081"
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,21 +146,25 @@ services:
       context: .
       dockerfile: Dockerfile.search-svc
     environment:
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       # core-svc's gRPC port (main.go default CORE_SVC_GRPC_ADDR :50051) —
       # was pointing at core-svc's HTTP port instead.
       CORE_SVC_ADDR: core-svc:50051
       ML_SVC_ADDR: ml-svc:50055
       OTLP_ENDPOINT: jaeger:4317
       S3_ENDPOINT: minio:9000
-      S3_ACCESS_KEY: minioadmin
-      S3_SECRET_KEY: minioadmin
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
     ports:
-      - "8082:8082"
+      # Host side remapped to 18082, same reason as core-svc's 18081 above:
+      # web's NGINX container also publishes host 8082 (the documented
+      # Ministry Console entry point), and both binding host 8082 fails
+      # "port is already allocated" the moment both are up together.
+      - "18082:8082"
       # search-svc's own gRPC port (main.go default SEARCH_SVC_GRPC_ADDR
       # :50052) — the old 9092 mapping didn't correspond to anything
       # search-svc listens on, and collided with kafka's own 9092.
@@ -163,11 +187,12 @@ services:
       context: .
       dockerfile: Dockerfile.collab-svc
     environment:
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
     ports:
       - "8083:8083"
       # collab-svc's own gRPC port (main.go default :50053) — the old 9093
@@ -189,9 +214,9 @@ services:
       context: .
       dockerfile: Dockerfile.channel-svc
     environment:
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      KAFKA_BROKERS: kafka:9092
+      KAFKA_BROKERS: kafka:29092
       CORE_SVC_ADDR: core-svc:50051
       OTLP_ENDPOINT: jaeger:4317
       CHANNEL_SVC_HTTP_ADDR: ":8084"
@@ -215,12 +240,16 @@ services:
       context: .
       dockerfile: Dockerfile.insight-svc
     environment:
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       S3_ENDPOINT: minio:9000
-      S3_ACCESS_KEY: minioadmin
-      S3_SECRET_KEY: minioadmin
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       S3_USE_SSL: "false"
       S3_BUCKET: kalakriti
+      # Same reasoning as core-svc's S3_PUBLIC_URL above -- insight-svc's
+      # presigned URLs (e.g. report/export downloads) reach the browser via
+      # the bff, and are equally unresolvable without this.
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
       OTLP_ENDPOINT: jaeger:4317
     ports:
       # insight-svc's only listener (main.go default GRPC_ADDR :8085) — the
@@ -257,11 +286,23 @@ services:
       # which is channel-svc's HTTP port, used elsewhere.
       CHANNEL_SVC_GRPC_ADDR: channel-svc:9096
       INSIGHT_SVC_ADDR: insight-svc:8085
-      POSTGRES_DSN: postgres://kalakriti:kalakriti@postgres:5432/kalakriti?sslmode=disable
+      POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
-      BASE_URL: http://localhost:8000
-      JWT_SECRET: dev-secret-change-in-prod-32bytes-minimum
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       OTLP_ENDPOINT: jaeger:4317
+      # NOT actually same-origin: the browser sees three distinct origins
+      # (port is part of an origin) -- http://localhost (buyer, :80),
+      # :8081 (artisan), :8082 (admin) -- all proxied by the same NGINX to
+      # this bff's :8000, which is a different origin again. Without this,
+      # pkg/httpx's CSRFProtection middleware only ever trusts BASE_URL's
+      # origin (:8000) and 403s every mutating request (POST/PUT/PATCH/
+      # DELETE) from any of the three real frontend apps with "forbidden:
+      # cross-site request forgery protection" -- confirmed live: OTP
+      # request from the artisan PWA at :8081 403'd until these were added.
+      # Also set to your Vercel frontend's origin(s) if the frontend is
+      # deployed separately and calls this bff cross-origin.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:8081,http://localhost:8082}
     ports:
       - "8000:8000"
       - "9095:9095"
@@ -281,6 +322,11 @@ services:
       dockerfile: Dockerfile.web
     ports:
       - "80:80"
+      # Local-development entry points for Artisan Studio and the Ministry
+      # Console -- see deploy/nginx/nginx.conf and WIRING_AUDIT_PLAN.md F-7
+      # for why these are separate ports rather than a path prefix on :80.
+      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - bff
     restart: unless-stopped
@@ -289,15 +335,101 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ml-svc
+      args:
+        EXTRAS: real
     environment:
       ML_SVC_GRPC_PORT: "50055"
       ML_SVC_METRICS_PORT: "9095"
       ML_SVC_MOCK_MODE: "true"
+      ML_SVC_OBJECT_STORAGE_ENDPOINT: "minio:9000"
+      ML_SVC_OBJECT_STORAGE_ACCESS_KEY: "${S3_ACCESS_KEY:-minioadmin}"
+      ML_SVC_OBJECT_STORAGE_SECRET_KEY: "${S3_SECRET_KEY:-minioadmin}"
+      ML_SVC_OBJECT_STORAGE_BUCKET: "kalakriti"
+      # Generic, vendor-agnostic: app/registry.py's load_all() translates
+      # this into whatever env var each component's underlying library
+      # actually reads (HF_HOME, U2NET_HOME, ...) -- see its docstring. Keeps
+      # every real component's downloaded weights persisted across container
+      # recreates via the one hf-cache volume below, without this file or any
+      # single component needing to know a vendor's own env var name.
+      ML_SVC_MODEL_CACHE_DIR: /root/.cache/huggingface
+      # Needed only for Translate: IndicTrans2's whole org gates on a
+      # license/contact-info agreement, regardless of checkpoint size. Scoped
+      # to that one component (app/models/translation), not a global var --
+      # read from the host shell/.env; other RPCs work fine with this unset.
+      ML_SVC_TRANSLATION_HF_TOKEN: "${HF_TOKEN:-}"
+      # Zero-DCE++ has no pip package or HF repo (see net.py's docstring) --
+      # its one checkpoint is a raw .pth bind-mounted from the host below,
+      # not pulled through hf-cache. Container path, not the host path
+      # (services/ml-svc/checkpoints/zero_dce_pp/, gitignored -- see that
+      # dir's fetch command in services/ml-svc/CLAUDE.md). Inert while
+      # ML_SVC_MOCK_MODE is "true" above; only read once real mode loads
+      # the image_lighting component.
+      ML_SVC_IMAGE_LIGHTING_MODEL: /models/zero_dce_pp/Epoch99.pth
+      # "transformers" (in-process, the only path this stack ran before) or
+      # "llamacpp" (HTTP client to the llama-server service below). Inert
+      # while ML_SVC_MOCK_MODE is "true"; see docs/ML_SETUP.md for how to
+      # flip both to real/llamacpp together. Default stays "transformers"
+      # until the llama.cpp path is validated on your hardware.
+      ML_SVC_VLM_BACKEND: ${ML_SVC_VLM_BACKEND:-transformers}
+      ML_SVC_VLM_LLAMACPP_URL: http://llama-server:8080
+    volumes:
+      - hf-cache:/root/.cache/huggingface
     ports:
       - "50055:50055"
       # host 9097, not 9095: bff's k8s manifest reserves 9095 for its own
       # (currently unimplemented) metrics endpoint; this avoids the clash.
       - "9097:9095"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # llama-server backs ml-svc's VLM component when ML_SVC_VLM_BACKEND=llamacpp
+  # (see app/models/vlm/llamacpp.py). Only started if you actually run it --
+  # `make up`/`make demo-up` don't depend on this service at all, since mock
+  # mode never calls the VLM. GGUF files are bind-mounted, not baked into the
+  # image or pulled through hf-cache: gitignored, fetched once per machine
+  # (see docs/ML_SETUP.md's llama.cpp section). CPU image (`server`, no
+  # `-cuda` suffix) is available too, for a host with no NVIDIA GPU.
+  #
+  # `profiles` keeps this out of a bare `docker compose up`/`up --build`/
+  # `make demo-up` (all of which start every service with no profile) -- it
+  # was pulling the multi-GB server-cuda image and trying to start on hosts
+  # with no NVIDIA GPU at all, contradicting the doc comment above. Explicit
+  # invocation only: `docker compose up -d llama-server` or the two-file form
+  # in ML_SETUP.md's llama.cpp section.
+  llama-server:
+    profiles: ["llamacpp"]
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    command:
+      - -m
+      - /models/llama_vlm/model.gguf
+      - --mmproj
+      - /models/llama_vlm/mmproj.gguf
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      # Conservative defaults for a 4GB-class card -- see docs/ML_SETUP.md
+      # for the flags to add (--no-mmproj-offload, lower --image-max-tokens)
+      # if this OOMs on your GPU, and for the 8GB-class flags that trade this
+      # headroom for quality/concurrency instead.
+      - -c
+      - "8192"
+      - -np
+      - "2"
+      - -ngl
+      - "99"
+      - -ctk
+      - q8_0
+      - -ctv
+      - q8_0
+      - --image-max-tokens
+      - "1024"
+    volumes:
+      - ./services/ml-svc/checkpoints/llama_vlm:/models/llama_vlm:ro
+    ports:
+      - "8090:8080"
     restart: unless-stopped
 
   # Observability
@@ -323,3 +455,4 @@ volumes:
   pg_data:
   minio_data:
   prometheus_data:
+  hf-cache:

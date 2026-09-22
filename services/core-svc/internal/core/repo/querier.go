@@ -50,16 +50,13 @@ type Querier interface {
 	UpsertCraftAlias(ctx context.Context, arg db.UpsertCraftAliasParams) (db.CraftAlias, error)
 
 	CreateProduct(ctx context.Context, arg db.CreateProductParams) (db.Product, error)
-	CreateProductForMedia(ctx context.Context, arg db.CreateProductForMediaParams) (db.Product, error)
 	GetProduct(ctx context.Context, id uuid.UUID) (db.Product, error)
-	GetProductByMedia(ctx context.Context, sourceMediaID *uuid.UUID) (db.Product, error)
 
 	CreateListing(ctx context.Context, arg db.CreateListingParams) (db.Listing, error)
 	UpdateListing(ctx context.Context, arg db.UpdateListingParams) (db.Listing, error)
 	TransitionListingState(ctx context.Context, arg db.TransitionListingStateParams) (db.Listing, error)
 	GetListing(ctx context.Context, id uuid.UUID) (db.Listing, error)
 	ListListings(ctx context.Context, arg db.ListListingsParams) ([]db.Listing, error)
-	GetListingByProduct(ctx context.Context, productID uuid.UUID) (db.Listing, error)
 	SetListingNeedsDescription(ctx context.Context, arg db.SetListingNeedsDescriptionParams) (db.Listing, error)
 	GetListingTranslations(ctx context.Context, listingID uuid.UUID) ([]db.ListingTranslation, error)
 	GetListingAttributes(ctx context.Context, listingID uuid.UUID) ([]db.ListingAttribute, error)

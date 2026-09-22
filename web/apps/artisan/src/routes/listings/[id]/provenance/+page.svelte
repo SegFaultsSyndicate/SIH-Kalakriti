@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale, formatDate } from '@kalakriti/i18n';
+  import { locale, formatDate, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Input, showToast } from '@kalakriti/ui';
   import { QRFrame } from '@kalakriti/patterns';
@@ -129,6 +129,7 @@
       size="xl"
       disabled={files.length === 0 || claimedTechnique.trim() === ''}
       onclick={() => (phase = 'confirm')}
+      tooltip={tooltip('tooltip.next')}
     >
       {t('action.next')}
     </Button>
@@ -157,11 +158,11 @@
         <p class="provenance-page__error" role="alert">{sealError}</p>
       {/if}
 
-      <Button size="xl" loading={phase === 'sealing'} onclick={confirmSeal}>
+      <Button size="xl" loading={phase === 'sealing'} onclick={confirmSeal} tooltip={tooltip('tooltip.sealProvenance')}>
         {t('provenance.sealButton')}
       </Button>
       {#if phase !== 'sealing'}
-        <Button size="sm" variant="ghost" onclick={() => (phase = 'capture')}>{t('action.back')}</Button>
+        <Button size="sm" variant="ghost" onclick={() => (phase = 'capture')} tooltip={tooltip('tooltip.back')}>{t('action.back')}</Button>
       {/if}
     </div>
   {:else if phase === 'sealed' && record}

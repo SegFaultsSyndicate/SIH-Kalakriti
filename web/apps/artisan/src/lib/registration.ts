@@ -24,6 +24,7 @@ export interface RegistrationDraft {
   stateFreeText?: string;
   pehchanId?: string;
   clusterName?: string;
+  socialCategory?: string;
 }
 
 export async function getDraft(): Promise<RegistrationDraft> {
@@ -74,6 +75,7 @@ export interface RegisterBody {
   region: { state_code: string; district?: string };
   cluster_id?: string;
   pehchan_id?: string;
+  social_category?: string;
 }
 
 /**
@@ -110,6 +112,7 @@ export function buildRegisterBody(draft: RegistrationDraft, language: string): R
     },
   };
   if (draft.pehchanId) body.pehchan_id = draft.pehchanId;
+  if (draft.socialCategory) body.social_category = draft.socialCategory;
   return body;
 }
 

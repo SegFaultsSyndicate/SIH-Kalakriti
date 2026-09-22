@@ -10,6 +10,13 @@ option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/inference/v1;infer
 
 // InferenceService is the Python ml-svc surface; every RPC is stateless and idempotent.
 service InferenceService {
+  // Cheap, non-model quality check on a raw upload -- corrupt, too small,
+  // blank or blurred. Meant to run before EnhanceImage/ExtractAttributes so a
+  // garbage upload never reaches either. Never rejects a valid, in-focus
+  // photo just because it doesn't match anything in the craft ontology --
+  // that is ExtractAttributes's job, and it already abstains rather than
+  // failing when nothing matches.
+  rpc AssessImageQuality(AssessImageQualityRequest) returns (AssessImageQualityResponse);
   // Denoise, colour-correct and optionally matte a raw artisan photograph.
   rpc EnhanceImage(EnhanceImageRequest) returns (EnhanceImageResponse);
   // Read craft attributes out of product imagery.
@@ -26,6 +33,8 @@ service InferenceService {
   rpc Rerank(RerankRequest) returns (RerankResponse);
   // Transcribe an artisan voice note, streaming partial hypotheses as they settle.
   rpc Transcribe(TranscribeRequest) returns (stream TranscribeResponse);
+  // Translate listing copy from one language into another.
+  rpc Translate(TranslateRequest) returns (TranslateResponse);
 }
 
 // ScoredString is one inferred value with the model's confidence in it.
@@ -102,6 +111,35 @@ message TechniqueVerdict {
   string model_version = 6;
 }
 
+// AssessImageQualityRequest asks whether a raw upload is even worth processing.
+message AssessImageQualityRequest {
+  // Source object; must already exist in the media bucket.
+  common.v1.MediaRef media = 1;
+}
+
+// ImageQualityIssue is one reason an image failed the quality gate.
+message ImageQualityIssue {
+  // CORRUPT | TOO_SMALL | BLANK | BLURRY.
+  string code = 1;
+  // Human-readable, safe to show the artisan directly.
+  string message = 2;
+}
+
+// AssessImageQualityResponse is the quality verdict. This never judges
+// whether the subject matches anything in the craft ontology -- only whether
+// the image itself is usable at all.
+message AssessImageQualityResponse {
+  // False only for a genuine quality failure (see issues); never false
+  // because the subject is unrecognised.
+  bool passed = 1;
+  // Empty when passed is true.
+  repeated ImageQualityIssue issues = 2;
+  // Raw Laplacian-variance blur score, for threshold tuning/observability.
+  float blur_score = 3;
+  // Model bundle that produced the verdict.
+  string model_version = 4;
+}
+
 // EnhanceImageRequest asks for a cleaned-up version of one uploaded photograph.
 message EnhanceImageRequest {
   // Source object; must already exist in the media bucket.
@@ -112,6 +150,10 @@ message EnhanceImageRequest {
   bool auto_white_balance = 3;
   // Upscale factor; 1 leaves resolution untouched.
   optional int32 upscale_factor = 4;
+  // Brighten a dark or unevenly-lit photograph with a zero-reference curve
+  // estimation model (Zero-DCE++), separate from auto_white_balance's colour
+  // correction.
+  bool correct_lighting = 5;
 }
 
 // EnhanceImageResponse returns the enhanced object and what was done to it.
@@ -171,6 +213,34 @@ message GenerateDescriptionResponse {
   // Attribute keys the copy actually draws on, so a reviewer can trace every
   // claim back to something the artisan confirmed.
   repeated string attribute_keys_used = 7;
+}
+
+// TranslateRequest asks for listing copy translated into a target language. Text
+// containing a do-not-translate placeholder (a caller-side masking convention) is
+// expected to come back with that placeholder intact.
+message TranslateRequest {
+  // Listing title in the source language.
+  string title = 1;
+  // Listing description in the source language.
+  string description = 2;
+  // Short bullet highlights in the source language.
+  repeated string highlights = 3;
+  // Language the fields above are written in.
+  common.v1.Language source_language = 4;
+  // Language to translate into.
+  common.v1.Language target_language = 5;
+}
+
+// TranslateResponse returns copy translated into the requested language.
+message TranslateResponse {
+  // Translated title.
+  string title = 1;
+  // Translated description.
+  string description = 2;
+  // Translated highlights, same order as the request.
+  repeated string highlights = 3;
+  // Model bundle that produced the translation.
+  string model_version = 4;
 }
 
 // VerifyTechniqueRequest asks whether imagery supports the artisan's technique claim.

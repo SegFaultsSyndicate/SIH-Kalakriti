@@ -11,6 +11,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { db, enqueue, type OutboxEntry } from '@kalakriti/offline';
 import { sendOutboxEntry } from './outbox-send';
+import { getArtisanId } from './registration';
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -167,5 +168,33 @@ describe('sendListingUpdate / submit / approve', () => {
     const submit = await entry({ kind: 'listing.submit', draftId: 'd2', payload: { draftId: 'd2' } });
     const result = await sendOutboxEntry(submit);
     expect(result).toEqual({ ok: false, retryable: true, error: expect.any(String) });
+  });
+});
+
+describe('sendProfileUpdate', () => {
+  it('reports failure, and never fabricates an artisan id, when registration fails', async () => {
+    // A previous version of this sender treated ANY registerArtisan
+    // failure as success in dev mode, storing a fabricated
+    // `artisan-${Date.now()}` as this app's own identity -- every later
+    // authenticated request (follower-count, artisans/me, listing
+    // creation) then carried an id no backend row could ever match. See
+    // WIRING_AUDIT_PLAN.md F-4.
+    server.use(http.post('*/api/v1/artisans', () => new HttpResponse(null, { status: 500 })));
+
+    const update = await entry({ kind: 'profile.update', payload: { display_name: 'Test' } });
+    const result = await sendOutboxEntry(update);
+
+    expect(result.ok).toBe(false);
+    expect(await getArtisanId()).toBeUndefined();
+  });
+
+  it('stores the real artisan id on success', async () => {
+    server.use(http.post('*/api/v1/artisans', () => HttpResponse.json({ artisan_id: 'real-artisan-1' })));
+
+    const update = await entry({ kind: 'profile.update', payload: { display_name: 'Test' } });
+    const result = await sendOutboxEntry(update);
+
+    expect(result).toEqual({ ok: true });
+    expect(await getArtisanId()).toBe('real-artisan-1');
   });
 });

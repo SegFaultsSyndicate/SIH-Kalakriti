@@ -65,7 +65,7 @@ func grpcErr(err error) error {
 		return domain.Unauthenticated(msg)
 	case codes.PermissionDenied:
 		return domain.Forbidden(msg)
-	case codes.Unavailable, codes.DeadlineExceeded:
+	case codes.Unavailable, codes.DeadlineExceeded, codes.Unimplemented:
 		return domain.Unavailable(msg)
 	default:
 		return err

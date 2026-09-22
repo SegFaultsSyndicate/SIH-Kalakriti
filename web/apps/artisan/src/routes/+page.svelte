@@ -170,10 +170,10 @@
   </div>
   <div class="sahayak-banner__actions">
     <button type="button" class="sahayak-btn" onclick={() => (showTutorial = true)}>
-      📖 {t('literacy.tutorial.open')}
+      <Icon name="help" size="1.1rem" /> {t('literacy.tutorial.open')}
     </button>
     <button type="button" class="sahayak-btn sahayak-btn--primary" onclick={handleStartDemo}>
-      ⚡ {t('literacy.demo.start')}
+      <Icon name="play" size="1.1rem" /> {t('literacy.demo.start')}
     </button>
   </div>
 </aside>
@@ -195,12 +195,31 @@
   </a>
   <button type="button" class="home-links-row__link home-links-row__btn" onclick={() => (showStallModal = true)}>
     <Icon name="verified-artisan" />
-    <span>Stall Placard</span>
+    <span>{t('home.stallPlacard')}</span>
   </button>
   <a class="home-links-row__link" href="/notifications">
     <Icon name="bell" />
-    {t('home.notifications')}
+    <span>{t('home.notifications')}</span>
   </a>
+  <a class="home-links-row__link" href="/trends">
+    <Icon name="link" />
+    <span>{t('nav.trends')}</span>
+  </a>
+</div>
+
+<!-- B2B Enterprise & Boutique Partners Strip -->
+<div class="b2b-opportunity-card">
+  <div class="b2b-header">
+    <Icon name="package" />
+    <span class="b2b-kicker">{t('home.sourcing.kicker')}</span>
+  </div>
+  <p class="b2b-desc">
+    {t('home.sourcing.desc')}
+  </p>
+  <div class="b2b-actions">
+    <a href="/orders" class="b2b-btn">{t('home.sourcing.viewLots')}</a>
+    <a href="/trends" class="b2b-btn secondary">{t('home.sourcing.viewTrends')}</a>
+  </div>
 </div>
 
 <!-- Economic Growth & Income Uplift Section -->
@@ -380,8 +399,9 @@
   .sahayak-banner {
     margin: var(--k-space-4) var(--k-space-4) 0;
     padding: var(--k-space-3) var(--k-space-4);
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.04));
-    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: var(--k-surface-raised);
+    border: 1px solid var(--k-border-hairline);
+    border-inline-start: 3px solid var(--k-accent-warning-bg);
     border-radius: var(--k-radius-lg);
     display: flex;
     justify-content: space-between;
@@ -403,7 +423,7 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .sahayak-banner__title {
@@ -420,6 +440,12 @@
   }
 
   .sahayak-btn {
+    /* Icon + label on one row. The global reset gives every <svg> display:block
+       (packages/tokens/src/reset.css) so a plain <button> with no flex context
+       stacks its icon above its text instead of beside it -- this is the fix. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
     border: 1px solid var(--k-border-interactive);
     background: var(--k-surface-raised);
     color: var(--k-text-primary);
@@ -432,9 +458,9 @@
   }
 
   .sahayak-btn--primary {
-    background: #b45309;
-    color: #ffffff;
-    border-color: #b45309;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-border-accent);
   }
 
   .home-growth-section {
@@ -523,5 +549,61 @@
   .lots__row-status {
     color: var(--k-accent-warning);
     font-size: var(--k-text-sm);
+  }
+
+  .b2b-opportunity-card {
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface-raised);
+    padding: var(--k-space-3);
+    margin-block: var(--k-space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+  }
+
+  .b2b-header {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    color: var(--k-terracotta);
+  }
+
+  .b2b-kicker {
+    font-size: var(--k-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .b2b-desc {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .b2b-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--k-space-2);
+    margin-block-start: var(--k-space-1);
+  }
+
+  .b2b-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--k-space-2) var(--k-space-3);
+    font-size: var(--k-text-xs);
+    font-weight: 600;
+    text-decoration: none;
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface);
+    color: var(--k-ink);
+  }
+
+  .b2b-btn:not(.secondary) {
+    background-color: var(--k-terracotta);
+    color: var(--k-khadi);
+    border-color: transparent;
   }
 </style>

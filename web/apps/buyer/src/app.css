@@ -117,6 +117,11 @@ body::-webkit-scrollbar {
     line-height: var(--k-leading-tight);
   }
 
+  .shell__wordmark-img {
+    block-size: 1.5rem;
+    inline-size: auto;
+  }
+
   .shell__actions {
     display: flex;
     align-items: center;
@@ -124,34 +129,55 @@ body::-webkit-scrollbar {
     margin-inline-start: auto;
   }
 
-  .shell__icon-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
-    border-radius: var(--k-radius-md);
-  }
-
   .shell__search-inline {
     display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
     flex-shrink: 1;
     min-inline-size: 0;
+    padding: var(--k-space-1) var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-border-interactive);
+    border-radius: var(--k-radius-sm);
+    background: var(--k-surface-sunken);
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+  }
+
+  .shell__search-inline:focus-within {
+    border-color: var(--k-border-accent);
+  }
+
+  .shell__search-inline .shell__search-icon {
+    flex: none;
+    color: var(--k-text-secondary);
   }
 
   .shell__search-inline input {
     inline-size: 9rem;
     min-inline-size: 0;
-    block-size: 2.25rem;
-    padding-inline: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-border-hairline);
-    border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-base);
+    block-size: 1.5rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font: inherit;
     font-size: var(--k-text-sm);
+    color: var(--k-text-primary);
+    outline: none;
   }
 
-  .shell__icon-link:hover {
-    background-color: rgba(244, 240, 234, 0.9);
+  .shell__search-inline input::placeholder {
+    color: var(--k-text-secondary);
+  }
+
+  .shell__search-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    flex: none;
+    border-radius: var(--k-radius-md);
+    color: var(--k-text-primary);
   }
 
   .shell__main {
@@ -203,9 +229,17 @@ body::-webkit-scrollbar {
       display: none;
     }
 
-    .shell__icon-link {
-      inline-size: 2.25rem;
-      block-size: 2.25rem;
+    .shell__search-toggle {
+      display: flex;
+    }
+
+    /* Below this width the crest carries the brand alone -- with hamburger,
+       "Kalakriti", and the three action icons all fighting for one row, the
+       wordmark was the single biggest thing to give (about 90px), and it's
+       the one piece a returning visitor least needs spelled out. */
+    .shell__wordmark,
+    .shell__wordmark-img {
+      display: none;
     }
 
     .shell__main {

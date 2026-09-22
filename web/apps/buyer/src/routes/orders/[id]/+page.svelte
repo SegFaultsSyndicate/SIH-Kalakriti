@@ -23,9 +23,8 @@
   the other, per the brief's "not visual-only" requirement.
 -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import { page } from '$app/state';
-  import { locale, type MessageKey } from '@kalakriti/i18n';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Button, Money, EmptyState, Skeleton, Tabs } from '@kalakriti/ui';
   import { getOrder, getArtisanStorefront, watchOrderEvents, type components } from '@kalakriti/api';
   import {
@@ -63,8 +62,15 @@
   let view = $state('cards');
   let disputeOpen = $state(false);
 
-  const watcher = watchOrderEvents(orderId);
-  const sseStatus = $derived(watcher.state.status);
+  // Re-subscribe when the route param changes. Capturing the watcher once
+  // bound the stream to the first order id the page ever saw.
+  let watcher = $state<ReturnType<typeof watchOrderEvents> | undefined>(undefined);
+  $effect(() => {
+    const w = watchOrderEvents(orderId);
+    watcher = w;
+    return () => w.stop();
+  });
+  const sseStatus = $derived(watcher?.state.status ?? 'connecting');
 
   async function resolveArtisan(artisanId: string): Promise<void> {
     if (!artisanId || names[artisanId] !== undefined) return;
@@ -103,7 +109,7 @@
   });
 
   $effect(() => {
-    const ev = watcher.state.lastEvent;
+    const ev = watcher?.state.lastEvent;
     if (!ev) return;
     let parsed: RawOrderEvent | undefined;
     try {
@@ -120,7 +126,6 @@
     if (line) liveLines = [...liveLines.slice(-19), line];
   });
 
-  onDestroy(() => watcher.stop());
 
   const lots = $derived(Object.values(allocation.lots));
   const allocated = $derived(allocatedQuantity(allocation.lots));
@@ -150,7 +155,7 @@
     {#if orderState === 'AMENDMENT_PENDING'}
       <p class="alloc-header__amendment" role="status">{t('allocation.amendment.banner')}</p>
     {/if}
-    <Button variant="secondary" onclick={() => (disputeOpen = true)}>{t('orders.dispute.entry')}</Button>
+    <Button variant="secondary" onclick={() => (disputeOpen = true)} tooltip={tooltip('tooltip.dispute')}>{t('orders.dispute.entry')}</Button>
   </header>
 
   <div
@@ -184,7 +189,7 @@
             <li class="alloc-lot" class:alloc-lot--reallocated={lot.state === 'REALLOCATED'}>
               <p class="alloc-lot__artisan">{names[lot.artisan_id] || t('allocation.lot.unknownArtisan')}</p>
               {#if districts[lot.artisan_id]}<p class="alloc-lot__district">{districts[lot.artisan_id]}</p>{/if}
-              <p class="alloc-lot__quantity">{lot.quantity} units</p>
+              <p class="alloc-lot__quantity">{t('orders.units', { count: String(lot.quantity) })}</p>
               <p class="alloc-lot__state">{lot.state}</p>
               {#if lot.progress_pct > 0}
                 <p class="alloc-lot__progress">{t('allocation.lot.progress', { pct: String(lot.progress_pct) })}</p>

@@ -27,6 +27,10 @@
     display: grid;
     grid-template-rows: auto 1fr auto;
     min-block-size: 100dvb;
+    /* Clamp the page to the viewport width so no child (wide grid/tables,
+       long labels) can force a horizontal scrollbar. `clip`, not `hidden`,
+       keeps position:sticky working for the sidebar. */
+    overflow-x: clip;
   }
 
   /*

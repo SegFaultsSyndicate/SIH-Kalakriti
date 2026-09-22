@@ -13,10 +13,7 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Guild Case Studies' },
-  ]);
+  const breadcrumbs = $derived([{ label: t('caseStudies.breadcrumbLabel') }]);
 
   interface BeforeAfterRow {
     dimension: string;
@@ -210,22 +207,19 @@
 </script>
 
 <svelte:head>
-  <title>Guild Impact Case Studies — Kalakriti</title>
-  <meta
-    name="description"
-    content="Empirical field documentation and Before/After metrics showing how Kalakriti converts temporary exhibition sales into year-round digital prosperity."
-  />
+  <title>{t('caseStudies.headTitle')}</title>
+  <meta name="description" content={t('caseStudies.metaDescription')} />
 </svelte:head>
 
 <div class="studies-page">
   <div class="studies-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <!-- Header Section -->
     <header class="studies-header">
       <div class="kicker-wrap">
-        <span class="studies-kicker">GOVERNMENT OF INDIA • EMPIRICAL FIELD RESEARCH</span>
-        <span class="kicker-sub">SOCIO-ECONOMIC IMPACT & UPLIFT</span>
+        <span class="studies-kicker">{t('caseStudies.kicker')}</span>
+        <span class="kicker-sub">{t('caseStudies.kickerSub')}</span>
       </div>
       <h1 class="studies-title">{t('caseStudies.pageTitle')}</h1>
       <p class="studies-subhead">
@@ -242,7 +236,7 @@
             <span class="study-gi-badge"><Icon name="gi-tagged" size="0.9rem" /> {study.giTag}</span>
             <div class="artisan-portrait-badge">
               <span class="portrait-name">{study.artisanName}</span>
-              <span class="portrait-role">Master Lineage</span>
+              <span class="portrait-role">{t('caseStudies.masterLineage')}</span>
             </div>
           </div>
 
@@ -269,15 +263,15 @@
             <!-- Visual Income Growth Bar Comparison -->
             <div class="income-comparison-bar-wrap">
               <div class="bar-header">
-                <span class="bar-title">Monthly Income Transformation (Before vs. After)</span>
+                <span class="bar-title">{t('caseStudies.incomeChartTitle')}</span>
                 <span class="bar-uplift-badge">
-                  +{Math.round(((study.afterMonthlyInr - study.beforeMonthlyInr) / study.beforeMonthlyInr) * 100)}% Surge
+                  {t('caseStudies.upliftSurge', { percent: String(Math.round(((study.afterMonthlyInr - study.beforeMonthlyInr) / study.beforeMonthlyInr) * 100)) })}
                 </span>
               </div>
 
               <div class="dual-progress-bar">
                 <div class="bar-item bar-item--before">
-                  <span class="bar-item__label">Before Kalakriti: ₹{study.beforeMonthlyInr.toLocaleString('en-IN')}</span>
+                  <span class="bar-item__label">{t('caseStudies.beforeAmountLabel', { amount: study.beforeMonthlyInr.toLocaleString('en-IN') })}</span>
                   <div class="bar-track">
                     <div
                       class="bar-fill bar-fill--red"
@@ -287,7 +281,7 @@
                 </div>
 
                 <div class="bar-item bar-item--after">
-                  <span class="bar-item__label">With Kalakriti: ₹{study.afterMonthlyInr.toLocaleString('en-IN')}/mo</span>
+                  <span class="bar-item__label">{t('caseStudies.afterAmountLabel', { amount: study.afterMonthlyInr.toLocaleString('en-IN') })}</span>
                   <div class="bar-track">
                     <div class="bar-fill bar-fill--green" style:inline-size="100%"></div>
                   </div>
@@ -297,14 +291,14 @@
 
             <!-- Before vs. After Structured Comparison Table -->
             <div class="before-after-section">
-              <h3 class="comparison-heading">Comparative Field Audit</h3>
+              <h3 class="comparison-heading">{t('caseStudies.comparisonHeading')}</h3>
               <div class="table-responsive">
                 <table class="comparison-table">
                   <thead>
                     <tr>
-                      <th scope="col">Evaluation Dimension</th>
-                      <th scope="col" class="th-before">Before Kalakriti (Traditional Exploitation)</th>
-                      <th scope="col" class="th-after">With Kalakriti (Digital Infrastructure)</th>
+                      <th scope="col">{t('caseStudies.tableDimensionHeader')}</th>
+                      <th scope="col" class="th-before">{t('caseStudies.tableBeforeHeader')}</th>
+                      <th scope="col" class="th-after">{t('caseStudies.tableAfterHeader')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -329,17 +323,17 @@
             <!-- Narrative Blocks -->
             <div class="study-narrative">
               <div class="narrative-block">
-                <h3>The Structural Bottleneck</h3>
+                <h3>{t('caseStudies.narrative.problemHeading')}</h3>
                 <p>{study.problem}</p>
               </div>
 
               <div class="narrative-block">
-                <h3>The Kalakriti Public Intervention</h3>
+                <h3>{t('caseStudies.narrative.interventionHeading')}</h3>
                 <p>{study.intervention}</p>
               </div>
 
               <div class="narrative-block">
-                <h3>Socio-Economic & Generational Impact</h3>
+                <h3>{t('caseStudies.narrative.impactHeading')}</h3>
                 <p>{study.impact}</p>
               </div>
             </div>
@@ -357,10 +351,10 @@
             <div class="study-actions">
               <a href="/card/{study.artisanSlug}" class="action-btn action-btn--card">
                 <Icon name="verified-artisan" size="0.9rem" />
-                <span>View Digital Visiting Card</span>
+                <span>{t('caseStudies.viewCardAction')}</span>
               </a>
               <a href="/artisan/{study.artisanSlug}" class="action-btn action-btn--store">
-                <span>Explore Artisan Storefront</span>
+                <span>{t('caseStudies.exploreStorefrontAction')}</span>
                 <Icon name="arrow-right" size="0.9rem" />
               </a>
             </div>
@@ -374,7 +368,7 @@
 <style>
   .studies-page {
     padding-block: var(--k-space-6) var(--k-space-12);
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .studies-container {
@@ -397,8 +391,8 @@
   }
 
   .studies-kicker {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -459,7 +453,7 @@
     inset-block-start: var(--k-space-4);
     inset-inline-start: var(--k-space-4);
     background: rgba(15, 23, 42, 0.85);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 4px 10px;
@@ -474,7 +468,7 @@
     inset-block-end: var(--k-space-4);
     inset-inline-start: var(--k-space-4);
     background: rgba(120, 53, 15, 0.92);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-md);
     display: flex;
@@ -509,7 +503,7 @@
 
   .study-region {
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .study-item-title {
@@ -546,7 +540,7 @@
   .metric-val {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #15803d;
+    color: var(--k-accent-success-muted);
   }
 
   .metric-lbl {
@@ -557,8 +551,8 @@
 
   /* Income Comparison Bar */
   .income-comparison-bar-wrap {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
     display: flex;
@@ -575,12 +569,12 @@
   .bar-title {
     font-size: var(--k-text-xs);
     font-weight: 700;
-    color: #334155;
+    color: var(--k-stone-700);
   }
 
   .bar-uplift-badge {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
     font-size: 0.72rem;
     font-weight: 800;
     padding: 2px 8px;
@@ -608,7 +602,7 @@
   .bar-track {
     inline-size: 100%;
     block-size: 0.85rem;
-    background: #e2e8f0;
+    background: var(--k-surface-neutral);
     border-radius: 999px;
     overflow: hidden;
   }
@@ -619,11 +613,11 @@
   }
 
   .bar-fill--red {
-    background: #f87171;
+    background: var(--k-madder-500);
   }
 
   .bar-fill--green {
-    background: #22c55e;
+    background: var(--k-neem-500);
   }
 
   /* Before vs. After Table */
@@ -638,7 +632,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -664,13 +658,13 @@
   }
 
   .th-before {
-    background: #fef2f2;
-    color: #991b1b;
+    background: var(--k-surface-base);
+    color: var(--k-accent-danger);
   }
 
   .th-after {
-    background: #f0fdf4;
-    color: #166534;
+    background: var(--k-surface-base);
+    color: var(--k-accent-success);
   }
 
   .dim-cell {
@@ -681,13 +675,13 @@
   }
 
   .before-cell {
-    color: #7f1d1d;
+    color: var(--k-accent-danger-strong);
     background: rgba(254, 242, 242, 0.4);
     inline-size: 39%;
   }
 
   .after-cell {
-    color: #14532d;
+    color: var(--k-accent-success);
     background: rgba(240, 253, 244, 0.4);
     inline-size: 39%;
     font-weight: 600;
@@ -700,11 +694,11 @@
   }
 
   .cell-status--bad {
-    color: #dc2626;
+    color: var(--k-accent-danger);
   }
 
   .cell-status--good {
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
   }
 
   /* Narrative */
@@ -733,15 +727,15 @@
   .study-quote {
     margin: 0;
     padding: var(--k-space-4);
-    background: #fdfbf7;
-    border-inline-start: 4px solid #b45309;
+    background: var(--k-surface-base);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 
   .study-quote p {
     font-size: var(--k-text-sm);
     font-style: italic;
-    color: #44403c;
+    color: var(--k-stone-700);
     line-height: var(--k-leading-normal);
     margin: 0 0 var(--k-space-2);
   }
@@ -778,13 +772,13 @@
 
   .action-btn--card {
     border: 1px solid var(--k-border-interactive);
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
   }
 
   .action-btn--store {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     margin-inline-start: auto;
   }
 

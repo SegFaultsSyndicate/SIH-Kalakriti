@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { requestOtp, ApiError, messageKeyFor } from '@kalakriti/api';
   import { getPref, setPref, network } from '@kalakriti/offline';
   import { Keypad, SpeakButton, Button } from '@kalakriti/ui';
@@ -39,7 +39,8 @@
       await setPref('login.phone', value);
       await goto('/verify');
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] requestOtp:', cause);
         await setPref('login.phone', value);
         await goto('/verify');
         return;
@@ -168,7 +169,7 @@
     </button>
   {/if}
 
-  <Button size="xl" class="login__submit" onclick={submit} loading={sending}>
+  <Button size="xl" class="login__submit" onclick={submit} loading={sending} tooltip={tooltip('tooltip.submit')}>
     {t('login.submit')}
   </Button>
 </div>
@@ -196,7 +197,7 @@
     padding: var(--k-space-3) var(--k-space-5);
     border: var(--k-hairline) solid var(--k-border-interactive);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     cursor: text;
     inline-size: 100%;
     max-inline-size: 22rem;
@@ -205,7 +206,7 @@
   }
 
   .login__readout:focus-within {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
     outline: 2px solid var(--k-terracotta-400);
   }
 

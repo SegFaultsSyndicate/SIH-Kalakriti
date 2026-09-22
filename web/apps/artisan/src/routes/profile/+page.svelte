@@ -12,22 +12,35 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale, type LocaleCode } from '@kalakriti/i18n';
+  import { locale, tooltip, type LocaleCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import {
     Button,
     SpeakButton,
     Skeleton,
     showToast,
+    Tooltip,
     a11y,
   } from '@kalakriti/ui';
   import {
     getFollowerCount,
     getArtisanProfile,
+    requestPhoneChangeOtp,
+    verifyPhoneChangeOtp,
     setAccessToken,
     setRefreshToken,
     session,
+    ApiError,
   } from '@kalakriti/api';
+
+  /** Narrows an unknown throw to something showable. Never leaks a raw status number. */
+  function errorText(err: unknown, fallback: string): string {
+    if (err instanceof ApiError) {
+      const body = err.body as { message?: string; error?: { message?: string } } | null;
+      return body?.error?.message ?? body?.message ?? fallback;
+    }
+    return err instanceof Error && err.message ? err.message : fallback;
+  }
   import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
@@ -39,15 +52,16 @@
   const t = $derived(locale.t);
 
   let name = $state('eshaan');
-  let phone = $state('+91 8779279060');
+  let phone = $state('+91 9999999999');
   let avatarUrl = $state<string | undefined>(undefined);
   let rawImageToCrop = $state<string>('');
   let showCropModal = $state(false);
   let showBusinessCardModal = $state(false);
-  let showStallModal = $state(false);
+  let showStallModal = $state(false);  
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
+  let craftId = $state<string | undefined>(undefined);
   let craftName = $state('Weaving & Handloom (बुनकरी)');
   let districtName = $state('Varanasi, Uttar Pradesh');
   let clusterName = $state('Varanasi Silk Weaver Common Facility Centre');
@@ -96,6 +110,7 @@
       if (draft.pehchanId) pehchanId = draft.pehchanId;
       if (draft.clusterName) clusterName = draft.clusterName;
 
+      if (draft.craftId) craftId = draft.craftId;
       if (draft.craftName) {
         craftName = draft.craftName;
       }
@@ -145,8 +160,54 @@
     })();
   });
 
+  const localizedCraftName = $derived.by(() => {
+    const cid = (craftId || '').toLowerCase();
+    const cname = (craftName || '').toLowerCase();
+
+    if (cid === 'block-printing' || cname.includes('block') || cname.includes('print')) {
+      return t('craft.block-printing.name');
+    }
+    if (cid === 'weaving' || cname.includes('weav') || cname.includes('loom') || cname.includes('बुनकरी')) {
+      return t('craft.weaving.name');
+    }
+    if (cid === 'pottery' || cname.includes('pott') || cname.includes('clay') || cname.includes('terracotta')) {
+      return t('craft.pottery.name');
+    }
+    if (cid === 'metalwork' || cname.includes('metal') || cname.includes('brass') || cname.includes('bronze')) {
+      return t('craft.metalwork.name');
+    }
+    if (cid === 'woodwork' || cname.includes('wood')) {
+      return t('craft.woodwork.name');
+    }
+    if (cid === 'embroidery' || cname.includes('embroid') || cname.includes('zari') || cname.includes('chikankari')) {
+      return t('craft.embroidery.name');
+    }
+    if (cid === 'painting' || cname.includes('paint') || cname.includes('madhubani') || cname.includes('warli')) {
+      return t('craft.painting.name');
+    }
+    if (cid === 'basketry' || cname.includes('basket') || cname.includes('cane')) {
+      return t('craft.basketry.name');
+    }
+    if (cid === 'jewellery' || cname.includes('jewel') || cname.includes('meenakari') || cname.includes('filigree')) {
+      return t('craft.jewellery.name');
+    }
+    if (cid === 'leather' || cname.includes('leather')) {
+      return t('craft.leather.name');
+    }
+    if (cid === 'stone' || cname.includes('stone')) {
+      return t('craft.stone.name');
+    }
+    if (cid === 'bamboo' || cname.includes('bamboo')) {
+      return t('craft.bamboo.name');
+    }
+    if (cid === 'other' || cname.includes('other') || cname.includes('something else')) {
+      return t('craft.other.name');
+    }
+    return craftName;
+  });
+
   const spokenProfileText = $derived(
-    `Namaste ${name}. You are registered as an authentic artisan in ${districtName}. Craft: ${craftName}. Your profile is verified with PM Vishwakarma.`,
+    t('profile.spokenSummary', { name, district: districtName, craft: localizedCraftName }),
   );
 
   const initial = $derived((name.trim()[0] ?? 'A').toUpperCase());
@@ -176,8 +237,6 @@
     { code: 'kok', label: 'कोंकणी', english: 'Konkani' },
     { code: 'brx', label: 'बड़ो', english: 'Bodo' },
     { code: 'doi', label: 'डोगरी', english: 'Dogri' },
-    { code: 'mni', label: 'মৈতৈলোন্', english: 'Manipuri' },
-    { code: 'sat', label: 'ᱥᱟᱱᱛᱟᱲᱤ', english: 'Santali' },
   ];
 
   let showMoreLanguages = $state(false);
@@ -194,7 +253,7 @@
       });
     } catch {
       showToast({
-        message: `Language updated to ${code.toUpperCase()}`,
+        message: t('profile.languageUpdated', { lang: code.toUpperCase() }),
         variant: 'info',
       });
     }
@@ -202,12 +261,12 @@
 
   function downloadIncomeStatement(): void {
     showToast({
-      message: 'Generating cryptographically signed Income Statement (PDF)...',
+      message: t('profile.incomeStatement.generating'),
       variant: 'info',
     });
     setTimeout(() => {
       showToast({
-        message: 'Income Statement generated and verified with Ed25519 seal.',
+        message: t('profile.incomeStatement.ready'),
         variant: 'success',
       });
     }, 1200);
@@ -246,7 +305,7 @@
         window.dispatchEvent(new Event('storage'));
       }
     } catch {}
-    showToast({ message: 'Profile picture updated successfully!', variant: 'success' });
+    showToast({ message: t('profile.photoUpdated'), variant: 'success' });
   }
 
   function handleCancelCrop(): void {
@@ -274,7 +333,7 @@
     await setPref('profile.emailVideoAlerts', emailVideoAlerts);
     savingEmail = false;
     showToast({
-      message: 'Email and VIP video consultation preferences saved!',
+      message: t('profile.email.saved'),
       variant: 'success',
     });
   }
@@ -282,24 +341,18 @@
   async function requestPhoneChange(): Promise<void> {
     const raw = newPhoneInput.trim().replace(/\s+/g, '');
     if (raw.length < 10) {
-      phoneError = 'Please enter a valid 10-digit mobile number';
+      phoneError = t('profile.phone.invalidNew');
       return;
     }
     phoneLoading = true;
     phoneError = '';
     try {
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to request verification code');
+      await requestPhoneChangeOtp({ new_phone: formatted });
       phoneStep = 'otp';
-      showToast({ message: data.message || 'Verification code sent to new mobile number', variant: 'info' });
-    } catch (err: any) {
-      phoneError = err.message || 'Failed to request verification code';
+      showToast({ message: t('profile.phone.otpSent'), variant: 'info' });
+    } catch (err: unknown) {
+      phoneError = errorText(err, t('profile.phone.otpSendFailed'));
     } finally {
       phoneLoading = false;
     }
@@ -307,7 +360,7 @@
 
   async function verifyPhoneChange(): Promise<void> {
     if (phoneOtpInput.trim().length < 4) {
-      phoneError = 'Please enter the verification OTP';
+      phoneError = t('profile.phone.otpRequired');
       return;
     }
     phoneLoading = true;
@@ -315,13 +368,10 @@
     try {
       const raw = newPhoneInput.trim().replace(/\s+/g, '');
       const formatted = raw.startsWith('+91') ? raw : `+91${raw}`;
-      const res = await fetch('/auth/phone/change/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_phone: formatted, otp: phoneOtpInput.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Verification failed');
+      const data = await verifyPhoneChangeOtp({ new_phone: formatted, otp: phoneOtpInput.trim() });
+      if (data.access_token) setAccessToken(data.access_token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
+      if (data.access_token) session.establish(data.access_token);
       phone = formatted;
       await setPref('login.phone', formatted);
       showPhoneModal = false;
@@ -329,11 +379,11 @@
       phoneOtpInput = '';
       phoneStep = 'phone';
       showToast({
-        message: 'Mobile number updated! Other active sessions terminated for security.',
+        message: t('profile.phone.updated'),
         variant: 'success',
       });
-    } catch (err: any) {
-      phoneError = err.message || 'Verification failed';
+    } catch (err: unknown) {
+      phoneError = errorText(err, t('profile.phone.verifyFailed'));
     } finally {
       phoneLoading = false;
     }
@@ -344,7 +394,7 @@
     setRefreshToken(undefined);
     await setArtisanId(undefined);
     session.clear();
-    showToast({ message: 'Logged out successfully.', variant: 'info' });
+    showToast({ message: t('profile.loggedOut'), variant: 'info' });
     await goto('/welcome');
   }
 </script>
@@ -361,6 +411,11 @@
   <!-- Top Identity & Hero Card -->
   <section class="profile-hero">
     <div class="profile-hero__badge-rule"></div>
+
+    <a class="profile-hero__corner-badge" href="/badges">
+      <Icon name="badge-verified" size="1rem" />
+      <span>{t('nav.badges')}</span>
+    </a>
 
     <div class="profile-hero__main">
       <div class="profile-avatar-wrap">
@@ -395,31 +450,39 @@
           <span class="profile-avatar__camera-badge" title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}>
             <Icon name="camera" size="0.85rem" />
           </span>
-          <span class="profile-avatar__verified" title="Govt & AI Verified Artisan">
+          <span class="profile-avatar__verified" title={t('profile.verifiedBadgeTitle')}>
             <Icon name="verified-artisan" size="1.25rem" />
           </span>
         </div>
 
         <div class="profile-avatar-btns">
-          <button
-            type="button"
-            class="avatar-ctrl-btn"
-            onclick={() => (cameraInput ?? fileInput)?.click()}
-            title={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}
-          >
-            <Icon name="camera" size="0.8rem" />
-            <span>{avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}</span>
-          </button>
+          <Tooltip text={avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}>
+            {#snippet trigger(props)}
+              <button
+                type="button"
+                class="avatar-ctrl-btn"
+                onclick={() => (cameraInput ?? fileInput)?.click()}
+                {...props}
+              >
+                <Icon name="camera" size="0.8rem" />
+                <span>{avatarUrl ? t('profile.changePhoto') : t('profile.uploadPhoto')}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
           {#if avatarUrl}
-            <button
-              type="button"
-              class="avatar-ctrl-btn avatar-ctrl-btn--danger"
-              onclick={handleRemoveAvatar}
-              title={t('profile.removePhoto')}
-            >
-              <Icon name="trash" size="0.8rem" />
-              <span>{t('profile.removePhoto')}</span>
-            </button>
+            <Tooltip text={t('profile.removePhoto')}>
+              {#snippet trigger(props)}
+                <button
+                  type="button"
+                  class="avatar-ctrl-btn avatar-ctrl-btn--danger"
+                  onclick={handleRemoveAvatar}
+                  {...props}
+                >
+                  <Icon name="trash" size="0.8rem" />
+                  <span>{t('profile.removePhoto')}</span>
+                </button>
+              {/snippet}
+            </Tooltip>
           {/if}
         </div>
       </div>
@@ -433,7 +496,7 @@
           </span>
         </div>
 
-        <p class="profile-hero__role">{t('profile.masterArtisan', { craft: craftName })}</p>
+        <p class="profile-hero__role">{t('profile.masterArtisan', { craft: localizedCraftName })}</p>
 
         <div class="profile-hero__meta">
           <span class="profile-meta-item">
@@ -454,23 +517,27 @@
                 phoneOtpInput = '';
               }}
             >
-              Change
+              {t('profile.phone.change')}
             </button>
           </span>
         </div>
 
         <div class="profile-hero__followers">
           <Icon name="users" size="1.1rem" />
-          <span><strong>{followerCount}</strong> {t('profile.followers', { count: String(followerCount) })}</span>
+          <span>{t('profile.followers', { count: String(followerCount) })}</span>
         </div>
       </div>
     </div>
 
     <div class="profile-hero__actions">
-      <SpeakButton text={spokenProfileText} label={t('action.speak')} />
-      <a class="profile-btn-ghost" href="/accessibility">
+      <SpeakButton class="profile-action-btn" text={spokenProfileText} label={t('action.speak')} />
+      <a class="profile-action-btn" href="/schemes">
+        <Icon name="verified-artisan" size="1rem" />
+        <span>{t('nav.schemes')}</span>
+      </a>
+      <a class="profile-action-btn" href="/accessibility">
         <Icon name="accessibility" size="1rem" />
-        {t('profile.a11ySettings')}
+        <span>{t('profile.a11ySettings')}</span>
       </a>
     </div>
   </section>
@@ -542,7 +609,7 @@
     <div class="profile-grid-details">
       <div class="detail-tile">
         <span class="detail-tile__label">{t('profile.guild.primaryCraft')}</span>
-        <span class="detail-tile__value">{craftName}</span>
+        <span class="detail-tile__value">{localizedCraftName}</span>
       </div>
 
       <div class="detail-tile">
@@ -577,7 +644,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.incomeProof')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.incomeProofDesc')}</p>
-          <Button variant="secondary" size="md" onclick={downloadIncomeStatement}>
+          <Button variant="secondary" size="md" onclick={downloadIncomeStatement} tooltip={tooltip('tooltip.generateStatement')}>
             <Icon name="download" size="1rem" />
             {t('profile.tools.generateStatement')}
           </Button>
@@ -591,7 +658,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.businessCard')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.businessCardDesc')}</p>
-          <Button variant="secondary" size="md" onclick={shareVisitingCard}>
+          <Button variant="secondary" size="md" onclick={shareVisitingCard} tooltip={tooltip('tooltip.shareCard')}>
             <Icon name="share" size="1rem" />
             {t('profile.tools.shareWhatsapp')}
           </Button>
@@ -603,11 +670,11 @@
           <Icon name="verified-artisan" size="1.5rem" />
         </div>
         <div class="tool-tile__content">
-          <h3 class="tool-tile__heading">Exhibition Stall Placard</h3>
-          <p class="tool-tile__desc">Generate & print an official QR placard for your exhibition stand at Dilli Haat, Surajkund, or Shilp Samagam.</p>
-          <Button variant="secondary" size="md" onclick={openStallCard}>
+          <h3 class="tool-tile__heading">{t('profile.tools.stallCard')}</h3>
+          <p class="tool-tile__desc">{t('profile.tools.stallCardDesc')}</p>
+          <Button variant="secondary" size="md" onclick={openStallCard} tooltip={tooltip('tooltip.print')}>
             <Icon name="print" size="1rem" />
-            Generate Stall Card
+            {t('profile.tools.generateStallCard')}
           </Button>
         </div>
       </div>
@@ -638,7 +705,7 @@
         <div class="tool-tile__content">
           <h3 class="tool-tile__heading">{t('profile.tools.addProduct')}</h3>
           <p class="tool-tile__desc">{t('profile.tools.addProductDesc')}</p>
-          <Button variant="primary" size="md" onclick={() => goto('/listing/new/capture')}>
+          <Button variant="primary" size="md" onclick={() => goto('/listing/new/capture')} tooltip={tooltip('tooltip.newListing')}>
             <Icon name="camera" size="1rem" />
             {t('profile.tools.startListing')}
           </Button>
@@ -706,13 +773,13 @@
     <div class="profile-card__header">
       <h2 class="profile-card__title">
         <Icon name="message" size="1.2rem" />
-        Official Email & Buyer Video Consultation Alerts
+        {t('profile.emailCard.title')}
       </h2>
-      <span class="profile-card__tag">Government Verified</span>
+      <span class="profile-card__tag">{t('profile.emailCard.badge')}</span>
     </div>
 
     <p class="profile-card__desc">
-      Add your official email address to receive real-time updates for bulk order lot allocations, advance dispatch notices, and calendar invitations whenever buyers book VIP loom video consultations.
+      {t('profile.emailCard.desc')}
     </p>
 
     <div class="email-settings-box">
@@ -720,23 +787,23 @@
         <input
           type="email"
           class="email-text-input"
-          placeholder="artisan.master@kalakriti.org"
+          placeholder={t('profile.email.placeholder')}
           bind:value={email}
-          aria-label="Artisan email address"
+          aria-label={t('profile.email.ariaLabel')}
         />
-        <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail}>
-          Save Email
+        <Button variant="primary" size="md" onclick={saveEmailPreferences} loading={savingEmail} tooltip={tooltip('tooltip.savePreferences')}>
+          {t('profile.email.save')}
         </Button>
       </div>
 
       <div class="email-pref-list">
         <label class="email-pref-row">
           <input type="checkbox" bind:checked={emailOrderAlerts} />
-          <span>Real-time SMS & email notifications when large buyer purchase orders are placed</span>
+          <span>{t('profile.email.orderAlerts')}</span>
         </label>
         <label class="email-pref-row">
           <input type="checkbox" bind:checked={emailVideoAlerts} />
-          <span>Video consultation alerts 30 minutes before booked loom sessions</span>
+          <span>{t('profile.email.videoAlerts')}</span>
         </label>
       </div>
     </div>
@@ -749,7 +816,7 @@
       <span class="session-info__badge">{t('profile.session.active')}</span>
     </div>
 
-    <Button variant="danger" size="md" onclick={handleLogout}>
+    <Button variant="danger" size="md" onclick={handleLogout} tooltip={tooltip('tooltip.signout')}>
       <Icon name="lock" size="1rem" />
       {t('profile.session.signOut')}
     </Button>
@@ -772,19 +839,19 @@
         aria-labelledby="phone-modal-heading"
       >
         <div class="phone-modal-header">
-          <h3 id="phone-modal-heading">Update Registered Mobile Number</h3>
+          <h3 id="phone-modal-heading">{t('profile.phoneModal.heading')}</h3>
           <button
             type="button"
             class="phone-modal-close"
             onclick={() => (showPhoneModal = false)}
-            aria-label="Close dialog"
+            aria-label={t('profile.phoneModal.closeAriaLabel')}
           >
             &times;
           </button>
         </div>
 
         <p class="phone-modal-desc">
-          Changing your phone requires 2-factor OTP verification. In compliance with security standards, updating your number will automatically terminate all other active login sessions.
+          {t('profile.phoneModal.desc')}
         </p>
 
         {#if phoneError}
@@ -796,21 +863,23 @@
 
         {#if phoneStep === 'phone'}
           <div class="phone-modal-body">
-            <label class="phone-modal-label" for="new-phone-input">New 10-Digit Mobile Number</label>
+            <label class="phone-modal-label" for="new-phone-input"
+              >{t('profile.phoneModal.newNumberLabel')}</label
+            >
             <div class="phone-input-wrap">
               <span class="prefix">+91</span>
               <input
                 id="new-phone-input"
                 type="tel"
                 class="phone-text-field"
-                placeholder="9876543210"
+                placeholder={t('profile.phoneModal.newNumberPlaceholder')}
                 bind:value={newPhoneInput}
                 maxlength="10"
               />
             </div>
             <div class="phone-modal-actions">
-              <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)}>
-                Cancel
+              <Button variant="secondary" size="md" onclick={() => (showPhoneModal = false)} tooltip={tooltip('tooltip.cancel')}>
+                {t('action.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -818,28 +887,29 @@
                 onclick={requestPhoneChange}
                 loading={phoneLoading}
                 disabled={!newPhoneInput}
+                tooltip={tooltip('tooltip.changePhone')}
               >
-                Send Verification OTP
+                {t('profile.phoneModal.sendOtp')}
               </Button>
             </div>
           </div>
         {:else}
           <div class="phone-modal-body">
             <label class="phone-modal-label" for="phone-otp-input">
-              Enter 6-Digit Verification OTP sent to {newPhoneInput}
+              {t('profile.phoneModal.otpLabel', { phone: newPhoneInput })}
             </label>
             <input
               id="phone-otp-input"
               type="text"
               inputmode="numeric"
               class="phone-otp-field"
-              placeholder="123456"
+              placeholder={t('profile.phoneModal.otpPlaceholder')}
               bind:value={phoneOtpInput}
               maxlength="6"
             />
             <div class="phone-modal-actions">
-              <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')}>
-                Back
+              <Button variant="secondary" size="md" onclick={() => (phoneStep = 'phone')} tooltip={tooltip('tooltip.back')}>
+                {t('action.back')}
               </Button>
               <Button
                 variant="primary"
@@ -847,8 +917,9 @@
                 onclick={verifyPhoneChange}
                 loading={phoneLoading}
                 disabled={!phoneOtpInput}
+                tooltip={tooltip('tooltip.verifyPhone')}
               >
-                Verify & Update Mobile
+                {t('profile.phoneModal.verifyAndUpdate')}
               </Button>
             </div>
           </div>
@@ -902,9 +973,9 @@
   /* --- Top Hero Section --- */
   .profile-hero {
     position: relative;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     padding: var(--k-space-5);
     overflow: hidden;
   }
@@ -914,7 +985,7 @@
     inset-block-start: 0;
     inset-inline: 0;
     block-size: 4px;
-    background: linear-gradient(90deg, var(--k-terracotta-700), var(--k-haldi-500), var(--k-indigo-700));
+    background: var(--k-accent-primary-bg);
   }
 
   .profile-hero__main {
@@ -956,15 +1027,15 @@
     font-weight: var(--k-weight-medium);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     color: var(--k-terracotta-800);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
 
   .avatar-ctrl-btn:hover {
-    background-color: var(--k-khadi-200);
-    border-color: var(--k-terracotta-700);
+    background-color: var(--k-surface-pressed);
+    border-color: var(--k-border-accent);
   }
 
   .avatar-ctrl-btn--danger {
@@ -972,9 +1043,9 @@
   }
 
   .avatar-ctrl-btn--danger:hover {
-    color: #b91c1c;
-    border-color: #fca5a5;
-    background-color: #fef2f2;
+    color: var(--k-accent-danger);
+    border-color: var(--k-madder-400);
+    background-color: var(--k-surface-base);
   }
 
   .profile-avatar {
@@ -987,8 +1058,8 @@
     flex-shrink: 0;
     border: 3px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-terracotta-700);
-    color: var(--k-khadi-50);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     box-shadow: 0 0 0 2px var(--k-terracotta-400);
   }
 
@@ -1027,7 +1098,7 @@
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
     background-color: var(--k-terracotta-800);
-    color: #fff;
+    color: var(--k-text-on-accent);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: transform var(--k-duration-fast) var(--k-ease-standard);
   }
@@ -1048,8 +1119,8 @@
     block-size: 1.75rem;
     border: 2px solid var(--k-khadi-50);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
-    color: #fff;
+    background-color: var(--k-accent-success-bg);
+    color: var(--k-text-on-accent);
   }
 
   .sr-only {
@@ -1076,6 +1147,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--k-space-2);
+    padding-inline-end: 6.5rem;
   }
 
   .profile-hero__name {
@@ -1094,7 +1166,7 @@
     border: var(--k-hairline) solid var(--k-neem-300);
     border-radius: var(--k-radius-pill);
     background-color: color-mix(in srgb, var(--k-neem-300) 25%, transparent);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
   }
@@ -1103,12 +1175,12 @@
     inline-size: 6px;
     block-size: 6px;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600);
+    background-color: var(--k-accent-success-bg);
   }
 
   .profile-hero__role {
     margin: 0;
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-md);
     font-weight: var(--k-weight-medium);
   }
@@ -1135,44 +1207,97 @@
     margin-block-start: var(--k-space-1);
     padding: var(--k-space-2) var(--k-space-3);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-primary);
     font-size: var(--k-text-sm);
   }
 
-  .profile-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--k-space-3);
-    margin-block-start: var(--k-space-4);
-    padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
-  }
-
-  .profile-btn-ghost {
+  .profile-hero__corner-badge {
+    position: absolute;
+    inset-block-start: var(--k-space-4);
+    inset-inline-end: var(--k-space-4);
     display: inline-flex;
     align-items: center;
     gap: var(--k-space-1);
-    padding: var(--k-space-1) var(--k-space-3);
+    padding: 0.3rem var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background: transparent;
+    background-color: var(--k-surface-base);
     color: var(--k-text-secondary);
+    font-family: var(--k-font-body);
     font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
     text-decoration: none;
-    transition: background-color var(--k-duration-fast) var(--k-ease-standard);
+    transition: all var(--k-duration-fast) var(--k-ease-standard);
+    z-index: 2;
   }
 
-  .profile-btn-ghost:hover {
-    background-color: var(--k-khadi-150);
+  .profile-hero__corner-badge:hover {
+    background-color: var(--k-surface-sunken);
+    border-color: var(--k-border-interactive);
     color: var(--k-text-primary);
+  }
+
+  .profile-hero__actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--k-space-2);
+    margin-block-start: var(--k-space-4);
+    padding-block-start: var(--k-space-3);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    inline-size: 100%;
+    box-sizing: border-box;
+  }
+
+  .profile-hero__actions :global(.k-speak),
+  .profile-hero__actions :global(.profile-action-btn),
+  .profile-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--k-space-1);
+    min-block-size: 2.35rem;
+    min-inline-size: 0;
+    inline-size: 100%;
+    padding: var(--k-space-1) var(--k-space-2);
+    border: var(--k-hairline) solid var(--k-stone-300);
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-surface-base);
+    color: var(--k-text-primary);
+    font-family: var(--k-font-body);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
+    text-decoration: none;
+    text-align: center;
+    line-height: 1.2;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all var(--k-duration-fast) var(--k-ease-standard);
+  }
+
+  .profile-hero__actions :global(.k-speak:hover),
+  .profile-hero__actions :global(.profile-action-btn:hover),
+  .profile-action-btn:hover {
+    background-color: var(--k-surface-sunken);
+    border-color: var(--k-border-interactive);
+    color: var(--k-text-primary);
+  }
+
+  .profile-hero__actions :global(.k-icon),
+  .profile-action-btn :global(.k-icon) {
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex-shrink: 0;
   }
 
   @media (max-width: 32rem) {
     .profile-hero {
       padding: var(--k-space-3);
+    }
+
+    .profile-hero__corner-badge {
+      inset-block-start: var(--k-space-3);
+      inset-inline-end: var(--k-space-3);
     }
 
     .profile-avatar {
@@ -1189,13 +1314,16 @@
     }
 
     .profile-hero__actions {
-      flex-direction: column;
-      align-items: stretch;
-      gap: var(--k-space-2);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem;
     }
 
-    .profile-btn-ghost {
-      justify-content: center;
+    .profile-hero__actions :global(.k-speak),
+    .profile-hero__actions :global(.profile-action-btn),
+    .profile-action-btn {
+      padding: var(--k-space-1) 0.2rem;
+      font-size: 0.7rem;
+      gap: 2px;
     }
 
     .profile-card {
@@ -1229,9 +1357,9 @@
     align-items: center;
     gap: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
   }
 
   .trust-badge__text {
@@ -1254,9 +1382,9 @@
   .profile-metrics-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -1272,8 +1400,8 @@
     align-items: center;
     text-align: center;
     padding: var(--k-space-4) var(--k-space-3);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-200);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200);
+    border-inline-end: var(--k-hairline) solid var(--k-border-hairline);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   @media (min-width: 720px) {
@@ -1289,7 +1417,7 @@
   .metric-item__value {
     font-size: var(--k-text-xl);
     font-weight: var(--k-weight-bold);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-variant-numeric: tabular-nums;
   }
 
@@ -1310,15 +1438,15 @@
     margin-block-start: 0.25rem;
     font-size: var(--k-text-2xs);
     font-weight: var(--k-weight-semibold);
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     text-decoration: none;
   }
 
   /* --- General Profile Cards --- */
   .profile-card {
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
+    background-color: var(--k-surface-base);
     padding: var(--k-space-5);
   }
 
@@ -1345,7 +1473,7 @@
     padding: 0.2rem var(--k-space-2);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-150);
+    background-color: var(--k-surface-sunken);
     color: var(--k-text-secondary);
     font-size: var(--k-text-xs);
     font-family: monospace;
@@ -1375,9 +1503,9 @@
     flex-direction: column;
     gap: 0.2rem;
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .detail-tile__label {
@@ -1411,9 +1539,11 @@
     display: flex;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .tool-tile__icon-wrap {
@@ -1424,8 +1554,9 @@
     block-size: 2.75rem;
     flex-shrink: 0;
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
-    color: var(--k-terracotta-700);
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-primary-text);
+    align-self: flex-start;
   }
 
   .tool-tile__content {
@@ -1433,6 +1564,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--k-space-2);
+    flex: 1;
+    min-inline-size: 0;
+    inline-size: 100%;
+    height: 100%;
   }
 
   .tool-tile__heading {
@@ -1444,29 +1579,42 @@
 
   .tool-tile__desc {
     margin: 0;
+    margin-block-end: auto;
     color: var(--k-text-secondary);
     font-size: var(--k-text-xs);
     line-height: 1.45;
   }
 
+  .tool-tile__content > :global(button),
+  .tool-tile__content > :global(.k-button),
+  .tool-tile__content > .profile-action-link {
+    margin-block-start: auto;
+  }
+
   .profile-action-link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--k-space-1);
-    padding: var(--k-space-2) var(--k-space-3);
+    min-block-size: 2.5rem;
+    padding-inline: var(--k-space-3);
     border: var(--k-hairline) solid var(--k-indigo-300);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-50);
-    color: var(--k-indigo-700);
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-secondary);
+    font-family: var(--k-font-body);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
     text-decoration: none;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
+    margin-block-start: auto;
+    box-sizing: border-box;
   }
 
   .profile-action-link:hover {
     background-color: var(--k-indigo-700);
-    color: #fff;
+    border-color: var(--k-indigo-700);
+    color: var(--k-text-on-accent);
   }
 
   /* Language Pill Grid */
@@ -1484,19 +1632,19 @@
     padding: var(--k-space-2) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     cursor: pointer;
     transition: all var(--k-duration-fast) var(--k-ease-standard);
   }
 
   .lang-pill:hover {
-    border-color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
   }
 
   .lang-pill--active {
-    border-color: var(--k-terracotta-700);
-    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-khadi-100));
-    color: var(--k-terracotta-700);
+    border-color: var(--k-border-accent);
+    background-color: color-mix(in srgb, var(--k-terracotta-300) 25%, var(--k-surface-raised));
+    color: var(--k-accent-primary-text);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -1521,7 +1669,7 @@
     gap: var(--k-space-1);
     background: transparent;
     border: var(--k-hairline) solid var(--k-stone-300);
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
     cursor: pointer;
@@ -1531,8 +1679,8 @@
   }
 
   .lang-more-btn:hover {
-    background-color: var(--k-khadi-200);
-    border-color: var(--k-terracotta-700);
+    background-color: var(--k-surface-pressed);
+    border-color: var(--k-border-accent);
   }
 
   /* Accessibility Quick Bar */
@@ -1543,7 +1691,7 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
     padding-block-start: var(--k-space-3);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .a11y-quick-btn {
@@ -1553,7 +1701,7 @@
     padding: var(--k-space-1) var(--k-space-3);
     border: var(--k-hairline) solid var(--k-stone-300);
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
     color: var(--k-text-primary);
     font-size: var(--k-text-xs);
     cursor: pointer;
@@ -1561,7 +1709,7 @@
 
   .a11y-quick-link {
     margin-inline-start: auto;
-    color: var(--k-indigo-700);
+    color: var(--k-accent-secondary);
     font-size: var(--k-text-xs);
     text-decoration: none;
   }
@@ -1578,9 +1726,9 @@
     justify-content: space-between;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-stone-200);
+    border: var(--k-hairline) solid var(--k-border-hairline);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100);
+    background-color: var(--k-surface-raised);
   }
 
   .session-info {
@@ -1596,7 +1744,7 @@
 
   .session-info__badge {
     font-size: var(--k-text-xs);
-    color: var(--k-neem-700);
+    color: var(--k-accent-success);
   }
 
   /* Change Phone Button */
@@ -1604,7 +1752,7 @@
     display: inline-block;
     margin-inline-start: var(--k-space-2);
     font-size: var(--k-text-xs);
-    color: var(--k-indigo-700, #364190);
+    color: var(--k-indigo-700, var(--k-indigo-800));
     text-decoration: underline;
     background: none;
     border: none;
@@ -1631,16 +1779,16 @@
     flex: 1;
     min-inline-size: 16rem;
     padding: var(--k-space-2) var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
-    background-color: var(--k-surface-base, #ffffff);
+    background-color: var(--k-surface-base, var(--k-surface-base));
     font-size: var(--k-text-sm);
     color: var(--k-text-primary);
   }
 
   .email-text-input:focus {
     outline: none;
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 
@@ -1661,7 +1809,7 @@
 
   .email-pref-row input[type='checkbox'] {
     margin-block-start: 2px;
-    accent-color: var(--k-terracotta-700, #96381e);
+    accent-color: var(--k-terracotta-700, var(--k-accent-primary-text));
   }
 
   /* Phone Change Modal */
@@ -1677,8 +1825,8 @@
   }
 
   .phone-modal-card {
-    background-color: var(--k-surface-base, #ffffff);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-lg);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     max-inline-size: 28rem;
@@ -1722,8 +1870,8 @@
     align-items: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: #fee2e2;
-    color: #991b1b;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-accent-danger);
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-xs);
   }
@@ -1743,17 +1891,17 @@
   .phone-input-wrap {
     display: flex;
     align-items: center;
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     overflow: hidden;
   }
 
   .phone-input-wrap .prefix {
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: var(--k-stone-100, #f5f2ed);
+    background-color: var(--k-stone-100, var(--k-surface-raised));
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
-    border-inline-end: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border-inline-end: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
   }
 
   .phone-text-field {
@@ -1766,7 +1914,7 @@
 
   .phone-otp-field {
     padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-sm);
     font-size: var(--k-text-lg);
     text-align: center;
@@ -1776,7 +1924,7 @@
   }
 
   .phone-otp-field:focus {
-    border-color: var(--k-terracotta-600, #b24526);
+    border-color: var(--k-terracotta-600, var(--k-border-accent));
     box-shadow: 0 0 0 2px rgba(178, 69, 38, 0.15);
   }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+	"github.com/ZoroNewbie00/kalakriti/pkg/topics"
 
 	"github.com/ZoroNewbie00/kalakriti/services/collab-svc/internal/collab/domain"
 )
@@ -396,6 +397,29 @@ func TestSubmitQCFailureOpensReworkWindow(t *testing.T) {
 		t.Errorf("rework deadline = %v, want %v", updated.ReworkDeadline, wantDeadline)
 	}
 	assertHasEvent(t, store, order.ID, &lot.ID, "QC_RECORDED")
+}
+
+func TestSubmitQCPassPublishesLotCompleted(t *testing.T) {
+	t.Parallel()
+	store := newFakeStore()
+	f := newTestFulfilment(store)
+	ctx := context.Background()
+
+	order := seedBulkOrder(store, domain.BulkOrderInProduction, 100, 20, 10000, f.now().AddDate(0, 0, 20))
+	lot := domain.OrderLot{ID: uuid.New(), BulkOrderID: order.ID, Quantity: 20, State: domain.LotQCPending}
+	store.lots[lot.ID] = lot
+
+	updated, err := f.SubmitQC(ctx, SubmitQCInput{
+		LotID: lot.ID, InspectorID: "inspector-1", Passed: true,
+		IdempotencyKey: "qc-pass-1",
+	})
+	if err != nil {
+		t.Fatalf("SubmitQC: %v", err)
+	}
+	if updated.State != domain.LotCompleted {
+		t.Fatalf("lot state = %s, want COMPLETED", updated.State)
+	}
+	assertHasOutbox(t, store, topics.OrderLotCompleted)
 }
 
 func TestSubmitQCSecondFailureReallocatesAndWithholdsOnlyThatLotsSplit(t *testing.T) {

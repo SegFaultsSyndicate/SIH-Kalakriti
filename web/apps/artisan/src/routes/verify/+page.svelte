@@ -15,14 +15,13 @@
   import {
     requestOtp,
     completeOtpVerification,
-    setAccessToken,
-    setRefreshToken,
-    session,
+    establishMockSession,
     ApiError,
     messageKeyFor,
   } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
+  import { toE164 } from '$lib/phone';
 
   const RESEND_SECONDS = 30;
 
@@ -57,7 +56,7 @@
     verifying = true;
     error = '';
     try {
-      const ok = await completeOtpVerification({ phone, otp });
+      const ok = await completeOtpVerification({ phone: toE164(phone), otp });
       if (ok) {
         await goto('/');
       } else {
@@ -65,12 +64,22 @@
         code = '';
       }
     } catch (cause) {
-      if (import.meta.env.DEV && (otp === '000000' || otp === '123456')) {
-        const devToken =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZXYtYXJ0aXNhbiIsInJvbGUiOiJBUlRJU0FOIn0.devsignature';
-        setAccessToken(devToken);
-        setRefreshToken(devToken);
-        session.establish(devToken);
+      // core-svc's real dev-mode OTP acceptance (AUTH_DEV_OTP_ENABLED, code
+      // 000000/123456) already goes through completeOtpVerification above --
+      // this used to also forge an unsigned client-side JWT on any failure,
+      // which never actually worked in any environment: pkg/auth.Issuer.Verify
+      // checks a real HMAC signature regardless of environment, so it just
+      // failed one request later than the honest error would have. See the
+      // admin app's login/verify/+page.svelte for the same fix.
+      //
+      // VITE_USE_MOCKS=1 is the one exception, and only because it's opt-in:
+      // with no backend reachable at all there is no real request to fail
+      // later, so a local-only fake session is the only way to get past this
+      // screen for UI work. Same fake token shape, gated so it can't hide a
+      // real backend problem.
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] completeOtpVerification:', cause);
+        establishMockSession('ARTISAN', toE164(phone));
         await goto('/');
         return;
       }
@@ -85,7 +94,7 @@
     if (resendIn > 0 || resending || !network.online) return;
     resending = true;
     try {
-      await requestOtp({ phone });
+      await requestOtp({ phone: toE164(phone) });
       resendIn = RESEND_SECONDS;
     } catch (cause) {
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');

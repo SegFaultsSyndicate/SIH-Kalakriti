@@ -389,7 +389,7 @@ func TestArtisanRegisterSendsCraftLanguageAndRegionThrough(t *testing.T) {
 		},
 	}}
 
-	id, err := a.Register(context.Background(), "+919900011234", "idem-1", validRegisterFields())
+	id, _, _, err := a.Register(context.Background(), "+919900011234", "idem-1", validRegisterFields())
 	require.NoError(t, err)
 	assert.Equal(t, "art-1", id)
 }
@@ -398,7 +398,7 @@ func TestArtisanRegisterRejectsMissingCraftIDs(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	delete(fields, "craft_ids")
-	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
+	_, _, _, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
@@ -406,7 +406,7 @@ func TestArtisanRegisterRejectsMissingRegion(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	delete(fields, "region")
-	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
+	_, _, _, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 
@@ -414,7 +414,7 @@ func TestArtisanRegisterRejectsNonStringCraftID(t *testing.T) {
 	a := &Artisan{}
 	fields := validRegisterFields()
 	fields["craft_ids"] = []any{42}
-	_, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
+	_, _, _, err := a.Register(context.Background(), "+919900011234", "idem-1", fields)
 	assert.Equal(t, 400, domain.HTTPStatus(err))
 }
 

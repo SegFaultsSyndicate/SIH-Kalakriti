@@ -51,7 +51,7 @@
 
 <section class="barchart" aria-label={caption}>
   <h3 class="barchart__caption">{caption}</h3>
-  {#if grouped && legend}
+  {#if grouped && legend && selected === 'chart'}
     <div class="barchart__legend">
       <span class="barchart__legend-item"><span class="barchart__legend-swatch barchart__legend-swatch--primary"></span>{legend[0]}</span>
       <span class="barchart__legend-item"><span class="barchart__legend-swatch barchart__legend-swatch--secondary"></span>{legend[1]}</span>
@@ -170,7 +170,7 @@
   }
 
   .barchart__legend-swatch--secondary {
-    background: #66bb6a;
+    background: var(--k-neem-500);
   }
 
   .barchart__empty {
@@ -258,11 +258,11 @@
   }
 
   .barchart__fill--secondary {
-    background: #66bb6a;
+    background: var(--k-neem-500);
   }
 
   .barchart__value--secondary {
-    color: #66bb6a;
+    color: var(--k-neem-500);
     font-weight: 600;
   }
 
@@ -306,6 +306,9 @@
     text-align: start;
     padding: var(--k-space-2);
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+    /* th is bold by browser default; keep the whole table at regular
+       weight so the data reads flat. */
+    font-weight: var(--k-weight-regular);
   }
 
   .sr-only {
@@ -320,7 +323,7 @@
   @media print {
     .barchart {
       break-inside: avoid;
-      border-color: #999;
+      border-color: var(--k-stone-400);
     }
   }
 </style>

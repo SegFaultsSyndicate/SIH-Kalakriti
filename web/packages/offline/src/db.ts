@@ -57,6 +57,7 @@ export type OutboxStatus =
 export type OutboxKind =
   | 'listing.create'
   | 'listing.update'
+  | 'listing.media.attach'
   | 'listing.submit'
   | 'listing.approve'
   | 'media.upload'

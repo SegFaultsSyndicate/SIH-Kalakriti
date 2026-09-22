@@ -22,7 +22,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, Dialog, Label, Money, NumberStepper, Textarea, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
@@ -201,7 +201,7 @@
           />
         </div>
 
-        <Button onclick={submitProgress} disabled={submitting} loading={submitting}>
+        <Button onclick={submitProgress} disabled={submitting} loading={submitting} tooltip={tooltip('tooltip.submitProgress')}>
           {isRework ? t('lotProgress.resubmit.confirm') : t('lotProgress.report.confirm')}
         </Button>
       </section>
@@ -225,10 +225,10 @@
   <Label for="give-up-reason">{t('lotProgress.giveUpDialog.reasonLabel')}</Label>
   <Textarea id="give-up-reason" bind:value={giveUpReason} />
   <div class="lot-progress-page__dialog-actions">
-    <Button onclick={confirmGiveUp} disabled={!giveUpReason || submitting} loading={submitting}>
+    <Button onclick={confirmGiveUp} disabled={!giveUpReason || submitting} loading={submitting} tooltip={tooltip('tooltip.giveUp')}>
       {t('lotProgress.giveUpDialog.confirm')}
     </Button>
-    <Button variant="ghost" onclick={() => (confirmingGiveUp = false)}>{t('action.cancel')}</Button>
+    <Button variant="ghost" onclick={() => (confirmingGiveUp = false)} tooltip={tooltip('tooltip.cancelGiveUp')}>{t('action.cancel')}</Button>
   </div>
 </Dialog>
 

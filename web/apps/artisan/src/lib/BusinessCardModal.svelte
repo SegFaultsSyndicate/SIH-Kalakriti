@@ -6,9 +6,9 @@
   visiting card, instant WhatsApp sharing, and printing options.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button, showToast } from '@kalakriti/ui';
+  import { Button, showToast, Tooltip } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
 
   interface Props {
@@ -61,12 +61,12 @@
   function copyLink(): void {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(cardUrl);
-      showToast({ message: 'Digital business card link copied to clipboard!', variant: 'success' });
+      showToast({ message: t('card.linkCopied'), variant: 'success' });
     }
   }
 
   function shareWhatsApp(): void {
-    const text = `Namaste! Discover authentic handmade ${craftName} by ${artisanName} (${districtName}) on Kalakriti Platform. View my verified digital business card & catalog here: ${cardUrl}`;
+    const text = t('card.shareMessage', { craft: craftName, name: artisanName, district: districtName, url: cardUrl });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 
@@ -89,11 +89,15 @@
       <header class="modal-header">
         <div>
           <h2>{t('card.title')}</h2>
-          <p class="modal-subhead">Share your authentic artisan identity with buyers and institutions.</p>
+          <p class="modal-subhead">{t('card.subtitle')}</p>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label="Close">
-          <Icon name="close" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+              <Icon name="close" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </header>
 
       <!-- Live Card Preview -->
@@ -106,8 +110,8 @@
 
           <div class="preview-content">
             <div class="preview-header">
-              <span class="preview-gov">MINISTRY OF TEXTILES • GOVT. OF INDIA</span>
-              <span class="preview-badge">PM VISHWAKARMA VERIFIED</span>
+              <span class="preview-gov">{t('card.ministryLine')}</span>
+              <span class="preview-badge">{t('card.pmVishwakarmaVerified')}</span>
             </div>
 
             <div class="preview-main">
@@ -123,22 +127,22 @@
                   <h3 class="preview-name">{artisanName}</h3>
                   <p class="preview-craft">{craftName}</p>
                   <p class="preview-loc">{districtName} • {clusterName}</p>
-                  <span class="preview-id">ID: {pehchanId}</span>
+                  <span class="preview-id">{t('card.idLabel', { id: pehchanId })}</span>
                 </div>
               </div>
 
               <div class="preview-qr-box">
                 {#if qrDataUrl}
-                  <img src={qrDataUrl} alt="QR Code" class="preview-qr" />
+                  <img src={qrDataUrl} alt={t('card.qrAlt')} class="preview-qr" />
                 {:else}
                   <div class="preview-qr-ph">QR</div>
                 {/if}
-                <span class="preview-scan-text">Scan to Buy</span>
+                <span class="preview-scan-text">{t('card.scanToBuy')}</span>
               </div>
             </div>
 
             <footer class="preview-footer">
-              <span>Direct Artisan Payments (DBT) • Authentic GI Provenance</span>
+              <span>{t('card.dbtProvenance')}</span>
               <span class="preview-url">{cardUrl}</span>
             </footer>
           </div>
@@ -147,15 +151,15 @@
 
       <!-- Action Buttons Strip -->
       <footer class="modal-actions">
-        <Button variant="secondary" size="sm" onclick={copyLink}>
+        <Button variant="secondary" size="sm" onclick={copyLink} tooltip={tooltip('tooltip.copy')}>
           <Icon name="link" size="0.85rem" />
-          <span>Copy Link</span>
+          <span>{t('card.copyLink')}</span>
         </Button>
-        <Button variant="secondary" size="sm" onclick={shareWhatsApp}>
+        <Button variant="secondary" size="sm" onclick={shareWhatsApp} tooltip={tooltip('tooltip.shareCard')}>
           <Icon name="whatsapp" size="0.85rem" />
-          <span>WhatsApp</span>
+          <span>{t('card.whatsapp')}</span>
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint}>
+        <Button variant="primary" size="sm" onclick={handlePrint} tooltip={tooltip('tooltip.printCard')}>
           <Icon name="print" size="0.85rem" />
           <span>{t('card.printCard')}</span>
         </Button>
@@ -221,22 +225,22 @@
 
   /* Card Preview */
   .card-preview-stage {
-    background: #fdfbf7;
+    background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-3);
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-border-on-inverse);
   }
 
   :global(.preview-card) {
     position: relative;
-    background: #ffffff;
+    background: var(--k-surface-base);
     padding: 2rem 1.75rem;
-    color: #1c1917;
+    color: var(--k-text-primary);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   }
 
   :global(.preview-card .k-kolam-corner) {
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     inline-size: 2.2rem;
     block-size: 2.2rem;
     opacity: 0.75;
@@ -252,7 +256,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-block-end: 2px solid #78350f;
+    border-block-end: 2px solid var(--k-border-accent);
     padding-block-end: var(--k-space-2);
   }
 
@@ -260,17 +264,17 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .preview-badge {
     font-size: 0.62rem;
     font-weight: 700;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--k-surface-pressed);
+    color: var(--k-accent-primary-text);
     padding: 2px 6px;
     border-radius: 4px;
-    border: 1px solid #d97706;
+    border: 1px solid var(--k-border-warning);
   }
 
   .preview-main {
@@ -291,15 +295,15 @@
     block-size: 3.8rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #d97706;
+    border: 2px solid var(--k-border-warning);
   }
 
   .preview-avatar-fallback {
     inline-size: 3.8rem;
     block-size: 3.8rem;
     border-radius: 50%;
-    background: #78350f;
-    color: #fff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 1.5rem;
     font-weight: 800;
     display: flex;
@@ -310,27 +314,27 @@
   .preview-name {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .preview-craft {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
   .preview-loc {
     font-size: 0.68rem;
-    color: #57534e;
+    color: var(--k-stone-600);
     margin: 2px 0 0;
   }
 
   .preview-id {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #78716c;
+    color: var(--k-text-tertiary);
   }
 
   .preview-qr-box {
@@ -343,7 +347,7 @@
   .preview-qr {
     inline-size: 5rem;
     block-size: 5rem;
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: 4px;
     padding: 2px;
   }
@@ -355,27 +359,27 @@
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--k-indigo-400);
   }
 
   .preview-scan-text {
     font-size: 0.6rem;
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .preview-footer {
-    border-block-start: 1px solid #e7e5e4;
+    border-block-start: 1px solid var(--k-border-on-inverse);
     padding-block-start: var(--k-space-2);
     display: flex;
     justify-content: space-between;
     font-size: 0.62rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
   }
 
   .preview-url {
     font-family: monospace;
-    color: #a8a29e;
+    color: var(--k-stone-300);
   }
 
   .modal-actions {
@@ -444,7 +448,7 @@
       block-size: 2in;
     }
     :global(.preview-card) {
-      border: 2px solid #78350f !important;
+      border: 2px solid var(--k-border-accent) !important;
       box-shadow: none;
     }
   }

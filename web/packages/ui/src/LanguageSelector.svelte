@@ -11,9 +11,19 @@
   import { LOCALES, LOCALE_CODES, type LocaleCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import Popover from './Popover.svelte';
-  import Button from './Button.svelte';
+  import Button, { type ButtonSize } from './Button.svelte';
+
+  interface Props {
+    /** xl (Button's own default) is the artisan app's minimum comfortable
+     * tap target. A header that also has to fit a wordmark and two more
+     * icon buttons on one row at phone width (the buyer shell) can pass a
+     * smaller size -- lg is still above --k-touch-min (44px). */
+    triggerSize?: ButtonSize;
+  }
+  let { triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
   let open = $state(false);
 
   function select(code: LocaleCode): void {
@@ -24,7 +34,7 @@
 
 <Popover align="end" bind:open>
   {#snippet trigger(props)}
-    <Button icon="language" label={t('language.selector.label')} variant="ghost" {...props} />
+    <Button icon="language" label={t('language.selector.label')} variant="ghost" tooltip={tt('tooltip.language')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <ul class="k-lang-panel" role="list">

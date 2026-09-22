@@ -1,37 +1,57 @@
 # Request ID Propagation
 
-**Status:** HTTP layer complete, gRPC layer ready for wiring  
-**Last Updated:** 2026-08-28
+**Status:** HTTP layer complete at the bff edge. gRPC propagation is still not
+wired — this doc previously claimed the reason was that bff's gRPC clients
+were TODO stubs; that's no longer true (they're real client connections, see
+`services/bff/cmd/bff/main.go`), but nothing propagates a request ID across a
+gRPC call regardless. `pkg/grpcx` (referenced below) doesn't exist yet — this
+is a real gap, not a stale doc describing finished work.
+**Last Updated:** 2026-09-15
 
 ---
 
 ## Current Implementation
 
-### HTTP Layer (BFF)
+### HTTP layer (bff)
 
-Request IDs are **already generated and logged** at the BFF edge:
+Request IDs are generated and logged at the bff edge:
 
-1. **Generation:** `pkg/httpx/middleware.go` — `httpx.RequestID` reads an inbound `X-Request-Id` or generates a UUID
-2. **Context injection:** `pkg/httpx/middleware.go`'s `RequestID` middleware attaches it via `logger.ContextWithRequestID`; `pkg/logger/logger.go`'s `Middleware` reads it back (falling back to a fresh UUID if that middleware isn't mounted)
-3. **Logging:** Every log line includes `request_id` field via `logger.With(ctx, base)`
-4. **Response header:** `httpx.RequestID` echoes it back as the `X-Request-Id` response header
+1. **Generation:** `pkg/httpx/middleware.go` — `httpx.RequestID` reads an
+   inbound `X-Request-Id` header or generates a UUID.
+2. **Context injection:** the same middleware attaches it via
+   `logger.ContextWithRequestID`; `pkg/logger/logger.go`'s `Middleware` reads
+   it back (falling back to a fresh UUID if that middleware isn't mounted).
+3. **Logging:** every log line includes a `request_id` field via
+   `logger.With(ctx, base)`.
+4. **Response header:** `httpx.RequestID` echoes it back as `X-Request-Id`.
 
-**What's covered:**
-- Every HTTP request to BFF gets a unique request ID
-- All BFF logs include `request_id`
-- Response includes `X-Request-ID` header for client correlation
-- Client can send `X-Request-ID` in request to preserve their own ID
+**What's covered:** every HTTP request to bff gets a unique request ID, every
+bff log line includes it, and the response carries it back for client-side
+correlation. A client can send its own `X-Request-ID` to have it preserved.
+
+**What's not covered:** once bff calls core-svc/search-svc/collab-svc/
+channel-svc/insight-svc over gRPC, the request ID is dropped. Each backend
+service's own logs get a fresh, unrelated ID (or none, depending on whether
+that service's own logging middleware generates one) — there is currently no
+way to grep one request's logs across service boundaries.
 
 ---
 
-## gRPC Propagation (Not Yet Wired)
+## gRPC Propagation — Not Yet Wired (real gap, verified against current code)
 
-The BFF's gRPC clients are currently TODO stubs (`services/bff/cmd/bff/main.go:46-57`). When wiring them, add this interceptor to propagate request IDs downstream:
+Verified directly: `pkg/grpcx` does not exist anywhere in the repo, no service
+attaches `x-request-id` (or any similar key) to outgoing gRPC metadata, and no
+service's gRPC server reads incoming metadata for a request ID. bff's clients
+(`services/bff/cmd/bff/main.go`) are plain `grpc.NewClient(...)` calls with no
+interceptor chain at all today.
 
-### Unary Interceptor
+If you build this, here's the shape that would fit the existing HTTP-layer
+pattern:
+
+### Unary interceptor
 
 ```go
-// pkg/grpcx/requestid.go
+// pkg/grpcx/requestid.go — proposed, does not exist yet
 package grpcx
 
 import (
@@ -39,7 +59,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	
+
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 )
 
@@ -78,86 +98,73 @@ func UnaryServerRequestID() grpc.UnaryServerInterceptor {
 }
 ```
 
-### Wiring at BFF Client
+### Wiring at bff's clients
 
 ```go
-// services/bff/cmd/bff/main.go (when wiring gRPC clients)
-import (
-	"google.golang.org/grpc"
-	"github.com/ZoroNewbie00/kalakriti/pkg/grpcx"
-)
-
-conn, err := grpc.NewClient(
-	coreSvcAddr,
-	grpc.WithUnaryInterceptor(grpcx.UnaryClientRequestID()),
+// services/bff/cmd/bff/main.go — where the grpc.NewClient(...) calls already are
+coreConn, err := grpc.NewClient(
+	getEnv("CORE_SVC_ADDR", "localhost:50051"),
+	grpc.WithTransportCredentials(insecure.NewCredentials()),
+	grpc.WithChainUnaryInterceptor(grpcx.UnaryClientRequestID()),
 )
 ```
 
-### Wiring at Service Server
+### Wiring at each service's gRPC server
+
+core-svc already chains interceptors for auth (`services/core-svc/internal/core/handler/identity.go`'s
+`PublicMethods()` + `auth.UnaryServerInterceptor`); add the request-ID
+interceptor to that same chain. search-svc/collab-svc/channel-svc/insight-svc
+currently register bare or recovery-only interceptor chains (see
+`docs/PORTS_AND_APIS.md` §3) — add it there too if you want request IDs to
+survive the hop.
 
 ```go
-// services/core-svc/cmd/core-svc/main.go
-import (
-	"google.golang.org/grpc"
-	"github.com/ZoroNewbie00/kalakriti/pkg/grpcx"
-)
-
 grpcServer := grpc.NewServer(
-	grpc.UnaryInterceptor(grpcx.UnaryServerRequestID()),
+	grpc.ChainUnaryInterceptor(
+		grpcx.UnaryServerRequestID(),
+		// existing interceptors (recovery, auth) go here too
+	),
 )
 ```
 
 ---
 
-## Flow
+## Flow, once wired
 
 ```
-1. Client → BFF
-   Request-ID: (generated or passed through)
-   
-2. BFF logs with request_id
-   {"level":"info","request_id":"abc123",...}
-   
-3. BFF → core-svc (gRPC)
-   metadata: x-request-id=abc123
-   
-4. core-svc logs with request_id
-   {"level":"info","request_id":"abc123",...}
-   
-5. core-svc → search-svc (gRPC)
-   metadata: x-request-id=abc123
-   
-6. search-svc logs with request_id
-   {"level":"info","request_id":"abc123",...}
+1. Client → bff            X-Request-Id: (generated or passed through)
+2. bff logs                {"request_id":"abc123",...}
+3. bff → core-svc (gRPC)   metadata: x-request-id=abc123
+4. core-svc logs           {"request_id":"abc123",...}
+5. core-svc → ml-svc/search-svc (gRPC)   metadata: x-request-id=abc123
+6. downstream service logs {"request_id":"abc123",...}
 ```
 
-Every log line across all services shares the same `request_id`, making distributed traces trivial to correlate.
+Every log line across all services would share the same `request_id`, making
+distributed traces trivial to grep for even without the Jaeger/OTLP tracing
+already running (`OTLP_ENDPOINT`, `jaeger:4317` — see `docs/PORTS_AND_APIS.md`
+§1). Trace IDs from OTLP spans already give you cross-service correlation if
+you're using Jaeger's UI at `:16686`; this doc is about being able to `grep`
+plain-text/JSON logs by request ID without needing a tracing backend.
 
 ---
 
-## Verification
-
-Once gRPC clients are wired:
+## Verification (once implemented)
 
 ```bash
-# Make a request
 curl -H "X-Request-ID: test-123" http://localhost:8000/api/v1/listings
-
-# Grep all service logs for that ID
 docker compose logs | grep test-123
-
-# Should see:
-# bff_1         | {"request_id":"test-123",...}
-# core-svc_1    | {"request_id":"test-123",...}
-# search-svc_1  | {"request_id":"test-123",...}
+# Expect to see it in bff's logs today; core-svc/search-svc's logs only once
+# the gRPC interceptors above are added.
 ```
 
 ---
 
 ## Summary
 
-**Done now:** HTTP request ID generation and logging at BFF edge  
-**When gRPC clients wired:** Add 2 interceptors (10 lines each) to propagate through the stack  
-**Cost:** ~20 lines of code, zero runtime overhead
-
-The hard part (generating IDs, context threading, log injection) is already done. gRPC propagation is mechanical once clients exist.
+**Done:** HTTP request-ID generation, context threading, and logging at the
+bff edge.
+**Not done:** `pkg/grpcx` doesn't exist; no gRPC client or server anywhere
+attaches/reads `x-request-id` metadata. This is real, actionable work — not a
+few lines away as "propagation is mechanical once clients exist" (the clients
+already exist; the interceptors don't).

@@ -11,7 +11,7 @@
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
@@ -124,7 +124,7 @@
     <p class="studio-subhead">{t('listing.studio.subheading')}</p>
 
     {#if photos.length > 1}
-      <div class="photo-selector" role="tablist" aria-label="Select photo to enhance">
+      <div class="photo-selector" role="tablist" aria-label={t('listing.studio.selectPhotoAria')}>
         {#each photos as photo, i (photo.id)}
           <button
             type="button"
@@ -157,12 +157,12 @@
         onclick={toggleLighting}
         aria-pressed={autoLighting}
       >
-        {autoLighting ? 'Active' : 'Off'}
+        {autoLighting ? t('listing.studio.toggleActive') : t('listing.studio.toggleOff')}
       </button>
     </div>
 
     <!-- View Mode Selector -->
-    <div class="view-mode-bar" role="tablist" aria-label="Comparison View Mode">
+    <div class="view-mode-bar" role="tablist" aria-label={t('listing.studio.comparisonModeAria')}>
       <button
         type="button"
         class="view-mode-btn"
@@ -171,7 +171,7 @@
         role="tab"
         aria-selected={viewMode === 'split'}
       >
-        Split Slider
+        {t('listing.studio.splitSlider')}
       </button>
       <button
         type="button"
@@ -181,7 +181,7 @@
         role="tab"
         aria-selected={viewMode === 'sideBySide'}
       >
-        Side-by-Side
+        {t('listing.studio.sideBySide')}
       </button>
     </div>
 
@@ -242,9 +242,9 @@
           <div class="side-card">
             <span class="side-card__label">{t('listing.studio.before')}</span>
             <div class="side-card__media">
-              <img src={activePhotoUrl} alt="Original workshop capture" />
+              <img src={activePhotoUrl} alt={t('listing.studio.originalAlt')} />
             </div>
-            <span class="side-card__caption">Raw Workshop Capture</span>
+            <span class="side-card__caption">{t('listing.studio.rawCaption')}</span>
           </div>
 
           <div class="side-card side-card--enhanced">
@@ -256,12 +256,12 @@
             >
               <img
                 src={activePhotoUrl}
-                alt="AI Studio Enhanced"
+                alt={t('listing.studio.enhancedAlt')}
                 class:split-viewer__img--enhanced={autoLighting}
                 class:split-viewer__img--isolated={backgroundMode !== 'natural'}
               />
             </div>
-            <span class="side-card__caption">Clean Studio + Light Balancer</span>
+            <span class="side-card__caption">{t('listing.studio.enhancedCaption')}</span>
           </div>
         </div>
       {/if}
@@ -282,7 +282,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--white"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgWhite')}</strong>
-            <small>E-Commerce Showroom</small>
+            <small>{t('listing.studio.bgWhiteDesc')}</small>
           </span>
           {#if backgroundMode === 'white'}
             <Icon name="check" class="bg-pill__check" />
@@ -300,7 +300,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--checker"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgTransparent')}</strong>
-            <small>Cutout for Banners</small>
+            <small>{t('listing.studio.bgTransparentDesc')}</small>
           </span>
           {#if backgroundMode === 'transparent'}
             <Icon name="check" class="bg-pill__check" />
@@ -318,7 +318,7 @@
           <span class="bg-pill__swatch bg-pill__swatch--natural"></span>
           <span class="bg-pill__text">
             <strong>{t('listing.studio.bgNatural')}</strong>
-            <small>Keep Loom Backdrop</small>
+            <small>{t('listing.studio.bgNaturalDesc')}</small>
           </span>
           {#if backgroundMode === 'natural'}
             <Icon name="check" class="bg-pill__check" />
@@ -329,7 +329,7 @@
   {/snippet}
 
   {#snippet actions()}
-    <Button size="xl" onclick={next} loading={saving} disabled={locked}>{t('listing.studio.apply')}</Button>
+    <Button size="xl" onclick={next} loading={saving} disabled={locked} tooltip={tooltip('tooltip.next')}>{t('listing.studio.apply')}</Button>
   {/snippet}
 </ListingStep>
 
@@ -376,7 +376,7 @@
     inset-block-end: 2px;
     inset-inline-end: 2px;
     background: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     padding-inline: 4px;
     border-radius: var(--k-radius-xs);
@@ -399,8 +399,8 @@
     inline-size: 2.2rem;
     block-size: 2.2rem;
     border-radius: var(--k-radius-pill);
-    background: #d97706;
-    color: #ffffff;
+    background: var(--k-haldi-700);
+    color: var(--k-text-on-accent);
     flex-shrink: 0;
   }
 
@@ -434,16 +434,16 @@
   }
 
   .lighting-toggle-btn--active {
-    background: #d97706;
-    color: #ffffff;
-    border-color: #d97706;
+    background: var(--k-haldi-700);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-border-warning);
   }
 
   .view-mode-bar {
     display: flex;
     justify-content: center;
     gap: var(--k-space-1);
-    background: var(--k-surface-raised, #f1f5f9);
+    background: var(--k-surface-raised, var(--k-surface-base));
     padding: 3px;
     border-radius: var(--k-radius-pill, 999px);
     inline-size: fit-content;
@@ -463,7 +463,7 @@
   }
 
   .view-mode-btn--active {
-    background: var(--k-surface-base, #ffffff);
+    background: var(--k-surface-base, var(--k-surface-base));
     color: var(--k-text-primary);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   }
@@ -482,7 +482,7 @@
     border-radius: var(--k-radius-lg);
     overflow: hidden;
     border: var(--k-hairline) solid var(--k-border-hairline);
-    background: #000;
+    background: var(--k-surface-inverse);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   }
 
@@ -494,16 +494,16 @@
   }
 
   .split-viewer__enhanced--white {
-    background: #ffffff;
+    background: var(--k-surface-base);
   }
 
   .split-viewer__enhanced--transparent {
-    background-color: #f3f4f6;
+    background-color: var(--k-surface-base);
     background-image:
-      linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-      linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
-      linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+      linear-gradient(45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--k-surface-neutral) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--k-surface-neutral) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
@@ -541,20 +541,20 @@
   .view-tag--before {
     inset-inline-start: var(--k-space-2);
     background: rgba(15, 23, 42, 0.85);
-    color: #f8fafc;
+    color: var(--k-text-on-accent);
   }
 
   .view-tag--after {
     inset-inline-end: var(--k-space-2);
-    background: #d97706;
-    color: #ffffff;
+    background: var(--k-haldi-700);
+    color: var(--k-text-on-accent);
   }
 
   .split-divider {
     position: absolute;
     inset-block: 0;
     inline-size: 2px;
-    background: #ffffff;
+    background: var(--k-surface-base);
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
     pointer-events: none;
     transform: translateX(-50%);
@@ -568,8 +568,8 @@
     inline-size: 2rem;
     block-size: 2rem;
     border-radius: var(--k-radius-pill);
-    background: #ffffff;
-    color: #1f2937;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -616,7 +616,7 @@
   }
 
   .side-card--enhanced {
-    border-color: #d97706;
+    border-color: var(--k-border-warning);
   }
 
   .side-card__label {
@@ -627,27 +627,27 @@
   }
 
   .side-card__label--gold {
-    color: #d97706;
+    color: var(--k-haldi-700);
   }
 
   .side-card__media {
     aspect-ratio: 1;
     border-radius: var(--k-radius-sm);
     overflow: hidden;
-    background: #000;
+    background: var(--k-surface-inverse);
   }
 
   .side-card__media--white {
-    background: #ffffff;
+    background: var(--k-surface-base);
   }
 
   .side-card__media--transparent {
-    background-color: #f3f4f6;
+    background-color: var(--k-surface-base);
     background-image:
-      linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
-      linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
-      linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+      linear-gradient(45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--k-surface-neutral) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--k-surface-neutral) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--k-surface-neutral) 75%);
     background-size: 12px 12px;
   }
 
@@ -695,7 +695,7 @@
   }
 
   .bg-pill--active {
-    border-color: #d97706;
+    border-color: var(--k-border-warning);
     background: rgba(217, 119, 6, 0.05);
   }
 
@@ -708,22 +708,22 @@
   }
 
   .bg-pill__swatch--white {
-    background: #ffffff;
-    box-shadow: inset 0 0 0 1px #e5e7eb;
+    background: var(--k-surface-base);
+    box-shadow: inset 0 0 0 1px var(--k-border-on-inverse);
   }
 
   .bg-pill__swatch--checker {
-    background-color: #f3f4f6;
+    background-color: var(--k-surface-base);
     background-image:
-      linear-gradient(45deg, #9ca3af 25%, transparent 25%),
-      linear-gradient(-45deg, #9ca3af 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #9ca3af 75%),
-      linear-gradient(-45deg, transparent 75%, #9ca3af 75%);
+      linear-gradient(45deg, var(--k-stone-300) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--k-stone-300) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--k-stone-300) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--k-stone-300) 75%);
     background-size: 8px 8px;
   }
 
   .bg-pill__swatch--natural {
-    background: linear-gradient(135deg, #78350f, #92400e);
+    background: linear-gradient(135deg, var(--k-accent-primary-bg), var(--k-accent-primary-bg));
   }
 
   .bg-pill__text {
@@ -743,7 +743,7 @@
   }
 
   .bg-pill :global(.bg-pill__check) {
-    color: #d97706;
+    color: var(--k-haldi-700);
     inline-size: 1.25rem;
     block-size: 1.25rem;
   }

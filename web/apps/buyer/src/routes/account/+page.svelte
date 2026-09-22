@@ -15,9 +15,9 @@
   Strictly adheres to Svelte 5 runes ($state, $derived) and GIGW 3.0 accessibility.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -26,7 +26,7 @@
 
   const breadcrumbs = $derived<BreadcrumbItem[]>([
     { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Your Account' },
+    { label: t('account.breadcrumb') },
   ]);
 
   // Active section tab: 'personal' | 'addresses' | 'security' | 'orders' | 'consultations'
@@ -116,21 +116,21 @@
 
   function handleSaveProfile(e: Event): void {
     e.preventDefault();
-    showToast({ message: 'Personal details updated successfully', variant: 'success' });
+    showToast({ message: t('account.page.toast.profileSaved'), variant: 'success' });
   }
 
   function handleRequestPhoneOtp(): void {
     if (!newPhone.trim()) {
-      showToast({ message: 'Please enter a valid 10-digit mobile number', variant: 'error' });
+      showToast({ message: t('account.page.toast.invalidPhone'), variant: 'error' });
       return;
     }
     phoneOtpSent = true;
-    showToast({ message: `Verification code sent to ${newPhone}`, variant: 'info' });
+    showToast({ message: t('account.page.toast.otpSent', { phone: newPhone }), variant: 'info' });
   }
 
   function handleVerifyPhone(): void {
     if (!phoneOtp.trim()) {
-      showToast({ message: 'Please enter the 6-digit OTP', variant: 'error' });
+      showToast({ message: t('account.page.toast.invalidOtp'), variant: 'error' });
       return;
     }
     isVerifyingPhone = true;
@@ -141,20 +141,20 @@
       phoneOtpSent = false;
       newPhone = '';
       phoneOtp = '';
-      showToast({ message: 'Mobile number updated and verified!', variant: 'success' });
+      showToast({ message: t('account.page.toast.phoneUpdated'), variant: 'success' });
     }, 600);
   }
 
   function handleAddAddress(e: Event): void {
     e.preventDefault();
     if (!newAddressLine.trim() || !newAddressCity.trim() || !newAddressPin.trim()) {
-      showToast({ message: 'Please fill in all mandatory address fields', variant: 'error' });
+      showToast({ message: t('account.page.toast.addressFieldsRequired'), variant: 'error' });
       return;
     }
 
     const newAddr = {
       id: `addr-${Date.now()}`,
-      type: newAddressGstin ? 'Institutional' : 'Home',
+      type: newAddressGstin ? t('account.page.addresses.typeInstitutional') : t('account.page.addresses.typeHome'),
       isDefault: newAddressIsDefault,
       name: newAddressFullName || fullName,
       lines: newAddressLine,
@@ -177,7 +177,7 @@
     newAddressPin = '';
     newAddressGstin = '';
     newAddressIsDefault = false;
-    showToast({ message: 'Address saved to your address book', variant: 'success' });
+    showToast({ message: t('account.page.toast.addressSaved'), variant: 'success' });
   }
 
   function handleSetDefaultAddress(id: string): void {
@@ -185,31 +185,31 @@
       ...a,
       isDefault: a.id === id,
     }));
-    showToast({ message: 'Default shipping address updated', variant: 'success' });
+    showToast({ message: t('account.page.toast.defaultAddressUpdated'), variant: 'success' });
   }
 
   function handleDeleteAddress(id: string): void {
     savedAddresses = savedAddresses.filter((a) => a.id !== id);
-    showToast({ message: 'Address removed from address book', variant: 'info' });
+    showToast({ message: t('account.page.toast.addressRemoved'), variant: 'info' });
   }
 
   function handleRevokeOtherSessions(): void {
     activeSessions = activeSessions.filter((s) => s.isCurrent);
-    showToast({ message: 'All other device sessions have been revoked.', variant: 'success' });
+    showToast({ message: t('account.page.toast.sessionsRevoked'), variant: 'success' });
   }
 
   function handleSignOut(): void {
     setAccessToken(undefined);
     setRefreshToken(undefined);
     session.clear();
-    showToast({ message: 'Signed out of your account', variant: 'info' });
+    showToast({ message: t('account.page.toast.signedOut'), variant: 'info' });
     void goto('/');
   }
 </script>
 
 <svelte:head>
-  <title>Your Account & Details - Kalakriti</title>
-  <meta name="description" content="Manage your Kalakriti buyer profile, orders, delivery addresses, login & security settings, and craft provenance passports." />
+  <title>{t('account.page.title')}</title>
+  <meta name="description" content={t('account.page.metaDescription')} />
 </svelte:head>
 
 <div class="account-page">
@@ -220,16 +220,20 @@
     <section class="profile-banner">
       <div class="profile-avatar-wrap">
         <div class="profile-avatar">AS</div>
-        <button type="button" class="avatar-edit-btn" title="Change profile picture" aria-label="Change photo">
-          <Icon name="camera" size="0.85rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.addPhoto')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="avatar-edit-btn" aria-label={t('account.changePhotoLabel')} {...tp}>
+              <Icon name="camera" size="0.85rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="profile-meta">
         <div class="name-badge-row">
           <h1 class="profile-name">{fullName}</h1>
-          <span class="patron-tier-pill">Verified Craft Patron</span>
-          <span class="member-since-pill">Patron since 2024</span>
+          <span class="patron-tier-pill">{t('account.patronTier')}</span>
+          <span class="member-since-pill">{t('account.memberSince')}</span>
         </div>
 
         <div class="profile-contact-strip">
@@ -241,7 +245,11 @@
           <span class="contact-item">
             <Icon name="phone" size="0.9rem" />
             {phone}
-            <span class="verified-dot" title="Mobile number OTP verified">✓ Verified</span>
+            <Tooltip text={t('account.phoneVerifiedTitle')}>
+              {#snippet trigger(tp)}
+                <span class="verified-dot" {...tp}>{t('account.phoneVerifiedBadge')}</span>
+              {/snippet}
+            </Tooltip>
           </span>
         </div>
       </div>
@@ -249,28 +257,32 @@
       <div class="profile-telemetry">
         <div class="telemetry-card">
           <span class="telemetry-value">4</span>
-          <span class="telemetry-label">Total Orders</span>
+          <span class="telemetry-label">{t('account.telemetry.orders')}</span>
         </div>
         <div class="telemetry-card">
           <span class="telemetry-value">6</span>
-          <span class="telemetry-label">GI Passports</span>
+          <span class="telemetry-label">{t('account.telemetry.giPassports')}</span>
         </div>
         <div class="telemetry-card">
           <span class="telemetry-value">1</span>
-          <span class="telemetry-label">Loom Commission</span>
+          <span class="telemetry-label">{t('account.telemetry.loomCommission')}</span>
         </div>
       </div>
 
       <div class="profile-actions-col">
-        <button type="button" class="banner-signout-btn" onclick={handleSignOut} title="Sign Out of Kalakriti">
-          <Icon name="lock" size="0.85rem" />
-          <span>Sign Out</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.signout')}>
+        {#snippet trigger(tp)}
+          <button type="button" class="banner-signout-btn" onclick={handleSignOut} {...tp}>
+            <Icon name="lock" size="0.85rem" />
+            <span>{t('account.signOut')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
       </div>
     </section>
 
     <!-- Amazon's Signature 6-Card Navigation Hub -->
-    <section class="amazon-hub-section" aria-label="Your Account Shortcuts">
+    <section class="amazon-hub-section" aria-label={t('account.shortcutsAriaLabel')}>
       <div class="hub-grid">
         <!-- Card 1: Your Orders -->
         <a href="/orders" class="hub-card">
@@ -278,40 +290,50 @@
             <Icon name="collective-order" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Your Orders</h2>
-            <p class="card-desc">Track packages, download GST invoices, return or buy again</p>
+            <h2 class="card-title">{t('account.hub.orders.title')}</h2>
+            <p class="card-desc">{t('account.hub.orders.desc')}</p>
           </div>
         </a>
 
         <!-- Card 2: Login & Security -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <div class="card-icon-box">
-            <Icon name="lock" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Login & Security</h2>
-            <p class="card-desc">Edit name, mobile number, password, 2FA, and active sessions</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'security' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'security')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="lock" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.security.title')}</h2>
+              <p class="card-desc">{t('account.hub.security.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 3: Your Addresses -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <div class="card-icon-box">
-            <Icon name="location" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Your Addresses</h2>
-            <p class="card-desc">Edit addresses and institutional GSTIN delivery preferences</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'addresses' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'addresses')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="location" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.addresses.title')}</h2>
+              <p class="card-desc">{t('account.hub.addresses.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 4: Craft Provenance Passports -->
         <a href="/verify" class="hub-card">
@@ -319,25 +341,30 @@
             <Icon name="provenance" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Craft Provenance</h2>
-            <p class="card-desc">Ed25519 digital certificates of authenticity for your pieces</p>
+            <h2 class="card-title">{t('account.hub.provenance.title')}</h2>
+            <p class="card-desc">{t('account.hub.provenance.desc')}</p>
           </div>
         </a>
 
         <!-- Card 5: Loom Consultations -->
-        <button
-          type="button"
-          class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <div class="card-icon-box">
-            <Icon name="video" size="1.75rem" />
-          </div>
-          <div class="card-content">
-            <h2 class="card-title">Loom Consultations</h2>
-            <p class="card-desc">Scheduled 1-on-1 video calls with master weavers & inquiries</p>
-          </div>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="hub-card {activeTab === 'consultations' ? 'card-active' : ''}"
+            onclick={() => (activeTab = 'consultations')}
+            {...tp}
+          >
+            <div class="card-icon-box">
+              <Icon name="video" size="1.75rem" />
+            </div>
+            <div class="card-content">
+              <h2 class="card-title">{t('account.hub.consultations.title')}</h2>
+              <p class="card-desc">{t('account.hub.consultations.desc')}</p>
+            </div>
+          </button>
+        {/snippet}
+      </Tooltip>
 
         <!-- Card 6: Bulk Procurement -->
         <a href="/bulk-order" class="hub-card">
@@ -345,8 +372,8 @@
             <Icon name="cluster" size="1.75rem" />
           </div>
           <div class="card-content">
-            <h2 class="card-title">Bulk Procurement</h2>
-            <p class="card-desc">Manage institutional RFQs, tender allocations, and guild bids</p>
+            <h2 class="card-title">{t('account.hub.procurement.title')}</h2>
+            <p class="card-desc">{t('account.hub.procurement.desc')}</p>
           </div>
         </a>
       </div>
@@ -355,47 +382,72 @@
     <!-- Sub-Panels Tabbed Details Section -->
     <div class="account-details-container">
       <!-- Section Navigation Pills -->
-      <nav class="details-nav-pills" aria-label="Account Settings Tabs">
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'personal')}
-        >
-          <Icon name="user" size="0.95rem" />
-          Personal Details
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'addresses')}
-        >
-          <Icon name="location" size="0.95rem" />
-          Saved Addresses ({savedAddresses.length})
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'security')}
-        >
-          <Icon name="lock" size="0.95rem" />
-          Login & Security
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'orders')}
-        >
-          <Icon name="collective-order" size="0.95rem" />
-          Recent Orders (2)
-        </button>
-        <button
-          type="button"
-          class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
-          onclick={() => (activeTab = 'consultations')}
-        >
-          <Icon name="video" size="0.95rem" />
-          Loom Video Calls (1)
-        </button>
+      <nav class="details-nav-pills" aria-label={t('account.page.tabsAriaLabel')}>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'personal' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'personal')}
+              {...tp}
+            >
+              <Icon name="user" size="0.95rem" />
+              {t('account.page.tab.personal')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'addresses' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'addresses')}
+              {...tp}
+            >
+              <Icon name="location" size="0.95rem" />
+              {t('account.page.tab.addresses', { count: String(savedAddresses.length) })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'security' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'security')}
+              {...tp}
+            >
+              <Icon name="lock" size="0.95rem" />
+              {t('account.page.tab.security')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'orders' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'orders')}
+              {...tp}
+            >
+              <Icon name="collective-order" size="0.95rem" />
+              {t('account.page.tab.orders', { count: '2' })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectTab')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="pill-btn {activeTab === 'consultations' ? 'is-active' : ''}"
+              onclick={() => (activeTab = 'consultations')}
+              {...tp}
+            >
+              <Icon name="video" size="0.95rem" />
+              {t('account.page.tab.consultations', { count: '1' })}
+            </button>
+          {/snippet}
+        </Tooltip>
       </nav>
 
       <!-- Panel 1: Personal Details & Contact -->
@@ -403,15 +455,15 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Personal Information</h2>
-              <p class="panel-desc">Manage your identity, communications, and verified credentials</p>
+              <h2 class="panel-title">{t('account.page.personal.title')}</h2>
+              <p class="panel-desc">{t('account.page.personal.desc')}</p>
             </div>
           </div>
 
           <form class="details-form" onsubmit={handleSaveProfile}>
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-fullname" class="form-label">Full Legal Name</label>
+                <label for="prof-fullname" class="form-label">{t('account.page.personal.fullNameLabel')}</label>
                 <input
                   id="prof-fullname"
                   type="text"
@@ -422,7 +474,7 @@
               </div>
 
               <div class="form-field">
-                <label for="prof-dispname" class="form-label">Display Name / Preferred Name</label>
+                <label for="prof-dispname" class="form-label">{t('account.page.personal.displayNameLabel')}</label>
                 <input
                   id="prof-dispname"
                   type="text"
@@ -434,7 +486,7 @@
 
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-email" class="form-label">Primary Email Address</label>
+                <label for="prof-email" class="form-label">{t('account.page.personal.emailLabel')}</label>
                 <input
                   id="prof-email"
                   type="email"
@@ -442,11 +494,11 @@
                   bind:value={email}
                   required
                 />
-                <span class="field-tip">Used for order receipts and cryptographic provenance certificates</span>
+                <span class="field-tip">{t('account.page.personal.emailTip')}</span>
               </div>
 
               <div class="form-field">
-                <label for="prof-phone" class="form-label">Mobile Phone Number</label>
+                <label for="prof-phone" class="form-label">{t('account.page.personal.phoneLabel')}</label>
                 <div class="input-with-action">
                   <input
                     id="prof-phone"
@@ -455,21 +507,26 @@
                     value={phone}
                     readonly
                   />
-                  <button
-                    type="button"
-                    class="action-inline-btn"
-                    onclick={() => (isPhoneModalOpen = true)}
-                  >
-                    Change via OTP
-                  </button>
+                  <Tooltip text={tooltip('tooltip.changePhone')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="action-inline-btn"
+                        onclick={() => (isPhoneModalOpen = true)}
+                        {...tp}
+                      >
+                        {t('account.page.personal.changeViaOtp')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
-                <span class="field-tip">Verified with 2-Factor Authentication</span>
+                <span class="field-tip">{t('account.page.personal.phoneTip')}</span>
               </div>
             </div>
 
             <div class="form-grid-2">
               <div class="form-field">
-                <label for="prof-lang" class="form-label">Preferred Platform Language</label>
+                <label for="prof-lang" class="form-label">{t('account.page.personal.languageLabel')}</label>
                 <select id="prof-lang" class="form-input" bind:value={preferredLanguage}>
                   <option value="en">English (India)</option>
                   <option value="hi">हिन्दी (Hindi)</option>
@@ -481,24 +538,28 @@
               </div>
 
               <div class="form-field">
-                <span class="form-label">Notification Channels</span>
+                <span class="form-label">{t('account.page.personal.notificationChannels')}</span>
                 <div class="toggle-row">
                   <label class="checkbox-label">
                     <input type="checkbox" bind:checked={emailAlerts} />
-                    <span>Email Order & Invoice Updates</span>
+                    <span>{t('account.page.personal.emailAlertsLabel')}</span>
                   </label>
                   <label class="checkbox-label">
                     <input type="checkbox" bind:checked={whatsappAlerts} />
-                    <span>WhatsApp Loom Dispatch Alerts</span>
+                    <span>{t('account.page.personal.whatsappAlertsLabel')}</span>
                   </label>
                 </div>
               </div>
             </div>
 
             <div class="form-submit-row">
-              <button type="submit" class="primary-save-btn">
-                Save Profile Changes
-              </button>
+              <Tooltip text={tooltip('tooltip.save')}>
+              {#snippet trigger(tp)}
+                <button type="submit" class="primary-save-btn" {...tp}>
+                  {t('account.page.personal.saveButton')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </form>
         </div>
@@ -508,17 +569,22 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Your Delivery Addresses</h2>
-              <p class="panel-desc">Manage shipping destinations and corporate institutional addresses</p>
+              <h2 class="panel-title">{t('account.page.addresses.title')}</h2>
+              <p class="panel-desc">{t('account.page.addresses.desc')}</p>
             </div>
-            <button
-              type="button"
-              class="add-addr-btn"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <Icon name="plus" size="0.95rem" />
-              Add a New Address
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="add-addr-btn"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <Icon name="plus" size="0.95rem" />
+                {t('account.page.addresses.addButton')}
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
 
           <div class="addresses-grid">
@@ -527,7 +593,7 @@
                 <div class="addr-header-row">
                   <span class="addr-type-tag">{addr.type}</span>
                   {#if addr.isDefault}
-                    <span class="default-badge">Default Delivery Address</span>
+                    <span class="default-badge">{t('account.page.addresses.defaultBadge')}</span>
                   {/if}
                 </div>
 
@@ -535,47 +601,62 @@
                 <p class="addr-text">
                   {addr.lines}<br />
                   {addr.city}, {addr.state} - <strong>{addr.pin}</strong><br />
-                  India
+                  {t('account.page.addresses.country')}
                 </p>
-                <p class="addr-phone">Phone: {addr.phone}</p>
+                <p class="addr-phone">{t('account.page.addresses.phoneLabel', { phone: addr.phone })}</p>
                 {#if addr.gstin}
-                  <p class="addr-gstin">GSTIN: <code>{addr.gstin}</code></p>
+                  <p class="addr-gstin">{t('account.page.addresses.gstinLabel')} <code>{addr.gstin}</code></p>
                 {/if}
 
                 <div class="addr-actions">
                   {#if !addr.isDefault}
-                    <button
-                      type="button"
-                      class="addr-text-btn"
-                      onclick={() => handleSetDefaultAddress(addr.id)}
-                    >
-                      Set as Default
-                    </button>
+                    <Tooltip text={tooltip('tooltip.setDefault')}>
+                      {#snippet trigger(tp)}
+                        <button
+                          type="button"
+                          class="addr-text-btn"
+                          onclick={() => handleSetDefaultAddress(addr.id)}
+                          {...tp}
+                        >
+                          {t('account.page.addresses.setDefault')}
+                        </button>
+                      {/snippet}
+                    </Tooltip>
                     <span class="btn-divider">|</span>
                   {/if}
-                  <button
-                    type="button"
-                    class="addr-text-btn remove-btn"
-                    onclick={() => handleDeleteAddress(addr.id)}
-                  >
-                    Remove
-                  </button>
+                  <Tooltip text={tooltip('tooltip.removeAddress')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="addr-text-btn remove-btn"
+                        onclick={() => handleDeleteAddress(addr.id)}
+                        {...tp}
+                      >
+                        {t('action.remove')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
                 </div>
               </div>
             {/each}
 
             <!-- Add Address Card Placeholder -->
-            <button
-              type="button"
-              class="new-address-placeholder-card"
-              onclick={() => (isAddAddressOpen = true)}
-            >
-              <div class="plus-circle">
-                <Icon name="plus" size="1.5rem" />
-              </div>
-              <strong>Add Delivery Address</strong>
-              <small>Home, atelier, or corporate ministry office</small>
-            </button>
+            <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="new-address-placeholder-card"
+                onclick={() => (isAddAddressOpen = true)}
+                {...tp}
+              >
+                <div class="plus-circle">
+                  <Icon name="plus" size="1.5rem" />
+                </div>
+                <strong>{t('account.page.addresses.placeholderTitle')}</strong>
+                <small>{t('account.page.addresses.placeholderSub')}</small>
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
@@ -584,8 +665,8 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Login & Security Settings</h2>
-              <p class="panel-desc">Manage your password, 2-factor authentication, active devices, and DPDP consent</p>
+              <h2 class="panel-title">{t('account.page.security.title')}</h2>
+              <p class="panel-desc">{t('account.page.security.desc')}</p>
             </div>
           </div>
 
@@ -593,63 +674,82 @@
             <!-- Row 1: Name & Email -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Name</strong>
+                <strong>{t('account.page.security.nameLabel')}</strong>
                 <span>{fullName}</span>
               </div>
-              <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')}>
-                Edit
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button type="button" class="sec-edit-btn" onclick={() => (activeTab = 'personal')} {...tp}>
+                    {t('account.page.security.editButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 2: Mobile Phone Number -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Mobile Phone Number</strong>
-                <span>{phone} (Verified)</span>
+                <strong>{t('account.page.personal.phoneLabel')}</strong>
+                <span>{t('account.page.security.phoneVerifiedSuffix', { phone })}</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => (isPhoneModalOpen = true)}
-              >
-                Change
-              </button>
+              <Tooltip text={tooltip('tooltip.changePhone')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => (isPhoneModalOpen = true)}
+                    {...tp}
+                  >
+                    {t('account.page.security.changeButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 3: Password -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Password</strong>
-                <span>•••••••••••• (Last changed 14 days ago)</span>
+                <strong>{t('account.page.security.passwordLabel')}</strong>
+                <span>{t('account.page.security.passwordValue')}</span>
               </div>
-              <button
-                type="button"
-                class="sec-edit-btn"
-                onclick={() => showToast({ message: 'Password reset link sent to your verified email', variant: 'info' })}
-              >
-                Change
-              </button>
+              <Tooltip text={tooltip('tooltip.edit')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-edit-btn"
+                    onclick={() => showToast({ message: t('account.page.toast.passwordResetSent'), variant: 'info' })}
+                    {...tp}
+                  >
+                    {t('account.page.security.changeButton')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
 
             <!-- Row 4: Two-Factor Authentication -->
             <div class="security-row">
               <div class="sec-meta">
-                <strong>Two-Factor Authentication (2FA)</strong>
-                <span>Receive a one-time passcode on your phone upon login</span>
+                <strong>{t('account.page.security.twoFaLabel')}</strong>
+                <span>{t('account.page.security.twoFaDesc')}</span>
               </div>
-              <button
-                type="button"
-                class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
-                onclick={() => {
-                  twoFactorEnabled = !twoFactorEnabled;
-                  showToast({
-                    message: twoFactorEnabled ? '2FA enabled' : '2FA disabled',
-                    variant: 'info',
-                  });
-                }}
-              >
-                {twoFactorEnabled ? 'Enabled' : 'Disabled'}
-              </button>
+              <Tooltip text={tooltip('tooltip.toggle2fa')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="sec-toggle-btn {twoFactorEnabled ? 'is-enabled' : ''}"
+                    onclick={() => {
+                      twoFactorEnabled = !twoFactorEnabled;
+                      showToast({
+                        message: twoFactorEnabled ? t('account.page.toast.twoFaEnabled') : t('account.page.toast.twoFaDisabled'),
+                        variant: 'info',
+                      });
+                    }}
+                    {...tp}
+                  >
+                    {twoFactorEnabled ? t('account.page.security.enabled') : t('account.page.security.disabled')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
 
@@ -657,17 +757,22 @@
           <div class="active-sessions-block">
             <div class="sessions-header">
               <div>
-                <h3 class="block-title">Active Devices & Sessions</h3>
-                <p class="block-sub">Signed-in web browsers and mobile PWAs connected to your account</p>
+                <h3 class="block-title">{t('account.page.security.sessionsHeading')}</h3>
+                <p class="block-sub">{t('account.page.security.sessionsDesc')}</p>
               </div>
-              <button
-                type="button"
-                class="revoke-all-btn"
-                onclick={handleRevokeOtherSessions}
-              >
-                <Icon name="lock" size="0.85rem" />
-                Sign Out of All Other Devices
-              </button>
+              <Tooltip text={tooltip('tooltip.revokeSessions')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="revoke-all-btn"
+                  onclick={handleRevokeOtherSessions}
+                  {...tp}
+                >
+                  <Icon name="lock" size="0.85rem" />
+                  {t('account.page.security.revokeAll')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
 
             <div class="sessions-list">
@@ -680,10 +785,10 @@
                     <div class="sess-title-row">
                       <strong>{sess.device}</strong>
                       {#if sess.isCurrent}
-                        <span class="current-badge">This Device</span>
+                        <span class="current-badge">{t('account.page.security.thisDevice')}</span>
                       {/if}
                     </div>
-                    <span class="sess-loc">{sess.location} • IP: {sess.ip}</span>
+                    <span class="sess-loc">{t('account.page.security.sessionLocationLine', { location: sess.location, ip: sess.ip })}</span>
                     <span class="sess-time">{sess.lastActive}</span>
                   </div>
                 </div>
@@ -693,24 +798,34 @@
 
           <!-- DPDP Act 2023 Data Controls -->
           <div class="dpdp-privacy-block">
-            <h3 class="block-title">DPDP Act 2023 Data Sovereignty</h3>
-            <p class="block-sub">Under India's Digital Personal Data Protection Act 2023, you retain absolute ownership over your account data.</p>
+            <h3 class="block-title">{t('account.page.security.dpdpHeading')}</h3>
+            <p class="block-sub">{t('account.page.security.dpdpDesc')}</p>
             <div class="dpdp-actions">
-              <button
-                type="button"
-                class="dpdp-btn"
-                onclick={() => showToast({ message: 'Personal data archive download started (JSON)', variant: 'success' })}
-              >
-                <Icon name="download" size="0.9rem" />
-                Download Personal Data Archive
-              </button>
-              <button
-                type="button"
-                class="dpdp-btn danger"
-                onclick={() => showToast({ message: 'Consent withdrawal request logged. An officer will confirm via SMS.', variant: 'info' })}
-              >
-                Manage Privacy Consent
-              </button>
+              <Tooltip text={tooltip('tooltip.exportData')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn"
+                    onclick={() => showToast({ message: t('account.page.toast.dataArchiveStarted'), variant: 'success' })}
+                    {...tp}
+                  >
+                    <Icon name="download" size="0.9rem" />
+                    {t('account.page.security.downloadArchive')}
+                  </button>
+                {/snippet}
+              </Tooltip>
+              <Tooltip text={tooltip('tooltip.withdrawConsent')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="dpdp-btn danger"
+                    onclick={() => showToast({ message: t('account.page.toast.consentWithdrawalLogged'), variant: 'info' })}
+                    {...tp}
+                  >
+                    {t('account.page.security.manageConsent')}
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -720,11 +835,11 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Your Recent Heritage Acquisitions</h2>
-              <p class="panel-desc">Directly fulfilling master artisans across 74 national craft belts</p>
+              <h2 class="panel-title">{t('account.page.orders.title')}</h2>
+              <p class="panel-desc">{t('account.page.orders.desc')}</p>
             </div>
             <a href="/orders" class="view-all-orders-btn">
-              View All Orders
+              {t('account.page.orders.viewAll')}
               <Icon name="arrow-right" size="0.85rem" />
             </a>
           </div>
@@ -751,31 +866,36 @@
                 />
                 <div class="rail-prod-info">
                   <h3 class="rail-prod-title">Dhamadka Natural Indigo Block-Printed Silk Saree</h3>
-                  <p class="rail-artisan">Crafted by: <strong>Master Artisan Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
+                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Master Artisan Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
                   <span class="rail-gi-tag">Certified GI Registered Craft (GI-184)</span>
 
                   <!-- 4-Stage Loom Progress Bar -->
                   <div class="rail-progress-track">
-                    <div class="track-step step-done"><span>Ordered</span></div>
-                    <div class="track-step step-done"><span>Loom Woven</span></div>
-                    <div class="track-step step-done"><span>GI Sealed</span></div>
-                    <div class="track-step step-active"><span>En Route</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.ordered')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.loomWoven')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.giSealed')}</span></div>
+                    <div class="track-step step-active"><span>{t('account.page.orders.step.enRoute')}</span></div>
                   </div>
                 </div>
               </div>
 
               <div class="rail-card-foot">
-                <a href="/orders/ord-1" class="rail-action-link">Track Package</a>
+                <a href="/orders/ord-1" class="rail-action-link">{t('account.page.orders.trackPackage')}</a>
                 <span class="dot-sep">•</span>
-                <a href="/verify" class="rail-action-link">View Cryptographic Seal</a>
+                <a href="/verify" class="rail-action-link">{t('account.page.orders.viewSeal')}</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
-                >
-                  Download Tax Invoice
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
+                        {...tp}
+                      >
+                        {t('account.page.orders.downloadInvoice')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
 
@@ -800,30 +920,35 @@
                 />
                 <div class="rail-prod-info">
                   <h3 class="rail-prod-title">Bastar Hand-Cast Lost-Wax Bell Metal Dhokra Nandi</h3>
-                  <p class="rail-artisan">Crafted by: <strong>Sukchand Ghadwa</strong> • Bastar Tribal Collective, Chhattisgarh</p>
+                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Sukchand Ghadwa</strong> • Bastar Tribal Collective, Chhattisgarh</p>
                   <span class="rail-gi-tag">Certified GI Registered Craft (GI-83)</span>
 
                   <div class="rail-progress-track">
-                    <div class="track-step step-done"><span>Ordered</span></div>
-                    <div class="track-step step-done"><span>Cast in Wax</span></div>
-                    <div class="track-step step-done"><span>GI Sealed</span></div>
-                    <div class="track-step step-done"><span>Delivered</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.ordered')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.castInWax')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.giSealed')}</span></div>
+                    <div class="track-step step-done"><span>{t('account.page.orders.step.delivered')}</span></div>
                   </div>
                 </div>
               </div>
 
               <div class="rail-card-foot">
-                <a href="/orders/ord-2" class="rail-action-link">Order Details</a>
+                <a href="/orders/ord-2" class="rail-action-link">{t('account.page.orders.orderDetails')}</a>
                 <span class="dot-sep">•</span>
-                <a href="/verify" class="rail-action-link">Ed25519 Provenance Certificate</a>
+                <a href="/verify" class="rail-action-link">{t('account.page.orders.provenanceCertificate')}</a>
                 <span class="dot-sep">•</span>
-                <button
-                  type="button"
-                  class="rail-invoice-btn"
-                  onclick={() => showToast({ message: 'GST Tax Invoice downloaded', variant: 'success' })}
-                >
-                  Download Tax Invoice
-                </button>
+                <Tooltip text={tooltip('tooltip.downloadInvoice')}>
+                    {#snippet trigger(tp)}
+                      <button
+                        type="button"
+                        class="rail-invoice-btn"
+                        onclick={() => showToast({ message: t('account.page.toast.invoiceDownloaded'), variant: 'success' })}
+                        {...tp}
+                      >
+                        {t('account.page.orders.downloadInvoice')}
+                      </button>
+                    {/snippet}
+                  </Tooltip>
               </div>
             </div>
           </div>
@@ -834,8 +959,8 @@
         <div class="detail-panel">
           <div class="panel-header">
             <div>
-              <h2 class="panel-title">Loom Video Consultations & Direct Inquiries</h2>
-              <p class="panel-desc">1-on-1 scheduled sessions with master weavers and tribal cluster leads</p>
+              <h2 class="panel-title">{t('account.page.consultations.title')}</h2>
+              <p class="panel-desc">{t('account.page.consultations.desc')}</p>
             </div>
           </div>
 
@@ -855,26 +980,36 @@
               </div>
 
               <p class="consult-topic">
-                <strong>Topic:</strong> Custom Katan Silk weaving motif selection and gold zari thread selection for upcoming ceremonial attire.
+                <strong>{t('account.page.consultations.topicLabel')}</strong> Custom Katan Silk weaving motif selection and gold zari thread selection for upcoming ceremonial attire.
               </p>
             </div>
 
             <div class="consult-actions">
-              <button
-                type="button"
-                class="join-room-btn"
-                onclick={() => showToast({ message: 'Loom Video Room will activate 10 minutes prior to session', variant: 'info' })}
-              >
-                <Icon name="video" size="1.1rem" />
-                Join Video Consultation Room
-              </button>
-              <button
-                type="button"
-                class="reschedule-btn"
-                onclick={() => showToast({ message: 'Reschedule request sent to artisan guild coordinator', variant: 'info' })}
-              >
-                Reschedule Session
-              </button>
+              <Tooltip text={tooltip('tooltip.joinRoom')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="join-room-btn"
+                  onclick={() => showToast({ message: t('account.page.toast.videoRoomActivates'), variant: 'info' })}
+                  {...tp}
+                >
+                  <Icon name="video" size="1.1rem" />
+                  {t('account.page.consultations.joinRoom')}
+                </button>
+              {/snippet}
+            </Tooltip>
+            <Tooltip text={tooltip('tooltip.reschedule')}>
+              {#snippet trigger(tp)}
+                <button
+                  type="button"
+                  class="reschedule-btn"
+                  onclick={() => showToast({ message: t('account.page.toast.rescheduleSent'), variant: 'info' })}
+                  {...tp}
+                >
+                  {t('account.page.consultations.reschedule')}
+                </button>
+              {/snippet}
+            </Tooltip>
             </div>
           </div>
         </div>
@@ -892,49 +1027,59 @@
       onkeydown={(e) => { if (e.key === 'Escape') isPhoneModalOpen = false; }}
       role="dialog"
       tabindex="-1"
-      aria-label="Change Phone Number Modal"
+      aria-label={t('account.page.phoneModal.ariaLabel')}
     >
       <div class="modal-head">
-        <h3 class="modal-title">Change Mobile Number via OTP</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isPhoneModalOpen = false)}
-          aria-label="Close modal"
-        >
-          ✕
-        </button>
+        <h3 class="modal-title">{t('account.page.phoneModal.title')}</h3>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isPhoneModalOpen = false)}
+              aria-label={t('ui.dialog.close')}
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="modal-body">
         <p class="modal-desc">
-          To maintain security, we will dispatch a 6-digit verification passcode to your new mobile number.
+          {t('account.page.phoneModal.desc')}
         </p>
 
         <div class="form-field">
-          <label for="new-phone-input" class="form-label">New 10-Digit Mobile Number</label>
+          <label for="new-phone-input" class="form-label">{t('account.page.phoneModal.newPhoneLabel')}</label>
           <div class="input-with-action">
             <input
               id="new-phone-input"
               type="tel"
               class="form-input"
-              placeholder="e.g. 9876543210"
+              placeholder={t('account.phonePlaceholder')}
               bind:value={newPhone}
               maxlength="13"
             />
-            <button
-              type="button"
-              class="action-inline-btn"
-              onclick={handleRequestPhoneOtp}
-            >
-              {phoneOtpSent ? 'Resend' : 'Send Code'}
-            </button>
+            <Tooltip text={tooltip('tooltip.sendOtp')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="action-inline-btn"
+                onclick={handleRequestPhoneOtp}
+                {...tp}
+              >
+                {phoneOtpSent ? t('account.page.phoneModal.resend') : t('account.page.phoneModal.sendCode')}
+              </button>
+            {/snippet}
+          </Tooltip>
           </div>
         </div>
 
         {#if phoneOtpSent}
           <div class="form-field">
-            <label for="phone-otp-input" class="form-label">Enter 6-Digit OTP</label>
+            <label for="phone-otp-input" class="form-label">{t('account.page.phoneModal.otpLabel')}</label>
             <input
               id="phone-otp-input"
               type="text"
@@ -943,27 +1088,37 @@
               maxlength="6"
               bind:value={phoneOtp}
             />
-            <span class="field-tip">Verification provided by Go BFF `/auth/phone/change/*`</span>
+            <span class="field-tip">{t('account.page.phoneModal.verificationNote')}</span>
           </div>
         {/if}
       </div>
 
       <div class="modal-foot">
-        <button
-          type="button"
-          class="modal-cancel-btn"
-          onclick={() => (isPhoneModalOpen = false)}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="modal-submit-btn"
-          disabled={!phoneOtpSent || isVerifyingPhone}
-          onclick={handleVerifyPhone}
-        >
-          {isVerifyingPhone ? 'Verifying...' : 'Verify & Update Number'}
-        </button>
+        <Tooltip text={tooltip('tooltip.cancel')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-cancel-btn"
+              onclick={() => (isPhoneModalOpen = false)}
+              {...tp}
+            >
+              {t('action.cancel')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.verifyOtp')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-submit-btn"
+              disabled={!phoneOtpSent || isVerifyingPhone}
+              onclick={handleVerifyPhone}
+              {...tp}
+            >
+              {isVerifyingPhone ? t('account.page.phoneModal.verifying') : t('account.page.phoneModal.verifyButton')}
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </div>
@@ -978,41 +1133,46 @@
       onkeydown={(e) => { if (e.key === 'Escape') isAddAddressOpen = false; }}
       role="dialog"
       tabindex="-1"
-      aria-label="Add Address Modal"
+      aria-label={t('account.page.addresses.modalAriaLabel')}
     >
       <div class="modal-head">
-        <h3 class="modal-title">Add a New Delivery Address</h3>
-        <button
-          type="button"
-          class="modal-close"
-          onclick={() => (isAddAddressOpen = false)}
-          aria-label="Close modal"
-        >
-          ✕
-        </button>
+        <h3 class="modal-title">{t('account.page.addresses.modalTitle')}</h3>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="modal-close"
+              onclick={() => (isAddAddressOpen = false)}
+              aria-label={t('ui.dialog.close')}
+              {...tp}
+            >
+              ✕
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <form onsubmit={handleAddAddress}>
         <div class="modal-body">
           <div class="form-field">
-            <label for="addr-fullname" class="form-label">Full Name</label>
+            <label for="addr-fullname" class="form-label">{t('account.page.addresses.fullNameLabel')}</label>
             <input
               id="addr-fullname"
               type="text"
               class="form-input"
-              placeholder="e.g. Aarav Sharma"
+              placeholder={t('account.page.addresses.fullNamePlaceholder')}
               bind:value={newAddressFullName}
               required
             />
           </div>
 
           <div class="form-field">
-            <label for="addr-lines" class="form-label">Flat, House no., Building, Street</label>
+            <label for="addr-lines" class="form-label">{t('account.page.addresses.lineLabel')}</label>
             <input
               id="addr-lines"
               type="text"
               class="form-input"
-              placeholder="e.g. B-42 Defence Colony, Near Flyover"
+              placeholder={t('account.page.addresses.linePlaceholder')}
               bind:value={newAddressLine}
               required
             />
@@ -1020,19 +1180,19 @@
 
           <div class="form-grid-2">
             <div class="form-field">
-              <label for="addr-city" class="form-label">City / District</label>
+              <label for="addr-city" class="form-label">{t('account.page.addresses.cityLabel')}</label>
               <input
                 id="addr-city"
                 type="text"
                 class="form-input"
-                placeholder="e.g. New Delhi"
+                placeholder={t('account.page.addresses.cityPlaceholder')}
                 bind:value={newAddressCity}
                 required
               />
             </div>
 
             <div class="form-field">
-              <label for="addr-state" class="form-label">State</label>
+              <label for="addr-state" class="form-label">{t('account.page.addresses.stateLabel')}</label>
               <select id="addr-state" class="form-input" bind:value={newAddressState}>
                 <option value="Delhi">Delhi</option>
                 <option value="Maharashtra">Maharashtra</option>
@@ -1048,7 +1208,7 @@
 
           <div class="form-grid-2">
             <div class="form-field">
-              <label for="addr-pin" class="form-label">PIN Code (6 digits)</label>
+              <label for="addr-pin" class="form-label">{t('account.page.addresses.pinLabel')}</label>
               <input
                 id="addr-pin"
                 type="text"
@@ -1061,12 +1221,12 @@
             </div>
 
             <div class="form-field">
-              <label for="addr-gstin" class="form-label">Institutional GSTIN (Optional)</label>
+              <label for="addr-gstin" class="form-label">{t('account.page.addresses.gstinInputLabel')}</label>
               <input
                 id="addr-gstin"
                 type="text"
                 class="form-input"
-                placeholder="e.g. 07AAACM1234F1Z5"
+                placeholder={t('account.page.addresses.gstinPlaceholder')}
                 bind:value={newAddressGstin}
               />
             </div>
@@ -1074,21 +1234,30 @@
 
           <label class="checkbox-label" style="margin-block-start: 0.5rem;">
             <input type="checkbox" bind:checked={newAddressIsDefault} />
-            <span>Set as my default delivery address</span>
+            <span>{t('account.page.addresses.setDefaultCheckbox')}</span>
           </label>
         </div>
 
         <div class="modal-foot">
-          <button
-            type="button"
-            class="modal-cancel-btn"
-            onclick={() => (isAddAddressOpen = false)}
-          >
-            Cancel
-          </button>
-          <button type="submit" class="modal-submit-btn">
-            Save Address
-          </button>
+          <Tooltip text={tooltip('tooltip.cancel')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="modal-cancel-btn"
+                onclick={() => (isAddAddressOpen = false)}
+                {...tp}
+              >
+                {t('action.cancel')}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.addAddress')}>
+            {#snippet trigger(tp)}
+              <button type="submit" class="modal-submit-btn" {...tp}>
+                {t('account.page.addresses.saveButton')}
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       </form>
     </div>
@@ -1111,8 +1280,8 @@
     align-items: center;
     gap: 1.5rem;
     padding: 1.5rem 1.75rem;
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-hairline, #e2dcd2);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 14px;
     margin-block: 1rem 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1135,9 +1304,9 @@
     inline-size: 4.25rem;
     block-size: 4.25rem;
     border-radius: 50%;
-    background-color: #efe8dc;
-    color: #b84a39;
-    border: 2px solid #ded7cc;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-accent-danger-muted);
+    border: 2px solid var(--k-border-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1153,8 +1322,8 @@
     inline-size: 1.6rem;
     block-size: 1.6rem;
     border-radius: 50%;
-    background-color: #ffffff;
-    border: 1px solid #d5cec5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1181,7 +1350,7 @@
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.45rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
@@ -1190,9 +1359,9 @@
     font-weight: 700;
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
+    border: 1px solid var(--k-neem-300);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -1202,9 +1371,9 @@
     font-weight: 600;
     padding: 0.18rem 0.6rem;
     border-radius: 999px;
-    background-color: #f5f2eb;
-    color: #70685f;
-    border: 1px solid #e0d8cc;
+    background-color: var(--k-surface-raised);
+    color: var(--k-text-tertiary);
+    border: 1px solid var(--k-border-muted);
   }
 
   .profile-contact-strip {
@@ -1213,7 +1382,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.825rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
   }
 
   .contact-item {
@@ -1223,14 +1392,14 @@
   }
 
   .contact-divider {
-    color: #ded7cc;
+    color: var(--k-khadi-200);
   }
 
   .verified-dot {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #2e7d32;
-    background-color: #e8f5e9;
+    color: var(--k-accent-success-muted);
+    background-color: var(--k-surface-raised);
     padding: 0.1rem 0.35rem;
     border-radius: 4px;
   }
@@ -1270,8 +1439,8 @@
     align-items: center;
     justify-content: center;
     padding: 0.65rem 1rem;
-    background-color: #faf7f2;
-    border: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     min-inline-size: 5.5rem;
   }
@@ -1279,14 +1448,14 @@
   .telemetry-value {
     font-size: 1.35rem;
     font-weight: 800;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     font-family: var(--k-font-display, Georgia, serif);
   }
 
   .telemetry-label {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-block-start: 0.15rem;
@@ -1320,8 +1489,8 @@
     align-items: flex-start;
     gap: 1rem;
     padding: 1.25rem;
-    background-color: #ffffff;
-    border: 1px solid #e5dfd5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 12px;
     text-decoration: none;
     color: inherit;
@@ -1334,12 +1503,12 @@
   .hub-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-    border-color: #b84a39;
+    border-color: var(--k-border-danger);
   }
 
   .hub-card.card-active {
-    border-color: #b84a39;
-    background-color: #fdfaf7;
+    border-color: var(--k-border-danger);
+    background-color: var(--k-surface-base);
   }
 
   .card-icon-box {
@@ -1349,9 +1518,9 @@
     inline-size: 3rem;
     block-size: 3rem;
     border-radius: 10px;
-    background-color: #fbf8f2;
-    color: #b84a39;
-    border: 1px solid #ece4d8;
+    background-color: var(--k-surface-base);
+    color: var(--k-accent-danger-muted);
+    border: 1px solid var(--k-border-subtle);
     flex: none;
   }
 
@@ -1364,21 +1533,21 @@
   .card-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .card-desc {
     font-size: 0.775rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     line-height: 1.35;
     margin: 0;
   }
 
   /* Sub-Panels Section */
   .account-details-container {
-    background-color: #ffffff;
-    border: 1px solid #e5dfd5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -1388,8 +1557,8 @@
     display: flex;
     gap: 0.5rem;
     padding: 0.85rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #ece4d8;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
     overflow-x: auto;
   }
 
@@ -1403,7 +1572,7 @@
     border: 1px solid transparent;
     font-weight: 600;
     font-size: 0.825rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.15s ease;
@@ -1411,14 +1580,14 @@
   }
 
   .pill-btn:hover {
-    background-color: #efe8dc;
-    color: #1e1915;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-text-primary);
   }
 
   .pill-btn.is-active {
-    background-color: #b84a39;
-    color: #ffffff;
-    border-color: #b84a39;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-border-danger);
   }
 
   .detail-panel {
@@ -1432,20 +1601,20 @@
     gap: 1rem;
     margin-block-end: 1.75rem;
     padding-block-end: 1rem;
-    border-block-end: 1px solid #eee8df;
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .panel-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.35rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .panel-desc {
     font-size: 0.85rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0.2rem 0 0;
   }
 
@@ -1456,8 +1625,8 @@
     gap: 0.4rem;
     padding: 0.5rem 0.9rem;
     border-radius: 8px;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     border: none;
     font-size: 0.825rem;
     font-weight: 600;
@@ -1468,7 +1637,7 @@
 
   .add-addr-btn:hover,
   .view-all-orders-btn:hover {
-    background-color: #993b2d;
+    background-color: var(--k-accent-danger-bg);
   }
 
   /* Form Styles */
@@ -1499,22 +1668,22 @@
   .form-label {
     font-size: 0.825rem;
     font-weight: 700;
-    color: #2b2520;
+    color: var(--k-text-primary);
   }
 
   .form-input {
     padding: 0.65rem 0.85rem;
-    border: 1px solid #d5cec5;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 8px;
     font-size: 0.9rem;
-    color: #1e1915;
-    background-color: #ffffff;
+    color: var(--k-text-primary);
+    background-color: var(--k-surface-base);
     font-family: inherit;
   }
 
   .form-input:focus {
     outline: none;
-    border-color: #b84a39;
+    border-color: var(--k-border-danger);
     box-shadow: 0 0 0 3px rgba(184, 74, 57, 0.12);
   }
 
@@ -1529,24 +1698,24 @@
 
   .action-inline-btn {
     padding: 0.65rem 0.85rem;
-    background-color: #f4eee3;
-    border: 1px solid #dcd4c7;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-size: 0.775rem;
     font-weight: 600;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 0.15s ease;
   }
 
   .action-inline-btn:hover {
-    background-color: #e8ded0;
+    background-color: var(--k-surface-pressed);
   }
 
   .field-tip {
     font-size: 0.7rem;
-    color: #8c8278;
+    color: var(--k-stone-400);
   }
 
   .toggle-row {
@@ -1561,7 +1730,7 @@
     align-items: center;
     gap: 0.45rem;
     font-size: 0.825rem;
-    color: #3b342e;
+    color: var(--k-stone-700);
     cursor: pointer;
   }
 
@@ -1571,8 +1740,8 @@
 
   .primary-save-btn {
     padding: 0.75rem 1.5rem;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
     font-size: 0.875rem;
@@ -1582,7 +1751,7 @@
   }
 
   .primary-save-btn:hover {
-    background-color: #993b2d;
+    background-color: var(--k-accent-danger-bg);
   }
 
   /* Addresses Grid (Amazon Style) */
@@ -1608,15 +1777,15 @@
     display: flex;
     flex-direction: column;
     padding: 1.25rem;
-    background-color: #ffffff;
-    border: 1px solid #d5cec5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
     border-radius: 12px;
     position: relative;
   }
 
   .address-card.is-default-card {
-    border-color: #b84a39;
-    box-shadow: 0 0 0 1px #b84a39;
+    border-color: var(--k-border-danger);
+    box-shadow: 0 0 0 1px var(--k-border-danger);
   }
 
   .addr-header-row {
@@ -1631,25 +1800,25 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
   }
 
   .default-badge {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .addr-name {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0 0 0.4rem;
   }
 
   .addr-text {
     font-size: 0.8rem;
-    color: #59524a;
+    color: var(--k-stone-600);
     line-height: 1.45;
     margin: 0 0 0.5rem;
     flex: 1;
@@ -1657,14 +1826,14 @@
 
   .addr-phone {
     font-size: 0.775rem;
-    color: #70685f;
+    color: var(--k-text-tertiary);
     margin: 0 0 0.35rem;
   }
 
   .addr-gstin {
     font-size: 0.725rem;
-    color: #4a423a;
-    background-color: #faf7f2;
+    color: var(--k-text-secondary);
+    background-color: var(--k-surface-base);
     padding: 0.2rem 0.4rem;
     border-radius: 4px;
     margin: 0 0 0.75rem;
@@ -1676,7 +1845,7 @@
     gap: 0.5rem;
     margin-block-start: auto;
     padding-block-start: 0.75rem;
-    border-block-start: 1px solid #eee8df;
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .addr-text-btn {
@@ -1685,16 +1854,16 @@
     padding: 0;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #1d4ed8;
+    color: var(--k-indigo-900);
     cursor: pointer;
   }
 
   .addr-text-btn.remove-btn {
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .btn-divider {
-    color: #ded7cc;
+    color: var(--k-khadi-200);
     font-size: 0.75rem;
   }
 
@@ -1704,8 +1873,8 @@
     align-items: center;
     justify-content: center;
     padding: 2rem 1.25rem;
-    background-color: #faf7f2;
-    border: 2px dashed #d5cec5;
+    background-color: var(--k-surface-base);
+    border: 2px dashed var(--k-border-hairline);
     border-radius: 12px;
     cursor: pointer;
     text-align: center;
@@ -1714,31 +1883,31 @@
   }
 
   .new-address-placeholder-card:hover {
-    border-color: #b84a39;
-    background-color: #fdfaf7;
+    border-color: var(--k-border-danger);
+    background-color: var(--k-surface-base);
   }
 
   .plus-circle {
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: 50%;
-    background-color: #ffffff;
-    border: 1px solid #d5cec5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     margin-block-end: 0.65rem;
   }
 
   .new-address-placeholder-card strong {
     font-size: 0.9rem;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .new-address-placeholder-card small {
     font-size: 0.75rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     margin-block-start: 0.2rem;
   }
 
@@ -1746,13 +1915,13 @@
   .security-sections {
     display: flex;
     flex-direction: column;
-    border: 1px solid #eee8df;
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     margin-block-end: 2rem;
   }
 
   .security-sections > * + * {
-    border-block-start: 1px solid #eee8df;
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .banner-signout-btn {
@@ -1761,9 +1930,9 @@
     gap: 0.35rem;
     padding: 0.45rem 0.85rem;
     background: transparent;
-    border: 1px solid #d8cfc4;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    color: #6e6459;
+    color: var(--k-text-tertiary);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
@@ -1771,9 +1940,9 @@
   }
 
   .banner-signout-btn:hover {
-    background-color: #fdf2f0;
-    border-color: #f0b2aa;
-    color: #b84a39;
+    background-color: var(--k-surface-base);
+    border-color: var(--k-terracotta-400);
+    color: var(--k-accent-danger-muted);
   }
 
   .security-row {
@@ -1781,7 +1950,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
   }
 
   .sec-meta {
@@ -1792,20 +1961,20 @@
 
   .sec-meta strong {
     font-size: 0.85rem;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .sec-meta span {
     font-size: 0.775rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
   }
 
   .sec-edit-btn {
     padding: 0.4rem 0.85rem;
-    border: 1px solid #d5cec5;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    background-color: #fbf8f2;
-    color: #3b342e;
+    background-color: var(--k-surface-base);
+    color: var(--k-stone-700);
     font-size: 0.775rem;
     font-weight: 600;
     cursor: pointer;
@@ -1817,22 +1986,22 @@
     font-size: 0.775rem;
     font-weight: 700;
     cursor: pointer;
-    border: 1px solid #d5cec5;
-    background-color: #f3efe6;
-    color: #6b635b;
+    border: 1px solid var(--k-border-hairline);
+    background-color: var(--k-surface-raised);
+    color: var(--k-text-tertiary);
   }
 
   .sec-toggle-btn.is-enabled {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border-color: #c8e6c9;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
+    border-color: var(--k-neem-300);
   }
 
   /* Active Sessions */
   .active-sessions-block,
   .dpdp-privacy-block {
-    background-color: #faf7f2;
-    border: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     padding: 1.25rem;
     margin-block-end: 1.5rem;
@@ -1849,13 +2018,13 @@
   .block-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .block-sub {
     font-size: 0.75rem;
-    color: #70685f;
+    color: var(--k-text-tertiary);
     margin: 0.15rem 0 0;
   }
 
@@ -1864,10 +2033,10 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.45rem 0.85rem;
-    background-color: #ffffff;
-    border: 1px solid #d5cec5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
@@ -1884,24 +2053,24 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background-color: #ffffff;
-    border: 1px solid #e5dfd5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 8px;
   }
 
   .session-item.is-current-sess {
-    border-color: #b84a39;
+    border-color: var(--k-border-danger);
   }
 
   .sess-icon {
     inline-size: 2.25rem;
     block-size: 2.25rem;
     border-radius: 50%;
-    background-color: #f5f0e6;
+    background-color: var(--k-surface-raised);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .sess-info {
@@ -1918,26 +2087,26 @@
 
   .sess-title-row strong {
     font-size: 0.825rem;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .current-badge {
     font-size: 0.65rem;
     font-weight: 700;
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
   }
 
   .sess-loc {
     font-size: 0.725rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
   }
 
   .sess-time {
     font-size: 0.675rem;
-    color: #948b81;
+    color: var(--k-stone-400);
   }
 
   .dpdp-actions {
@@ -1955,14 +2124,14 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    background-color: #ffffff;
-    border: 1px solid #d5cec5;
-    color: #2b2520;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline);
+    color: var(--k-text-primary);
   }
 
   .dpdp-btn.danger {
-    color: #b84a39;
-    border-color: #fca5a5;
+    color: var(--k-accent-danger-muted);
+    border-color: var(--k-madder-400);
   }
 
   /* Recent Orders Quick Rail */
@@ -1973,9 +2142,9 @@
   }
 
   .order-rail-card {
-    border: 1px solid #e0d8cc;
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -1984,20 +2153,20 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.85rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .order-id {
     font-weight: 700;
     font-size: 0.85rem;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin-inline-end: 0.65rem;
   }
 
   .order-date {
     font-size: 0.75rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
   }
 
   .rail-price-wrap {
@@ -2009,7 +2178,7 @@
   .rail-price {
     font-weight: 800;
     font-size: 0.95rem;
-    color: #1e1915;
+    color: var(--k-text-primary);
     font-family: var(--k-font-display, Georgia, serif);
   }
 
@@ -2021,13 +2190,13 @@
   }
 
   .status-ship {
-    background-color: #e0f2fe;
-    color: #0369a1;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-indigo-600);
   }
 
   .status-delivered {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
   }
 
   .rail-card-body {
@@ -2041,7 +2210,7 @@
     block-size: 5.5rem;
     object-fit: cover;
     border-radius: 8px;
-    border: 1px solid #e5dfd5;
+    border: 1px solid var(--k-border-subtle);
     flex: none;
   }
 
@@ -2055,20 +2224,20 @@
   .rail-prod-title {
     font-size: 0.975rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .rail-artisan {
     font-size: 0.775rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
   .rail-gi-tag {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .rail-progress-track {
@@ -2084,18 +2253,18 @@
     border-radius: 4px;
     font-size: 0.675rem;
     font-weight: 700;
-    background-color: #f3efe6;
-    color: #8c8278;
+    background-color: var(--k-surface-raised);
+    color: var(--k-stone-400);
   }
 
   .track-step.step-done {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
   }
 
   .track-step.step-active {
-    background-color: #e0f2fe;
-    color: #0369a1;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-indigo-600);
   }
 
   .rail-card-foot {
@@ -2103,19 +2272,19 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-start: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .rail-action-link {
     font-size: 0.775rem;
     font-weight: 600;
-    color: #1d4ed8;
+    color: var(--k-indigo-900);
     text-decoration: underline;
   }
 
   .dot-sep {
-    color: #d5cec5;
+    color: var(--k-stone-200);
   }
 
   .rail-invoice-btn {
@@ -2123,7 +2292,7 @@
     border: none;
     font-size: 0.775rem;
     font-weight: 600;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     cursor: pointer;
   }
 
@@ -2133,10 +2302,10 @@
 
   /* Consultation Card */
   .consultation-card {
-    border: 1px solid #e0d8cc;
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
     padding: 1.5rem;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
   }
 
   .consult-badge-row {
@@ -2151,15 +2320,15 @@
     font-weight: 700;
     padding: 0.25rem 0.65rem;
     border-radius: 999px;
-    background-color: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background-color: var(--k-surface-pressed);
+    color: var(--k-accent-primary-text);
+    border: 1px solid var(--k-haldi-300);
   }
 
   .consult-type {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
   }
 
   .artisan-preview {
@@ -2173,35 +2342,35 @@
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: 50%;
-    background-color: #efe8dc;
-    color: #b84a39;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-accent-danger-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    border: 1px solid #ded7cc;
+    border: 1px solid var(--k-border-muted);
   }
 
   .artisan-head-name {
     font-size: 1rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .artisan-guild {
     font-size: 0.775rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0;
   }
 
   .consult-topic {
     font-size: 0.825rem;
-    color: #3b342e;
-    background-color: #faf7f2;
+    color: var(--k-stone-700);
+    background-color: var(--k-surface-base);
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 1px solid #eee8df;
+    border: 1px solid var(--k-border-subtle);
     line-height: 1.45;
   }
 
@@ -2216,8 +2385,8 @@
     align-items: center;
     gap: 0.45rem;
     padding: 0.65rem 1.25rem;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     border: none;
     border-radius: 8px;
     font-weight: 700;
@@ -2227,12 +2396,12 @@
 
   .reschedule-btn {
     padding: 0.65rem 1.25rem;
-    background-color: #f4eee3;
-    border: 1px solid #dcd4c7;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-border-muted);
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.85rem;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     cursor: pointer;
   }
 
@@ -2252,7 +2421,7 @@
   .modal-box {
     inline-size: 100%;
     max-inline-size: 28rem;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     border-radius: 14px;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
     overflow: hidden;
@@ -2267,15 +2436,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.15rem 1.5rem;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .modal-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
@@ -2283,7 +2452,7 @@
     background: transparent;
     border: none;
     font-size: 1.1rem;
-    color: #756d65;
+    color: var(--k-text-tertiary);
     cursor: pointer;
   }
 
@@ -2296,7 +2465,7 @@
 
   .modal-desc {
     font-size: 0.825rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0;
     line-height: 1.4;
   }
@@ -2313,29 +2482,29 @@
     justify-content: flex-end;
     gap: 0.65rem;
     padding: 1rem 1.5rem;
-    background-color: #faf7f2;
-    border-block-start: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-start: 1px solid var(--k-border-subtle);
   }
 
   .modal-cancel-btn {
     padding: 0.55rem 1rem;
     background: transparent;
-    border: 1px solid #d5cec5;
+    border: 1px solid var(--k-border-hairline);
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.8rem;
-    color: #59524a;
+    color: var(--k-stone-600);
     cursor: pointer;
   }
 
   .modal-submit-btn {
     padding: 0.55rem 1.25rem;
-    background-color: #b84a39;
+    background-color: var(--k-accent-danger-bg);
     border: none;
     border-radius: 6px;
     font-weight: 700;
     font-size: 0.825rem;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     cursor: pointer;
   }
 

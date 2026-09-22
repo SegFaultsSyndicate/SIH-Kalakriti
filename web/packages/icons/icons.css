@@ -138,4 +138,18 @@
   color: var(--k-accent-danger);
 }
 
+/* ---- RTL directional mirroring ------------------------------------------- */
+
+/*
+ * Under dir="rtl", directional navigation icons mirror horizontally so that
+ * forward/next points left (inline-end in RTL) and back/prev points right.
+ */
+[dir="rtl"] .k-icon--flip-rtl,
+[dir="rtl"] [data-icon="arrow-right"],
+[dir="rtl"] [data-icon="arrow-left"],
+[dir="rtl"] [data-icon="chevron-right"],
+[dir="rtl"] [data-icon="chevron-left"] {
+  transform: scaleX(-1);
+}
+
 }

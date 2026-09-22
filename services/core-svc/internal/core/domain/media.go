@@ -83,14 +83,32 @@ func ValidateMediaTransition(from, to MediaState) error {
 // kind and file extension each maps to. Anything not in this table is refused
 // before a presigned URL is minted, because the bucket will happily accept
 // whatever bytes a URL is issued for.
+//
+// This is the deepest of three independent allowlists a content-type must
+// clear (bff's allowedMIMETypes, pkg/storage's allowedContentTypes, and this
+// one) -- MediaAudio/MediaDocument were already real MediaKind values (the
+// media_kind Postgres enum already has them) but had no entries here at
+// all, so the story step's voice-note recording 400'd in every browser,
+// unconditionally, confirmed live. video/webm was accepted by the other two
+// allowlists but not this one either -- also fixed here.
 var uploadableTypes = map[string]struct {
 	kind      MediaKind
 	extension string
 }{
-	"image/jpeg": {MediaImage, ".jpg"},
-	"image/png":  {MediaImage, ".png"},
-	"image/webp": {MediaImage, ".webp"},
-	"video/mp4":  {MediaVideo, ".mp4"},
+	"image/jpeg":      {MediaImage, ".jpg"},
+	"image/png":       {MediaImage, ".png"},
+	"image/webp":      {MediaImage, ".webp"},
+	"video/mp4":       {MediaVideo, ".mp4"},
+	"video/webm":      {MediaVideo, ".webm"},
+	"application/pdf": {MediaDocument, ".pdf"},
+	// MediaRecorder's real, browser-chosen mimeType (VoiceInput.svelte calls
+	// `new MediaRecorder(stream)` with no explicit one) -- covering Chrome/
+	// Firefox/Safari's actual defaults rather than picking just one.
+	"audio/webm": {MediaAudio, ".webm"},
+	"audio/ogg":  {MediaAudio, ".ogg"},
+	"audio/mp4":  {MediaAudio, ".m4a"},
+	"audio/mpeg": {MediaAudio, ".mp3"},
+	"audio/wav":  {MediaAudio, ".wav"},
 }
 
 // MediaKindForContentType returns the kind and canonical extension for an
@@ -162,6 +180,20 @@ func (m Media) ServableObjectKey() string {
 		return *m.EnhancedObjectKey
 	}
 	return m.ObjectKey
+}
+
+// ImageQualityIssue is one reason a raw upload failed the pre-VLM quality
+// gate -- corrupt, too small, blank or blurred. Never about whether the
+// subject matches anything in the craft ontology.
+type ImageQualityIssue struct {
+	Code    string
+	Message string
+}
+
+// ImageQualityVerdict is ml-svc's AssessImageQuality answer.
+type ImageQualityVerdict struct {
+	Passed bool
+	Issues []ImageQualityIssue
 }
 
 // RequestUploadInput is what the service needs to mint an upload ticket.

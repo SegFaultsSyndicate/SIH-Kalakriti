@@ -147,6 +147,14 @@ message VerifyOtpRequest {
   string phone_e164 = 2;
   // The code the artisan received.
   string code = 3;
+  // Requests a token minted for this role instead of the default ARTISAN
+  // (BUYER, CLUSTER_OFFICER, or MINISTRY -- the short-form Role name).
+  // Honored only when the server is running with dev OTP enabled (the same
+  // flag that makes `code` "000000" always accepted); ignored otherwise, so
+  // this field does nothing outside local/demo builds. There is currently
+  // no other path in the product that can mint a BUYER, CLUSTER_OFFICER or
+  // MINISTRY token at all -- see auth.go's VerifyOtp doc comment.
+  optional string dev_role = 4;
 }
 
 // VerifyOtpResponse carries the token pair and whether a profile exists yet.
@@ -195,12 +203,20 @@ message RegisterArtisanRequest {
   optional string bio = 10;
   // Caller-supplied key making a retried registration a no-op.
   string idempotency_key = 11;
+  // Social category for government scheme guidance (e.g. GENERAL, OBC, SC, ST, EWS, PREFER_NOT_TO_SAY).
+  optional string social_category = 12;
 }
 
 // RegisterArtisanResponse returns the created profile.
 message RegisterArtisanResponse {
   // The registered artisan.
   catalog.v1.Artisan artisan = 1;
+  // Fresh tokens bound to the new artisan id. The caller's prior access
+  // token (minted at OTP-verify time, before this profile existed) has no
+  // subject and can never authenticate a subsequent call -- every caller
+  // must switch to these immediately after registering, the same way
+  // VerifyOtp's own response is used.
+  TokenPair tokens = 2;
 }
 
 // GetArtisanRequest fetches one artisan by id.

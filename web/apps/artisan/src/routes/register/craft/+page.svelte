@@ -1,7 +1,7 @@
 <!-- apps/artisan/src/routes/register/craft/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Input, Button } from '@kalakriti/ui';
   import { listen, listenSupported } from '@kalakriti/voice';
@@ -98,7 +98,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={selected === ''} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={selected === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </RegisterStep>
 

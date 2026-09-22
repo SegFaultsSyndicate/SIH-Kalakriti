@@ -494,27 +494,31 @@
 
 .k-tabs__list {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--k-space-2);
   border-block-end: var(--k-hairline) solid var(--k-border-hairline);
-  /* More tabs, or 200% text, than a 360px screen can hold scrolls
-     horizontally rather than wrapping (which would break the
-     underline-per-tab convention) or forcing the page wider. */
-  overflow-x: auto;
+  /* Tabs wrap instead of scrolling: the selected tab is a compact filled
+     box now (not a per-tab underline), so a second line can't break the
+     style, and there is no horizontal scrollbar — nothing to scroll. */
 }
 .k-tabs__tab {
-  padding: var(--k-space-3) var(--k-space-4);
-  min-block-size: var(--k-touch-min);
+  padding: var(--k-space-1) var(--k-space-3);
+  min-block-size: 2rem;
   background: transparent;
   border: none;
-  border-block-end: var(--k-rule) solid transparent;
-  margin-block-end: calc(var(--k-hairline) * -1);
+  border-radius: var(--k-radius-sm);
   color: var(--k-text-secondary);
   font-weight: var(--k-weight-medium);
   cursor: pointer;
 }
-.k-tabs__tab[aria-selected='true'] {
+.k-tabs__tab:hover,
+.k-tabs__tab:focus-visible {
   color: var(--k-text-primary);
-  border-block-end-color: var(--k-accent-primary-bg);
+}
+.k-tabs__tab[aria-selected='true'] {
+  background: var(--k-accent-primary-bg);
+  color: var(--k-text-on-accent);
+  font-weight: var(--k-weight-semibold);
 }
 .k-tabs__panel { padding-block-start: var(--k-space-4); }
 .k-tabs__panel:focus-visible { outline: none; }
@@ -551,6 +555,10 @@
 /* ============================================================= Tooltip */
 
 .k-tooltip-anchor { position: relative; display: inline-block; }
+/* An inline-block anchor shrink-wraps a full-width child button; give the
+   anchor block-level layout when the trigger is a full-row control (e.g.
+   an accordion toggle) so its inline-size: 100% still resolves. */
+.k-tooltip-anchor--fill { display: block; }
 .k-tooltip {
   position: absolute;
   inset-inline-start: 50%;
@@ -562,8 +570,17 @@
   max-inline-size: min(16rem, 90vw);
   padding: var(--k-space-2) var(--k-space-3);
   border-radius: var(--k-radius-sm);
-  background: var(--k-surface-inverse);
-  color: var(--k-text-on-inverse);
+  /* The one deliberately light chip in the system: flows over whatever
+     surface sits below it, so --k-surface-tooltip stays khadi in every
+     theme and the hairlined edge plus a small menu elevation do the
+     separating. Note the tooltip is pointer-transparent -- the trigger
+     (not the chip) owns mouse events -- and the visible text lives in
+     the accessible name of the trigger itself, so a tooltip is always
+     supplementary. */
+  background: var(--k-surface-tooltip);
+  color: var(--k-text-tooltip);
+  border: var(--k-hairline) solid var(--k-border-hairline);
+  box-shadow: var(--k-elevation-menu);
   font-size: var(--k-text-xs);
   opacity: 0;
   visibility: hidden;
@@ -574,6 +591,11 @@
 .k-tooltip--top { inset-block-end: calc(100% + var(--k-space-2)); }
 .k-tooltip--bottom { inset-block-start: calc(100% + var(--k-space-2)); }
 .k-tooltip--visible { opacity: 1; visibility: visible; }
+/* A popover trigger that is open (aria-expanded=true) holds its tooltip
+   chip back -- a chip floating over an open panel would read as part of
+   the panel. Higher specificity than k-tooltip--visible so it wins even
+   while the chip is shown. */
+.k-button[aria-expanded='true'] .k-tooltip { opacity: 0; visibility: hidden; }
 
 /* ============================================================= Popover */
 
@@ -582,6 +604,10 @@
   position: absolute;
   inset-block-start: calc(100% + var(--k-space-2));
   min-inline-size: 12rem;
+  /* Belt-and-braces with Popover.svelte's own clamp effect: that nudges an
+     already-reasonably-sized panel back on-screen, this stops one from
+     being wider than the viewport in the first place. */
+  max-inline-size: calc(100vw - 2 * var(--k-gutter, 1rem));
   padding: var(--k-space-2);
   border-radius: var(--k-radius-md);
   background: var(--k-surface-raised);

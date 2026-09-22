@@ -7,37 +7,45 @@
   - Official National Partner & Government Accreditation strip (Make in India, Digital India, india.gov.in, GI Registry, ONDC).
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
 
-  const testimonials = [
+  const testimonials: {
+    id: string;
+    nameKey: MessageKey;
+    titleKey: MessageKey;
+    clusterKey: MessageKey;
+    craftKey: MessageKey;
+    quoteKey: MessageKey;
+    image: string;
+  }[] = [
     {
       id: 'seller-1',
-      name: 'Altaf Hussain',
-      title: 'National Awardee Woodcarver',
-      cluster: 'Saharanpur, Uttar Pradesh',
-      craft: 'Shisham Inlay & Jali Carving',
-      quote: 'A National Awardee Seller showcasing the beauty of handcrafted heritage creations. Through Kalakriti, we connect directly with global patrons without commission brokers.',
+      nameKey: 'sellerShowcase.testimonial.1.name',
+      titleKey: 'sellerShowcase.testimonial.1.title',
+      clusterKey: 'sellerShowcase.testimonial.1.cluster',
+      craftKey: 'sellerShowcase.testimonial.1.craft',
+      quoteKey: 'sellerShowcase.testimonial.1.quote',
       image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-2',
-      name: 'Mohammed Shafiuddin',
-      title: 'State Awardee Master Craftsman',
-      cluster: 'Bidar, Karnataka',
-      craft: 'GI-Certified Bidriware Metalwork',
-      quote: 'Showcasing our 600-year-old silver inlay art globally through digital infrastructure provided by the Government of India. Orders reach our village workshop with zero intermediaries.',
+      nameKey: 'sellerShowcase.testimonial.2.name',
+      titleKey: 'sellerShowcase.testimonial.2.title',
+      clusterKey: 'sellerShowcase.testimonial.2.cluster',
+      craftKey: 'sellerShowcase.testimonial.2.craft',
+      quoteKey: 'sellerShowcase.testimonial.2.quote',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-3',
-      name: 'Amrita Saavan',
-      title: 'Master Weaver & SHG Leader',
-      cluster: 'Imphal, Manipur',
-      craft: 'Shaphee Lanphee & Loin Loom',
-      quote: 'Our women’s cooperative registered in minutes using the low-literacy Voice PWA. Prompt doorstep logistics and DBT bank settlements have revived our traditional loin looms.',
+      nameKey: 'sellerShowcase.testimonial.3.name',
+      titleKey: 'sellerShowcase.testimonial.3.title',
+      clusterKey: 'sellerShowcase.testimonial.3.cluster',
+      craftKey: 'sellerShowcase.testimonial.3.craft',
+      quoteKey: 'sellerShowcase.testimonial.3.quote',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
     },
   ];
@@ -47,10 +55,10 @@
   <!-- 1. Become a Seller Hero Banner -->
   <div class="seller-cta-banner">
     <div class="seller-cta-content">
-      <span class="seller-kicker">Empowering Master Craftspersons</span>
-      <h2 class="seller-title">Sell Hassle Free • Become a {t('app.name')} Seller</h2>
+      <span class="seller-kicker">{t('sellerShowcase.kicker')}</span>
+      <h2 class="seller-title">{t('sellerShowcase.title', { appName: t('app.name') })}</h2>
       <p class="seller-subtitle">
-        Join over 12,000 verified rural artisans, weavers, and self-help guilds across 74 national craft corridors.
+        {t('sellerShowcase.subtitle')}
       </p>
 
       <!-- 3 Key Value Props -->
@@ -64,8 +72,8 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Zero Commission</strong>
-            <span>100% fair-trade proceeds directly to you</span>
+            <strong>{t('sellerShowcase.perk.commissionTitle')}</strong>
+            <span>{t('sellerShowcase.perk.commissionDesc')}</span>
           </div>
         </div>
 
@@ -79,8 +87,8 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Easy Pickup &amp; Delivery</strong>
-            <span>Doorstep postal dispatch from your village</span>
+            <strong>{t('sellerShowcase.perk.pickupTitle')}</strong>
+            <span>{t('sellerShowcase.perk.pickupDesc')}</span>
           </div>
         </div>
 
@@ -92,24 +100,24 @@
             </svg>
           </div>
           <div class="perk-meta">
-            <strong>Direct DBT Bank Payments</strong>
-            <span>Immediate escrow settlement upon delivery</span>
+            <strong>{t('sellerShowcase.perk.dbtTitle')}</strong>
+            <span>{t('sellerShowcase.perk.dbtDesc')}</span>
           </div>
         </div>
       </div>
 
       <!-- Action Button -->
       <div class="seller-cta-action">
-        <a 
-          href="http://localhost:5173/onboarding" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+        <a
+          href="http://localhost:5173/onboarding"
+          target="_blank"
+          rel="noopener noreferrer"
           class="seller-register-btn"
         >
-          <span>Register Now as Master Artisan</span>
+          <span>{t('sellerShowcase.registerCta')}</span>
           <Icon name="arrow-right" size="1.1rem" />
         </a>
-        <span class="seller-helper-text">Supports Voice Onboarding in 11 Indian Languages</span>
+        <span class="seller-helper-text">{t('sellerShowcase.registerHelper')}</span>
       </div>
     </div>
   </div>
@@ -117,27 +125,27 @@
   <!-- 2. Hear from our Happy Sellers / Testimonials -->
   <div class="sellers-testimonials-section">
     <div class="testimonials-header">
-      <span class="testimonials-kicker">Voices of Guild Transformation</span>
-      <h3 class="testimonials-title">Hear from our Happy Sellers</h3>
+      <span class="testimonials-kicker">{t('sellerShowcase.testimonialsKicker')}</span>
+      <h3 class="testimonials-title">{t('sellerShowcase.testimonialsTitle')}</h3>
     </div>
 
     <div class="testimonials-grid">
       {#each testimonials as seller}
         <article class="testimonial-card">
           <div class="testimonial-card__media">
-            <img src={seller.image} alt={seller.name} class="testimonial-img" loading="lazy" />
+            <img src={seller.image} alt={t(seller.nameKey)} class="testimonial-img" loading="lazy" />
             <div class="video-play-indicator" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
             </div>
-            <div class="card-award-badge">{seller.title}</div>
+            <div class="card-award-badge">{t(seller.titleKey)}</div>
           </div>
           <div class="testimonial-card__body">
-            <h4 class="seller-name">{seller.name}</h4>
-            <span class="seller-cluster"><Icon name="location" size="0.85rem" /> {seller.cluster}</span>
-            <span class="seller-craft"><Icon name="verified-artisan" size="0.85rem" /> {seller.craft}</span>
-            <p class="seller-quote">"{seller.quote}"</p>
+            <h4 class="seller-name">{t(seller.nameKey)}</h4>
+            <span class="seller-cluster"><Icon name="location" size="0.85rem" /> {t(seller.clusterKey)}</span>
+            <span class="seller-craft"><Icon name="verified-artisan" size="0.85rem" /> {t(seller.craftKey)}</span>
+            <p class="seller-quote">"{t(seller.quoteKey)}"</p>
           </div>
         </article>
       {/each}
@@ -145,24 +153,24 @@
   </div>
 
   <!-- 3. Official Government Accreditation & Partner Logos Strip -->
-  <div class="official-accreditation-strip" aria-label="Official Government Partners">
+  <div class="official-accreditation-strip" aria-label={t('sellerShowcase.accreditationAriaLabel')}>
     <div class="accreditation-item">
-      <span class="emblem-text">MAKE IN INDIA</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.makeInIndia')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">DIGITAL INDIA</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.digitalIndia')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">INDIA.GOV.IN</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.indiaGov')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">MINISTRY OF SOCIAL JUSTICE &amp; EMPOWERMENT</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.ministry')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">GEOGRAPHICAL INDICATIONS REGISTRY</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.giRegistry')}</span>
     </div>
     <div class="accreditation-item">
-      <span class="emblem-text">ONDC COMPLIANT</span>
+      <span class="emblem-text">{t('sellerShowcase.accreditation.ondc')}</span>
     </div>
   </div>
 </div>
@@ -177,8 +185,8 @@
 
   /* 1. Become a Seller Hero Banner */
   .seller-cta-banner {
-    background: linear-gradient(135deg, #fdfbf7 0%, #f4ede4 100%);
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background: linear-gradient(135deg, var(--k-surface-base) 0%, var(--k-surface-raised) 100%);
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 12px;
     padding: 3rem 2.5rem;
     position: relative;
@@ -201,21 +209,21 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
   }
 
   .seller-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: clamp(1.6rem, 3.5vw, 2.4rem);
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0;
     line-height: 1.25;
   }
 
   .seller-subtitle {
     font-size: 1rem;
-    color: var(--k-text-secondary, #57534e);
+    color: var(--k-text-secondary, var(--k-stone-600));
     max-inline-size: 44rem;
     line-height: 1.5;
     margin: 0;
@@ -239,7 +247,7 @@
   }
 
   .perk-item {
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     border: 1px solid rgba(198, 93, 59, 0.15);
     border-radius: 8px;
     padding: 1.15rem 1.25rem;
@@ -257,7 +265,7 @@
     aspect-ratio: 1;
     border-radius: 50%;
     background-color: rgba(198, 93, 59, 0.1);
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
     flex-shrink: 0;
   }
 
@@ -269,13 +277,13 @@
 
   .perk-meta strong {
     font-size: 0.9rem;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     font-weight: 700;
   }
 
   .perk-meta span {
     font-size: 0.775rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     line-height: 1.35;
   }
 
@@ -291,8 +299,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    background-color: #7b1d24; /* Refined deep madder red matching government craft initiatives */
-    color: #ffffff;
+    background-color: var(--k-madder-700); /* Refined deep madder red matching government craft initiatives */
+    color: var(--k-text-on-accent);
     font-size: 0.95rem;
     font-weight: 700;
     padding: 0.85rem 2rem;
@@ -303,13 +311,13 @@
   }
 
   .seller-register-btn:hover {
-    background-color: #63141a;
+    background-color: var(--k-madder-800);
     transform: translateY(-2px);
   }
 
   .seller-helper-text {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     font-style: italic;
   }
 
@@ -325,14 +333,14 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
   }
 
   .testimonials-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0.35rem 0 0 0;
   }
 
@@ -349,8 +357,8 @@
   }
 
   .testimonial-card {
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-subtle, #e7e5e4);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     border-radius: 8px;
     overflow: hidden;
     display: flex;
@@ -367,7 +375,7 @@
   .testimonial-card__media {
     position: relative;
     aspect-ratio: 16 / 10;
-    background-color: #f5f5f4;
+    background-color: var(--k-surface-base);
     overflow: hidden;
   }
 
@@ -390,26 +398,23 @@
     inline-size: 3rem;
     aspect-ratio: 1;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .card-award-badge {
     position: absolute;
     bottom: 0.75rem;
     left: 0.75rem;
-    background-color: rgba(28, 25, 23, 0.85);
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-inverse);
     font-size: 0.69rem;
     font-weight: 600;
     padding: 0.25rem 0.6rem;
     border-radius: 4px;
-    backdrop-filter: blur(4px);
   }
 
   .testimonial-card__body {
@@ -423,13 +428,13 @@
   .seller-name {
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--k-text-primary, #1c1917);
+    color: var(--k-text-primary, var(--k-text-primary));
     margin: 0;
   }
 
   .seller-cluster {
     font-size: 0.75rem;
-    color: var(--k-text-secondary, #78716c);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -438,7 +443,7 @@
   .seller-craft {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--k-accent-secondary, #c65d3b);
+    color: var(--k-accent-secondary, var(--k-terracotta-600));
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -447,22 +452,22 @@
   .seller-quote {
     font-size: 0.825rem;
     line-height: 1.5;
-    color: var(--k-text-secondary, #44403c);
+    color: var(--k-text-secondary, var(--k-stone-700));
     margin: 0.5rem 0 0 0;
     font-style: italic;
   }
 
   /* 3. Official Government Accreditation Strip */
   .official-accreditation-strip {
-    border-block-start: 1px solid var(--k-border-subtle, #e7e5e4);
-    border-block-end: 1px solid var(--k-border-subtle, #e7e5e4);
+    border-block-start: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
+    border-block-end: 1px solid var(--k-border-subtle, var(--k-border-on-inverse));
     padding-block: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: space-around;
     flex-wrap: wrap;
     gap: 1.5rem;
-    background-color: #fafaf9;
+    background-color: var(--k-surface-base);
     border-radius: 6px;
   }
 
@@ -476,7 +481,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     text-transform: uppercase;
   }
 </style>

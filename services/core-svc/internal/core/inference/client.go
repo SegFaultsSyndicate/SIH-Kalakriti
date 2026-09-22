@@ -34,12 +34,36 @@ func (c *Client) ref(objectKey string) *commonv1.MediaRef {
 	return &commonv1.MediaRef{Bucket: c.bucket, ObjectKey: objectKey, Kind: commonv1.MediaKind_MEDIA_KIND_IMAGE}
 }
 
-// EnhanceImage returns the object key of the enhanced rendition.
+// AssessImageQuality checks whether a raw upload is even worth processing --
+// corrupt, too small, blank or blurred. It never judges whether the subject
+// matches anything in the craft ontology.
+func (c *Client) AssessImageQuality(ctx context.Context, objectKey string) (domain.ImageQualityVerdict, error) {
+	resp, err := c.stub.AssessImageQuality(ctx, &inferencev1.AssessImageQualityRequest{
+		Media: c.ref(objectKey),
+	})
+	if err != nil {
+		return domain.ImageQualityVerdict{}, fmt.Errorf("assessing image quality of %s: %w", objectKey, err)
+	}
+
+	issues := make([]domain.ImageQualityIssue, 0, len(resp.GetIssues()))
+	for _, i := range resp.GetIssues() {
+		issues = append(issues, domain.ImageQualityIssue{Code: i.GetCode(), Message: i.GetMessage()})
+	}
+	return domain.ImageQualityVerdict{Passed: resp.GetPassed(), Issues: issues}, nil
+}
+
+// EnhanceImage returns the object key of the enhanced rendition. Every photo
+// gets the same three treatments -- background removal, white balance, and
+// lighting correction -- CorrectLighting was never actually set here despite
+// pipeline.go's own docs describing "enhances every attached photo": the
+// image_lighting component (Zero-DCE++) was reachable end to end but never
+// once requested, so it silently never ran on a single real upload.
 func (c *Client) EnhanceImage(ctx context.Context, objectKey string) (string, error) {
 	resp, err := c.stub.EnhanceImage(ctx, &inferencev1.EnhanceImageRequest{
 		Source:           c.ref(objectKey),
 		RemoveBackground: true,
 		AutoWhiteBalance: true,
+		CorrectLighting:  true,
 	})
 	if err != nil {
 		return "", fmt.Errorf("enhancing %s: %w", objectKey, err)
@@ -94,8 +118,17 @@ func (c *Client) ExtractAttributes(
 func (c *Client) GenerateDescription(ctx context.Context, in domain.CopyRequest) (domain.GeneratedCopy, error) {
 	req := &inferencev1.GenerateDescriptionRequest{
 		Attributes: attributesToProto(in.Attributes),
-		CraftId:    in.CraftID.String(),
-		Language:   languageToProto(in.Language),
+		// craft_id on this RPC's wire contract is the ontology CODE/slug
+		// ("ajrakh-block-printing"), not the row's UUID -- ExtractAttributes'
+		// declared_craft_id already sends craft.Code (see pipeline.go), and
+		// ml-svc's template layer (templates.py's _template_title/_sentence)
+		// derives the human-readable craft name straight from this string
+		// via craft_id.replace("-", " ").title(). Sending in.CraftID.String()
+		// here instead sent the raw UUID every time, so every mock-mode
+		// generated title/description read like "Turmeric Yellow Cotton
+		// 01A08746 A764 7Dec B7D2 1B071370F6B5" -- confirmed live.
+		CraftId:  in.CraftCode,
+		Language: languageToProto(in.Language),
 	}
 	if in.ArtisanNote != "" {
 		req.ArtisanNote = &in.ArtisanNote
@@ -115,6 +148,25 @@ func (c *Client) GenerateDescription(ctx context.Context, in domain.CopyRequest)
 		Keywords:          resp.GetKeywords(),
 		AttributeKeysUsed: resp.GetAttributeKeysUsed(),
 		ModelVersion:      resp.GetModelVersion(),
+	}, nil
+}
+
+// Translate translates listing copy from one language into another.
+func (c *Client) Translate(ctx context.Context, in domain.TranslateRequest) (domain.TranslatedCopy, error) {
+	resp, err := c.stub.Translate(ctx, &inferencev1.TranslateRequest{
+		Title:          in.Title,
+		Description:    in.Description,
+		Highlights:     in.Highlights,
+		SourceLanguage: languageToProto(in.SourceLanguage),
+		TargetLanguage: languageToProto(in.TargetLanguage),
+	})
+	if err != nil {
+		return domain.TranslatedCopy{}, fmt.Errorf("translating %s to %s: %w", in.SourceLanguage, in.TargetLanguage, err)
+	}
+	return domain.TranslatedCopy{
+		Title:       resp.GetTitle(),
+		Description: resp.GetDescription(),
+		Highlights:  resp.GetHighlights(),
 	}, nil
 }
 

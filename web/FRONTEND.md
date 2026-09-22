@@ -216,10 +216,11 @@ eviction after ~7 days unopened.
 
 **120 KB gzip** initial JS for the artisan app — the entry chunk plus
 everything it statically imports before first paint. Lazy route chunks
-don't count. `pnpm size` (`SIZE_BUDGET_ENFORCE=1 pnpm build`) turns a
-regression into a build failure; this also runs in CI. Buyer's budget is
-200 KB gzip. Last measured: artisan 70.6 KB (59% of budget), buyer 33.0 KB,
-admin 30.7 KB — see `web/README.md` for the full table and how manual
+don't count. Every build fails when an app is over its budget;
+`SIZE_BUDGET_ENFORCE=0` downgrades it to a report for a local build you
+knowingly want to finish. Buyer's budget is 200 KB gzip, admin's 80 KB.
+Last measured: artisan 49.0 KB (41% of budget), buyer 48.2 KB (24%),
+admin 35.1 KB (44%) — see `web/README.md` for the full table and how manual
 chunking was verified to help.
 
 ---
@@ -250,8 +251,11 @@ Full manual-verification checklist (keyboard traversal, screen-reader pass,
 
 Full 8-minute click-path script, timings, and a troubleshooting table:
 `web/DEMO.md`. `PUBLIC_DEMO_MODE=1` is a cosmetic-only flag (fixed
-empty-state illustrations, deterministic timings) — it does **not** seed
-any data; there is no seed-data backend for artisans/listings/orders yet.
+empty-state illustrations, deterministic timings) — it does **not** seed any
+data itself. `make seed-demo` (or `make demo-up`/`make seed-data`, which now
+call it) does: it registers real artisans, publishes real listings and
+places a real bulk order through the live BFF REST API (see
+`cmd/seed-demo/main.go`) rather than inserting rows directly.
 
 ---
 

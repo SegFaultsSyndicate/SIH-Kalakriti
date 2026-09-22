@@ -71,7 +71,7 @@ func (r *Repo) GetArtisansByCategory(ctx context.Context, stateCode, district *s
 	out := make([]domain.ArtisanCategoryRow, 0, len(rows))
 	for _, row := range rows {
 		out = append(out, domain.ArtisanCategoryRow{
-			StateCode: row.StateCode, District: derefString(row.District), SocialCategory: derefString(row.SocialCategory),
+			StateCode: row.StateCode, District: derefString(row.District), SocialCategory: derefSocialCategory(row.SocialCategory),
 			ArtisanCount: int32(row.ArtisanCount), VerifiedCount: int32(row.VerifiedCount),
 		})
 	}
@@ -208,11 +208,11 @@ func (r *Repo) GetArtisanIncomeStatements(ctx context.Context, artisanID uuid.UU
 	return out, nil
 }
 
-func derefString(s *string) string {
+func derefString[T ~string](s *T) string {
 	if s == nil {
 		return ""
 	}
-	return *s
+	return string(*s)
 }
 
 func derefTime(t *time.Time) time.Time {
@@ -227,4 +227,13 @@ func derefUUID(u *uuid.UUID) uuid.UUID {
 		return uuid.Nil
 	}
 	return *u
+}
+
+// derefSocialCategory unwraps GetArtisansByCategory's nullable enum column
+// (artisan.social_category is optional -- see migrations/023_insight.sql).
+func derefSocialCategory(c *db.SocialCategory) string {
+	if c == nil {
+		return ""
+	}
+	return string(*c)
 }

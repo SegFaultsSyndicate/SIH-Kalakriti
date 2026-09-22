@@ -1,38 +1,42 @@
 <!--
   apps/artisan/src/routes/listings/[id]/+page.svelte
 
-  Detail and edit. Two different kinds of "AI-generated field" live here,
-  with two different amounts of server backing:
+  Detail and edit. Translations (title/description) are real --
+  ListingTranslation carries machine_generated, and PATCH /listings/{id}
+  replaces the array wholesale. Editing one here sets machine_generated:false
+  before saving, which is exactly core-svc's own artisan-wins rule
+  (UpsertListingTranslation only ever stamps EditedBy when !MachineGenerated
+  -- this screen mirrors that server-side precedence, it doesn't invent it).
 
-  - Translations (title/description) are real -- ListingTranslation carries
-    machine_generated, and PATCH /listings/{id} replaces the array wholesale.
-    Editing one here sets machine_generated:false before saving, which is
-    exactly core-svc's own artisan-wins rule (UpsertListingTranslation only
-    ever stamps EditedBy when !MachineGenerated -- this screen mirrors that
-    server-side precedence in what it sends, it doesn't invent it).
-  - Attributes have no server column at all (see ml_wiring.md) -- they stay
-    the same local-only, per-device mock batch 8 established, readable here
-    only when this device holds the local draft the listing was created
-    from. Editing one marks it ARTISAN the same three-way way
-    domain.AttributeSource already does server-side for translations, so the
-    day attributes get a real endpoint this is a data-source swap, not a
-    redesign.
+  Attributes are real too now -- GET /listings/{id}/attributes, written by
+  the cataloguing pipeline (see listing-draft.ts's ensureListingMediaAttachQueued
+  and the processing step that triggers it). Fetched fresh from the server
+  on every load, not read from a local draft, so this screen works from any
+  device, not just the one the listing was created on. Read-only here: there
+  is no UpsertListingAttributes write-back route wired to the BFF yet, so an
+  editable input would silently discard whatever the artisan typed. No
+  "regenerate" action either -- there is no real regenerate endpoint, only
+  the one-shot pipeline run that already happened at creation time.
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, FieldGroup, Input, Textarea, NumberStepper, Money, SpeakButton, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
-  import { db } from '@kalakriti/offline';
-  import { ApiError, advisePricing, updateListing, type components } from '@kalakriti/api';
+  import { ApiError, advisePricing, getListingAttributes, updateListing, type components } from '@kalakriti/api';
   import StateBadge from '$lib/StateBadge.svelte';
   import PriceAdvisory from '$lib/PriceAdvisory.svelte';
   import GemExportPreview from '$lib/GemExportPreview.svelte';
   import { fetchListing, groupFor, network, type Listing } from '$lib/listings';
-  import { patchFields, type ListingDraftFields } from '$lib/listing-draft';
   import { getDraft as getRegistrationDraft } from '$lib/registration';
-  import { buildMockResult, type MockAttribute } from '$lib/ml-mock';
+
+  interface Attribute {
+    name: string;
+    value: string;
+    confidence: number;
+    source: 'MODEL' | 'ARTISAN' | 'CURATOR';
+  }
 
   const t = $derived(locale.t);
   const listingId = $derived(page.params.id ?? '');
@@ -44,9 +48,13 @@
   let translations = $state<NonNullable<Listing['translations']>>([]);
   let savingTranslations = $state(false);
 
-  let localDraftId = $state<string | undefined>(undefined);
-  let attributes = $state<MockAttribute[]>([]);
-  let regenerating = $state(false);
+  let attributes = $state<Attribute[]>([]);
+
+  /** "material" -> "Material"; attribute names are free-form from ml-svc, not an i18n-keyed set. */
+  function humanize(name: string): string {
+    const spaced = name.replace(/_/g, ' ');
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  }
 
   let priceRupees = $state('');
   let materialCostRupees = $state('');
@@ -65,20 +73,33 @@
     loading = true;
     loadError = undefined;
     try {
-      listing = await fetchListing(listingId);
-      translations = structuredClone(listing.translations ?? []);
-      priceRupees = listing.price?.amount_paise ? String(listing.price.amount_paise / 100) : '';
+      // structuredClone the plain, just-awaited value's translations, not
+      // `listing.translations` -- once `listing` (a `$state`) is assigned,
+      // Svelte wraps it (and every nested array/object) in a reactive Proxy,
+      // and structuredClone cannot clone a Proxy: every listing that had any
+      // translations at all (i.e. every enriched or artisan-edited one)
+      // threw `DataCloneError: ... could not be cloned` here, unconditionally,
+      // caught below and shown as the generic "Something went wrong."
+      // Confirmed live -- this is the "clicking on the listing just says
+      // some error occurred" bug. Cloning before the $state assignment
+      // avoids the proxy entirely.
+      const fetched = await fetchListing(listingId);
+      translations = structuredClone(fetched.translations ?? []);
+      priceRupees = fetched.price?.amount_paise ? String(fetched.price.amount_paise / 100) : '';
+      listing = fetched;
     } catch (cause) {
       loadError = cause instanceof ApiError ? cause.message : t('api.error.unknown');
     } finally {
       loading = false;
     }
 
-    const draft = await db.drafts.where('remoteId').equals(listingId).first();
-    if (draft) {
-      localDraftId = draft.id;
-      attributes = ((draft.fields as ListingDraftFields).attributes ?? []) as MockAttribute[];
-    }
+    const attrResponse = await getListingAttributes(listingId).catch(() => undefined);
+    attributes = (attrResponse?.attributes ?? []).map((a) => ({
+      name: a.name ?? '',
+      value: a.value ?? '',
+      confidence: a.confidence ?? 0,
+      source: (a.source ?? 'MODEL') as Attribute['source'],
+    }));
 
     // Load registration details for the GeM export card (seller info).
     const regDraft = await getRegistrationDraft();
@@ -105,26 +126,6 @@
       showToast({ variant: 'error', message: cause instanceof ApiError ? cause.message : t('api.error.unknown') });
     } finally {
       savingTranslations = false;
-    }
-  }
-
-  function editAttribute(index: number, value: string): void {
-    attributes[index] = { ...attributes[index], value, source: 'ARTISAN' };
-    if (localDraftId) void patchFields(localDraftId, { attributes });
-  }
-
-  async function regenerateDescription(): Promise<void> {
-    if (!localDraftId) return;
-    regenerating = true;
-    try {
-      const draft = await db.drafts.get(localDraftId);
-      const fields = draft?.fields as ListingDraftFields | undefined;
-      const result = buildMockResult(fields?.craftId, fields?.workingTitle);
-      translations = result.translations;
-      attributes = result.attributes;
-      await patchFields(localDraftId, { attributes, translations: result.translations });
-    } finally {
-      regenerating = false;
     }
   }
 
@@ -193,7 +194,7 @@
       {/if}
       {#if listing.state === 'PUBLISHED'}
         <a href="/listings/{listing.id}/provenance">{t('listings.detail.provenanceLink')}</a>
-        <Button size="sm" variant="secondary" onclick={() => (gemOpen = true)}>
+        <Button size="sm" variant="secondary" onclick={() => (gemOpen = true)} tooltip={tooltip('tooltip.viewGem')}>
           <Icon name="external-link" />
           {t('gem.exportButton')}
         </Button>
@@ -203,12 +204,6 @@
     <section class="listing-detail__section">
       <div class="listing-detail__section-header">
         <h2>{t('listings.detail.copyHeading')}</h2>
-        {#if localDraftId}
-          <Button size="sm" variant="ghost" loading={regenerating} onclick={regenerateDescription}>
-            <Icon name="refresh" />
-            {t('listings.detail.regenerate')}
-          </Button>
-        {/if}
       </div>
 
       {#each translations as translation, i (translation.language)}
@@ -249,7 +244,7 @@
         </Card>
       {/each}
 
-      <Button size="sm" loading={savingTranslations} onclick={saveTranslations}>
+      <Button size="sm" loading={savingTranslations} onclick={saveTranslations} tooltip={tooltip('tooltip.saveTranslations')}>
         {t('listings.detail.saveCopy')}
       </Button>
     </section>
@@ -259,10 +254,18 @@
         <h2>{t('listings.detail.attributesHeading')}</h2>
         <p class="listing-detail__attributes-note">{t('listings.detail.attributesNote')}</p>
         <ul class="listing-detail__attributes" role="list">
-          {#each attributes as attribute, i (attribute.key)}
+          <!--
+            Keyed on name+value, not name alone: core-svc flattens every
+            detected colour/motif into its own row sharing the same bare
+            "colour"/"motif" name (InferredAttributes.ToListingAttributes) --
+            any listing with more than one of either crashed this whole
+            screen with Svelte's each_key_duplicate. Confirmed live: this is
+            the "clicking on the listing just says some error occurred" bug.
+          -->
+          {#each attributes as attribute (`${attribute.name}:${attribute.value}`)}
             <li class="listing-detail__attribute">
               <div class="listing-detail__attribute-label">
-                <p>{t(attribute.labelKey)}</p>
+                <p>{humanize(attribute.name)}</p>
                 <span
                   class="listing-detail__provenance-pill"
                   class:listing-detail__provenance-pill--ai={attribute.source !== 'ARTISAN'}
@@ -270,10 +273,7 @@
                   {attribute.source === 'ARTISAN' ? t('listings.detail.artisanAuthored') : t('listings.detail.aiGuessed')}
                 </span>
               </div>
-              <Input
-                value={attribute.value}
-                oninput={(e: Event) => editAttribute(i, (e.currentTarget as HTMLInputElement).value)}
-              />
+              <p class="listing-detail__attribute-value">{attribute.value}</p>
             </li>
           {/each}
         </ul>
@@ -287,7 +287,7 @@
           <Input {id} type="tel" bind:value={priceRupees} placeholder="0" />
         {/snippet}
       </FieldGroup>
-      <Button size="sm" loading={savingPrice} disabled={priceAmountPaise === undefined} onclick={savePrice}>
+      <Button size="sm" loading={savingPrice} disabled={priceAmountPaise === undefined} onclick={savePrice} tooltip={tooltip('tooltip.savePrice')}>
         {t('listings.detail.savePrice')}
       </Button>
 
@@ -304,7 +304,7 @@
             <NumberStepper {id} bind:value={hours} min={0} />
           {/snippet}
         </FieldGroup>
-        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice}>
+        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice} tooltip={tooltip('tooltip.getPriceAdvice')}>
           {t('listing.pricing.adviceButton')}
         </Button>
         {#if advice}
@@ -432,6 +432,10 @@
     display: flex;
     align-items: center;
     gap: var(--k-space-2);
+  }
+
+  .listing-detail__attribute-value {
+    color: var(--k-text-secondary);
   }
 
   .listing-detail__offline-note {

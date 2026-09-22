@@ -1,11 +1,17 @@
 /*
  * Kalakriti provenance page backdrop — Batch 6
  * ---------------------------------------------------------------
- * A standalone CSS file the Go-templated public verification page can
- * <link> directly — no Svelte, no build step, just this file plus
- * palette.css and the SVGs in packages/patterns/src and
- * packages/identity/src, all referenced by relative or root-relative path
- * so the Go server only has to serve them as static files.
+ * The ornamental certificate treatment: a standalone CSS file, no Svelte and
+ * no build step, just this file plus palette.css and the SVGs in
+ * packages/patterns/src and packages/identity/src, referenced by relative or
+ * root-relative path so a server only has to serve them as static files.
+ *
+ * NOT what the live /v/<code> page uses today. That page is rendered by the
+ * Go BFF from packages/patterns/verify-page.css, inlined in a single request
+ * (see that file's header for why linking these assets would be the wrong
+ * trade on a 2G connection behind a scanned tag). This file is the Batch 6
+ * print/certificate pack and the reference for a future redesign of that
+ * page; adopting it there is a design decision, not a cleanup.
  *
  * The provenance page is reached by a stranger scanning a physical tag —
  * it is a standalone artefact, not a page inside the app shell, so it gets

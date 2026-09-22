@@ -10,24 +10,27 @@
   - Svelte 5 runes
 -->
 <script lang="ts">
+  import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
+
+  const t = $derived(locale.t);
 </script>
 
 <section class="craft-categories-section" aria-labelledby="craft-categories-heading">
   <div class="craft-section-header">
     <div class="header-text-group">
-      <span class="section-kicker">Indigenous Craft Taxonomy</span>
+      <span class="section-kicker">{t('craftGrid.kicker')}</span>
       <h2 id="craft-categories-heading" class="section-title">
-        Browse by Artisan Craft Discipline
+        {t('craftGrid.title')}
       </h2>
       <p class="section-subtitle">
-        Direct from verified guild looms, foundry forges, and carving studios across 74 registered GI clusters.
+        {t('craftGrid.subtitle')}
       </p>
     </div>
 
     <a href="/catalog" class="catalog-all-link">
-      <span>View Cluster Directory</span>
+      <span>{t('craftGrid.viewDirectory')}</span>
       <Icon name="arrow-right" size="0.85rem" />
     </a>
   </div>
@@ -43,18 +46,18 @@
             <Icon name={craft.icon} size="1.4rem" />
           </div>
           <span class="craft-card__gi-pill">
-            {craft.giCount} GI Hubs
+            {t('craftGrid.giHubs', { count: String(craft.giCount) })}
           </span>
         </div>
 
         <div class="craft-card__body">
           <div class="craft-card__name-row">
-            <h3 class="craft-card__name">{craft.name}</h3>
-            <span class="craft-card__hindi">{craft.hindiName}</span>
+            <h3 class="craft-card__name">{t(craft.nameKey)}</h3>
+            <span class="craft-card__hindi">{t(craft.nativeNameKey)}</span>
           </div>
 
-          <p class="craft-card__subtitle">{craft.subtitle}</p>
-          <p class="craft-card__tagline">{craft.tagline}</p>
+          <p class="craft-card__subtitle">{t(craft.subtitleKey)}</p>
+          <p class="craft-card__tagline">{t(craft.taglineKey)}</p>
         </div>
 
         <div class="craft-card__footer">
@@ -63,7 +66,7 @@
             <span>{craft.regions.slice(0, 2).join(' · ')}</span>
           </div>
           <span class="craft-card__cta">
-            Explore ➔
+            {t('craftGrid.explore')}
           </span>
         </div>
       </a>
@@ -74,9 +77,9 @@
 <style>
   .craft-categories-section {
     padding-block: 2.5rem;
-    border-block-start: 1px solid #e8e2d8;
-    border-block-end: 1px solid #e8e2d8;
-    background-color: #faf7f2;
+    border-block-start: 1px solid var(--k-border-subtle);
+    border-block-end: 1px solid var(--k-border-subtle);
+    background-color: var(--k-surface-base);
     margin-block: 1rem;
   }
 
@@ -99,14 +102,14 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     margin-block-end: 0.4rem;
   }
 
   .section-title {
     font-size: clamp(1.4rem, 2.8vw, 2rem);
     font-weight: 800;
-    color: #1e1915;
+    color: var(--k-text-primary);
     line-height: 1.2;
     margin: 0 0 0.5rem 0;
     letter-spacing: -0.01em;
@@ -114,7 +117,7 @@
 
   .section-subtitle {
     font-size: 0.9rem;
-    color: #6b635a;
+    color: var(--k-text-tertiary);
     line-height: 1.5;
     margin: 0;
   }
@@ -125,18 +128,18 @@
     gap: 0.5rem;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
     padding: 0.5rem 0.85rem;
     border-radius: 6px;
-    background-color: #ffffff;
-    border: 1px solid #ded7cb;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-muted);
     transition: all 0.15s ease;
   }
 
   .catalog-all-link:hover {
-    background-color: #f0eae1;
-    border-color: #c9bea9;
+    background-color: var(--k-surface-raised);
+    border-color: var(--k-border-hairline);
   }
 
   .craft-grid-12 {
@@ -167,8 +170,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: #ffffff;
-    border: 1px solid #e5dfd5;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     border-radius: 10px;
     padding: 1.25rem;
     text-decoration: none;
@@ -191,11 +194,11 @@
   .craft-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    border-color: #b84a39;
+    border-color: var(--k-border-danger);
   }
 
   .craft-card:hover::after {
-    background-color: #b84a39;
+    background-color: var(--k-accent-danger-bg);
   }
 
   .craft-card__header {
@@ -209,29 +212,29 @@
     inline-size: 2.6rem;
     block-size: 2.6rem;
     border-radius: 8px;
-    background-color: #f7f4ed;
-    border: 1px solid #e5dfd3;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-border-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #8c3b2d;
+    color: var(--k-terracotta-600);
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   .craft-card:hover .craft-card__icon-badge {
-    background-color: #b84a39;
-    color: #ffffff;
-    border-color: #b84a39;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
+    border-color: var(--k-border-danger);
   }
 
   .craft-card__gi-pill {
     font-size: 0.68rem;
     font-weight: 700;
-    color: #635b52;
-    background-color: #f2eee8;
+    color: var(--k-stone-600);
+    background-color: var(--k-surface-raised);
     padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    border: 1px solid #e0d8cd;
+    border: 1px solid var(--k-border-muted);
   }
 
   .craft-card__body {
@@ -249,26 +252,26 @@
   .craft-card__name {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .craft-card__hindi {
     font-size: 0.85rem;
-    color: #8c8278;
+    color: var(--k-stone-400);
     font-weight: 500;
   }
 
   .craft-card__subtitle {
     font-size: 0.775rem;
     font-weight: 600;
-    color: #8c3b2d;
+    color: var(--k-terracotta-600);
     margin: 0 0 0.45rem 0;
   }
 
   .craft-card__tagline {
     font-size: 0.775rem;
-    color: #5c544d;
+    color: var(--k-stone-600);
     line-height: 1.45;
     margin: 0;
     display: -webkit-box;
@@ -283,7 +286,7 @@
     align-items: center;
     justify-content: space-between;
     padding-block-start: 0.75rem;
-    border-block-start: 1px solid #f0ebe2;
+    border-block-start: 1px solid var(--k-khadi-100);
     font-size: 0.725rem;
   }
 
@@ -291,12 +294,12 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
   }
 
   .craft-card__cta {
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     transition: transform 0.15s ease;
   }
 

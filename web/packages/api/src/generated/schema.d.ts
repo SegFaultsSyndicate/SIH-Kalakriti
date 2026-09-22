@@ -72,6 +72,8 @@ export interface paths {
                     "application/json": {
                         phone: string;
                         otp: string;
+                        /** @description Requests a token minted for BUYER, CLUSTER_OFFICER, or MINISTRY instead of the default ARTISAN. Only honored when the server is running with dev OTP enabled (AUTH_DEV_OTP_ENABLED) -- ignored otherwise, so this never does anything against a real deployment. There is currently no other way to obtain a token for any of these three roles. */
+                        dev_role?: string;
                     };
                 };
             };
@@ -140,6 +142,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/change/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request OTP to change the caller's registered phone number */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description E.164 phone number */
+                        new_phone: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OTP sent to the new number */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example otp_sent */
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/change/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify OTP and complete the phone number change
+         * @description On success, invalidates the caller's other active sessions and returns a fresh token pair.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        new_phone: string;
+                        otp: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Phone updated, new tokens issued */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example phone_updated */
+                            status?: string;
+                            access_token?: string;
+                            refresh_token?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artisans": {
         parameters: {
             query?: never;
@@ -179,7 +278,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Artisan created */
+                /** @description Artisan created. The caller's prior token (minted at OTP-verify time, before this profile existed) has no subject and cannot authenticate further calls -- switch to access_token/refresh_token immediately, the same as after /auth/otp/verify. */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -187,6 +286,8 @@ export interface paths {
                     content: {
                         "application/json": {
                             artisan_id?: string;
+                            access_token?: string;
+                            refresh_token?: string;
                         };
                     };
                 };
@@ -336,6 +437,98 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/listings/{id}/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a listing's attributes
+         * @description What the model inferred (source MODEL) and what the artisan has since overridden (source ARTISAN). Same visibility as the listing itself: public once PUBLISHED, otherwise only the owning artisan or a curator.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Attributes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            attributes?: components["schemas"]["ListingAttribute"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach photos to a listing
+         * @description Replaces the listing's media set wholesale, ordered, with at most one primary image and one process video. Triggers the cataloguing pipeline (enhance/extract attributes/generate description) once photos land on the listing.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ListingMediaItem"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description The listing's media, ordered */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items?: components["schemas"]["ListingMediaItem"][];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/listings/{id}/submit": {
@@ -2649,6 +2842,1256 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List companies */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    type?: string;
+                    verification_status?: string;
+                    verified_only?: boolean;
+                    page_token?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Company list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            companies?: components["schemas"]["Company"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Register company or boutique
+         * @description Onboard a business entity through the buyer portal with GSTIN and income statement
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RegisterCompanyRequest"];
+                };
+            };
+            responses: {
+                /** @description Company registered */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Company"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get caller company profile */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Company profile */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Company"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get company by ID */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Company profile */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Company"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify or reject company
+         * @description Admin decision based on legitimacy check of income statement and GSTIN
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VerifyCompanyRequest"];
+                };
+            };
+            responses: {
+                /** @description Company verified/rejected */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Company"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/commission-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get platform commission statistics
+         * @description Platform ledger earnings and company verification counts
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Platform commission statistics */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CommissionStatsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/sales/settle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record company sale settlement
+         * @description Deducts platform commission (0.5% or 1%) and records payout
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        company_id: string;
+                        order_id: string;
+                        product_name: string;
+                        buyer_id: string;
+                        /** Format: int64 */
+                        gross_amount_paise: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Settlement recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            settlement?: components["schemas"]["CompanySaleSettlement"];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{id}/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List company sales settlements */
+        get: {
+            parameters: {
+                query?: {
+                    page_token?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Company sales settlements */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sales?: components["schemas"]["CompanySaleSettlement"][];
+                            page?: {
+                                next_page_token?: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{id}/interest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Express interest in an artisan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        artisan_id: string;
+                        message: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Interest expressed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanyInterest"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leads/{id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Artisan response to interest */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        artisan_id: string;
+                        /** @enum {string} */
+                        decision: "ACCEPTED" | "DECLINED";
+                    };
+                };
+            };
+            responses: {
+                /** @description Interest response recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanyInterest"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/me/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List inbound leads for authenticated artisan */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Artisan leads */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            leads?: components["schemas"]["CompanyInterest"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/me/boutique-matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recommended boutique matches for artisan */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Boutique matches */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            matches?: components["schemas"]["BoutiqueMatch"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boutiques/nearby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List nearby boutiques */
+        get: {
+            parameters: {
+                query?: {
+                    latitude?: number;
+                    longitude?: number;
+                    radius_km?: number;
+                    craft_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Nearby boutiques */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            boutiques?: components["schemas"]["Company"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List curated market trend links */
+        get: {
+            parameters: {
+                query?: {
+                    craft_id?: string;
+                    source_type?: string;
+                    exclude_expired?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Trend links */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            trend_links?: components["schemas"]["TrendLink"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create curated market trend link
+         * @description Dual curated by both Admins and Artisans
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateTrendLinkRequest"];
+                };
+            };
+            responses: {
+                /** @description Trend link created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrendLink"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trends/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete trend link */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trends/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pin or unpin trend link */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        pinned: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Pinned trend link */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrendLink"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active badge catalog */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Badge catalog */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            badges?: components["schemas"]["Badge"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/{id}/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List an artisan's active badges */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Artisan badges */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            artisan_badges?: components["schemas"]["ArtisanBadge"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Confer badge on an artisan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GrantBadgeRequest"];
+                };
+            };
+            responses: {
+                /** @description Badge granted */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArtisanBadge"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/badges/me/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get authenticated artisan's badge progress */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Badge progress entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            progress?: components["schemas"]["BadgeProgressEntry"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artisans/{id}/badges/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an artisan's badge */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RevokeBadgeRequest"];
+                };
+            };
+            responses: {
+                /** @description Badge revoked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schemes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List government schemes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Government schemes list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            schemes?: components["schemas"]["GovernmentScheme"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Upsert government scheme */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSchemeRequest"];
+                };
+            };
+            responses: {
+                /** @description Upserted government scheme */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GovernmentScheme"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schemes/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Match caller against active government schemes */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Government scheme match results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            matches?: components["schemas"]["SchemeMatch"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schemes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete government scheme by ID */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deletion confirmation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update government scheme by ID */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertSchemeRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated government scheme */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GovernmentScheme"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/partnerships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List supply partnerships, optionally filtered by artisan or company */
+        get: {
+            parameters: {
+                query?: {
+                    artisan_id?: string;
+                    company_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            partnerships?: {
+                                id?: string;
+                                company_id?: string;
+                                artisan_id?: string;
+                                craft_id?: string;
+                                terms?: string;
+                                active?: boolean;
+                                company_name?: string;
+                                artisan_name?: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Form a supply partnership between a company and an artisan */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        company_id: string;
+                        artisan_id: string;
+                        craft_id: string;
+                        terms?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id?: string;
+                            company_id?: string;
+                            artisan_id?: string;
+                            craft_id?: string;
+                            terms?: string;
+                            active?: boolean;
+                            company_name?: string;
+                            artisan_name?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's outbound webhook subscriptions */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            subscriptions?: {
+                                id?: string;
+                                subscriber_id?: string;
+                                subscriber_type?: string;
+                                url?: string;
+                                events?: string[];
+                                active?: boolean;
+                                created_at?: string;
+                                updated_at?: string;
+                                consecutive_failures?: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create an outbound webhook subscription for the caller */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        url: string;
+                        secret: string;
+                        events: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete one of the caller's outbound webhook subscriptions */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2825,6 +4268,26 @@ export interface components {
             download_url?: string;
             /** Format: date-time */
             created_at?: string;
+        };
+        ListingAttribute: {
+            name?: string;
+            value?: string;
+            /** @description In [0,1]; an artisan's own answer is always 1. */
+            confidence?: number;
+            /** @enum {string} */
+            source?: "MODEL" | "ARTISAN" | "CURATOR";
+        };
+        ListingMediaItem: {
+            media_id: string;
+            /** @description Display position; unique within the listing. */
+            ordinal: number;
+            /** @enum {string} */
+            role: "GALLERY" | "PRIMARY_IMAGE" | "PROCESS_VIDEO";
+            /**
+             * @description Kind of the underlying asset; returned on reads, ignored on writes.
+             * @enum {string}
+             */
+            kind?: "IMAGE" | "VIDEO" | "AUDIO" | "DOCUMENT";
         };
         CreateListingRequest: {
             craft_id: string;
@@ -3013,6 +4476,234 @@ export interface components {
             cluster_id?: string;
             photo_media_id?: string;
             years_of_experience?: number;
+        };
+        Company: {
+            id: string;
+            user_id?: string;
+            name: string;
+            /** @enum {string} */
+            type: "COMPANY_TYPE_RETAILER" | "COMPANY_TYPE_BOUTIQUE" | "COMPANY_TYPE_EXPORTER" | "COMPANY_TYPE_INSTITUTION" | "RETAILER" | "BOUTIQUE" | "EXPORTER" | "INSTITUTION";
+            gstin?: string;
+            contact_name: string;
+            contact_phone: string;
+            contact_email?: string;
+            website?: string;
+            region?: {
+                state_code?: string;
+                district?: string;
+            };
+            verified?: boolean;
+            verified_by?: string;
+            verified_at?: string;
+            /** @enum {string} */
+            verification_status: "VERIFICATION_STATUS_PENDING" | "VERIFICATION_STATUS_VERIFIED" | "VERIFICATION_STATUS_REJECTED" | "PENDING" | "VERIFIED" | "REJECTED";
+            rejection_reason?: string;
+            income_statement_url?: string;
+            commission_rate_bps?: number;
+            /** Format: int64 */
+            total_sales_paise?: number;
+            /** Format: int64 */
+            commission_earned_paise?: number;
+            accepts_consignment?: boolean;
+            /** Format: int64 */
+            min_order_value_paise?: number;
+            preferred_craft_ids?: string[];
+            store_location?: {
+                latitude?: number;
+                longitude?: number;
+                address?: string;
+                city?: string;
+                pincode?: string;
+            };
+        };
+        RegisterCompanyRequest: {
+            name: string;
+            /** @enum {string} */
+            type: "RETAILER" | "BOUTIQUE" | "EXPORTER" | "INSTITUTION";
+            gstin?: string;
+            contact_name: string;
+            contact_phone: string;
+            contact_email?: string;
+            website?: string;
+            income_statement_url?: string;
+            accepts_consignment?: boolean;
+            /** Format: int64 */
+            min_order_value_paise?: number;
+            region?: {
+                state_code?: string;
+                district?: string;
+            };
+            preferred_craft_ids?: string[];
+            store_location?: {
+                latitude?: number;
+                longitude?: number;
+                address?: string;
+                city?: string;
+                pincode?: string;
+            };
+        };
+        VerifyCompanyRequest: {
+            /** @enum {string} */
+            decision: "VERIFIED" | "REJECTED";
+            rejection_reason?: string;
+        };
+        CommissionStatsResponse: {
+            total_companies: number;
+            pending_verifications: number;
+            verified_companies: number;
+            /** Format: int64 */
+            total_sales_paise: number;
+            /** Format: int64 */
+            total_commission_paise: number;
+        };
+        CompanySaleSettlement: {
+            id: string;
+            company_id: string;
+            order_id: string;
+            product_name?: string;
+            buyer_id?: string;
+            /** Format: int64 */
+            gross_amount_paise: number;
+            commission_rate_bps: number;
+            /** Format: int64 */
+            platform_fee_paise: number;
+            /** Format: int64 */
+            net_payout_paise: number;
+            settled_at: string;
+        };
+        CompanyInterest: {
+            id: string;
+            company_id: string;
+            artisan_id: string;
+            message?: string;
+            status: string;
+            company_name?: string;
+            company_type?: string;
+            created_at: string;
+        };
+        BoutiqueMatch: {
+            id: string;
+            company_id: string;
+            artisan_id: string;
+            match_score: number;
+            status: string;
+            boutique_name: string;
+            overlapping_crafts?: string[];
+            boutique_location?: {
+                latitude?: number;
+                longitude?: number;
+                address?: string;
+                city?: string;
+            };
+        };
+        TrendLink: {
+            id: string;
+            title: string;
+            description?: string;
+            url: string;
+            /** @enum {string} */
+            source_type: "TREND_SOURCE_TYPE_INSTAGRAM" | "TREND_SOURCE_TYPE_PINTEREST" | "TREND_SOURCE_TYPE_BLOG" | "TREND_SOURCE_TYPE_NEWS" | "TREND_SOURCE_TYPE_YOUTUBE" | "TREND_SOURCE_TYPE_OTHER" | "INSTAGRAM" | "PINTEREST" | "BLOG" | "NEWS" | "YOUTUBE" | "OTHER";
+            craft_id?: string;
+            craft_name?: string;
+            thumbnail_url?: string;
+            embed_html?: string;
+            embed_metadata_json?: string;
+            pinned?: boolean;
+            created_by?: string;
+            curator_role?: string;
+            curator_name?: string;
+            expires_at?: string;
+            created_at: string;
+        };
+        CreateTrendLinkRequest: {
+            title: string;
+            description?: string;
+            url: string;
+            /** @enum {string} */
+            source_type: "INSTAGRAM" | "PINTEREST" | "BLOG" | "NEWS" | "YOUTUBE" | "OTHER";
+            craft_id?: string;
+            thumbnail_url?: string;
+            auto_fetch_embed?: boolean;
+        };
+        Badge: {
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "EARNED" | "CONFERRED";
+            /** @enum {string} */
+            tier?: "BRONZE" | "SILVER" | "GOLD";
+            icon_name: string;
+            /** @enum {string} */
+            metric?: "LISTINGS_PUBLISHED" | "PROVENANCE_SEALED" | "LOTS_ACCEPTED" | "LOTS_COMPLETED";
+            threshold?: number;
+            sort_order: number;
+        };
+        ArtisanBadge: {
+            badge: components["schemas"]["Badge"];
+            granted_at: string;
+            granted_by: string;
+            evidence?: string;
+        };
+        BadgeProgressEntry: {
+            metric: string;
+            value: number;
+            updated_at: string;
+        };
+        GrantBadgeRequest: {
+            badge_id: string;
+            evidence_json?: string;
+        };
+        RevokeBadgeRequest: {
+            reason: string;
+        };
+        GovernmentScheme: {
+            id: string;
+            code: string;
+            /** @enum {string} */
+            authority: "CENTRAL" | "STATE";
+            ministry: string;
+            official_url: string;
+            state_code?: string;
+            name_i18n_key?: string;
+            name_text?: string;
+            summary_i18n_key?: string;
+            summary_text?: string;
+            sort_order: number;
+        };
+        SchemeCriterion: {
+            /** @enum {string} */
+            type: "SOCIAL_CATEGORY" | "STATE_CODE" | "CRAFT_ID" | "MIN_YEARS_EXPERIENCE" | "HAS_PEHCHAN_ID" | "HAS_PM_VISHWAKARMA_ID" | "CLUSTER_MEMBER" | "SHG_MEMBER";
+            string_values: string[];
+            int_value?: number;
+            negate: boolean;
+        };
+        SchemeManualCheck: {
+            i18n_key?: string;
+            check_text?: string;
+        };
+        SchemeMatch: {
+            scheme: components["schemas"]["GovernmentScheme"];
+            /** @enum {string} */
+            status: "MAY_QUALIFY" | "CHECK_REQUIRED" | "UNLIKELY";
+            matched_criteria_labels: string[];
+            unmet_criteria_labels: string[];
+            manual_checks: components["schemas"]["SchemeManualCheck"][];
+        };
+        UpsertSchemeRequest: {
+            id?: string;
+            code: string;
+            /** @enum {string} */
+            authority?: "CENTRAL" | "STATE";
+            ministry: string;
+            official_url: string;
+            state_code?: string;
+            name_i18n_key?: string;
+            name_text?: string;
+            summary_i18n_key?: string;
+            summary_text?: string;
+            sort_order?: number;
+            criteria?: components["schemas"]["SchemeCriterion"][];
+            manual_checks?: components["schemas"]["SchemeManualCheck"][];
         };
     };
     responses: never;

@@ -98,14 +98,13 @@
   const essay = $derived(ESSAYS.find((e) => e.slug === slug));
 
   const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'The Virasat Journal', href: '/#journal' },
-    { label: essay?.title ?? 'Essay' },
+    { label: t('journal.breadcrumbLabel'), href: '/#journal' },
+    { label: essay?.title ?? t('journal.breadcrumbEssayFallback') },
   ]);
 </script>
 
 <svelte:head>
-  <title>{essay ? `${essay.title} — Kalakriti Journal` : 'Essay — Kalakriti Journal'}</title>
+  <title>{essay ? t('journal.headTitleSuffix', { title: essay.title }) : t('journal.headTitleFallback')}</title>
   {#if essay}
     <meta name="description" content={essay.lead} />
   {/if}
@@ -114,18 +113,18 @@
 {#if !essay}
   <div class="essay-page">
     <div class="essay-container">
-      <Breadcrumbs items={[{ label: t('nav.home') || 'Home', href: '/' }, { label: 'Essay not found' }]} />
-      <h1>Essay not found</h1>
-      <p><a href="/">Return home</a></p>
+      <Breadcrumbs items={[{ label: t('journal.notFoundBreadcrumb') }]} />
+      <h1>{t('journal.notFoundHeading')}</h1>
+      <p><a href="/">{t('journal.returnHome')}</a></p>
     </div>
   </div>
 {:else}
   <div class="essay-page">
     <div class="essay-container">
-      <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+      <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
       <header class="essay-header">
-        <span class="essay-kicker">THE VIRASAT JOURNAL · {essay.cluster.toUpperCase()}</span>
+        <span class="essay-kicker">{t('journal.kickerPrefix', { cluster: essay.cluster.toUpperCase() })}</span>
         <h1 class="essay-title">{essay.title}</h1>
         <p class="essay-lead">{essay.lead}</p>
         <div class="essay-meta">
@@ -155,7 +154,7 @@
       <div class="essay-actions">
         <a href="/" class="essay-back-link">
           <Icon name="arrow-right" size="0.85rem" />
-          <span>Back to Kalakriti Home</span>
+          <span>{t('journal.backToHome')}</span>
         </a>
       </div>
     </div>
@@ -165,7 +164,7 @@
 <style>
   .essay-page {
     padding-block: var(--k-space-6) var(--k-space-12);
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .essay-container {
@@ -183,7 +182,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin-block-end: var(--k-space-2);
   }
 
@@ -240,15 +239,15 @@
   .essay-quote {
     margin: var(--k-space-7) 0;
     padding: var(--k-space-5);
-    background: #fdfbf7;
-    border-inline-start: 4px solid #b45309;
+    background: var(--k-surface-base);
+    border-inline-start: 4px solid var(--k-border-accent);
     border-radius: 0 var(--k-radius-md) var(--k-radius-md) 0;
   }
 
   .essay-quote p {
     font-size: var(--k-text-md);
     font-style: italic;
-    color: #44403c;
+    color: var(--k-stone-700);
     line-height: var(--k-leading-normal);
     margin: 0 0 var(--k-space-2);
   }
@@ -269,7 +268,7 @@
     gap: var(--k-space-2);
     font-size: var(--k-text-sm);
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     text-decoration: none;
   }
 

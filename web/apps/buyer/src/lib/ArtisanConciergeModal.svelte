@@ -6,7 +6,7 @@
   10-minute live video meeting with master weavers at their active looms.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Dialog, Button } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
@@ -48,8 +48,7 @@
         <Icon name="check" size="2rem" />
         <p class="success-heading">{t('home.concierge.success')}</p>
         <p class="success-note">
-          A master guild coordinator has reserved your consultation for {name}.
-          You will receive the video connection details via SMS / WhatsApp shortly.
+          {t('home.concierge.successNote', { name })}
         </p>
       </div>
     {:else}
@@ -61,7 +60,7 @@
             type="text"
             required
             bind:value={name}
-            placeholder="e.g. Ananya Sharma"
+            placeholder={t('home.concierge.namePlaceholder')}
             class="field-input"
           />
         </div>
@@ -73,7 +72,7 @@
             type="text"
             required
             bind:value={contact}
-            placeholder="e.g. ananya@example.com or +91 98765 43210"
+            placeholder={t('home.concierge.contactPlaceholder')}
             class="field-input"
           />
         </div>
@@ -81,12 +80,12 @@
         <div class="field-row">
           <label for="concierge-craft" class="field-label">{t('home.concierge.preferredCraft')}</label>
           <select id="concierge-craft" bind:value={craft} class="field-select">
-            <option value="banarasi">Varanasi Kadwa Silk & Zari Pit-Loom</option>
-            <option value="ajrakh">Kutch 16-Stage Natural Indigo & Dabu</option>
-            <option value="pashmina">Kashmir Imperial Sozni Needle Pashmina</option>
-            <option value="pochampally">Telangana Double-Ikat Warp Tension</option>
-            <option value="dokra">Bastar Lost-Wax Molten Bell Metal</option>
-            <option value="paithani">Maharashtra Pure Gold Zari Paithani</option>
+            <option value="banarasi">{t('home.concierge.craft.banarasi')}</option>
+            <option value="ajrakh">{t('home.concierge.craft.ajrakh')}</option>
+            <option value="pashmina">{t('home.concierge.craft.pashmina')}</option>
+            <option value="pochampally">{t('home.concierge.craft.pochampally')}</option>
+            <option value="dokra">{t('home.concierge.craft.dokra')}</option>
+            <option value="paithani">{t('home.concierge.craft.paithani')}</option>
           </select>
         </div>
 
@@ -102,17 +101,17 @@
             />
           </div>
           <div class="field-row flex-1">
-            <label for="concierge-slot" class="field-label">Preferred Window</label>
+            <label for="concierge-slot" class="field-label">{t('home.concierge.windowLabel')}</label>
             <select id="concierge-slot" bind:value={timeSlot} class="field-select">
-              <option value="morning">Morning (10:00 AM - 1:00 PM IST)</option>
-              <option value="afternoon">Afternoon (2:00 PM - 5:00 PM IST)</option>
-              <option value="evening">Evening (5:00 PM - 8:00 PM IST)</option>
+              <option value="morning">{t('home.concierge.window.morning')}</option>
+              <option value="afternoon">{t('home.concierge.window.afternoon')}</option>
+              <option value="evening">{t('home.concierge.window.evening')}</option>
             </select>
           </div>
         </div>
 
         <div class="form-actions">
-          <Button variant="primary" type="submit">
+          <Button variant="primary" type="submit" tooltip={tooltip('tooltip.submit')}>
             <Icon name="calendar" />
             <span>{t('home.concierge.submit')}</span>
           </Button>

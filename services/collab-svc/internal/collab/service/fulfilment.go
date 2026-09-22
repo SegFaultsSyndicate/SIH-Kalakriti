@@ -894,6 +894,11 @@ func (f *Fulfilment) SubmitQC(ctx context.Context, in SubmitQCInput) (domain.Ord
 			return nil
 		}
 
+		if err := outbox.Enqueue(ctx, tx, ids.New().String(), updated.ID.String(),
+			topics.OrderLotCompleted, in.IdempotencyKey+":lot-completed", lotCompletedPayload(updated)); err != nil {
+			return err
+		}
+
 		// target == LotCompleted: a passed lot releases its QC_PASSED
 		// tranche and, once every lot that will ever complete has, closes
 		// out the order.
@@ -1177,6 +1182,7 @@ func lotOfferedPayload(l domain.OrderLot) lotEventPayload    { return toLotEvent
 func lotAcceptedPayload(l domain.OrderLot) lotEventPayload   { return toLotEventPayload(l) }
 func lotDeclinedPayload(l domain.OrderLot) lotEventPayload   { return toLotEventPayload(l) }
 func lotProgressedPayload(l domain.OrderLot) lotEventPayload { return toLotEventPayload(l) }
+func lotCompletedPayload(l domain.OrderLot) lotEventPayload  { return toLotEventPayload(l) }
 
 func toLotEventPayload(l domain.OrderLot) lotEventPayload {
 	return lotEventPayload{

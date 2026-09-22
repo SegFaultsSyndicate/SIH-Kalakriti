@@ -33,6 +33,15 @@ const PAIRS = [
   ['--k-border-interactive', '--k-surface-base', 3],
   ['--k-focus-ring', '--k-surface-base', 3],
   ['--k-text-on-inverse', '--k-surface-inverse', 4.5],
+  ['--k-text-tertiary', '--k-surface-base', 4.5],
+  ['--k-accent-danger-muted', '--k-surface-base', 4.5],
+  ['--k-accent-danger-strong', '--k-surface-base', 4.5],
+  ['--k-accent-success-muted', '--k-surface-base', 4.5],
+  ['--k-text-on-accent', '--k-accent-danger-bg', 4.5],
+  ['--k-text-on-accent', '--k-accent-success-bg', 4.5],
+  ['--k-border-accent', '--k-surface-base', 3],
+  ['--k-border-danger', '--k-surface-base', 3],
+  ['--k-border-warning', '--k-surface-base', 3],
 ];
 
 const THEMES = {

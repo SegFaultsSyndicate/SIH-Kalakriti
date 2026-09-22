@@ -70,12 +70,24 @@ def _media(key: str = "artisans/a/b.jpg") -> common_pb2.MediaRef:
     )
 
 
+async def test_assess_image_quality(stub):
+    response = await stub.AssessImageQuality(
+        inference_pb2.AssessImageQualityRequest(media=_media())
+    )
+    assert response.passed
+    assert not response.issues
+    assert response.model_version
+
+
 async def test_enhance_image(stub):
     response = await stub.EnhanceImage(
-        inference_pb2.EnhanceImageRequest(source=_media(), remove_background=True)
+        inference_pb2.EnhanceImageRequest(
+            source=_media(), remove_background=True, correct_lighting=True
+        )
     )
     assert response.enhanced.object_key.endswith(".webp")
     assert "remove-background" in response.operations_applied
+    assert "correct-lighting" in response.operations_applied
     assert response.model_version
 
 
@@ -108,6 +120,22 @@ async def test_generate_description(stub):
     assert len(response.description) <= 240
     assert response.language == common_pb2.LANGUAGE_ENGLISH
     assert response.attribute_keys_used
+
+
+async def test_translate(stub):
+    response = await stub.Translate(
+        inference_pb2.TranslateRequest(
+            title="A cotton scarf.",
+            description="Hand woven with {{dnt0}}.",
+            highlights=["soft"],
+            source_language=common_pb2.LANGUAGE_ENGLISH,
+            target_language=common_pb2.LANGUAGE_HINDI,
+        )
+    )
+    assert response.title == "[HINDI] A cotton scarf."
+    assert "{{dnt0}}" in response.description
+    assert response.highlights == ["[HINDI] soft"]
+    assert response.model_version
 
 
 async def test_verify_technique(stub):

@@ -132,6 +132,13 @@ type CatalogService interface {
 	SuspendListing(ctx context.Context, listingID, reason, idempotencyKey string) (Listing, error)
 	ReinstateListing(ctx context.Context, listingID, idempotencyKey string) (Listing, error)
 
+	// AttachListingMedia replaces a listing's media set -- what triggers the
+	// cataloguing pipeline once photos land on a listing.
+	AttachListingMedia(ctx context.Context, listingID, idempotencyKey string, items []map[string]any) ([]map[string]any, error)
+	// GetListingAttributes reads what the model inferred for a listing, and
+	// what the artisan has since overridden.
+	GetListingAttributes(ctx context.Context, listingID string) ([]map[string]any, error)
+
 	// RefreshCraftIndex rebuilds the ontology alias index (Batch 13, /crafts).
 	RefreshCraftIndex(ctx context.Context, idempotencyKey string) (map[string]any, error)
 }

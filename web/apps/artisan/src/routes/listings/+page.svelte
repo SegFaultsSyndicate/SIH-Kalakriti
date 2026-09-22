@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Checkbox, EmptyState, Money, VisuallyHidden, VoiceInput, showToast } from '@kalakriti/ui';
   import { Card, Skeleton } from '@kalakriti/patterns';
@@ -175,7 +175,7 @@
 <main class="listings-page">
   <header class="listings-page__header">
     <h1>{t('listings.heading')}</h1>
-    <Button size="sm" onclick={() => goto('/listing/new/capture')}>
+    <Button size="sm" onclick={() => goto('/listing/new/capture')} tooltip={tooltip('tooltip.newListing')}>
       <Icon name="plus" />
       {t('listings.add')}
     </Button>
@@ -218,10 +218,10 @@
   {#if selected.size > 0}
     <div class="listings-page__bulk-bar" role="toolbar" aria-label={t('listings.bulk.label')}>
       <p>{t('listings.bulk.count', { count: String(selected.size) })}</p>
-      <Button size="sm" variant="secondary" disabled={!anySelectedPauseable} onclick={bulkPause}>{t('listings.bulk.pause')}</Button>
-      <Button size="sm" variant="secondary" disabled={!anySelectedPauseable} onclick={bulkResume}>{t('listings.bulk.resume')}</Button>
-      <Button size="sm" variant="secondary" onclick={bulkDuplicate}>{t('listings.bulk.duplicate')}</Button>
-      <Button size="sm" variant="ghost" onclick={() => (selected = new Set())}>{t('action.cancel')}</Button>
+      <Button size="sm" variant="secondary" disabled={!anySelectedPauseable} onclick={bulkPause} tooltip={tooltip('tooltip.pauseListing')}>{t('listings.bulk.pause')}</Button>
+      <Button size="sm" variant="secondary" disabled={!anySelectedPauseable} onclick={bulkResume} tooltip={tooltip('tooltip.resumeListing')}>{t('listings.bulk.resume')}</Button>
+      <Button size="sm" variant="secondary" onclick={bulkDuplicate} tooltip={tooltip('tooltip.duplicateListing')}>{t('listings.bulk.duplicate')}</Button>
+      <Button size="sm" variant="ghost" onclick={() => (selected = new Set())} tooltip={tooltip('tooltip.cancel')}>{t('action.cancel')}</Button>
     </div>
   {/if}
 
@@ -242,7 +242,7 @@
       body={t('listings.empty.body')}
     >
       {#snippet action()}
-        <Button onclick={() => goto('/listing/new/capture')}>{t('listings.add')}</Button>
+        <Button onclick={() => goto('/listing/new/capture')} tooltip={tooltip('tooltip.newListing')}>{t('listings.add')}</Button>
       {/snippet}
     </EmptyState>
   {:else}
@@ -280,11 +280,11 @@
                     {/if}
                   </div>
 
-                  <Button size="sm" variant="secondary" onclick={() => goto(primaryActionHref(listing))}>
+                  <Button size="sm" variant="secondary" onclick={() => goto(primaryActionHref(listing))} tooltip={tooltip('tooltip.viewListing')}>
                     {primaryActionLabel(listing)}
                   </Button>
                   {#if group === 'published'}
-                    <Button size="sm" variant="ghost" onclick={() => goto(`/listings/${listing.id}`)}>
+                    <Button size="sm" variant="ghost" onclick={() => goto(`/listings/${listing.id}`)} tooltip={tooltip('tooltip.viewGem')}>
                       <Icon name="external-link" />
                       GeM
                     </Button>

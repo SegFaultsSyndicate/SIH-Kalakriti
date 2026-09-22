@@ -1,15 +1,37 @@
 // packages/i18n/src/locales.test.ts
-import { describe, expect, it } from 'vitest';
-import { LOCALES, LOCALE_CODES, SUPPORTED_LOCALES, isLocaleCode, resolveLocale } from './locales';
+import { beforeAll, describe, expect, it } from 'vitest';
+import {
+  LOCALES,
+  LOCALE_CODES,
+  SUPPORTED_LOCALES,
+  isLocaleCode,
+  resolveLocale,
+  type LocaleCode,
+} from './locales';
+import { en } from './messages/en';
+import { auditCatalogue } from './catalogue-audit';
+
+const NON_EN: LocaleCode[] = LOCALE_CODES.filter((code) => code !== 'en');
+const catalogues = new Map<LocaleCode, Record<string, string>>();
+
+beforeAll(async () => {
+  const loaded = await Promise.all(
+    NON_EN.map((code) => import(`./messages/${code}.ts`) as Promise<Record<string, unknown>>),
+  );
+  NON_EN.forEach((code, i) => catalogues.set(code, loaded[i][code] as Record<string, string>));
+});
 
 describe('LOCALES', () => {
-  it('lists all 22 Eighth Schedule languages, plus English', () => {
-    // English is the administrative link language, not one of the 22
-    // constitutionally scheduled languages -- it's the 23rd code, added for
-    // the demo and as the catalogue's source of truth.
-    expect(LOCALE_CODES).toHaveLength(23);
+  it('lists 20 of the 22 Eighth Schedule languages, plus English', () => {
+    // English is the administrative link language, not one of the scheduled
+    // languages -- it's the 21st code, added for the demo and as the
+    // catalogue's source of truth. Manipuri and Santali were dropped (weakest
+    // script/font support of the 22, no translated catalogue).
+    expect(LOCALE_CODES).toHaveLength(21);
     expect(LOCALE_CODES).toContain('en');
-    expect(SUPPORTED_LOCALES).toHaveLength(22);
+    expect(LOCALE_CODES).not.toContain('mni');
+    expect(LOCALE_CODES).not.toContain('sat');
+    expect(SUPPORTED_LOCALES).toHaveLength(20);
     expect(SUPPORTED_LOCALES).not.toContain('en');
   });
 
@@ -19,11 +41,23 @@ describe('LOCALES', () => {
     }
   });
 
-  it('reports complete coverage for translated languages; the rest report fallback', () => {
-    const complete = new Set(['en', 'hi', 'bn', 'gu', 'mr', 'or', 'pa', 'sd', 'ta', 'te', 'ur']);
-    for (const code of LOCALE_CODES) {
-      const expected = complete.has(code) ? 'complete' : 'fallback';
-      expect(LOCALES[code].coverage).toBe(expected);
+  it('never declares complete/machine coverage for a catalogue the audit finds broken', () => {
+    // Regression guard for the exact bug this test used to have: it asserted
+    // a hardcoded list of "complete" locales without ever reading a
+    // catalogue file, so 9 locales that were ~90% pasted Hindi stayed
+    // labelled 'complete' indefinitely. See catalogue-audit.ts and
+    // I18N_PLAN.md's Phase 1 for the real measurement; a locale may only
+    // claim 'complete' or 'machine' once auditCatalogue reports zero issues
+    // against it.
+    expect(LOCALES.en.coverage).toBe('complete');
+    const hi = catalogues.get('hi') ?? {};
+    for (const code of NON_EN) {
+      const issues = auditCatalogue(code, catalogues.get(code)!, en, hi);
+      if (issues.length === 0) {
+        expect(['complete', 'machine']).toContain(LOCALES[code].coverage);
+      } else {
+        expect(LOCALES[code].coverage).toBe('fallback');
+      }
     }
   });
 
@@ -34,7 +68,7 @@ describe('LOCALES', () => {
 });
 
 describe('resolveLocale', () => {
-  it('resolves every one of the 22 codes without error', () => {
+  it('resolves every one of the 20 codes without error', () => {
     for (const code of LOCALE_CODES) {
       expect(resolveLocale([code])).toBe(code);
     }
@@ -55,3 +89,69 @@ describe('isLocaleCode', () => {
     expect(isLocaleCode('xx')).toBe(false);
   });
 });
+
+describe('tooltip translations', () => {
+  it('has translated tooltips without placeholder suffixes in message bundles', async () => {
+    const { hi } = await import('./messages/hi');
+    const { kok } = await import('./messages/kok');
+    const { bn } = await import('./messages/bn');
+    const { ta } = await import('./messages/ta');
+    const { mr } = await import('./messages/mr');
+
+    expect(hi['tooltip.back']).toBe('पीछे जाएं');
+    expect(hi['tooltip.search']).toBe('खोजें');
+    expect(kok['tooltip.back']).toBe('फाटीं वचा');
+    expect(kok['tooltip.search']).toBe('सोदा');
+    expect(bn['tooltip.back']).toBe('ফিরে যান');
+    expect(bn['tooltip.search']).toBe('অনুসন্ধান');
+    expect(ta['tooltip.back']).toBe('பின்னே செல்க');
+    expect(ta['tooltip.search']).toBe('தேடுக');
+    expect(mr['tooltip.back']).toBe('मागे जा');
+    expect(mr['tooltip.search']).toBe('शोधा');
+
+    // Verify none of the tooltips contain the dummy "(hi)" or "(kok)" pattern
+    for (const [key, val] of Object.entries(hi)) {
+      if (key.startsWith('tooltip.')) {
+        expect(val).not.toMatch(/\([a-z]{2,3}\)$/);
+      }
+    }
+    for (const [key, val] of Object.entries(kok)) {
+      if (key.startsWith('tooltip.')) {
+        expect(val).not.toMatch(/\([a-z]{2,3}\)$/);
+      }
+    }
+  });
+});
+
+describe('app.name localization', () => {
+  it('has localized brand name in every non-English locale and English source in en', () => {
+    expect(en['app.name']).toBe('Kalakriti');
+    expect(catalogues.get('hi')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('bn')?.['app.name']).toBe('কলাকৃতি');
+    expect(catalogues.get('ta')?.['app.name']).toBe('கலாகிருதி');
+    expect(catalogues.get('te')?.['app.name']).toBe('కలాకృతి');
+    expect(catalogues.get('mr')?.['app.name']).toBe('कलाकृती');
+    expect(catalogues.get('gu')?.['app.name']).toBe('કલાકૃતિ');
+    expect(catalogues.get('kn')?.['app.name']).toBe('ಕಲಾಕೃತಿ');
+    expect(catalogues.get('ml')?.['app.name']).toBe('കലാകൃതി');
+    expect(catalogues.get('pa')?.['app.name']).toBe('ਕਲਾਕ੍ਰਿਤੀ');
+    expect(catalogues.get('or')?.['app.name']).toBe('କଳାକୃତି');
+    expect(catalogues.get('as')?.['app.name']).toBe('কলাকৃতি');
+    expect(catalogues.get('ur')?.['app.name']).toBe('کلاکرتی');
+    expect(catalogues.get('ks')?.['app.name']).toBe('کلاکرتی');
+    expect(catalogues.get('sd')?.['app.name']).toBe('ڪلاڪرتي');
+    expect(catalogues.get('kok')?.['app.name']).toBe('कलाकृती');
+    expect(catalogues.get('mai')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('ne')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('sa')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('doi')?.['app.name']).toBe('कलाकृति');
+    expect(catalogues.get('brx')?.['app.name']).toBe('कलाकृति');
+
+    for (const code of NON_EN) {
+      const val = catalogues.get(code)?.['app.name'];
+      expect(val).toBeDefined();
+      expect(val).not.toBe('Kalakriti');
+    }
+  });
+});
+

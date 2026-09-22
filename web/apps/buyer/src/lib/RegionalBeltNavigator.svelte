@@ -6,8 +6,8 @@
   authentic typography, and first-class GI tag status.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon, type IconName } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -19,7 +19,7 @@
     descKey: string;
     icon: IconName;
     states: string;
-    featuredCrafts: { name: string; query: string; giYear: string }[];
+    featuredCrafts: { nameKey: MessageKey; query: string; giYear: string }[];
   };
 
   const BELTS: Belt[] = [
@@ -31,10 +31,10 @@
       icon: 'weaving',
       states: 'Jammu & Kashmir, Himachal Pradesh, Uttar Pradesh, Punjab',
       featuredCrafts: [
-        { name: 'Kashmir Pashmina', query: 'pashmina', giYear: 'GI-2008' },
-        { name: 'Banarasi Brocade & Zari', query: 'banarasi', giYear: 'GI-2009' },
-        { name: 'Lucknow Chikankari', query: 'chikankari', giYear: 'GI-2008' },
-        { name: 'Kullu Shawls', query: 'kullu', giYear: 'GI-2004' },
+        { nameKey: 'home.belts.north.craft.1.name', query: 'pashmina', giYear: 'GI-2008' },
+        { nameKey: 'home.belts.north.craft.2.name', query: 'banarasi', giYear: 'GI-2009' },
+        { nameKey: 'home.belts.north.craft.3.name', query: 'chikankari', giYear: 'GI-2008' },
+        { nameKey: 'home.belts.north.craft.4.name', query: 'kullu', giYear: 'GI-2004' },
       ],
     },
     {
@@ -45,10 +45,10 @@
       icon: 'block-printing',
       states: 'Gujarat, Rajasthan, Western Maharashtra',
       featuredCrafts: [
-        { name: 'Kutch Ajrakh', query: 'ajrakh', giYear: 'GI-2024' },
-        { name: 'Bagru Hand Block Print', query: 'bagru', giYear: 'GI-2011' },
-        { name: 'Patan Patola Double-Ikat', query: 'patola', giYear: 'GI-2013' },
-        { name: 'Rogan Art of Nirona', query: 'rogan', giYear: 'GI-2023' },
+        { nameKey: 'home.belts.west.craft.1.name', query: 'ajrakh', giYear: 'GI-2024' },
+        { nameKey: 'home.belts.west.craft.2.name', query: 'bagru', giYear: 'GI-2011' },
+        { nameKey: 'home.belts.west.craft.3.name', query: 'patola', giYear: 'GI-2013' },
+        { nameKey: 'home.belts.west.craft.4.name', query: 'rogan', giYear: 'GI-2023' },
       ],
     },
     {
@@ -59,10 +59,10 @@
       icon: 'jewellery',
       states: 'Tamil Nadu, Telangana, Karnataka, Andhra Pradesh, Kerala',
       featuredCrafts: [
-        { name: 'Kanchipuram Temple Silk', query: 'kanchipuram', giYear: 'GI-2005' },
-        { name: 'Pochampally Ikat', query: 'pochampally', giYear: 'GI-2004' },
-        { name: 'Bidriware Silver Inlay', query: 'bidriware', giYear: 'GI-2006' },
-        { name: 'Srikalahasti Kalamkari', query: 'kalamkari', giYear: 'GI-2006' },
+        { nameKey: 'home.belts.south.craft.1.name', query: 'kanchipuram', giYear: 'GI-2005' },
+        { nameKey: 'home.belts.south.craft.2.name', query: 'pochampally', giYear: 'GI-2004' },
+        { nameKey: 'home.belts.south.craft.3.name', query: 'bidriware', giYear: 'GI-2006' },
+        { nameKey: 'home.belts.south.craft.4.name', query: 'kalamkari', giYear: 'GI-2006' },
       ],
     },
     {
@@ -73,10 +73,10 @@
       icon: 'metalwork',
       states: 'West Bengal, Assam, Odisha, Nagaland, Manipur',
       featuredCrafts: [
-        { name: 'Assam Muga Wild Silk', query: 'muga', giYear: 'GI-2007' },
-        { name: 'Bengal Jamdani', query: 'jamdani', giYear: 'GI-2016' },
-        { name: 'Sambalpuri Bandha Saree', query: 'sambalpuri', giYear: 'GI-2010' },
-        { name: 'Bastar Lost-Wax Dokra', query: 'dokra', giYear: 'GI-2008' },
+        { nameKey: 'home.belts.east.craft.1.name', query: 'muga', giYear: 'GI-2007' },
+        { nameKey: 'home.belts.east.craft.2.name', query: 'jamdani', giYear: 'GI-2016' },
+        { nameKey: 'home.belts.east.craft.3.name', query: 'sambalpuri', giYear: 'GI-2010' },
+        { nameKey: 'home.belts.east.craft.4.name', query: 'dokra', giYear: 'GI-2008' },
       ],
     },
     {
@@ -87,10 +87,10 @@
       icon: 'charkha-spinner',
       states: 'Madhya Pradesh, Chhattisgarh, Eastern Maharashtra',
       featuredCrafts: [
-        { name: 'Chanderi Gossamer Silk', query: 'chanderi', giYear: 'GI-2005' },
-        { name: 'Maheshwari Handloom', query: 'maheshwari', giYear: 'GI-2012' },
-        { name: 'Bastar Bell Metal Castings', query: 'bastar', giYear: 'GI-2008' },
-        { name: 'Gond Tribal Painting', query: 'gond', giYear: 'GI-2023' },
+        { nameKey: 'home.belts.central.craft.1.name', query: 'chanderi', giYear: 'GI-2005' },
+        { nameKey: 'home.belts.central.craft.2.name', query: 'maheshwari', giYear: 'GI-2012' },
+        { nameKey: 'home.belts.central.craft.3.name', query: 'bastar', giYear: 'GI-2008' },
+        { nameKey: 'home.belts.central.craft.4.name', query: 'gond', giYear: 'GI-2023' },
       ],
     },
   ];
@@ -112,27 +112,32 @@
   <!-- Belt Selector Navigation Tabs -->
   <div class="belt-nav-strip" role="tablist">
     {#each BELTS as belt (belt.id)}
-      <button
-        type="button"
-        role="tab"
-        aria-selected={selectedBeltId === belt.id}
-        class="belt-nav-item"
-        class:active={selectedBeltId === belt.id}
-        onclick={() => (selectedBeltId = belt.id)}
-      >
-        <Icon name={belt.icon} size="1.1rem" />
-        <span class="nav-text">
-          {belt.id === 'north'
-            ? t('home.belts.north.name')
-            : belt.id === 'west'
-              ? t('home.belts.west.name')
-              : belt.id === 'south'
-                ? t('home.belts.south.name')
-                : belt.id === 'east'
-                  ? t('home.belts.east.name')
-                  : t('home.belts.central.name')}
-        </span>
-      </button>
+      <Tooltip text={tooltip('tooltip.selectBelt')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selectedBeltId === belt.id}
+            class="belt-nav-item"
+            class:active={selectedBeltId === belt.id}
+            onclick={() => (selectedBeltId = belt.id)}
+            {...tp}
+          >
+            <Icon name={belt.icon} size="1.1rem" />
+            <span class="nav-text">
+              {belt.id === 'north'
+                ? t('home.belts.north.name')
+                : belt.id === 'west'
+                  ? t('home.belts.west.name')
+                  : belt.id === 'south'
+                    ? t('home.belts.south.name')
+                    : belt.id === 'east'
+                      ? t('home.belts.east.name')
+                      : t('home.belts.central.name')}
+            </span>
+          </button>
+        {/snippet}
+      </Tooltip>
     {/each}
   </div>
 
@@ -169,12 +174,12 @@
       </p>
 
       <div class="gi-craft-register">
-        <p class="register-label">GI Certified Geographical Specialities:</p>
+        <p class="register-label">{t('home.belts.registerLabel')}</p>
         <ul class="register-list" role="list">
           {#each selectedBelt.featuredCrafts as craft}
             <li class="register-item">
               <a href={`/search?q=${encodeURIComponent(craft.query)}`} class="craft-anchor">
-                <span class="craft-name">{craft.name}</span>
+                <span class="craft-name">{t(craft.nameKey)}</span>
                 <span class="gi-badge">{craft.giYear}</span>
                 <Icon name="arrow-right" size="0.85rem" />
               </a>
@@ -186,21 +191,20 @@
 
     <div class="corridor-sidebar">
       <div class="sidebar-block">
-        <p class="sidebar-header">Cluster Architecture</p>
+        <p class="sidebar-header">{t('home.belts.sidebarHeader')}</p>
         <p class="sidebar-detail">
-          Every master piece from this corridor is cross-verified against the Geographical
-          Indications Registry of India with guaranteed direct-to-artisan payouts.
+          {t('home.belts.sidebarDetail')}
         </p>
       </div>
 
       <div class="sidebar-metrics">
         <div class="metric-cell">
           <span class="metric-val">100%</span>
-          <span class="metric-lbl">Direct Bank Floor</span>
+          <span class="metric-lbl">{t('home.belts.metric.directBankFloor')}</span>
         </div>
         <div class="metric-cell">
           <span class="metric-val">GI</span>
-          <span class="metric-lbl">Pehchan Verified</span>
+          <span class="metric-lbl">{t('home.belts.metric.pehchanVerified')}</span>
         </div>
       </div>
 

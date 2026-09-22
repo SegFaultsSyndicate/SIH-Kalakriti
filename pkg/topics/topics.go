@@ -6,10 +6,19 @@ package topics
 
 // Topic names. Each maps to exactly one envelope message in events/v1/events.proto.
 const (
-	// MediaUploaded carries events.v1.MediaUploaded.
+	// MediaUploaded carries events.v1.MediaUploaded. Currently unconsumed: the
+	// cataloguing pipeline used to trigger off this (one product per photo,
+	// created before any listing existed) but now triggers off
+	// CatalogListingMediaAttached instead, once photos are actually attached
+	// to a listing -- see WIRING_AUDIT_PLAN.md.
 	MediaUploaded = "media.uploaded"
 	// MediaEnhanced carries events.v1.MediaEnhanced.
 	MediaEnhanced = "media.enhanced"
+
+	// CatalogListingMediaAttached carries events.v1.ListingMediaAttached, and is
+	// what triggers the cataloguing pipeline: enhance every attached photo,
+	// extract attributes, draft a description.
+	CatalogListingMediaAttached = "catalog.listing.media_attached"
 
 	// CatalogAttributesExtracted carries events.v1.CatalogAttributesExtracted.
 	CatalogAttributesExtracted = "catalog.attributes.extracted"
@@ -70,6 +79,24 @@ const (
 	ShipmentDispatched = "shipment.dispatched"
 	// ShipmentDelivered carries events.v1.ShipmentDelivered.
 	ShipmentDelivered = "shipment.delivered"
+
+	// CompanyInterestExpressed is emitted when a company expresses interest in an artisan.
+	// CompanyRegistered is emitted when a new company submits registration.
+	CompanyRegistered = "company.registered"
+	// CompanyVerified is emitted when an admin approves a company's registration.
+	CompanyVerified = "company.verified"
+	// CompanyRejected is emitted when an admin rejects a company's registration.
+	CompanyRejected = "company.rejected"
+	// CompanySaleSettled is emitted when a purchase of a company product has platform fee deducted.
+	CompanySaleSettled = "company.sale.settled"
+	// CompanyInterestExpressed is emitted when a company reaches out to an artisan.
+	CompanyInterestExpressed = "company.interest.expressed"
+	// CompanyInterestAccepted is emitted when an artisan accepts a company's interest.
+	CompanyInterestAccepted = "company.interest.accepted"
+	// SupplyPartnershipCreated is emitted when a supply partnership is established.
+	SupplyPartnershipCreated = "supply.partnership.created"
+	// BoutiqueMatchFound is emitted when a new boutique-artisan match is computed.
+	BoutiqueMatchFound = "boutique.match.found"
 )
 
 // DLQSuffix is appended to a topic name to form its dead-letter topic.
@@ -79,6 +106,7 @@ const DLQSuffix = ".dlq"
 var All = []string{
 	MediaUploaded,
 	MediaEnhanced,
+	CatalogListingMediaAttached,
 	CatalogAttributesExtracted,
 	CatalogListingDrafted,
 	CatalogListingPublished,
@@ -104,6 +132,14 @@ var All = []string{
 	DisputeResolved,
 	ShipmentDispatched,
 	ShipmentDelivered,
+	CompanyRegistered,
+	CompanyVerified,
+	CompanyRejected,
+	CompanySaleSettled,
+	CompanyInterestExpressed,
+	CompanyInterestAccepted,
+	SupplyPartnershipCreated,
+	BoutiqueMatchFound,
 }
 
 // DLQ returns the dead-letter topic for the given topic.

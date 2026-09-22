@@ -36,24 +36,30 @@ type artisanRegistered struct {
 //
 // idempotencyKey is the caller's retry key; it is carried into the outbox row so
 // a replayed registration cannot enqueue the same event twice.
-func (s *Identity) RegisterArtisan(ctx context.Context, in domain.RegisterArtisanInput, idempotencyKey string) (domain.Artisan, error) {
+//
+// Returns a fresh token pair bound to the new artisan id alongside the
+// profile: the caller's existing token was minted at OTP-verify time, before
+// this profile existed, so it carries no subject and can never authenticate
+// another call. Every caller must switch to the returned tokens immediately,
+// the same way VerifyOtp's response is used.
+func (s *Identity) RegisterArtisan(ctx context.Context, in domain.RegisterArtisanInput, idempotencyKey string) (domain.Artisan, auth.TokenPair, error) {
 	if err := in.Validate(); err != nil {
-		return domain.Artisan{}, err
+		return domain.Artisan{}, auth.TokenPair{}, err
 	}
 	if idempotencyKey == "" {
-		return domain.Artisan{}, fmt.Errorf("idempotency_key is required: %w", pkgdomain.ErrInvalidInput)
+		return domain.Artisan{}, auth.TokenPair{}, fmt.Errorf("idempotency_key is required: %w", pkgdomain.ErrInvalidInput)
 	}
 
 	principal, err := auth.RequirePrincipal(ctx)
 	if err != nil {
-		return domain.Artisan{}, err
+		return domain.Artisan{}, auth.TokenPair{}, err
 	}
 	// A caller may register only the phone number they proved control of during
 	// login — otherwise anyone with a token could claim someone else's number.
 	// Field staff registering an artisan by proxy are the documented exception.
 	if !principal.HasRole(auth.RoleClusterOfficer, auth.RoleMinistry) {
 		if principal.PhoneE164 == "" || principal.PhoneE164 != in.PhoneE164 {
-			return domain.Artisan{}, fmt.Errorf(
+			return domain.Artisan{}, auth.TokenPair{}, fmt.Errorf(
 				"a registration must use the phone number verified at login: %w", pkgdomain.ErrForbidden)
 		}
 	}
@@ -68,10 +74,35 @@ func (s *Identity) RegisterArtisan(ctx context.Context, in domain.RegisterArtisa
 	// translated to ErrConflict by the repo. This pre-check exists so the common
 	// case produces a clear message naming the phone number, rather than a
 	// constraint name, and so a doomed registration never opens a transaction.
-	if _, exists, err := s.store.ArtisanExistsByPhone(ctx, in.PhoneE164); err != nil {
-		return domain.Artisan{}, fmt.Errorf("checking whether %s is registered: %w", in.PhoneE164, err)
+	if existingID, exists, err := s.store.ArtisanExistsByPhone(ctx, in.PhoneE164); err != nil {
+		return domain.Artisan{}, auth.TokenPair{}, fmt.Errorf("checking whether %s is registered: %w", in.PhoneE164, err)
 	} else if exists {
-		return domain.Artisan{}, fmt.Errorf("an artisan is already registered with phone %s: %w",
+		// Self-registration only: the phone-ownership check above already
+		// proved this caller controls in.PhoneE164, so an existing profile
+		// under that exact phone can only be their own -- never someone
+		// else's. Treating it as success (fresh tokens for the profile that
+		// already exists) rather than an error makes registration properly
+		// idempotent for a retried/duplicate submit, e.g. a client that sent
+		// this same request once already but lost the response before
+		// switching off its pre-registration token: without this, that
+		// client is stuck holding a token that can never authenticate
+		// anything, with no path back to the tokens its own prior success
+		// already issued. A cluster-officer/ministry proxy hitting this for
+		// someone else's phone still gets the conflict -- "already
+		// registered" is actionable information for them, not a race to
+		// paper over.
+		if !principal.HasRole(auth.RoleClusterOfficer, auth.RoleMinistry) {
+			existing, err := s.store.GetArtisan(ctx, existingID)
+			if err != nil {
+				return domain.Artisan{}, auth.TokenPair{}, fmt.Errorf("loading existing profile for %s: %w", in.PhoneE164, err)
+			}
+			tokens, err := s.mintArtisanTokens(existingID, in.PhoneE164, existing.Languages)
+			if err != nil {
+				return domain.Artisan{}, auth.TokenPair{}, err
+			}
+			return existing, tokens, nil
+		}
+		return domain.Artisan{}, auth.TokenPair{}, fmt.Errorf("an artisan is already registered with phone %s: %w",
 			in.PhoneE164, pkgdomain.ErrConflict)
 	}
 
@@ -113,12 +144,33 @@ func (s *Identity) RegisterArtisan(ctx context.Context, in domain.RegisterArtisa
 		)
 	})
 	if err != nil {
-		return domain.Artisan{}, err
+		return domain.Artisan{}, auth.TokenPair{}, err
+	}
+
+	tokens, err := s.mintArtisanTokens(artisanID, in.PhoneE164, in.Languages)
+	if err != nil {
+		return domain.Artisan{}, auth.TokenPair{}, err
 	}
 
 	s.log.InfoContext(ctx, "artisan registered",
 		"artisan_id", artisanID, "cluster_id", in.ClusterID, "crafts", len(in.CraftIDs))
-	return created, nil
+	return created, tokens, nil
+}
+
+// mintArtisanTokens issues an artisan-scoped token pair, the same shape
+// VerifyOtp mints for an already-registered phone. Shared by a fresh
+// registration and the already-registered recovery path above so both
+// return identically-shaped tokens.
+func (s *Identity) mintArtisanTokens(artisanID uuid.UUID, phone string, languages []string) (auth.TokenPair, error) {
+	sub := auth.Subject{ID: artisanID.String(), Role: auth.RoleArtisan, PhoneE164: phone}
+	if len(languages) > 0 {
+		sub.Language = languages[0]
+	}
+	tokens, err := s.tokens.Issue(sub)
+	if err != nil {
+		return auth.TokenPair{}, fmt.Errorf("issuing tokens for artisan %s: %w", artisanID, err)
+	}
+	return tokens, nil
 }
 
 // GetArtisan reads one artisan. Any authenticated caller may read a profile:

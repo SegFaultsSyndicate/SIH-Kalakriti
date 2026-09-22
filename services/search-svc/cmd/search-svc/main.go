@@ -18,12 +18,12 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	searchv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/search/v1"
@@ -103,13 +103,13 @@ func run() error {
 		}
 	}()
 
-	mlConn, err := grpc.NewClient(pipeline.MLSvcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	mlConn, err := grpcdial.Dial(pipeline.MLSvcAddr)
 	if err != nil {
 		return fmt.Errorf("dialling ml-svc: %w", err)
 	}
 	defer func() { _ = mlConn.Close() }()
 
-	coreConn, err := grpc.NewClient(coreAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	coreConn, err := grpcdial.Dial(coreAddr)
 	if err != nil {
 		return fmt.Errorf("dialling core-svc: %w", err)
 	}
@@ -135,17 +135,6 @@ func run() error {
 		reflection.Register(grpcServer)
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
-		if err := pool.Ping(r.Context()); err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-	httpServer := &http.Server{Addr: httpAddr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
-
 	bgCtx, stopBackground := context.WithCancel(context.Background())
 	defer stopBackground()
 
@@ -154,6 +143,24 @@ func run() error {
 		Topic:   topics.CatalogListingPublished,
 		GroupID: kafkaCfg.ConsumerGroupPrefix + "." + serviceName + ".index",
 	}, log)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) })
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		if err := pool.Ping(r.Context()); err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+		// See WIRING_AUDIT_PLAN.md F-6: indexConsumer reconnects forever
+		// after a disconnect rather than dying, which used to make it
+		// invisible to readiness (it only ever pinged Postgres).
+		if !indexConsumer.Healthy() {
+			http.Error(w, "index consumer for "+indexConsumer.Topic()+" is reconnecting", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	})
+	httpServer := &http.Server{Addr: httpAddr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {

@@ -15,7 +15,7 @@
 
 import { call, type CallOptions } from './retry';
 import { API_BASE } from './transport';
-import type { paths } from './generated/schema';
+import type { paths, components } from './generated/schema';
 
 type Json<T> = T extends { content: { 'application/json': infer J } } ? J : never;
 
@@ -83,6 +83,34 @@ export function updateArtisanProfile(
   options?: CallOptions,
 ): Promise<void> {
   return call('/artisans/me', { ...options, method: 'PATCH', body }) as Promise<void>;
+}
+
+type RequestPhoneChangeBody = Json<paths['/auth/phone/change/request']['post']['requestBody']>;
+type RequestPhoneChangeResponse = Json<paths['/auth/phone/change/request']['post']['responses'][200]>;
+
+export function requestPhoneChangeOtp(
+  body: RequestPhoneChangeBody,
+  options?: CallOptions,
+): Promise<RequestPhoneChangeResponse> {
+  return call('/auth/phone/change/request', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<RequestPhoneChangeResponse>;
+}
+
+type VerifyPhoneChangeBody = Json<paths['/auth/phone/change/verify']['post']['requestBody']>;
+type VerifyPhoneChangeResponse = Json<paths['/auth/phone/change/verify']['post']['responses'][200]>;
+
+export function verifyPhoneChangeOtp(
+  body: VerifyPhoneChangeBody,
+  options?: CallOptions,
+): Promise<VerifyPhoneChangeResponse> {
+  return call('/auth/phone/change/verify', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<VerifyPhoneChangeResponse>;
 }
 
 type ListListingsQuery = paths['/listings']['get']['parameters']['query'];
@@ -178,6 +206,30 @@ export function approveListing(
     method: 'POST',
     body,
   }) as Promise<void>;
+}
+
+type AttachListingMediaBody = Json<paths['/listings/{id}/media']['post']['requestBody']>;
+type AttachListingMediaResponse = Json<paths['/listings/{id}/media']['post']['responses'][200]>;
+
+export function attachListingMedia(
+  id: string,
+  body: AttachListingMediaBody,
+  options?: CallOptions,
+): Promise<AttachListingMediaResponse> {
+  return call(`/listings/${encodeURIComponent(id)}/media`, {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<AttachListingMediaResponse>;
+}
+
+type GetListingAttributesResponse = Json<paths['/listings/{id}/attributes']['get']['responses'][200]>;
+
+export function getListingAttributes(id: string, options?: CallOptions): Promise<GetListingAttributesResponse> {
+  return call(`/listings/${encodeURIComponent(id)}/attributes`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<GetListingAttributesResponse>;
 }
 
 type UploadUrlBody = Json<paths['/media/upload-url']['post']['requestBody']>;
@@ -596,4 +648,255 @@ type RefreshCraftIndexResponse = Json<paths['/crafts/refresh-index']['post']['re
 
 export function refreshCraftIndex(options?: CallOptions): Promise<RefreshCraftIndexResponse> {
   return call('/crafts/refresh-index', { ...options, method: 'POST' }) as Promise<RefreshCraftIndexResponse>;
+}
+
+// --- B2B & Boutique Operations ---
+
+export type Company = Json<paths['/companies']['post']['responses'][201]>;
+export type RegisterCompanyBody = Json<paths['/companies']['post']['requestBody']>;
+export type CompanyListResponse = Json<paths['/companies']['get']['responses'][200]>;
+export type VerifyCompanyBody = Json<paths['/companies/{id}/verify']['post']['requestBody']>;
+export type CommissionStatsResponse = Json<paths['/companies/commission-stats']['get']['responses'][200]>;
+export type RecordCompanySaleBody = Json<paths['/companies/sales/settle']['post']['requestBody']>;
+export type RecordCompanySaleResponse = Json<paths['/companies/sales/settle']['post']['responses'][200]>;
+export type CompanySalesListResponse = Json<paths['/companies/{id}/sales']['get']['responses'][200]>;
+export type ExpressInterestBody = Json<paths['/companies/{id}/interest']['post']['requestBody']>;
+export type ExpressInterestResponse = Json<paths['/companies/{id}/interest']['post']['responses'][201]>;
+export type RespondToInterestBody = Json<paths['/leads/{id}/respond']['post']['requestBody']>;
+export type RespondToInterestResponse = Json<paths['/leads/{id}/respond']['post']['responses'][200]>;
+export type ArtisanLeadsResponse = Json<paths['/artisans/me/leads']['get']['responses'][200]>;
+export type BoutiqueMatchesResponse = Json<paths['/artisans/me/boutique-matches']['get']['responses'][200]>;
+export type NearbyBoutiquesResponse = Json<paths['/boutiques/nearby']['get']['responses'][200]>;
+
+export function registerCompany(body: RegisterCompanyBody, options?: CallOptions): Promise<Company> {
+  return call('/companies', { ...options, method: 'POST', body }) as Promise<Company>;
+}
+
+export function listCompanies(
+  query?: { state_code?: string; type?: string; verification_status?: string; verified_only?: boolean; page_token?: string },
+  options?: CallOptions,
+): Promise<CompanyListResponse> {
+  const q = new URLSearchParams();
+  if (query?.state_code) q.set('state_code', query.state_code);
+  if (query?.type) q.set('type', query.type);
+  if (query?.verification_status) q.set('verification_status', query.verification_status);
+  if (query?.verified_only !== undefined) q.set('verified_only', String(query.verified_only));
+  if (query?.page_token) q.set('page_token', query.page_token);
+  const qs = q.toString();
+  return call(`/companies${qs ? `?${qs}` : ''}`, { ...options, method: 'GET' }) as Promise<CompanyListResponse>;
+}
+
+export function getCompany(id: string, options?: CallOptions): Promise<Company> {
+  return call(`/companies/${encodeURIComponent(id)}`, { ...options, method: 'GET' }) as Promise<Company>;
+}
+
+export function getMyCompany(options?: CallOptions): Promise<Company> {
+  return call('/companies/me', { ...options, method: 'GET' }) as Promise<Company>;
+}
+
+export function verifyCompany(id: string, body: VerifyCompanyBody, options?: CallOptions): Promise<Company> {
+  return call(`/companies/${encodeURIComponent(id)}/verify`, {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<Company>;
+}
+
+export function getCommissionStats(options?: CallOptions): Promise<CommissionStatsResponse> {
+  return call('/companies/commission-stats', { ...options, method: 'GET' }) as Promise<CommissionStatsResponse>;
+}
+
+export function recordCompanySale(body: RecordCompanySaleBody, options?: CallOptions): Promise<RecordCompanySaleResponse> {
+  return call('/companies/sales/settle', { ...options, method: 'POST', body }) as Promise<RecordCompanySaleResponse>;
+}
+
+export function listCompanySales(id: string, query?: { page_token?: string }, options?: CallOptions): Promise<CompanySalesListResponse> {
+  const qs = query?.page_token ? `?page_token=${encodeURIComponent(query.page_token)}` : '';
+  return call(`/companies/${encodeURIComponent(id)}/sales${qs}`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<CompanySalesListResponse>;
+}
+
+export function expressCompanyInterest(companyId: string, body: ExpressInterestBody, options?: CallOptions): Promise<ExpressInterestResponse> {
+  return call(`/companies/${encodeURIComponent(companyId)}/interest`, {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<ExpressInterestResponse>;
+}
+
+export function respondToInterest(interestId: string, body: RespondToInterestBody, options?: CallOptions): Promise<RespondToInterestResponse> {
+  return call(`/leads/${encodeURIComponent(interestId)}/respond`, {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<RespondToInterestResponse>;
+}
+
+export function listArtisanLeads(query?: { status?: string }, options?: CallOptions): Promise<ArtisanLeadsResponse> {
+  const qs = query?.status ? `?status=${encodeURIComponent(query.status)}` : '';
+  return call(`/artisans/me/leads${qs}`, { ...options, method: 'GET' }) as Promise<ArtisanLeadsResponse>;
+}
+
+export function listBoutiqueMatches(options?: CallOptions): Promise<BoutiqueMatchesResponse> {
+  return call('/artisans/me/boutique-matches', { ...options, method: 'GET' }) as Promise<BoutiqueMatchesResponse>;
+}
+
+export function listNearbyBoutiques(
+  query: { latitude: number; longitude: number; radius_km?: number; craft_id?: string },
+  options?: CallOptions,
+): Promise<NearbyBoutiquesResponse> {
+  const q = new URLSearchParams({
+    latitude: String(query.latitude),
+    longitude: String(query.longitude),
+  });
+  if (query.radius_km) q.set('radius_km', String(query.radius_km));
+  if (query.craft_id) q.set('craft_id', query.craft_id);
+  return call(`/boutiques/nearby?${q.toString()}`, { ...options, method: 'GET' }) as Promise<NearbyBoutiquesResponse>;
+}
+
+// --- Market Trends Operations ---
+
+export type TrendLink = Json<paths['/trends']['post']['responses'][201]>;
+export type CreateTrendLinkBody = Json<paths['/trends']['post']['requestBody']>;
+export type TrendLinksResponse = Json<paths['/trends']['get']['responses'][200]>;
+
+export function listTrendLinks(
+  query?: { craft_id?: string; source_type?: string; exclude_expired?: boolean },
+  options?: CallOptions,
+): Promise<TrendLinksResponse> {
+  const q = new URLSearchParams();
+  if (query?.craft_id) q.set('craft_id', query.craft_id);
+  if (query?.source_type) q.set('source_type', query.source_type);
+  if (query?.exclude_expired !== undefined) q.set('exclude_expired', String(query.exclude_expired));
+  const qs = q.toString();
+  return call(`/trends${qs ? `?${qs}` : ''}`, { ...options, method: 'GET' }) as Promise<TrendLinksResponse>;
+}
+
+export function createTrendLink(body: CreateTrendLinkBody, options?: CallOptions): Promise<TrendLink> {
+  return call('/trends', { ...options, method: 'POST', body }) as Promise<TrendLink>;
+}
+
+export function deleteTrendLink(id: string, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/trends/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<{ status?: string }>;
+}
+
+export function pinTrendLink(id: string, pinned: boolean, options?: CallOptions): Promise<TrendLink> {
+  return call(`/trends/${encodeURIComponent(id)}/pin`, {
+    ...options,
+    method: 'POST',
+    body: { pinned },
+  }) as Promise<TrendLink>;
+}
+
+// --- Badge Operations ---
+
+export type Badge = NonNullable<Json<paths['/badges']['get']['responses'][200]>['badges']>[number];
+export type ArtisanBadge = components['schemas']['ArtisanBadge'];
+export type ArtisanBadgesResponse = Json<paths['/artisans/{id}/badges']['get']['responses'][200]>;
+export type BadgeProgressResponse = Json<paths['/badges/me/progress']['get']['responses'][200]>;
+export type GrantBadgeBody = Json<paths['/artisans/{id}/badges']['post']['requestBody']>;
+
+export function listBadgeCatalog(options?: CallOptions): Promise<{ badges: Badge[] }> {
+  return call('/badges', { ...options, method: 'GET' }) as Promise<{ badges: Badge[] }>;
+}
+
+export function listArtisanBadges(artisanId: string, options?: CallOptions): Promise<ArtisanBadgesResponse> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'GET' }) as Promise<ArtisanBadgesResponse>;
+}
+
+export function getBadgeProgress(options?: CallOptions): Promise<BadgeProgressResponse> {
+  return call('/badges/me/progress', { ...options, method: 'GET' }) as Promise<BadgeProgressResponse>;
+}
+
+export function grantBadge(artisanId: string, body: GrantBadgeBody, options?: CallOptions): Promise<ArtisanBadge> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges`, { ...options, method: 'POST', body }) as Promise<ArtisanBadge>;
+}
+
+export function revokeBadge(artisanId: string, code: string, body: { reason: string }, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/artisans/${encodeURIComponent(artisanId)}/badges/${encodeURIComponent(code)}`, { ...options, method: 'DELETE', body }) as Promise<{ status?: string }>;
+}
+
+// --- Government Scheme Operations ---
+
+export type GovernmentScheme = NonNullable<Json<paths['/schemes']['get']['responses'][200]>['schemes']>[number];
+export type SchemeMatchesResponse = Json<paths['/schemes/match']['get']['responses'][200]>;
+export type UpsertSchemeBody = Json<paths['/schemes']['post']['requestBody']>;
+
+export function listSchemes(options?: CallOptions): Promise<{ schemes: GovernmentScheme[] }> {
+  return call('/schemes', { ...options, method: 'GET' }) as Promise<{ schemes: GovernmentScheme[] }>;
+}
+
+export function matchSchemes(options?: CallOptions): Promise<SchemeMatchesResponse> {
+  return call('/schemes/match', { ...options, method: 'GET' }) as Promise<SchemeMatchesResponse>;
+}
+
+export function upsertScheme(body: UpsertSchemeBody, id?: string, options?: CallOptions): Promise<GovernmentScheme> {
+  const path = id ? `/schemes/${encodeURIComponent(id)}` : '/schemes';
+  return call(path, { ...options, method: id ? 'PATCH' : 'POST', body }) as Promise<GovernmentScheme>;
+}
+
+export function deleteScheme(id: string, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/schemes/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<{ status?: string }>;
+}
+
+// --- Partnership Operations ---
+
+type CreatePartnershipBody = Json<paths['/partnerships']['post']['requestBody']>;
+type PartnershipResponse = Json<paths['/partnerships']['post']['responses'][201]>;
+type PartnershipsListResponse = Json<paths['/partnerships']['get']['responses'][200]>;
+
+export function createPartnership(
+  body: CreatePartnershipBody,
+  options?: CallOptions,
+): Promise<PartnershipResponse> {
+  return call('/partnerships', { ...options, method: 'POST', body }) as Promise<PartnershipResponse>;
+}
+
+export function listPartnerships(
+  filters?: { artisan_id?: string; company_id?: string },
+  options?: CallOptions,
+): Promise<PartnershipsListResponse> {
+  const params = new URLSearchParams();
+  if (filters?.artisan_id) params.set('artisan_id', filters.artisan_id);
+  if (filters?.company_id) params.set('company_id', filters.company_id);
+  const qs = params.toString();
+  return call(`/partnerships${qs ? `?${qs}` : ''}`, {
+    ...options,
+    method: 'GET',
+  }) as Promise<PartnershipsListResponse>;
+}
+
+// --- Webhook Subscription Operations ---
+
+type CreateWebhookSubscriptionBody = Json<paths['/webhooks/subscriptions']['post']['requestBody']>;
+type WebhookSubscriptionResponse = Json<paths['/webhooks/subscriptions']['post']['responses'][201]>;
+type WebhookSubscriptionsListResponse = Json<paths['/webhooks/subscriptions']['get']['responses'][200]>;
+
+export function createWebhookSubscription(
+  body: CreateWebhookSubscriptionBody,
+  options?: CallOptions,
+): Promise<WebhookSubscriptionResponse> {
+  return call('/webhooks/subscriptions', {
+    ...options,
+    method: 'POST',
+    body,
+  }) as Promise<WebhookSubscriptionResponse>;
+}
+
+export function listWebhookSubscriptions(
+  options?: CallOptions,
+): Promise<WebhookSubscriptionsListResponse> {
+  return call('/webhooks/subscriptions', {
+    ...options,
+    method: 'GET',
+  }) as Promise<WebhookSubscriptionsListResponse>;
+}
+
+export function deleteWebhookSubscription(id: string, options?: CallOptions): Promise<{ status?: string }> {
+  return call(`/webhooks/subscriptions/${encodeURIComponent(id)}`, {
+    ...options,
+    method: 'DELETE',
+  }) as Promise<{ status?: string }>;
 }

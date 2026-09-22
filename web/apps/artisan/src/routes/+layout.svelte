@@ -46,7 +46,7 @@
   import PwaUpdatePrompt from '$lib/PwaUpdatePrompt.svelte';
   import InstallPrompt from '$lib/InstallPrompt.svelte';
   import BottomNav from '$lib/BottomNav.svelte';
-  import { getArtisanId, watchArtisanId } from '$lib/registration';
+  import { getArtisanId, setArtisanId, watchArtisanId } from '$lib/registration';
   import { resolveRedirect, type GuardState } from '$lib/route-guard';
   import { syncEngine } from '$lib/sync';
 
@@ -64,9 +64,14 @@
   // Genuine side effects: resolve the startup language, restore the session,
   // subscribe to connectivity/registration/sync. None of these compute a
   // value the template reads directly.
-  $effect(() => {
-    void locale.init();
-  });
+  //
+  // locale.init() is awaited in the same Promise.all as the session/
+  // registration restore below (not its own fire-and-forget effect) so
+  // `booted` -- which already gates every route's first paint -- doesn't
+  // flip true until the real catalogue has loaded. Without that, a page's
+  // first paint runs with an empty catalogue and every t() call falls
+  // through to English, then re-renders in the real language a tick later.
+  // See I18N_PLAN.md's F-1.
 
   $effect(() => {
     setAcceptLanguage(locale.meta.tag);
@@ -91,7 +96,11 @@
   $effect(() => {
     let disposeWatch: (() => void) | undefined;
     void (async () => {
-      const [token, initialId] = await Promise.all([restoreAccessToken(), getArtisanId()]);
+      const [token, initialId] = await Promise.all([
+        restoreAccessToken(),
+        getArtisanId(),
+        locale.init(),
+      ]);
       if (token) session.establish(token);
       registeredArtisanId = initialId;
       booted = true;
@@ -102,12 +111,38 @@
     return () => disposeWatch?.();
   });
 
+  // The access token itself already proves registration: core-svc's VerifyOtp
+  // only ever mints a `sub` claim once an artisan profile exists (see
+  // auth.go's VerifyOtp). registeredArtisanId's IndexedDB pref is otherwise
+  // the only signal the guard below has, and it is purely local -- a fresh
+  // browser, a new device, cleared site data, or any other way that pref
+  // never got written leaves a genuinely already-registered artisan bounced
+  // to /register/name forever, with nothing to recover from except
+  // resubmitting registration. Confirmed live with a clean browser profile:
+  // logging in with an already-registered phone landed straight on
+  // /register/name. This reacts to session.claims directly (not just at
+  // boot) so it also covers logging in fresh within the same app session,
+  // not only a reload with a token already in storage.
+  const tokenArtisanId = $derived.by(() => {
+    const sub = session.claims?.sub;
+    return typeof sub === 'string' && sub !== '' ? sub : undefined;
+  });
+  const effectiveArtisanId = $derived(registeredArtisanId ?? tokenArtisanId);
+
+  $effect(() => {
+    // Heals the local pref once, so watchArtisanId/showBottomNav (which both
+    // still read it directly) agree with the token from here on.
+    if (tokenArtisanId !== undefined && registeredArtisanId === undefined) {
+      void setArtisanId(tokenArtisanId);
+    }
+  });
+
   $effect(() => {
     if (!booted) return;
     const state: GuardState = {
       hasExplicitLocale: hasExplicitLocale(),
       authenticated: session.status === 'authenticated',
-      registered: registeredArtisanId !== undefined,
+      registered: effectiveArtisanId !== undefined,
     };
     const redirect = resolveRedirect(state, page.url.pathname);
     if (redirect !== null && redirect !== page.url.pathname) {
@@ -117,7 +152,7 @@
 
   const showChrome = $derived(booted && page.url.pathname !== '/language');
   const showBottomNav = $derived(
-    showChrome && session.status === 'authenticated' && registeredArtisanId !== undefined,
+    showChrome && session.status === 'authenticated' && effectiveArtisanId !== undefined,
   );
 </script>
 
@@ -151,6 +186,7 @@
       </p>
 
       <LanguageSelector />
+      
       <AccessibilityControl statementHref="/accessibility" />
     </header>
   {/if}
@@ -190,6 +226,8 @@
     display: flex;
     flex-direction: column;
     min-block-size: 100dvh;
+    max-inline-size: 100%;
+    overflow-x: hidden;
   }
 
   .shell__header {

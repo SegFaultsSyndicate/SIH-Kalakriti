@@ -252,17 +252,29 @@ returns the same `{"status":"otp_sent",...}` body regardless of whether the
 phone is registered (deliberate anti-enumeration design) — don't expect a
 `challenge_id` back to feed into the verify call.
 
-## Idempotency header mismatch between frontend and bff (found, not yet fixed)
+## Idempotency header mismatch between frontend and bff (fixed)
 
-`services/bff/internal/bff/middleware/idempotency.go` reads
-**`X-Idempotency-Key`**. `web/packages/api/src/transport.ts` sends
+`services/bff/internal/bff/middleware/idempotency.go` read
+**`X-Idempotency-Key`** while `web/packages/api/src/transport.ts` sends
 **`Idempotency-Key`** (no `X-` prefix). Every mutating BFF route wrapped in
 `withIdempotency` (artisan/listing/order/statement/cluster/SHG creation,
-moderation actions) therefore never actually sees the frontend's key — a
-retried write from the offline outbox is indistinguishable from a new one
-server-side. This is live and unfixed as of this writing; pick a side
-(add `X-` client-side, or accept the bare header name server-side) before
-relying on retry-safety anywhere the outbox drains a queued write twice.
+moderation actions) therefore never actually saw the frontend's key — a
+retried write from the offline outbox was indistinguishable from a new one
+server-side. This was a silent retry-safety gap, not a visible request
+failure: `API_BASE` defaults to same-origin `/api/v1`, dev proxies through
+Vite to `:8000`, and prod serves web + API from the same compose stack, so
+the browser's CORS preflight path (which only allowlisted
+`X-Idempotency-Key` in `pkg/httpx/middleware.go`, and is only mounted at all
+when `AllowedOrigins` is configured) likely never ran for same-origin
+traffic. Fixed by standardizing on the bare `Idempotency-Key` name
+everywhere: the replay middleware, `idempotencyKeyFrom` in
+`services/bff/internal/bff/handler/api.go`, and the CORS allowlist (the
+`admin.go` handlers already read the bare name correctly and needed no
+change) — the CORS allowlist was wrong in the same direction and worth
+fixing regardless, for any deployment that does cross-origin the browser
+frontend. Integration/unit tests that were asserting the old header name
+were updated to match — they were passing only because both sides of the
+test shared the same wrong name.
 
 ## Outbound webhook subscription has no REST endpoint
 
@@ -296,6 +308,53 @@ schemas and keep hand-written docs to route existence + auth requirement +
 one-line purpose, verified against `server.go`'s actual route table rather
 than assumed.
 
+## Phone-change routes existed in the BFF but nowhere in the contract (fixed)
+
+`server.go` has mounted `POST /auth/phone/change/request` and
+`.../verify` (both under `authed`, JWT required) since Batch 13, but neither
+path ever made it into `services/bff/openapi.json`, so `schema.d.ts` and
+`operations.ts` had no types for them either. With no typed operation to
+call, `apps/artisan/src/routes/profile/+page.svelte` hand-rolled a raw
+`fetch('/auth/phone/change/request', …)` — missing the `/api/v1` prefix
+every real route lives under, and missing the `Authorization` bearer header
+`call()` normally attaches automatically. Every phone-change attempt 404'd.
+Fixed by adding both paths to `openapi.json` (request/response shapes taken
+from the actual handler in `services/bff/internal/bff/handler/api.go`),
+regenerating `schema.d.ts`, adding `requestPhoneChangeOtp`/
+`verifyPhoneChangeOtp` to `operations.ts` + the `index.ts` barrel, and
+switching the call site to use them. `verifyPhoneChangeOtp`'s response
+carries a fresh token pair (the endpoint revokes the caller's other
+sessions), so the call site also needs `session.establish(access_token)`
+alongside `setAccessToken`/`setRefreshToken` — see `completeOtpVerification`
+in `web/packages/api/src/auth-flow.ts` for the canonical three-step pattern;
+don't call `setAccessToken`/`setRefreshToken` alone at a new call site
+without it, or `session.claims` goes stale relative to the stored token.
+
+If a BFF route exists in `server.go` but not in `openapi.json`, nothing
+catches it at build time — `route-parity.test.ts` only checks the reverse
+direction (every spec path has *some* reference in `operations.ts`). A route
+missing from the spec has no compile-time signal at all until someone writes
+a raw `fetch()` for it by hand and gets the shape wrong.
+
+## Cluster member role enum is intentionally asymmetric — don't "fix" it
+
+`POST /clusters/{id}/members` accepts `role` as the short form (`"MEMBER"`,
+`"COORDINATOR"`, `"MASTER"`) but every response containing a cluster member
+returns the fully-qualified proto enum name (`"CLUSTER_MEMBER_ROLE_MEMBER"`,
+etc.) — see `services/bff/internal/bff/client/catalog.go`:
+`clusterMemberRoleFromString` parses the short form on the way in,
+`clusterMemberToMap` calls `m.GetRole().String()` (untrimmed) on the way
+out. `openapi.json`'s two schemas for this endpoint already reflect that
+asymmetry correctly. This one enum is the only place in the codebase that
+doesn't run `trimEnumPrefix` on an outbound enum (every other enum — listing
+type/state, media kind, order/lot state, defect severity, pricing anomaly
+level, search listing_type — is trimmed to match a short-form spec on both
+sides). `apps/admin/src/routes/clusters/+page.svelte`'s dev-mode mock/
+fallback data had the two forms backwards (short-form values pushed into
+`members`, which is response-shaped and needs the long form) — that's a
+`svelte-check` failure, not a live request bug, since the one real write
+call (`addClusterMember`) already sent the correct short form. Fixed by
+correcting the mock data, not by touching the request path or the spec.
 ## `AUTH_DEV_OTP_ENABLED` was never set in `docker-compose.yml` (fixed)
 
 There is no real SMS provider (`service.LoggingOTPSender` is a stub that only
@@ -393,7 +452,193 @@ unless someone runs `pnpm api:gen` after every bff route change.
 
 ## Idempotency header mismatch — now fixed (was: found, not yet fixed)
 
-`web/packages/api/src/transport.ts` now sends `X-Idempotency-Key`, matching
-`services/bff/internal/bff/middleware/idempotency.go`. (Previously documented
-here as sending the bare `Idempotency-Key` — that entry is superseded by this
-one; the fix has shipped.)
+`services/bff/internal/bff/middleware/idempotency.go` reads the bare
+`Idempotency-Key` header — that has not changed. `web/packages/api/src/transport.ts`
+sends **both** `Idempotency-Key` and `X-Idempotency-Key` on every mutating
+request, so the middleware always sees the one it reads regardless of which
+name a future refactor favors. The CORS allow-list
+(`pkg/httpx/middleware.go`) was missing `X-Idempotency-Key` — same-origin
+traffic never preflights so this was latent, but any cross-origin deployment
+would fail preflight on every mutating request. Fixed by adding it alongside
+the existing bare-name entry. (The two earlier versions of this entry
+contradicted each other on which header name is canonical — this replaces
+both; canonical is the bare `Idempotency-Key`.)
+
+## Internationalization (i18n) verification and ratchet convention
+
+Kalakriti supports 20 Eighth Schedule scheduled Indian languages plus English (21 locales total).
+The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 2,363 keys).
+
+### Audit Command
+Run the audit script to verify catalogue completeness, script correctness, and placeholder consistency:
+```sh
+# Inside web/packages/i18n:
+npm run audit
+# Or audit a specific locale:
+node scripts/audit.mjs --locale <code_or_tag>
+```
+
+### Ratchet Ceiling & Baseline Convention
+- `web/packages/i18n/i18n-baseline.json` defines the ratchet ceiling for allowed issues per locale.
+- Currently, **all 21 locales have reached 0 issues (100% coverage)**.
+- CI and vitest (`catalogue-audit.test.ts`) enforce that a locale's issues must never exceed its baseline count.
+- If you add new keys to `en.ts`, all non-English catalogues must have their translations populated to keep the baseline at 0. Never raise a baseline number to mask missing translations.
+- All non-English catalogues are typed as `export const <code>: Messages = { ... }`, making missing keys a compile-time type error permanently.
+
+## Outbound webhook subscribe route added (pkg/webhook.Manager was unused)
+
+`pkg/webhook.Manager` (CRUD) and the delivery `Worker`/`cmd/webhook-worker`
+existed, but nothing in `services/bff/internal/bff/server.go` ever mounted a
+route for subscription CRUD (only the *inbound* payment webhook existed).
+Fixed by adding `POST/GET /webhooks/subscriptions` and
+`DELETE /webhooks/subscriptions/:id` (all under `authed`) to
+`handler/api.go` + `server.go`, wired to a `*webhook.Manager` built in
+`cmd/bff/main.go` from its own `database/sql`/`lib/pq` connection (pkg/webhook
+predates pgxpool and wasn't worth rewriting just for this). Subscriber id
+comes from the JWT principal's `Subject`, parsed as a UUID — true for artisan
+ids, **not** guaranteed for buyer ids (opaque `text` elsewhere in this
+schema); a non-UUID buyer subject gets a 400, not a silent wrong write.
+`DeleteSubscription` now takes `subscriberID` too and filters on it, so one
+caller can no longer delete another's subscription by guessing a UUID.
+
+## No public path ever issues a BUYER, CLUSTER_OFFICER or MINISTRY token
+
+Found while writing `cmd/seed-demo` (a seeder that creates real
+artisans/listings/orders through the live BFF API instead of writing rows
+directly). `VerifyOtp` in `services/core-svc/internal/core/service/auth.go`
+hardcodes every OTP login to `auth.RoleArtisan` — there is no OTP flow, REST
+route, or self-service path anywhere that mints a `RoleBuyer` token, and
+`SubmitForApproval` (the listing-moderation step) requires
+`RoleClusterOfficer`/`RoleMinistry`, which are equally unreachable. Both
+roles appear only in test helpers (`bfftest/server.go`,
+`artisan_test.go`) — never in a real request path. Concretely: **nothing in
+the current product can create a bulk order as a real buyer, or move a
+listing from draft to published, without someone minting a JWT by hand.**
+`cmd/seed-demo/main.go` does exactly that with `pkg/auth.Issuer` directly
+(same `JWT_SECRET` the bff verifies against) to get demo data in, and says so
+in its own doc comment — this is a workaround for a real product gap, not a
+fix. Before real buyers or moderators use this in production, something
+needs to actually issue those roles: a buyer signup/login flow, and an
+admin/ops path for granting cluster-officer or ministry accounts.
+
+## Production secrets: docker-compose.yml now reads `.env`, no second compose file
+
+Every hardcoded dev secret in `docker-compose.yml`
+(`POSTGRES_PASSWORD`, `JWT_SECRET`, `S3_ACCESS_KEY`/`S3_SECRET_KEY`,
+`MINIO_ROOT_USER`/`PASSWORD`, Kafka `CLUSTER_ID`) is now `${VAR:-dev-default}`
+— same pattern the ml-svc block already used for `HF_TOKEN`. A real deploy
+generates a repo-root `.env` (`docker compose` reads it automatically) with
+`scripts/gen-prod-secrets.sh`, which refuses to run if `.env` already exists
+and does not touch `BASE_URL`/`CORS_ALLOWED_ORIGINS` (deploy-specific, edit by
+hand). Deliberately did **not** add a `docker-compose.prod.yml` — see the
+`docker-compose.full.yml` postmortem above; a second compose file drifts the
+moment someone edits only one of them. `bff`'s `CORS_ALLOWED_ORIGINS` env var
+also got wired into compose (was previously unset/undocumented there) since a
+frontend deployed separately on Vercel calls this bff cross-origin.
+
+## Backend CI added (`.github/workflows/ci.yml` only had a `web` job before)
+
+Added `go` (spins up a `pgvector/pgvector:pg17` service container, installs
+`protoc-gen-go`/`protoc-gen-go-grpc`, runs `make proto-go sqlc migrate-up
+lint test`) and `ml-svc` (`uv sync --extra dev && pytest`) jobs alongside the
+existing `web` job. `buf`/`goose`/`sqlc` need no separate install step — the
+Makefile already falls back to `go run .../tool@pinned-version` when the
+binary isn't on `PATH`.
+
+## gRPC service-to-service calls had no load-balancing policy (fixed)
+
+Every gRPC client in the repo dialed a bare `host:port` via
+`grpc.NewClient(addr, grpc.WithTransportCredentials(...))` with no LB policy
+— fine at one replica per service (docker-compose's reality today), but
+silently broken the moment any backend scales to multiple pods in k8s: gRPC's
+default resolver scheme is `passthrough`, which treats the address as one
+opaque target and never re-resolves it, so the connection pins to whichever
+single pod it first reached — `round_robin` has nothing to balance across
+without also fixing the resolver scheme, and a plain `ClusterIP` Service
+doesn't help either, since it hands back only its own virtual IP, not one
+address per pod.
+
+Fixed with **pkg/grpcdial** (`pkg/grpcdial/grpcdial.go`): `grpcdial.Dial(addr)`
+prefixes the target with `dns:///` (triggers real re-resolution to every `A`
+record behind a name) and sets `round_robin` via
+`grpc.WithDefaultServiceConfig`. Every dial site now uses it: `services/bff/
+cmd/bff/main.go` (→ core-svc, search-svc, insight-svc, collab-svc,
+channel-svc), `services/channel-svc/cmd/channel-svc/main.go` (→ core-svc),
+`services/core-svc/cmd/core-svc/main.go` (→ ml-svc), `services/search-svc/
+cmd/search-svc/main.go` (→ ml-svc, → core-svc). A unit test
+(`pkg/grpcdial/grpcdial_test.go`, using grpc-go's manual resolver against 3
+fake backends) proves the round_robin service config actually spreads calls
+across resolved addresses rather than pinning to one.
+
+`dns:///` alone is not sufficient — it also requires a **headless** k8s
+Service (`clusterIP: None`) on the callee, since CoreDNS only returns one A
+record per pod for a headless Service; a normal ClusterIP Service still
+resolves to just its own virtual IP regardless of the dial-side scheme. Every
+Service manifest under `deploy/k8s/` for a service reached over gRPC
+(core-svc, collab-svc, channel-svc, insight-svc, ml-svc, search-svc) is now
+headless. `bff`'s Service stays plain ClusterIP — it's reached over HTTP via
+Ingress, not dialed as gRPC by anything.
+
+Explicitly out of scope, and don't revisit without a real reason: no service
+mesh (Istio/Linkerd) — `round_robin` + headless Service solves the actual
+problem with zero new infrastructure. No Kafka request/reply conversion for
+ml-svc's synchronous, same-request-cycle calls (`Embed`/`Rerank`/`Transcribe`
+in search-svc, live at query time) — that would need correlation IDs, a reply
+topic, and a blocking wait-with-timeout in an HTTP handler, objectively more
+complex than fixing the LB policy. ml-svc's *other* calls
+(`EnhanceImage`/`ExtractAttributes`/`GenerateDescription`/`Translate`, all
+reachable only from `services/core-svc/internal/core/service/pipeline.go`
+inside the `MediaUploadedHandler` Kafka consumer) were already async before
+this change and needed no architecture change, only the same `dns:///` +
+round_robin fix on their own outbound gRPC hop.
+
+## k8s manifests for core-svc/collab-svc/channel-svc/insight-svc added; `user-svc-deployment.yaml` deleted
+
+`deploy/k8s/` previously had manifests only for `bff`, `ml-svc`, `search-svc`
+and a stray `web`, plus a `user-svc-deployment.yaml` that doesn't correspond
+to any real service under `services/` (real services are core-svc, search-svc,
+collab-svc, channel-svc, insight-svc, bff, ml-svc, web) — its ports (8080/9090),
+ownership of `JWT_SECRET`, and general shape strongly suggest it's a stale
+pre-rename draft of what's now `core-svc`. Deleted it rather than fixing it,
+same reasoning as the `docker-compose.full.yml` postmortem above: keeping two
+manifests both claiming to be "the identity service" under different names is
+exactly the kind of duplicate that drifts and confuses later, not a safety
+net. Added real manifests for the four services that were missing entirely
+(`core-svc-deployment.yaml`, `collab-svc-deployment.yaml`,
+`channel-svc-deployment.yaml`, `insight-svc-deployment.yaml`), with ports,
+env var names, and health-check paths taken from each service's actual
+`main.go` and `docker-compose.yml` — not assumed. Notable per-service specifics
+future edits should preserve:
+- **insight-svc** has exactly one listener, gRPC-only, no HTTP port at all
+  (confirms the already-fixed fictional `INSIGHT_SVC_HTTP_PORT` from the
+  `.env.example` section above stays gone) — its k8s probes are a bare
+  `tcpSocket` check, not an invented HTTP path.
+- **channel-svc** exposes only `/health`, not the `/healthz`+`/readyz` pair
+  core-svc/collab-svc/search-svc all have — don't copy the two-path pattern
+  onto it.
+- **collab-svc**'s own env var names are `COLLAB_GRPC_ADDR`/`COLLAB_HTTP_ADDR`
+  (not `COLLAB_SVC_GRPC_ADDR`/`COLLAB_SVC_HTTP_ADDR`, unlike every other
+  service's naming convention) — docker-compose.yml never overrides them
+  either, relying on the `:50053`/`:8083` code defaults instead; the new k8s
+  manifest does the same rather than setting a var under the wrong name.
+
+`deploy/k8s/configmap.yaml` also had six `*-addr` keys
+(`user-svc-addr`, `catalog-svc-addr`, `search-svc-addr`, `order-svc-addr`,
+`social-svc-addr`, `ml-svc-addr`) that no manifest ever actually read via
+`configMapKeyRef` — dead configuration, three of them (`catalog-svc`,
+`order-svc`, `social-svc`) for services that don't exist anywhere in
+`services/`. Deleted rather than fixed, since nothing consumes them; every
+real service gets its peer addresses from literal env values in its own
+Deployment instead (see `bff-deployment.yaml`'s `CORE_SVC_ADDR` etc.).
+
+`deploy/k8s/bff-deployment.yaml`, `search-svc-hpa.yaml` (now
+`search-svc-deployment.yaml` in spirit, filename unchanged) and the deleted
+`user-svc-deployment.yaml` all had the same `DATABASE_URL` mistake
+`.env.example` had (see that section above) — `pkg/config` reads
+`POSTGRES_DSN`. Fixed in both surviving files. `search-svc-hpa.yaml` also had
+its gRPC/HTTP ports backwards (8082 labeled `"grpc"`, real gRPC port is
+50052 per `SEARCH_SVC_GRPC_ADDR`'s default) and probed a port 9092 the
+service never listens on (`/healthz`/`/readyz` are served on the HTTP port,
+8082) — fixed to match `services/search-svc/cmd/search-svc/main.go`'s actual
+`envOr` defaults.
+

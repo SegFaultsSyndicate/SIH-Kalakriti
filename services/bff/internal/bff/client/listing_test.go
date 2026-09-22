@@ -60,6 +60,40 @@ func TestListingCreateListingChainsCreateProductThenUpsertListingWithSuffixedIde
 	assert.Equal(t, "idem-1:listing", sawListingReq.GetIdempotencyKey())
 }
 
+// TestListingCreateListingAcceptsTheWizardsMinimalShape locks in the actual
+// artisan app's first POST /listings body (see
+// web/apps/artisan/src/lib/listing-draft.ts's ensureListingCreateQueued):
+// craft_id, working_title, dimensions, min_order_quantity -- no type, no
+// price, sent at a point in the wizard the type genuinely isn't chosen yet
+// (that's the pricing step, later). core-svc's domain layer must accept an
+// unset type as a legal draft; see
+// services/core-svc/internal/core/domain/catalog.go's UpsertListingInput.Validate
+// and migrations/035_listing_draft_type.sql.
+func TestListingCreateListingAcceptsTheWizardsMinimalShape(t *testing.T) {
+	var sawListingReq *catalogv1.UpsertListingRequest
+	l := &Listing{catalog: &fakeCatalogService{
+		createProduct: func(ctx context.Context, in *catalogv1.CreateProductRequest, opts ...grpc.CallOption) (*catalogv1.CreateProductResponse, error) {
+			return &catalogv1.CreateProductResponse{Product: &catalogv1.Product{Id: "prod-1"}}, nil
+		},
+		upsertListing: func(ctx context.Context, in *catalogv1.UpsertListingRequest, opts ...grpc.CallOption) (*catalogv1.UpsertListingResponse, error) {
+			sawListingReq = in
+			return &catalogv1.UpsertListingResponse{Listing: &catalogv1.Listing{Id: "lst-1"}}, nil
+		},
+	}}
+
+	id, err := l.CreateListing(context.Background(), "art-1", "idem-1", map[string]any{
+		"craft_id":           "craft-1",
+		"working_title":      "Blue dhurrie",
+		"min_order_quantity": float64(1),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "lst-1", id)
+
+	require.NotNil(t, sawListingReq)
+	assert.Equal(t, catalogv1.ListingType_LISTING_TYPE_UNSPECIFIED, sawListingReq.GetType())
+	assert.Nil(t, sawListingReq.GetPrice())
+}
+
 func TestListingCreateListingRejectsMissingCraftID(t *testing.T) {
 	l := &Listing{}
 	fields := validListingFields()

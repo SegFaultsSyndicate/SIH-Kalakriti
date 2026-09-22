@@ -9,11 +9,12 @@ data:
   otlp-endpoint: "jaeger:4317"
   minio-endpoint: "minio:9000"
   minio-use-ssl: "false"
-  user-svc-addr: "user-svc:8080"
-  catalog-svc-addr: "catalog-svc:8081"
-  search-svc-addr: "search-svc:8082"
-  order-svc-addr: "order-svc:8083"
-  social-svc-addr: "social-svc:8084"
-  ml-svc-addr: "ml-svc:50051"
   bff-addr: "bff:8000"
   web-addr: "web:80"
+  # Removed: user-svc-addr/catalog-svc-addr/order-svc-addr/social-svc-addr
+  # (no matching Deployment under services/ -- likely a stale pre-rename
+  # draft) and ml-svc-addr (wrong port 50051, real port is 50055). None of
+  # these were ever referenced via configMapKeyRef by any manifest -- each
+  # service's Deployment sets its own peer *_ADDR env vars directly (see
+  # bff-deployment.yaml, core-svc-deployment.yaml, etc.), so there was
+  # nothing to fix here except delete the dead, wrong entries.

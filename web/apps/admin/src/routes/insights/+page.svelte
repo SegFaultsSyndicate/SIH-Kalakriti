@@ -133,8 +133,8 @@
       craftRows = craftMonth.data ?? [];
       dyingRows = [...(dying.data ?? [])].sort((a, b) => Math.abs(b.decline_rate ?? 0) - Math.abs(a.decline_rate ?? 0));
     } catch (cause) {
-      if (import.meta.env.DEV) {
-        // Fallback mock data during development when the backend server is offline
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] load insights:', cause);
         const filtered = MOCK_DISTRICT_DATA.filter((d) => {
           const matchState = !stateCode || d.stateCode.toLowerCase().includes(stateCode.trim().toLowerCase());
           const matchDistrict = !district || d.district.toLowerCase().includes(district.trim().toLowerCase());
@@ -553,7 +553,7 @@
   }
 
   .insights-kpi__value--uplift {
-    color: #2e7d32;
+    color: var(--k-accent-success-muted);
   }
 
   .insights-kpi__value--risk {
@@ -607,18 +607,18 @@
   }
 
   .dying-craft-severity--critical {
-    background: #ffcdd2;
-    color: #b71c1c;
+    background: var(--k-terracotta-300);
+    color: var(--k-accent-danger);
   }
 
   .dying-craft-severity--warning {
-    background: #fff9c4;
-    color: #f57f17;
+    background: var(--k-accent-warning-bg);
+    color: var(--k-haldi-600);
   }
 
   .dying-craft-severity--watch {
-    background: #c8e6c9;
-    color: #2e7d32;
+    background: var(--k-neem-300);
+    color: var(--k-accent-success-muted);
   }
 
   .dying-craft-item__stats {
@@ -647,15 +647,15 @@
   }
 
   .dying-craft-item__bar-fill--critical {
-    background: #c62828;
+    background: var(--k-madder-700);
   }
 
   .dying-craft-item__bar-fill--warning {
-    background: #f9a825;
+    background: var(--k-haldi-500);
   }
 
   .dying-craft-item__bar-fill--watch {
-    background: #43a047;
+    background: var(--k-neem-500);
   }
 
   /* ── Panels ── */
@@ -717,11 +717,11 @@
     }
 
     .insights-kpi {
-      border-color: #999;
+      border-color: var(--k-stone-400);
     }
 
     .insights-panel--dying {
-      border-color: #999;
+      border-color: var(--k-stone-400);
     }
 
     .insights-panel {

@@ -6,13 +6,23 @@
   Adheres to Svelte 5 runes ($state, $derived, $effect).
 -->
 <script lang="ts">
+  import { locale, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
   import { session, getAccessToken, setAccessToken, setRefreshToken } from '@kalakriti/api';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
-  import { showToast } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
+  import { currency, CURRENCY_RATES } from './currency.svelte';
+
+  const t = $derived(locale.t);
 
   let isOpen = $state(false);
+  let isCurrencyMenuOpen = $state(false);
   let menuContainer: HTMLDivElement | null = $state(null);
+  let popoverPanel: HTMLDivElement | null = $state(null);
+  let currencyWrapper: HTMLDivElement | null = $state(null);
+
+  const tt = $derived(locale.tooltip);
+  const currencyOptions = Object.keys(CURRENCY_RATES) as CurrencyCode[];
 
   const isAuthenticated = $derived(session.status === 'authenticated' || !!getAccessToken());
   const userName = $derived(
@@ -27,15 +37,30 @@
 
   function toggleMenu(): void {
     isOpen = !isOpen;
+    if (!isOpen) isCurrencyMenuOpen = false;
   }
 
   function closeMenu(): void {
     isOpen = false;
+    isCurrencyMenuOpen = false;
+  }
+
+  function toggleCurrencyMenu(): void {
+    isCurrencyMenuOpen = !isCurrencyMenuOpen;
+  }
+
+  function selectCurrency(code: CurrencyCode): void {
+    currency.set(code);
+    isCurrencyMenuOpen = false;
   }
 
   function handleKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && isOpen) {
-      isOpen = false;
+    if (e.key === 'Escape') {
+      if (isCurrencyMenuOpen) {
+        isCurrencyMenuOpen = false;
+      } else if (isOpen) {
+        isOpen = false;
+      }
     }
   }
 
@@ -44,7 +69,8 @@
     setRefreshToken(undefined);
     session.clear();
     isOpen = false;
-    showToast({ message: 'Signed out successfully', variant: 'info' });
+    isCurrencyMenuOpen = false;
+    showToast({ message: t('accountMenu.signedOutToast'), variant: 'info' });
     void goto('/');
   }
 
@@ -55,6 +81,9 @@
     function handleClickOutside(event: MouseEvent): void {
       if (menuContainer && !menuContainer.contains(event.target as Node)) {
         isOpen = false;
+        isCurrencyMenuOpen = false;
+      } else if (isCurrencyMenuOpen && currencyWrapper && !currencyWrapper.contains(event.target as Node)) {
+        isCurrencyMenuOpen = false;
       }
     }
 
@@ -63,73 +92,101 @@
       document.removeEventListener('mousedown', handleClickOutside);
     };
   });
+
+  // inset-inline-end: 0 below assumes this trigger sits at the true right
+  // edge of the header -- true today (AccountMenu is mounted last), but a
+  // reorder or a narrower screen than anticipated silently reintroduces the
+  // popover running off the left edge. Same clamp as packages/ui/src/Popover.svelte.
+  $effect(() => {
+    if (!isOpen || !popoverPanel) return;
+    const clampToViewport = () => {
+      if (!popoverPanel) return;
+      popoverPanel.style.transform = '';
+      const rect = popoverPanel.getBoundingClientRect();
+      const margin = 8;
+      if (rect.left < margin) {
+        popoverPanel.style.transform = `translateX(${margin - rect.left}px)`;
+      } else if (rect.right > window.innerWidth - margin) {
+        popoverPanel.style.transform = `translateX(-${rect.right - (window.innerWidth - margin)}px)`;
+      }
+    };
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <div class="account-menu" bind:this={menuContainer}>
-  <button
-    type="button"
-    class="account-trigger"
-    onclick={toggleMenu}
-    aria-expanded={isOpen}
-    aria-haspopup="true"
-    aria-label="Account and multi-portal menu"
-  >
-    <div class="account-avatar">
-      {#if isAuthenticated}
-        <span class="avatar-initials">AS</span>
-      {:else}
-        <Icon name="user" size="1.1rem" />
-      {/if}
-    </div>
-    <div class="account-label">
-      <span class="account-greeting">
-        {isAuthenticated ? 'Hello, Aarav' : 'Sign In'}
-      </span>
-      <span class="account-title">
-        Account & Lists
-        <Icon name="chevron-down" size="0.75rem" />
-      </span>
-    </div>
-  </button>
+  <Tooltip text={tt('tooltip.account')}>
+    {#snippet trigger(props)}
+      <button
+        type="button"
+        class="account-trigger"
+        onclick={toggleMenu}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-label={t('accountMenu.ariaLabel')}
+        {...props}
+      >
+        <div class="account-avatar">
+          {#if isAuthenticated}
+            <span class="avatar-initials">AS</span>
+          {:else}
+            <Icon name="user" size="1.1rem" />
+          {/if}
+        </div>
+        <div class="account-label">
+          <span class="account-greeting">
+            {isAuthenticated ? t('accountMenu.greetingSignedIn') : t('accountMenu.signIn')}
+          </span>
+          <span class="account-title">
+            {t('accountMenu.accountAndLists')}
+            <Icon name="chevron-down" size="0.75rem" />
+          </span>
+        </div>
+      </button>
+    {/snippet}
+  </Tooltip>
 
   {#if isOpen}
     <div
       class="account-popover"
       role="menu"
       tabindex="-1"
+      bind:this={popoverPanel}
     >
       <!-- Popover Header -->
       <div class="popover-header">
         {#if isAuthenticated}
           <div class="user-badge-row">
             <span class="user-name">{userName}</span>
-            <span class="patron-badge">Verified Patron</span>
+            <span class="patron-badge">{t('account.patronTier')}</span>
           </div>
           <span class="user-email">{userEmail}</span>
         {:else}
           <a href="/login" class="signin-primary-btn" onclick={closeMenu}>
-            Sign In
+            {t('accountMenu.signIn')}
           </a>
           <p class="signup-prompt">
-            New customer? <a href="/login?tab=register" class="signup-link" onclick={closeMenu}>Start here.</a>
+            {t('accountMenu.newCustomerPrefix')} <a href="/login?tab=register" class="signup-link" onclick={closeMenu}>{t('accountMenu.startHere')}</a>
           </p>
         {/if}
       </div>
 
       <div class="popover-grid" role="none">
         <!-- Row 1: Headings -->
-        <h3 class="col-heading col-left">Your Account</h3>
-        <h3 class="col-heading col-right">Institutional Portals</h3>
+        <h3 class="col-heading col-left">{t('account.breadcrumb')}</h3>
+        <h3 class="col-heading col-right">{t('accountMenu.institutionalPortals')}</h3>
 
         <!-- Row 2: Account vs Artisan Studio -->
         <div class="grid-cell cell-left">
           <a href="/account" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="user" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Account</strong>
-              <small>Profile, contact & security</small>
+              <strong>{t('account.breadcrumb')}</strong>
+              <small>{t('accountMenu.yourAccountDesc')}</small>
             </span>
           </a>
         </div>
@@ -142,10 +199,10 @@
             role="menuitem"
             onclick={closeMenu}
           >
-            <span class="portal-badge artisan-badge">Artisan</span>
+            <span class="portal-badge artisan-badge">{t('accountMenu.badgeArtisan')}</span>
             <span class="menu-link__text">
-              <strong>Artisan Studio (PWA)</strong>
-              <small>Voice-first loom portal</small>
+              <strong>{t('accountMenu.artisanStudioTitle')}</strong>
+              <small>{t('accountMenu.artisanStudioDesc')}</small>
             </span>
             <span class="portal-link__ext"><Icon name="external-link" size="0.75rem" /></span>
           </a>
@@ -156,8 +213,8 @@
           <a href="/orders" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="collective-order" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Orders</strong>
-              <small>Track, cancel & invoices</small>
+              <strong>{t('accountMenu.yourOrders')}</strong>
+              <small>{t('accountMenu.ordersDesc')}</small>
             </span>
           </a>
         </div>
@@ -170,10 +227,10 @@
             role="menuitem"
             onclick={closeMenu}
           >
-            <span class="portal-badge admin-badge">Ministry</span>
+            <span class="portal-badge admin-badge">{t('accountMenu.badgeMinistry')}</span>
             <span class="menu-link__text">
-              <strong>Ministry Admin Console</strong>
-              <small>Cluster governance & audits</small>
+              <strong>{t('accountMenu.ministryConsoleTitle')}</strong>
+              <small>{t('accountMenu.ministryConsoleDesc')}</small>
             </span>
             <span class="portal-link__ext"><Icon name="external-link" size="0.75rem" /></span>
           </a>
@@ -184,8 +241,8 @@
           <a href="/verify" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="provenance" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Craft Provenance</strong>
-              <small>Ed25519 digital seals</small>
+              <strong>{t('accountMenu.provenanceTitle')}</strong>
+              <small>{t('accountMenu.provenanceDesc')}</small>
             </span>
           </a>
         </div>
@@ -193,8 +250,8 @@
           <a href="/bulk-order" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="cluster" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Institutional Procurement</strong>
-              <small>Tenders & bulk guild orders</small>
+              <strong>{t('accountMenu.procurementTitle')}</strong>
+              <small>{t('accountMenu.procurementDesc')}</small>
             </span>
           </a>
         </div>
@@ -204,8 +261,8 @@
           <a href="/account#addresses" class="menu-link" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="location" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Your Addresses</strong>
-              <small>Shipping & institutional GST</small>
+              <strong>{t('accountMenu.addressesTitle')}</strong>
+              <small>{t('accountMenu.addressesDesc')}</small>
             </span>
           </a>
         </div>
@@ -213,21 +270,66 @@
           <a href="/contact" class="menu-link contact-menu-item" role="menuitem" onclick={closeMenu}>
             <span class="menu-link__icon"><Icon name="phone" size="1rem" /></span>
             <span class="menu-link__text">
-              <strong>Contact Us & Support</strong>
-              <small>Tollfree helpline & grievance</small>
+              <strong>{t('accountMenu.contactTitle')}</strong>
+              <small>{t('accountMenu.contactDesc')}</small>
             </span>
           </a>
         </div>
       </div>
 
-      {#if isAuthenticated}
-        <div class="popover-footer">
-          <button type="button" class="signout-btn" onclick={handleSignOut}>
-            <Icon name="lock" size="0.9rem" />
-            Sign Out of Kalakriti
-          </button>
+      <div class="popover-footer">
+        <div class="currency-picker-wrapper" bind:this={currencyWrapper}>
+          <Tooltip text={tt('tooltip.currency')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="currency-btn"
+                onclick={toggleCurrencyMenu}
+                aria-expanded={isCurrencyMenuOpen}
+                aria-haspopup="true"
+                aria-label={t('tooltip.currency')}
+                {...tp}
+              >
+                <Icon name="dollar-sign" size="0.9rem" />
+                <span>{t('tooltip.currency')}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
+
+          {#if isCurrencyMenuOpen}
+            <ul class="currency-dropdown" role="list">
+              {#each currencyOptions as code (code)}
+                <li>
+                  <button
+                    type="button"
+                    class="currency-option"
+                    class:currency-option--active={currency.code === code}
+                    aria-current={currency.code === code ? 'true' : undefined}
+                    onclick={() => selectCurrency(code)}
+                  >
+                    <span class="currency-option__code">{code}</span>
+                    <span class="currency-option__symbol">{CURRENCY_META[code].symbol}</span>
+                    {#if currency.code === code}
+                      <Icon name="check" size="0.85rem" />
+                    {/if}
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
         </div>
-      {/if}
+
+        {#if isAuthenticated}
+          <Tooltip text={tt('tooltip.signout')}>
+            {#snippet trigger(tp)}
+              <button type="button" class="signout-btn" onclick={handleSignOut} {...tp}>
+                <Icon name="lock" size="0.9rem" />
+                {t('account.signOutTitle')}
+              </button>
+            {/snippet}
+          </Tooltip>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -246,7 +348,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--k-radius-md, 8px);
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
     cursor: pointer;
     font-family: inherit;
     text-align: start;
@@ -267,7 +369,7 @@
     block-size: 2rem;
     border-radius: 50%;
     background-color: var(--k-premium-warm-cream);
-    color: var(--k-premium-header-bg, #873032);
+    color: var(--k-premium-header-bg, var(--k-accent-danger-muted));
     border: 1px solid rgba(244, 240, 234, 0.3);
     font-size: 0.75rem;
     font-weight: 700;
@@ -287,7 +389,7 @@
 
   .account-greeting {
     font-size: 0.7rem;
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
     font-weight: 500;
     opacity: 0.9;
   }
@@ -298,7 +400,7 @@
     gap: 0.25rem;
     font-size: 0.825rem;
     font-weight: 700;
-    color: var(--k-ink-900, #F4F0EA);
+    color: var(--k-ink-900, var(--k-khadi-100));
   }
 
   /* Popover */
@@ -308,8 +410,8 @@
     inset-block-start: calc(100% + 0.5rem);
     inline-size: 36rem;
     max-inline-size: 94vw;
-    background-color: #ffffff;
-    border: 1px solid var(--k-border-hairline, #e2dcd2);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-hairline, var(--k-border-muted));
     border-radius: 12px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     z-index: 1000;
@@ -330,8 +432,8 @@
 
   .popover-header {
     padding: 1rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-end: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .user-badge-row {
@@ -344,7 +446,7 @@
   .user-name {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
   }
 
   .patron-badge {
@@ -352,9 +454,9 @@
     font-weight: 700;
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    background-color: var(--k-surface-raised);
+    color: var(--k-accent-success-muted);
+    border: 1px solid var(--k-neem-300);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -362,7 +464,7 @@
   .user-email {
     display: block;
     font-size: 0.75rem;
-    color: #756d65;
+    color: var(--k-text-tertiary);
     margin-block-start: 0.15rem;
   }
 
@@ -371,8 +473,8 @@
     inline-size: 100%;
     text-align: center;
     padding: 0.6rem 1rem;
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
     font-weight: 700;
     font-size: 0.85rem;
     border-radius: 8px;
@@ -381,19 +483,19 @@
   }
 
   .signin-primary-btn:hover {
-    background-color: #993b2d;
+    background-color: var(--k-accent-danger-bg);
   }
 
   .signup-prompt {
     margin-block-start: 0.5rem;
     font-size: 0.75rem;
     text-align: center;
-    color: #756d65;
+    color: var(--k-text-tertiary);
     margin-block-end: 0;
   }
 
   .signup-link {
-    color: #1d4ed8;
+    color: var(--k-indigo-900);
     font-weight: 600;
     text-decoration: underline;
   }
@@ -415,7 +517,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #8c8278;
+    color: var(--k-stone-400);
     margin: 0;
     padding: 0.4rem 1rem 0.4rem 1rem;
     display: flex;
@@ -428,8 +530,8 @@
 
   .col-right {
     padding-inline-start: 1.25rem;
-    border-inline-start: 1px solid #eee8df;
-    background-color: #fdfbf7;
+    border-inline-start: 1px solid var(--k-border-subtle);
+    background-color: var(--k-surface-base);
   }
 
   .grid-cell {
@@ -440,13 +542,13 @@
 
   .cell-left {
     padding-inline-start: 0.85rem;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
   }
 
   .cell-right {
     padding-inline-start: 0.85rem;
-    border-inline-start: 1px solid #eee8df;
-    background-color: #fdfbf7;
+    border-inline-start: 1px solid var(--k-border-subtle);
+    background-color: var(--k-surface-base);
   }
 
   .menu-link {
@@ -456,7 +558,7 @@
     padding: 0.45rem 0.5rem;
     border-radius: 6px;
     text-decoration: none;
-    color: #2b2520;
+    color: var(--k-text-primary);
     inline-size: 100%;
     min-block-size: 2.75rem;
     box-sizing: border-box;
@@ -464,7 +566,7 @@
   }
 
   .menu-link:hover {
-    background-color: #f3efe6;
+    background-color: var(--k-surface-raised);
   }
 
   .menu-link__icon {
@@ -473,7 +575,7 @@
     align-items: center;
     justify-content: center;
     flex: none;
-    color: #6a6259;
+    color: var(--k-text-tertiary);
   }
 
   .menu-link__text {
@@ -487,7 +589,7 @@
   .menu-link__text strong {
     font-size: 0.825rem;
     font-weight: 600;
-    color: #1e1915;
+    color: var(--k-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -495,7 +597,7 @@
 
   .menu-link__text small {
     font-size: 0.7rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -507,7 +609,7 @@
 
   .portal-link__ext {
     flex: none;
-    color: #9c9288;
+    color: var(--k-stone-400);
     display: flex;
     align-items: center;
     margin-inline-start: 0.25rem;
@@ -527,23 +629,101 @@
   }
 
   .artisan-badge {
-    background-color: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffe0b2;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-accent-primary-text);
+    border: 1px solid var(--k-haldi-300);
   }
 
   .admin-badge {
-    background-color: #ede7f6;
-    color: #4a148c;
-    border: 1px solid #d1c4e9;
+    background-color: var(--k-surface-neutral);
+    color: var(--k-indigo-900);
+    border: 1px solid var(--k-indigo-300);
   }
 
   .popover-footer {
     padding: 0.65rem 1.25rem;
-    background-color: #faf7f2;
-    border-block-start: 1px solid #eee8df;
+    background-color: var(--k-surface-base);
+    border-block-start: 1px solid var(--k-border-subtle);
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-2, 0.5rem);
+    position: relative;
+  }
+
+  .currency-picker-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .currency-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: none;
+    color: var(--k-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    font-family: inherit;
+    transition: background-color var(--k-duration-fast, 150ms) ease, color var(--k-duration-fast, 150ms) ease;
+  }
+
+  .currency-btn:hover {
+    background-color: var(--k-surface-neutral);
+    color: var(--k-text-primary);
+  }
+
+  .currency-dropdown {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: calc(100% + 0.4rem);
+    min-inline-size: 11rem;
+    max-block-size: 14rem;
+    overflow-y: auto;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
+    border-radius: var(--k-radius-md, 8px);
+    box-shadow: var(--k-elevation-menu);
+    padding: var(--k-space-1, 0.25rem);
+    margin: 0;
+    list-style: none;
+    z-index: var(--k-z-dropdown, 110);
+  }
+
+  .currency-option {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2, 0.5rem);
+    inline-size: 100%;
+    padding: 0.45rem 0.65rem;
+    border: none;
+    background: transparent;
+    border-radius: var(--k-radius-sm, 4px);
+    text-align: start;
+    cursor: pointer;
+    font-size: var(--k-text-sm, 0.875rem);
+    color: var(--k-text-primary);
+    font-family: inherit;
+    transition: background-color var(--k-duration-fast, 150ms) ease;
+  }
+
+  .currency-option:hover,
+  .currency-option--active {
+    background-color: var(--k-surface-sunken);
+  }
+
+  .currency-option__code {
+    font-weight: 600;
+  }
+
+  .currency-option__symbol {
+    color: var(--k-text-secondary);
+    margin-inline-start: auto;
+    font-size: var(--k-text-xs, 0.75rem);
   }
 
   .signout-btn {
@@ -552,17 +732,18 @@
     gap: 0.4rem;
     background: transparent;
     border: none;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     padding: 0.3rem 0.5rem;
     border-radius: 4px;
     font-family: inherit;
+    margin-inline-start: auto;
   }
 
   .signout-btn:hover {
-    background-color: #fee2e2;
+    background-color: var(--k-surface-neutral);
   }
 
   /* On a very narrow phone the header action row is already saturated:

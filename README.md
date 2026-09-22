@@ -14,6 +14,7 @@ services/core-svc/     identity, artisan profiles, catalog, provenance
 services/search-svc/   pgvector similarity search and discovery
 services/collab-svc/   collective fulfilment, pooled orders, allocation
 services/channel-svc/  outbound channel sync and notifications
+services/insight-svc/  ministry analytics and income-statement generation
 services/bff/          the only REST/JSON surface
 services/ml-svc/       Python 3.11 gRPC server wrapping the models
 migrations/            goose migrations (single database, schema per service)
@@ -74,8 +75,8 @@ docker compose exec -e PGPASSWORD=kalakriti postgres \
 # Redis
 docker compose exec redis redis-cli ping                    # PONG
 
-# Kafka (KRaft, single broker)
-docker compose exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+# Kafka (KRaft, single broker; confluentinc/confluent-local ships kafka-topics on PATH, no .sh/opt path)
+docker compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
 
 # MinIO
 docker compose exec minio mc ready local
@@ -134,8 +135,8 @@ The web layer contains three independent SvelteKit applications in `web/apps/`:
 
 In production and full docker-compose mode, all three apps are built and served by NGINX (`Dockerfile.web` and `deploy/nginx/nginx.conf`) exposed on **Port 80**:
 - Buyer: `http://localhost/` (or `kalakriti.in`)
-- Artisan: `http://localhost/artisan/` (or `artisan.kalakriti.in`)
-- Admin: `http://localhost/admin/` (or `admin.kalakriti.in`)
+- Artisan: `http://localhost:8081` (or `artisan.kalakriti.in`)
+- Admin: `http://localhost:8082` (or `admin.kalakriti.in`)
 - API Gateway Proxy: `http://localhost/api/v1/*` (proxies to Go BFF at `:8000` with SSE support)
 - Direct BFF API: `http://localhost:8000/api/v1/*`
 

@@ -82,8 +82,6 @@ const CATALOGUE_LOADERS: Record<LocaleCode, () => Promise<Partial<Messages>>> = 
   ne: async () => (await import('./messages/ne')).ne,
   sa: async () => (await import('./messages/sa')).sa,
   brx: async () => (await import('./messages/brx')).brx,
-  sat: async () => (await import('./messages/sat')).sat,
-  mni: async () => (await import('./messages/mni')).mni,
 };
 
 /**
@@ -114,6 +112,12 @@ class LocaleState {
   #hiCataloguePromise: Promise<Partial<Messages>> | null = null;
   #loading = $state(false);
   #version = $state(0);
+  // DEV-only, dedupe by "code:key" so a re-rendered component doesn't
+  // reflood the console for the same fallthrough. See I18N_PLAN.md's F-6:
+  // once a locale's catalogue is genuinely complete this should never fire
+  // for it again, so a fresh entry here during development is a real
+  // regression signal, not noise to be ignored.
+  #warnedFallthrough = new Set<string>();
 
   get code(): LocaleCode {
     return this.#code;
@@ -129,6 +133,13 @@ class LocaleState {
 
   /** Active catalogue -> Hindi -> English -> the raw key itself. */
   #lookup(key: MessageKey): string {
+    if (DEV && this.#code !== 'en' && this.#code !== 'hi' && this.#catalogue[key] === undefined) {
+      const dedupeKey = `${this.#code}:${key}`;
+      if (!this.#warnedFallthrough.has(dedupeKey)) {
+        this.#warnedFallthrough.add(dedupeKey);
+        console.warn(`[i18n] "${key}" not in "${this.#code}" catalogue, falling through to hi/en`);
+      }
+    }
     const found = this.#catalogue[key] ?? this.#hiCatalogue?.[key] ?? en[key];
     if (found === undefined) {
       if (DEV) console.warn(`[i18n] missing key "${key}" for locale "${this.#code}"`);
@@ -149,6 +160,17 @@ class LocaleState {
     void this.#hiCatalogue;
     void this.#version;
     return (key, values) => interpolate(this.#lookup(key), values);
+  }
+
+  /**
+   * Tooltip resolver getter. Re-derives when code, version, or catalogue changes.
+   */
+  get tooltip(): (key: MessageKey) => string {
+    void this.#code;
+    void this.#catalogue;
+    void this.#hiCatalogue;
+    void this.#version;
+    return (key: MessageKey) => this.#lookup(key);
   }
 
   /**
@@ -184,7 +206,21 @@ class LocaleState {
     this.#loading = true;
     try {
       const loader = CATALOGUE_LOADERS[code] ?? (async () => FALLBACK_CATALOGUES[code] ?? {});
-      this.#catalogue = await loader();
+      try {
+        this.#catalogue = await loader();
+      } catch (err) {
+        // A dynamic import can fail: a stale chunk hash after a redeploy, or
+        // no network before the chunk was ever cached -- exactly the 2G
+        // conditions this app targets. Without this catch, set()'s promise
+        // rejects, #code is never assigned, and a caller doing
+        // `void locale.set(code)` (LanguageSelector.svelte does) gets an
+        // unhandled rejection while the UI does nothing: the artisan taps
+        // their language and nothing happens. Falling back here means the
+        // switch always does *something* -- worst case, the fallback chain
+        // -- rather than silently failing.
+        if (DEV) console.warn(`[i18n] failed to load catalogue for "${code}", using fallback`, err);
+        this.#catalogue = FALLBACK_CATALOGUES[code] ?? {};
+      }
       this.#code = code;
 
       if (code !== 'en' && code !== 'hi') {
@@ -234,4 +270,13 @@ export function t(key: MessageKey, values?: MessageValues): string {
 /** Convenience for `const tp = $derived(locale.tPlural.bind(locale))`. */
 export function tPlural(base: string, count: number, values?: MessageValues): string {
   return locale.tPlural(base, count, values);
+}
+
+/**
+ * Tooltip text, resolved through the same active catalogue -> Hindi ->
+ * English chain as `t()`, so it reads in the currently selected language.
+ * No endonym or fallback marker is appended. Every key must exist in en.ts.
+ */
+export function tooltip(key: MessageKey): string {
+  return locale.tooltip(key);
 }

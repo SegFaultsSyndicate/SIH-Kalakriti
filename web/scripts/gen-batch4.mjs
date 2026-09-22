@@ -48,6 +48,7 @@ const rrect = (x, y, w, h, r) =>
   ' L' + pt(x, y + r) + ' A' + n(r) + ' ' + n(r) + ' 0 0 1 ' + pt(x + r, y) + ' Z';
 
 const S = (d) => ({ d, fill: 'none', stroke: true });
+const SD = (d, dash) => ({ d, fill: 'none', stroke: true, dash });
 const F = (d) => ({ d, fill: 'currentColor', stroke: false });
 
 /* ================================================================ CORE UI
@@ -82,6 +83,10 @@ const CORE = {
   sort: () => [S(line(8, 4, 8, 20)), S(poly([[5, 7], [8, 4], [11, 7]])), S(line(16, 20, 16, 4)), S(poly([[13, 17], [16, 20], [19, 17]]))],
   share: () => [S(circ(6, 12, 2.6)), S(circ(18, 6, 2.6)), S(circ(18, 18, 2.6)), S(line(8.3, 10.7, 15.7, 7.3)), S(line(8.3, 13.3, 15.7, 16.7))],
   download: () => [S(line(12, 3, 12, 15) + ' L' + pt(8, 11)), S(line(12, 15, 16, 11)), S(poly([[4, 15], [4, 21], [20, 21], [20, 15]]))],
+  // Currency symbol for price displays; used via <Icon name="dollar-sign"> (e.g. the
+  // CurrencySelector trigger). Kept as part of the set even though the generator
+  // drifted out once — regeneration must not remove it (see ADMIN provenance note).
+  'dollar-sign': () => [S(line(12, 3, 12, 21)), S('M17 5 H9.5 A3.5 3.5 0 0 0 9.5 12 H14.5 A3.5 3.5 0 0 1 14.5 19 H6')],
   print: () => [S(rrect(6, 3, 12, 6, 1)), S(poly([[4, 9], [20, 9], [20, 17], [16, 17], [16, 21], [8, 21], [8, 17], [4, 17]], true)), S(line(8, 13, 16, 13))],
   link: () => [S('M10 14 A5 5 0 0 1 10.5 6.5 L14 3 A5 5 0 0 1 21 10 L18.5 12.5'), S('M14 10 A5 5 0 0 1 13.5 17.5 L10 21 A5 5 0 0 1 3 14 L5.5 11.5')],
   'external-link': () => [S(poly([[19, 14], [19, 20], [4, 20], [4, 5], [10, 5]])), S(line(13, 4, 20, 4) + ' L' + pt(20, 11)), S(line(20, 4, 11, 13))],
@@ -122,6 +127,32 @@ const CORE = {
   pause: () => [S(rrect(6, 4.5, 4.5, 15, 1)), S(rrect(13.5, 4.5, 4.5, 15, 1))],
   volume: () => [S(poly([[3, 9.5], [3, 14.5], [7.5, 14.5], [12.5, 19.5], [12.5, 4.5], [7.5, 9.5]], true)), S(arc(12.5, 12, 5, -45, 45))],
   speaker: () => [S(poly([[3, 9.5], [3, 14.5], [7.5, 14.5], [12.5, 19.5], [12.5, 4.5], [7.5, 9.5]], true)), S(arc(12.5, 12, 3.6, -50, 50)), S(arc(12.5, 12, 6.4, -50, 50))],
+  'badge-verified': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S('M9 12 L11 14 L15.5 9.5'),
+  ],
+  'badge-master': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S('M12 8.5 L13.2 11 L16 11.4 L14 13.3 L14.5 16 L12 14.6 L9.5 16 L10 13.3 L8 11.4 L10.8 11 Z'),
+  ],
+  'badge-award': () => [
+    S(circ(12, 9, 5)),
+    S('M9 13.2 L7.5 21 L12 18.5 L16.5 21 L15 13.2'),
+  ],
+  'badge-gi': () => [
+    S('M12 3 L19 6 V12 C19 16.5 16 19.5 12 21 C8 19.5 5 16.5 5 12 V6 Z'),
+    S(circ(12, 11.5, 3)),
+  ],
+  'badge-coordinator': () => [
+    S(circ(9, 10, 4)),
+    S(circ(15, 14, 4)),
+  ],
+  'badge-milestone': () => [
+    S('M12 3 L20 8 V16 L12 21 L4 16 V8 Z'),
+  ],
+  'badge-locked': () => [
+    SD('M12 3 L20 8 V16 L12 21 L4 16 V8 Z', '2.5 2'),
+  ],
 };
 
 /* ============================================================ DOMAIN ICONS
@@ -181,6 +212,16 @@ const DOMAIN_TRADITION = {
   'fair-price': 'none — balance scale with a thread',
 };
 
+const BADGE_USE = {
+  'badge-verified': 'verified_artisan badge',
+  'badge-master': 'master_craftsperson badge',
+  'badge-award': 'national_awardee badge',
+  'badge-gi': 'gi_practitioner badge',
+  'badge-coordinator': 'cluster_coordinator badge',
+  'badge-milestone': 'earned tiered badges (catalog_builder, provenance_keeper, order_fulfiller, first_listing)',
+  'badge-locked': 'any not-yet-earned badge slot',
+};
+
 /* --------------------------------------------------------------- emit */
 
 const icons = []; // { name, svg, category }
@@ -188,15 +229,17 @@ const icons = []; // { name, svg, category }
 function buildIcon(name, category, elements) {
   const body = elements.map((el) => {
     if (el.stroke) {
-      return '<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="' + el.d + '"/>';
+      const extra = el.dash ? ' stroke-dasharray="' + el.dash + '"' : '';
+      return '<path fill="none" stroke="currentColor"' + extra + ' stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="' + el.d + '"/>';
     }
     return '<path fill="currentColor" d="' + el.d + '"/>';
   }).join('\n  ');
   const meta = CATMETA[category];
   const tradition = DOMAIN_TRADITION[name] || meta.tradition;
+  const use = BADGE_USE[name] || meta.use;
   const comment = category === 'domain'
-    ? name + ' (domain icon). Tradition: ' + tradition + '. Use: ' + meta.use + '.'
-    : name + ' (' + category + ' icon). ' + tradition + '. Use: ' + meta.use + '.';
+    ? name + ' (domain icon). Tradition: ' + tradition + '. Use: ' + use + '.'
+    : name + ' (' + category + ' icon). ' + tradition + '. Use: ' + use + '.';
   const svg =
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">\n' +
@@ -274,6 +317,21 @@ writeFileSync(join(SRC, 'charkha-spinner.svg'), icons[icons.length - 1].svg);
   icons.push({ name: 'upload-zone', svg, category: 'core', isMultiState: true });
 }
 
+/* ====================================================== HAND-AUTHORED BADGE
+ *  The admin "badges" sidebar button uses a user-supplied SVG Repo
+ *  verified-badge emblem, kept verbatim (see web/packages/icons/src/badge.svg
+ *  and scripts/validate-all.mjs for why it opts out of this batch's
+ *  conventions): single currentColor fill on a 96x96 viewBox, not a 24x24
+ *  stroke icon. Re-read from disk every run so the generated registrations
+ *  never drift from the hand-authored source; a dedicated check below
+ *  re-validates its shape.
+ */
+
+{
+  const badgeSvg = readFileSync(join(SRC, 'badge.svg'), 'utf8');
+  icons.push({ name: 'badge', svg: badgeSvg, category: 'core', externalViewBox: '16.50 16.50 62.75 62.75' });
+}
+
 /* ============================================================ manifest,
  * typed names, and the name->component map. Direct `.svg` imports (per
  * icon) stay the tree-shaking path; `icons.js` + <Icon name> is the
@@ -295,7 +353,23 @@ writeFileSync(join(ROOT, 'packages/icons/manifest.js'),
 writeFileSync(join(ROOT, 'packages/icons/icons.d.ts'),
   '// Generated by scripts/gen-batch4.mjs — do not hand-edit.\n' +
   '// A name outside this union is a compile error at every <Icon name="..."> call site.\n' +
-  'export type IconName =\n  | ' + allNames.map((n2) => "'" + n2 + "'").join('\n  | ') + ';\n');
+  'export type IconName =\n  | ' + allNames.map((n2) => "'" + n2 + "'").join('\n  | ') + ';\n' +
+  '\n' +
+  "import type { Component } from 'svelte';\n" +
+  '\n' +
+  'export interface IconProps {\n' +
+  '  name: IconName;\n' +
+  '  title?: string;\n' +
+  '  size?: string;\n' +
+  '  strokeWidth?: number;\n' +
+  '  class?: string;\n' +
+  '  [key: string]: any;\n' +
+  '}\n' +
+  '\n' +
+  'export declare const Icon: Component<IconProps>;\n' +
+  'export declare const Spinner: Component<{ size?: string; class?: string; [key: string]: any }>;\n' +
+  'export declare const UploadZone: Component<{ [key: string]: any }>;\n' +
+  'export declare const ICONS: readonly IconName[];\n');
 
 writeFileSync(join(ROOT, 'packages/icons/icons.js'),
   '/* Generated by scripts/gen-batch4.mjs — do not hand-edit.\n' +
@@ -312,7 +386,7 @@ writeFileSync(join(ROOT, 'packages/icons/icons.js'),
 // "no unreferenced id" check the same way patterns.svg was in Batch 3.
 
 const symbolBodies = icons.filter((i) => !i.isMultiState).map((i) =>
-  '    <symbol id="k-icon-' + i.name + '" viewBox="0 0 24 24">\n' +
+  '    <symbol id="k-icon-' + i.name + '" viewBox="' + (i.externalViewBox || '0 0 24 24') + '">\n' +
   i.svg.replace(/[\s\S]*?<svg[^>]*>\n/, '').replace(/<\/svg>\s*$/, '').split('\n')
     .filter((l) => !l.trim().startsWith('<!--'))
     .map((l) => '      ' + l.trim()).filter(Boolean).join('\n') +
@@ -362,8 +436,20 @@ function endpoints(d) {
   else ok('upload-zone.svg: 5 states, viewBox, no SMIL, no bare hex');
 }
 
+{
+  const badge = icons.find((i) => i.name === 'badge');
+  const geom = badge.svg.replace(/<!--[\s\S]*?-->/g, '');
+  if (!/viewBox="16\.50 16\.50 62\.75 62\.75"/.test(geom)) fail('badge.svg: viewBox is not exactly "16.50 16.50 62.75 62.75" (full-extent crop of the 96x96 art — the tallest fill the box allows for the emblem\'s narrow aspect)');
+  if (/<svg[^>]*\swidth=/.test(geom)) fail('badge.svg: hardcoded width on root svg');
+  if (/#[0-9a-fA-F]{3,6}\b/.test(geom)) fail('badge.svg: bare hex colour');
+  if (/\bid=/.test(geom)) fail('badge.svg: unreferenced id');
+  if (/<animate/.test(geom)) fail('badge.svg: SMIL <animate> — CSS only');
+  if (!/fill="currentColor"/.test(geom)) fail('badge.svg: single currentColor fill required');
+  else ok('badge.svg: hand-authored verified-badge emblem, single currentColor fill');
+}
+
 for (const icon of icons) {
-  if (icon.isMultiState) continue; // checked above, separately, for its own shape
+  if (icon.isMultiState || icon.externalViewBox) continue; // multi-state checked separately; badge is hand-authored
   const geom = icon.svg.replace(/<!--[\s\S]*?-->/g, '');
   if (!/viewBox="0 0 24 24"/.test(geom)) fail(icon.name + '.svg: viewBox is not exactly "0 0 24 24"');
   if (/<svg[^>]*\swidth=/.test(geom)) fail(icon.name + '.svg: hardcoded width on root svg');
@@ -410,7 +496,7 @@ const innerBody = (svg) => svg
   .trim();
 
 const iconSvgTag = (icon, size) =>
-  '<svg viewBox="0 0 24 24" style="width:' + size + 'px;height:' + size + 'px" aria-hidden="true" focusable="false">' +
+  '<svg viewBox="' + (icon.externalViewBox || '0 0 24 24') + '" style="width:' + size + 'px;height:' + size + 'px" aria-hidden="true" focusable="false">' +
   innerBody(icon.svg) + '</svg>';
 
 const denseGrid = icons.filter((i) => !i.isMultiState).map((i) =>

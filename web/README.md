@@ -98,6 +98,17 @@ editing. To exercise install and offline behaviour in dev:
 PWA_DEV=1 pnpm dev:artisan
 ```
 
+Every app's DEV-mode mock fallback (offline/airplane-mode demo data, shown
+only when a real API call fails) is opt-in, not automatic: set
+`VITE_USE_MOCKS=1` to enable it.
+
+```bash
+VITE_USE_MOCKS=1 pnpm dev:admin
+```
+
+Without it, `pnpm dev:*` talks to the real backend and a failed call surfaces
+as a real error instead of silently falling back to fabricated data.
+
 ---
 
 ## The artisan bundle stays small
@@ -115,13 +126,13 @@ Svelte 5.57.0:
 
 | App     | Initial JS (gzip)           | All JS (gzip) | CSS (gzip) | Build dir |
 | ------- | --------------------------- | ------------- | ---------- | --------- |
-| artisan | **70.6 KB** (59% of budget) | 73.2 KB       | 3.8 KB     | 1.1 MB    |
-| buyer   | 33.0 KB                     | 35.6 KB       | 2.8 KB     | 698 KB    |
-| admin   | 30.7 KB                     | 32.7 KB       | 2.8 KB     | 624 KB    |
+| artisan | **49.0 KB** (41% of 120 KB) | 73.2 KB       | 3.8 KB     | 1.1 MB    |
+| buyer   | 48.2 KB (24% of 200 KB)     | 35.6 KB       | 2.8 KB     | 698 KB    |
+| admin   | 35.1 KB (44% of 80 KB)      | 32.7 KB       | 2.8 KB     | 624 KB    |
 
-Every build prints this table. `SIZE_BUDGET_ENFORCE=1 pnpm build` (that is what
-`pnpm size` runs, and what CI runs) turns going over the budget into a build
-failure. Each app also writes `apps/<app>/size-report.json` with the per-chunk
+Every build prints this table, and going over the budget fails the build --
+there is no flag to remember. `SIZE_BUDGET_ENFORCE=0` downgrades it to a
+report for a local build you knowingly want to finish anyway. Each app also writes `apps/<app>/size-report.json` with the per-chunk
 numbers.
 
 The artisan figure is higher than the other two because it carries Dexie and
@@ -170,10 +181,14 @@ NGINX reverse proxy (`deploy/nginx/nginx.conf`) exposed on **Port 80**:
   - `kalakriti.in` (default): Buyer Marketplace (`/var/www/buyer`)
   - `artisan.kalakriti.in`: Artisan PWA (`/var/www/artisan`)
   - `admin.kalakriti.in`: Admin Dashboard (`/var/www/admin`)
-- **Path Fallbacks** (for single-host / localhost testing):
+- **Local-development ports** (for single-host / localhost testing --
+  path-prefixing a second app under the buyer host doesn't work here: none
+  of the three apps set `kit.paths.base`, so their built asset URLs are
+  absolute and root-relative, and a path prefix on the buyer host served
+  the wrong app's bundle -- see `deploy/nginx/nginx.conf`):
   - `http://localhost/` → Buyer
-  - `http://localhost/artisan/` → Artisan PWA
-  - `http://localhost/admin/` → Admin Dashboard
+  - `http://localhost:8081` → Artisan PWA
+  - `http://localhost:8082` → Admin Dashboard
 - **API Proxy**: `/api/` requests are reverse-proxied to `bff:8000` with SSE streaming buffers disabled (`proxy_buffering off;`).
 - **PWA Service Worker**: Served with `Cache-Control: no-cache, no-store, must-revalidate` so updates deploy cleanly without worker trapping.
 - **Static Assets**: Precompressed `.br` and `.gz` static assets served with 1-year immutable caching (`_app/immutable/`).

@@ -143,13 +143,46 @@
 
   --k-focus-ring:          var(--k-terracotta-700);   /* on surface-base: 6.74:1 (≥3:1 required) */
 
-  /* A small chip (tooltip) or a scrim behind a modal/sheet stays dark in
-     every theme, including light -- there is no "light tooltip" in this
-     system, and a scrim that flipped pale in dark mode would stop reading
-     as an overlay. Same three values in every theme block on purpose. */
+  /* --- roles the components needed and the semantic layer did not have ---
+     Added from an audit that found ~500 raw palette-step references with
+     nowhere legitimate to go. Every text pairing below is measured, not
+     estimated; the border roles below 3:1 are decorative dividers only and
+     are never the sole indicator of a control's boundary. */
+  --k-surface-neutral:     var(--k-stone-100);  /* faint neutral fill — never carries text on its own */
+
+  --k-text-tertiary:       var(--k-stone-500);  /* on surface-base: 4.88:1 — metadata, timestamps */
+
+  --k-border-subtle:       var(--k-khadi-150);  /* decorative tonal divider */
+  --k-border-muted:        var(--k-khadi-200);  /* decorative, one step firmer */
+  --k-border-on-inverse:   var(--k-stone-100);  /* hairline drawn on surface-inverse — same in every theme */
+  --k-border-accent:       var(--k-terracotta-700); /* on surface-base: 6.77:1 */
+  --k-border-danger:       var(--k-madder-600);     /* on surface-base: 5.72:1 */
+  --k-border-warning:      var(--k-haldi-700);      /* on surface-base: 4.50:1 */
+
+  --k-accent-danger-bg:    var(--k-madder-600);  /* text-on-accent on this: 5.72:1 */
+  --k-accent-success-bg:   var(--k-neem-600);    /* text-on-accent on this: 5.84:1 */
+  --k-accent-danger-muted: var(--k-madder-600);  /* on surface-base: 5.72:1 */
+  --k-accent-danger-strong:var(--k-madder-800);  /* on surface-base: 11.38:1 */
+  --k-accent-success-muted:var(--k-neem-600);    /* on surface-base: 5.84:1 */
+
+  /* A scrim behind a modal/sheet -- and any banner-sized "inverse" chip
+     (footer call-outs, tutorial cards) -- stays dark in every theme,
+     including light, so it reads as an overlay no matter the theme. The
+     small floating tooltip chip is the deliberate exception: see
+     --k-surface-tooltip below. The same three values sit in every theme
+     block on purpose. */
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);   /* opacity applied by the component, not here */
+
+  /* Tooltips float over whatever surface happens to be under them (a
+     header row, a card, a photograph) and must separate from it in every
+     theme, so the chip stays a light khadi with ink text in dark and
+     high-contrast too -- the inverse of surface-inverse above. The same
+     two values sit in every theme block on purpose; the chip's hairlined
+     edge (--k-border-hairline) and small menu elevation do the separating. */
+  --k-surface-tooltip:     var(--k-khadi-100); /* ink-900 on this: ~12:1 (AAA) */
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 [data-theme="dark"] {
@@ -182,9 +215,30 @@
 
   --k-focus-ring:          var(--k-terracotta-300);   /* on surface-base: 12.68:1 */
 
+  --k-surface-neutral:     var(--k-ink-800);
+
+  --k-text-tertiary:       var(--k-stone-400);  /* on surface-base: 5.85:1 */
+
+  --k-border-subtle:       var(--k-ink-800);
+  --k-border-muted:        var(--k-ink-700);
+  --k-border-on-inverse:   var(--k-stone-100);
+  --k-border-accent:       var(--k-terracotta-400); /* on surface-base: 9.09:1 */
+  --k-border-danger:       var(--k-madder-400);     /* on surface-base: 7.54:1 */
+  --k-border-warning:      var(--k-haldi-400);      /* on surface-base: 11.05:1 */
+
+  --k-accent-danger-bg:    var(--k-madder-400);  /* text-on-accent on this: 7.54:1 */
+  --k-accent-success-bg:   var(--k-neem-400);    /* text-on-accent on this: 7.84:1 */
+  --k-accent-danger-muted: var(--k-madder-400);  /* on surface-base: 7.54:1 */
+  --k-accent-danger-strong:var(--k-madder-400);  /* on surface-base: 7.54:1 — dark theme has no darker danger that stays legible */
+  --k-accent-success-muted:var(--k-neem-400);    /* on surface-base: 7.84:1 */
+
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);
+
+  /* Tooltip chip: light in every theme, like the light block above. */
+  --k-surface-tooltip:     var(--k-khadi-100);
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 [data-theme="high-contrast"] {
@@ -211,9 +265,30 @@
 
   --k-focus-ring:          var(--k-terracotta-800);   /* on surface-base: 10.18:1, thicker ring drawn by component, not token */
 
+  --k-surface-neutral:     var(--k-khadi-100);
+
+  --k-text-tertiary:       var(--k-ink-800);   /* on surface-base: 11.81:1 */
+
+  --k-border-subtle:       var(--k-ink-700);   /* HC has no faint borders — every divider is seen */
+  --k-border-muted:        var(--k-ink-700);
+  --k-border-on-inverse:   var(--k-stone-100);
+  --k-border-accent:       var(--k-terracotta-800); /* on surface-base: 10.17:1 */
+  --k-border-danger:       var(--k-madder-800);     /* on surface-base: 11.38:1 */
+  --k-border-warning:      var(--k-haldi-700);      /* on surface-base: 4.50:1 */
+
+  --k-accent-danger-bg:    var(--k-madder-800);  /* text-on-accent on this: 11.38:1 */
+  --k-accent-success-bg:   var(--k-neem-700);    /* text-on-accent on this: 9.32:1 */
+  --k-accent-danger-muted: var(--k-madder-800);  /* on surface-base: 11.38:1 */
+  --k-accent-danger-strong:var(--k-madder-800);  /* on surface-base: 11.38:1 */
+  --k-accent-success-muted:var(--k-neem-700);    /* on surface-base: 9.32:1 */
+
   --k-surface-inverse:     var(--k-ink-950);
   --k-text-on-inverse:     var(--k-khadi-50);  /* on surface-inverse: 18.88:1 */
   --k-overlay-scrim:       var(--k-ink-950);
+
+  /* Tooltip chip: light in every theme, like the light block above. */
+  --k-surface-tooltip:     var(--k-khadi-100);
+  --k-text-tooltip:        var(--k-ink-900);
 }
 
 /*

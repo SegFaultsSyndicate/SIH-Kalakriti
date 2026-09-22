@@ -68,7 +68,11 @@ func (a *Auth) RequestOTP(ctx context.Context, phone string) error {
 }
 
 // VerifyOTP redeems the challenge RequestOTP opened for this phone number.
-func (a *Auth) VerifyOTP(ctx context.Context, phone, otp string) (accessToken, refreshToken string, err error) {
+// devRole requests a token minted for a role other than ARTISAN (BUYER,
+// CLUSTER_OFFICER, MINISTRY) -- core-svc honors it only when running with
+// dev OTP enabled, and ignores it otherwise; pass "" for the ordinary
+// artisan login and phone-change flows. See WIRING_AUDIT_PLAN.md F-5.
+func (a *Auth) VerifyOTP(ctx context.Context, phone, otp, devRole string) (accessToken, refreshToken string, err error) {
 	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
@@ -80,11 +84,15 @@ func (a *Auth) VerifyOTP(ctx context.Context, phone, otp string) (accessToken, r
 		return "", "", domain.Unavailable("otp challenge cache unavailable")
 	}
 
-	resp, err := a.identity.VerifyOtp(ctx, &identityv1.VerifyOtpRequest{
+	req := &identityv1.VerifyOtpRequest{
 		ChallengeId: challengeID,
 		PhoneE164:   phone,
 		Code:        otp,
-	})
+	}
+	if devRole != "" {
+		req.DevRole = &devRole
+	}
+	resp, err := a.identity.VerifyOtp(ctx, req)
 	if err != nil {
 		return "", "", grpcErr(err)
 	}

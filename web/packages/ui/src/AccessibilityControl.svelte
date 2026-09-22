@@ -14,18 +14,24 @@
   import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import Popover from './Popover.svelte';
-  import Button from './Button.svelte';
+  import Button, { type ButtonSize } from './Button.svelte';
   import Switch from './Switch.svelte';
   import { a11y, TEXT_SCALE_STEPS } from './a11y.svelte';
 
   interface Props {
     /** Route to the accessibility statement page, per-app. */
     statementHref: string;
+    /** xl (Button's own default) is the artisan app's minimum comfortable
+     * tap target. A header that also has to fit a wordmark and two more
+     * icon buttons on one row at phone width (the buyer shell) can pass a
+     * smaller size -- lg is still above --k-touch-min (44px). */
+    triggerSize?: ButtonSize;
   }
 
-  let { statementHref }: Props = $props();
+  let { statementHref, triggerSize }: Props = $props();
 
   const t = $derived(locale.t);
+  const tt = $derived(locale.tooltip);
 
   const stepIndex = $derived(TEXT_SCALE_STEPS.indexOf(a11y.textScale));
   const canDecrease = $derived(stepIndex > 0);
@@ -87,7 +93,7 @@
 
 <Popover align="end">
   {#snippet trigger(props)}
-    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" {...props} />
+    <Button icon="accessibility" label={t('a11y.settings')} variant="ghost" tooltip={tt('tooltip.accessibility')} size={triggerSize} {...props} />
   {/snippet}
   {#snippet children()}
     <div class="k-a11y-panel">
@@ -100,7 +106,6 @@
           type="button"
           class="k-a11y-panel__reset-btn"
           onclick={() => void a11y.resetAll()}
-          title={t('a11y.reset')}
         >
           <Icon name="refresh" size="0.85rem" />
           {t('a11y.reset')}

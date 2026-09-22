@@ -27,6 +27,12 @@
   --k-page-grain: url('/paper-grain.svg');
 }
 
+html,
+body {
+  max-inline-size: 100%;
+  overflow-x: hidden;
+}
+
 /* Apply Heritage Artisan premium theme */
 body {
   background-color: var(--k-premium-canvas, var(--k-surface-base));
@@ -43,6 +49,8 @@ body {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     min-block-size: 100dvb;
+    max-inline-size: 100%;
+    overflow-x: hidden;
   }
 
   .shell__header {

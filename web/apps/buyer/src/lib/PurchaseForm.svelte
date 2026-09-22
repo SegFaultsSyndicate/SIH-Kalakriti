@@ -28,7 +28,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, NumberStepper, Textarea, Select, Money, FieldGroup, showToast } from '@kalakriti/ui';
   import { createBulkOrder, session, type components } from '@kalakriti/api';
   import { rememberOrder } from './order-store';
@@ -141,7 +141,7 @@
 
     <p class="purchase-form__disclosure">{t('purchase.noPaymentGateway')}</p>
 
-    <Button type="submit" loading={submitting}>{submitting ? t('purchase.submitting') : t('purchase.submit')}</Button>
+    <Button type="submit" loading={submitting} tooltip={tooltip('tooltip.submit')}>{submitting ? t('purchase.submitting') : t('purchase.submit')}</Button>
   </form>
 {/if}
 

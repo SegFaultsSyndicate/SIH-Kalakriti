@@ -41,8 +41,16 @@
 
   let paletteOpen = $state(false);
 
+  // Gates {@render children()} below: locale.init() is async, so without
+  // this a page's first paint runs with an empty catalogue -- every t()
+  // call falls through to English -- then re-renders in the real language a
+  // tick later. See I18N_PLAN.md's F-1.
+  let localeReady = $state(false);
+
   $effect(() => {
-    void locale.init();
+    void locale.init().then(() => {
+      localeReady = true;
+    });
   });
   $effect(() => {
     void a11y.init();
@@ -110,7 +118,7 @@
                 ? 'page'
                 : undefined}
             >
-              <Icon name={item.icon} />
+              <Icon name={item.icon} size={item.iconSize} />
               {t(item.labelKey)}
             </a>
           </li>
@@ -119,18 +127,22 @@
     </nav>
 
     <main class="shell__main" id="main-content" tabindex="-1">
-      <Breadcrumb />
-      {#key currentPath}
-        <ErrorBoundary
-          source="admin-shell"
-          dsn={env.PUBLIC_SENTRY_DSN}
-          title={t('error.boundary.title')}
-          body={t('error.boundary.body')}
-          retryLabel={t('error.boundary.retry')}
-        >
-          {@render children()}
-        </ErrorBoundary>
-      {/key}
+      {#if localeReady}
+        <Breadcrumb />
+        {#key currentPath}
+          <ErrorBoundary
+            source="admin-shell"
+            dsn={env.PUBLIC_SENTRY_DSN}
+            title={t('error.boundary.title')}
+            body={t('error.boundary.body')}
+            retryLabel={t('error.boundary.retry')}
+          >
+            {@render children()}
+          </ErrorBoundary>
+        {/key}
+      {:else}
+        <p class="shell__boot" role="status" aria-live="polite">{t('state.loading')}</p>
+      {/if}
     </main>
   </div>
 
@@ -225,6 +237,12 @@
   .shell__main {
     padding: var(--k-space-5) var(--k-space-6) var(--k-space-9);
     min-inline-size: 0;
+  }
+
+  .shell__boot {
+    padding-block: var(--k-space-6);
+    text-align: center;
+    color: var(--k-text-secondary);
   }
 
   @media (max-width: 900px) {

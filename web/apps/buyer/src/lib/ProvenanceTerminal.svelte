@@ -6,40 +6,85 @@
   separation, monospace ledger hashing, and zero sci-fi neon gloss.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
 
-  let searchCode = $state('UP-VNS-2024-0982');
-  let isChecking = $state(false);
-  let verifiedRecord = $state<{
+  interface RawRecord {
     code: string;
-    title: string;
-    artisan: string;
-    location: string;
-    technique: string;
+    titleKey: MessageKey;
+    artisanKey: MessageKey;
+    locationKey: MessageKey;
+    techniqueKey: MessageKey;
     shaHash: string;
     publicKey: string;
     timestamp: string;
-    fftMatch: string;
-  } | null>({
-    code: 'UP-VNS-2024-0982',
-    title: 'Kashi Kadwa Pure Silver-Gilt Pit-Loom Saree',
-    artisan: 'Mohammad Kabir Ansari (Master Weaver Guild ID: 8812)',
-    location: 'Varanasi Weaver Cluster, Uttar Pradesh (25.3176° N, 82.9739° E)',
-    technique: 'Kadwa Pit-Loom Weave (Pure Mulberry Silk & Silver Zari)',
-    shaHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-    publicKey: 'ed25519:v1:7f4a8b...92d1',
-    timestamp: '2024-08-14 11:22:04 IST',
-    fftMatch: '99.4% Handloom FFT Spectral Peak Match',
-  });
+    fftMatchKey: MessageKey;
+  }
+
+  const RECORDS: Record<'vns' | 'ktc' | 'srn', RawRecord> = {
+    vns: {
+      code: 'UP-VNS-2024-0982',
+      titleKey: 'home.provenanceTerminal.record.vns.title',
+      artisanKey: 'home.provenanceTerminal.record.vns.artisan',
+      locationKey: 'home.provenanceTerminal.record.vns.location',
+      techniqueKey: 'home.provenanceTerminal.record.vns.technique',
+      shaHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      publicKey: 'ed25519:v1:7f4a8b...92d1',
+      timestamp: '2024-08-14 11:22:04 IST',
+      fftMatchKey: 'home.provenanceTerminal.record.vns.fftMatch',
+    },
+    ktc: {
+      code: 'GJ-KTC-2024-0417',
+      titleKey: 'home.provenanceTerminal.record.ktc.title',
+      artisanKey: 'home.provenanceTerminal.record.ktc.artisan',
+      locationKey: 'home.provenanceTerminal.record.ktc.location',
+      techniqueKey: 'home.provenanceTerminal.record.ktc.technique',
+      shaHash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+      publicKey: 'ed25519:v1:4c81a2...3f90',
+      timestamp: '2024-07-29 16:40:12 IST',
+      fftMatchKey: 'home.provenanceTerminal.record.ktc.fftMatch',
+    },
+    srn: {
+      code: 'JK-SRN-2024-1105',
+      titleKey: 'home.provenanceTerminal.record.srn.title',
+      artisanKey: 'home.provenanceTerminal.record.srn.artisan',
+      locationKey: 'home.provenanceTerminal.record.srn.location',
+      techniqueKey: 'home.provenanceTerminal.record.srn.technique',
+      shaHash: '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',
+      publicKey: 'ed25519:v1:8b13c7...61a4',
+      timestamp: '2024-09-02 09:15:30 IST',
+      fftMatchKey: 'home.provenanceTerminal.record.srn.fftMatch',
+    },
+  };
+
+  function toDisplayRecord(raw: RawRecord, codeOverride?: string) {
+    return {
+      code: codeOverride ?? raw.code,
+      title: t(raw.titleKey),
+      artisan: t(raw.artisanKey),
+      location: t(raw.locationKey),
+      technique: t(raw.techniqueKey),
+      shaHash: raw.shaHash,
+      publicKey: raw.publicKey,
+      timestamp: raw.timestamp,
+      fftMatch: t(raw.fftMatchKey),
+    };
+  }
+
+  let searchCode = $state('UP-VNS-2024-0982');
+  let isChecking = $state(false);
+  let selectedRecordKey = $state<'vns' | 'ktc' | 'srn'>('vns');
+  let selectedCodeOverride = $state<string | undefined>(undefined);
+
+  const verifiedRecord = $derived(toDisplayRecord(RECORDS[selectedRecordKey], selectedCodeOverride));
 
   const SAMPLE_CODES = [
-    { code: 'UP-VNS-2024-0982', label: 'Varanasi Kadwa Zari' },
-    { code: 'GJ-KTC-2024-0417', label: 'Kutch Natural Ajrakh' },
-    { code: 'JK-SRN-2024-1105', label: 'Kashmir Pashmina Sozni' },
+    { code: 'UP-VNS-2024-0982', labelKey: 'home.provenanceTerminal.sample.vns.label' as MessageKey },
+    { code: 'GJ-KTC-2024-0417', labelKey: 'home.provenanceTerminal.sample.ktc.label' as MessageKey },
+    { code: 'JK-SRN-2024-1105', labelKey: 'home.provenanceTerminal.sample.srn.label' as MessageKey },
   ];
 
   function pickSample(code: string) {
@@ -53,41 +98,17 @@
 
     setTimeout(() => {
       if (searchCode.includes('KTC')) {
-        verifiedRecord = {
-          code: 'GJ-KTC-2024-0417',
-          title: '16-Stage Natural Indigo & Harda Resist Stole',
-          artisan: 'Ismail Mohammed Khatri (National Heritage Awardee)',
-          location: 'Dhamadka Artisan Hamlet, Kutch, Gujarat (23.2396° N, 70.0163° E)',
-          technique: 'Traditional Hand-Carved Teak Block Print (Pure Mineral Indigo)',
-          shaHash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-          publicKey: 'ed25519:v1:4c81a2...3f90',
-          timestamp: '2024-07-29 16:40:12 IST',
-          fftMatch: 'Organic Botanical Resist Verified (Zero Synthetic Azo Dyes)',
-        };
+        selectedRecordKey = 'ktc';
+        selectedCodeOverride = undefined;
       } else if (searchCode.includes('SRN')) {
-        verifiedRecord = {
-          code: 'JK-SRN-2024-1105',
-          title: 'Imperial Jama Fine Needle Sozni Pashmina',
-          artisan: 'Ghulam Nabi Mir (Valley Master Weaver Council)',
-          location: 'Downtown Old Srinagar, Jammu & Kashmir (34.0837° N, 74.7973° E)',
-          technique: 'Single-Strand Sozni Needlework on Hand-Spun Changthangi Pashm',
-          shaHash: '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8',
-          publicKey: 'ed25519:v1:8b13c7...61a4',
-          timestamp: '2024-09-02 09:15:30 IST',
-          fftMatch: '12.4 Micron Ultra-Fine Pashm Fiber Certified',
-        };
+        selectedRecordKey = 'srn';
+        selectedCodeOverride = undefined;
+      } else if (searchCode.includes('VNS')) {
+        selectedRecordKey = 'vns';
+        selectedCodeOverride = undefined;
       } else {
-        verifiedRecord = {
-          code: searchCode.trim().toUpperCase(),
-          title: 'Kashi Kadwa Pure Silver-Gilt Pit-Loom Saree',
-          artisan: 'Mohammad Kabir Ansari (Master Weaver Guild ID: 8812)',
-          location: 'Varanasi Weaver Cluster, Uttar Pradesh (25.3176° N, 82.9739° E)',
-          technique: 'Kadwa Pit-Loom Weave (Pure Mulberry Silk & Silver Zari)',
-          shaHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-          publicKey: 'ed25519:v1:7f4a8b...92d1',
-          timestamp: '2024-08-14 11:22:04 IST',
-          fftMatch: '99.4% Handloom FFT Spectral Peak Match',
-        };
+        selectedRecordKey = 'vns';
+        selectedCodeOverride = searchCode.trim().toUpperCase();
       }
       isChecking = false;
     }, 300);
@@ -117,15 +138,20 @@
         />
       </div>
 
-      <button
-        type="button"
-        class="inspect-action-btn"
-        onclick={verifyCode}
-        disabled={isChecking}
-      >
-        <Icon name="check" size="1rem" />
-        <span>{isChecking ? 'Inspecting...' : t('home.provenanceTerminal.verifyButton')}</span>
-      </button>
+      <Tooltip text={tooltip('tooltip.verify')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="inspect-action-btn"
+            onclick={verifyCode}
+            disabled={isChecking}
+            {...tp}
+          >
+            <Icon name="check" size="1rem" />
+            <span>{isChecking ? t('home.provenanceTerminal.inspecting') : t('home.provenanceTerminal.verifyButton')}</span>
+          </button>
+        {/snippet}
+      </Tooltip>
     </div>
 
     <!-- Sample quick links -->
@@ -133,15 +159,20 @@
       <span class="sample-label">{t('home.provenanceTerminal.sampleCodes')}</span>
       <div class="sample-badges">
         {#each SAMPLE_CODES as sample}
-          <button
-            type="button"
-            class="sample-code-chip"
-            class:selected={searchCode === sample.code}
-            onclick={() => pickSample(sample.code)}
-          >
-            <span>{sample.label}</span>
-            <code class="chip-code">{sample.code}</code>
-          </button>
+          <Tooltip text={tooltip('tooltip.verify')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="sample-code-chip"
+                class:selected={searchCode === sample.code}
+                onclick={() => pickSample(sample.code)}
+                {...tp}
+              >
+                <span>{t(sample.labelKey)}</span>
+                <code class="chip-code">{sample.code}</code>
+              </button>
+            {/snippet}
+          </Tooltip>
         {/each}
       </div>
     </div>
@@ -154,14 +185,14 @@
             <Icon name="provenance" size="1.25rem" />
             <strong class="cert-verdict">{t('home.provenanceTerminal.verifiedBadge')}</strong>
           </div>
-          <span class="cert-registry-number">REGISTRY ID: {verifiedRecord.code}</span>
+          <span class="cert-registry-number">{t('home.provenanceTerminal.registryIdLabel', { code: verifiedRecord.code })}</span>
         </div>
 
         <h3 class="cert-piece-name">{verifiedRecord.title}</h3>
 
         <div class="cert-table">
           <div class="cert-row">
-            <span class="cert-key">Master Artisan & Guild:</span>
+            <span class="cert-key">{t('home.provenanceTerminal.certLabel.artisanGuild')}</span>
             <span class="cert-val">{verifiedRecord.artisan}</span>
           </div>
 
@@ -171,23 +202,23 @@
           </div>
 
           <div class="cert-row">
-            <span class="cert-key">Crafted Technique:</span>
+            <span class="cert-key">{t('home.provenanceTerminal.certLabel.craftedTechnique')}</span>
             <span class="cert-val">{verifiedRecord.technique}</span>
           </div>
 
           <div class="cert-row">
-            <span class="cert-key">Spectral AI Verification:</span>
+            <span class="cert-key">{t('home.provenanceTerminal.certLabel.spectralVerification')}</span>
             <span class="cert-val cert-highlight">{verifiedRecord.fftMatch}</span>
           </div>
 
           <div class="cert-row">
-            <span class="cert-key">SHA-256 Ledger Record:</span>
+            <span class="cert-key">{t('home.provenanceTerminal.certLabel.shaLedger')}</span>
             <code class="cert-hash">{verifiedRecord.shaHash}</code>
           </div>
 
           <div class="cert-row">
             <span class="cert-key">{t('home.provenanceTerminal.artisanSignature')}</span>
-            <code class="cert-key-val">{verifiedRecord.publicKey} • Sealed at {verifiedRecord.timestamp}</code>
+            <code class="cert-key-val">{verifiedRecord.publicKey} • {t('home.provenanceTerminal.sealedAt', { timestamp: verifiedRecord.timestamp })}</code>
           </div>
         </div>
 

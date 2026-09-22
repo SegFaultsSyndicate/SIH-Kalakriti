@@ -109,12 +109,24 @@ func (m *Manager) ListSubscriptions(ctx context.Context, subscriberID uuid.UUID)
 	return subs, rows.Err()
 }
 
-// DeleteSubscription removes a webhook subscription.
-func (m *Manager) DeleteSubscription(ctx context.Context, subscriptionID uuid.UUID) error {
-	_, err := m.db.ExecContext(ctx, `
-		DELETE FROM webhook_subscriptions WHERE id = $1
-	`, subscriptionID)
-	return err
+// DeleteSubscription removes a webhook subscription owned by subscriberID.
+// Returns sql.ErrNoRows if no matching subscription exists (wrong id, or
+// owned by someone else).
+func (m *Manager) DeleteSubscription(ctx context.Context, subscriptionID, subscriberID uuid.UUID) error {
+	res, err := m.db.ExecContext(ctx, `
+		DELETE FROM webhook_subscriptions WHERE id = $1 AND subscriber_id = $2
+	`, subscriptionID, subscriberID)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 // Worker processes pending webhook deliveries.

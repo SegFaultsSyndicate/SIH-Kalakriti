@@ -1,7 +1,7 @@
 <!-- apps/artisan/src/routes/register/cluster/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { FieldGroup, Input, Button } from '@kalakriti/ui';
   import RegisterStep from '$lib/RegisterStep.svelte';
   import { getDraft, patchDraft, submitRegistration } from '$lib/registration';
@@ -38,10 +38,10 @@
 </svelte:head>
 
 <RegisterStep
-  index={4}
+  index={5}
   heading={t('register.cluster.heading')}
   speakText={`${t('register.cluster.heading')}. ${t('register.cluster.body')}`}
-  backHref="/register/pehchan"
+  backHref="/register/social-category"
 >
   {#snippet children()}
     <p class="hint">{t('register.cluster.body')}</p>
@@ -52,7 +52,7 @@
     </FieldGroup>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" onclick={finish} loading={submitting}>{t('register.submit')}</Button>
+    <Button size="xl" onclick={finish} loading={submitting} tooltip={tooltip('tooltip.submitRegistration')}>{t('register.submit')}</Button>
   {/snippet}
 </RegisterStep>
 

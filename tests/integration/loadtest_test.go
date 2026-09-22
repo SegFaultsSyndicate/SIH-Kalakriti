@@ -202,7 +202,7 @@ func doRequest(url, method, token string, body map[string]any, headers map[strin
 	}
 	// Always send an idempotency key for POST/PUT endpoints.
 	if method == "POST" || method == "PUT" {
-		req.Header.Set("X-Idempotency-Key", fmt.Sprintf("loadtest-%d", time.Now().UnixNano()))
+		req.Header.Set("Idempotency-Key", fmt.Sprintf("loadtest-%d", time.Now().UnixNano()))
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -578,7 +578,7 @@ func generateMarkdownReport(stats []endpointStats, concurrency, reqsPerWorker in
 	b.WriteString("- **What's measured**: BFF HTTP layer — routing, middleware (auth, rate-limiting, CORS, i18n, idempotency), JSON serialization/deserialization, and response assembly.\n")
 	b.WriteString("- **What's NOT measured**: Database queries, gRPC round-trips to real services, object storage, Kafka producers — all stubbed.\n")
 	b.WriteString("- **Error codes 401/403/404/409**: Counted as handled successes — the BFF correctly rejected the request.\n")
-	b.WriteString("- **Idempotency**: POST/PUT endpoints send unique `X-Idempotency-Key` per request.\n")
+	b.WriteString("- **Idempotency**: POST/PUT endpoints send unique `Idempotency-Key` per request.\n")
 
 	return b.String()
 }

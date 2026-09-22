@@ -7,17 +7,42 @@
   media uploads in the background (ensureListingCreateQueued) -- everything
   captured so far is enough to register the listing; pricing and terms
   arrive later as PATCHes.
+
+  ensureListingMediaAttachQueued is also queued here now, not left for the
+  processing screen to queue once media.upload finishes (its own previous
+  behaviour). That gap let the outbox drain the whole media.upload ->
+  listing.create chain -- both entries reference the local media blob by id,
+  so as long as either is still in the outbox, discard()'s reference count
+  (isMediaReferenced) keeps the blob -- before anything had queued the
+  eventual listing.media.attach entry that would also need it. The instant
+  both drained, the last reference vanished and discard() deleted the local
+  blob outright; ensureListingMediaAttachQueued then found nothing to attach
+  (db.media.bulkGet came back empty) and silently no-opped, so the
+  cataloguing pipeline this attach call is what actually triggers never ran
+  -- not a slow pipeline, a starved one, permanently, on essentially every
+  fast/local drain. Queuing it in the same synchronous breath as
+  ensureListingCreateQueued (no network call and thus no drain opportunity
+  in between) keeps the blob referenced continuously through the whole
+  chain. Confirmed live with a real upload+drain sequence, traced via debug
+  logging in ensureListingMediaAttachQueued.
 -->
 <script lang="ts">
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Select, Input, FieldGroup, VoiceInput } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
   import ListingStep from '$lib/ListingStep.svelte';
-  import { getDraft, patchFields, addCapturedMedia, removeCapturedMedia, ensureListingCreateQueued } from '$lib/listing-draft';
+  import {
+    getDraft,
+    patchFields,
+    addCapturedMedia,
+    removeCapturedMedia,
+    ensureListingCreateQueued,
+    ensureListingMediaAttachQueued,
+  } from '$lib/listing-draft';
   import { loadCrafts, type Craft } from '$lib/ontology';
 
   const t = $derived(locale.t);
@@ -69,6 +94,7 @@
     if (!draftId || craftId === '') return;
     await patchFields(draftId, { craftId, workingTitle: workingTitle.trim() || undefined });
     await ensureListingCreateQueued(draftId);
+    await ensureListingMediaAttachQueued(draftId);
     await goto(`/listing/new/processing?d=${draftId}`);
   }
 </script>
@@ -97,7 +123,7 @@
         <div class="story-voice__done">
           <Icon name="success" />
           <span>{t('listing.story.voiceRecorded')}</span>
-          <Button size="sm" variant="ghost" onclick={removeVoice}>{t('listing.story.voiceRedo')}</Button>
+          <Button size="sm" variant="ghost" onclick={removeVoice} tooltip={tooltip('tooltip.removeVoice')}>{t('listing.story.voiceRedo')}</Button>
         </div>
       {:else}
         <VoiceInput mode="hold" onrecording={onRecording} />
@@ -105,7 +131,7 @@
     </div>
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={craftId === ''} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={craftId === ''} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </ListingStep>
 

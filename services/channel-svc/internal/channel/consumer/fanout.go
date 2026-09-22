@@ -123,3 +123,85 @@ func (f *FollowFanout) Handle(ctx context.Context, eventBytes []byte) error {
 	f.log.Info("fanout_complete", "artisan_id", evt.Payload.ArtisanID, "follower_count", len(followers))
 	return nil
 }
+
+// CompanyNotificationHandler consumes B2B company events and dispatches notifications.
+type CompanyNotificationHandler struct {
+	notificationSvc Notifier
+	log             *slog.Logger
+}
+
+// NewCompanyNotificationHandler constructs the handler.
+func NewCompanyNotificationHandler(notificationSvc Notifier, log *slog.Logger) *CompanyNotificationHandler {
+	if log == nil {
+		log = slog.Default()
+	}
+	return &CompanyNotificationHandler{
+		notificationSvc: notificationSvc,
+		log:             log,
+	}
+}
+
+// HandleCompanyEvent dispatches notifications for company lifecycle events.
+func (h *CompanyNotificationHandler) HandleCompanyEvent(ctx context.Context, topic string, eventBytes []byte) error {
+	var raw map[string]any
+	if err := json.Unmarshal(eventBytes, &raw); err != nil {
+		return fmt.Errorf("company_handler: unmarshal: %w", err)
+	}
+
+	payload, _ := raw["payload"].(map[string]any)
+	if payload == nil {
+		payload = raw
+	}
+
+	getString := func(key string) string {
+		if v, ok := payload[key].(string); ok {
+			return v
+		}
+		return ""
+	}
+
+	var kind notification.NotificationKind
+	recipient := getString("contact_phone")
+	if recipient == "" {
+		recipient = getString("company_id")
+	}
+
+	vars := make(map[string]string)
+	for k, v := range payload {
+		vars[k] = fmt.Sprintf("%v", v)
+	}
+
+	switch topic {
+	case "company.registered":
+		kind = notification.CompanyRegistered
+	case "company.verified":
+		kind = notification.CompanyVerified
+	case "company.rejected":
+		kind = notification.CompanyRejected
+	case "company.sale.settled":
+		kind = notification.CompanySaleSettled
+	case "company.interest.expressed":
+		kind = notification.CompanyInterestReceived
+		recipient = getString("artisan_id")
+	case "company.interest.accepted":
+		kind = notification.CompanyInterestAccepted
+		recipient = getString("company_id")
+	default:
+		return nil
+	}
+
+	_, err := h.notificationSvc.Create(ctx, notification.CreateInput{
+		RecipientID: recipient,
+		Kind:        kind,
+		Language:    notification.English,
+		Vars:        vars,
+		Payload:     payload,
+	})
+	if err != nil {
+		h.log.Error("company_notification_failed", "topic", topic, "error", err)
+		return err
+	}
+
+	h.log.Info("company_notification_sent", "topic", topic, "recipient", recipient, "kind", kind)
+	return nil
+}

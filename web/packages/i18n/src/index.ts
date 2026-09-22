@@ -6,6 +6,7 @@ export {
   DEFAULT_LOCALE,
   isLocaleCode,
   resolveLocale,
+  matchesLocale,
   type LocaleCode,
   type LocaleMeta,
 } from './locales';
@@ -15,6 +16,7 @@ export {
   locale,
   t,
   tPlural,
+  tooltip,
   hasExplicitLocale,
   type Translate,
   type MessageValues,
@@ -28,6 +30,9 @@ export {
   formatRelativeTime,
   formatList,
   formatPercent,
+  CURRENCY_META,
   type Paise,
   type MoneyOptions,
+  type CurrencyCode,
+  type CurrencyMeta,
 } from './format';

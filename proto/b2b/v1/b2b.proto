@@ -1,0 +1,366 @@
+// proto/b2b/v1/b2b.proto
+syntax = "proto3";
+
+package b2b.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/b2b/v1;b2bv1";
+
+// B2BService manages companies, verification, commission settlements, and partnerships.
+service B2BService {
+  // Register a new company (retailer, boutique, exporter, institution).
+  rpc RegisterCompany(RegisterCompanyRequest) returns (RegisterCompanyResponse);
+  // Fetch one company by id.
+  rpc GetCompany(GetCompanyRequest) returns (GetCompanyResponse);
+  // Fetch the calling user's own company profile.
+  rpc GetMyCompany(GetMyCompanyRequest) returns (GetMyCompanyResponse);
+  // Page through companies with optional filters.
+  rpc ListCompanies(ListCompaniesRequest) returns (ListCompaniesResponse);
+
+  // Admin: verify or reject a company application with commission tier.
+  rpc VerifyCompany(VerifyCompanyRequest) returns (VerifyCompanyResponse);
+  // Admin: platform treasury stats (total revenue, commission split).
+  rpc GetPlatformCommissionStats(GetPlatformCommissionStatsRequest) returns (GetPlatformCommissionStatsResponse);
+
+  // Settlement: record marketplace sales of company-listed products with platform fee deduction.
+  rpc RecordCompanySale(RecordCompanySaleRequest) returns (RecordCompanySaleResponse);
+  rpc ListCompanySales(ListCompanySalesRequest) returns (ListCompanySalesResponse);
+
+  // A company expresses interest in working with an artisan.
+  rpc ExpressInterest(ExpressInterestRequest) returns (ExpressInterestResponse);
+  // An artisan accepts or declines a company's interest.
+  rpc RespondToInterest(RespondToInterestRequest) returns (RespondToInterestResponse);
+  // List inbound interest requests for an artisan.
+  rpc ListArtisanLeads(ListArtisanLeadsRequest) returns (ListArtisanLeadsResponse);
+
+  // Create an ongoing supply partnership after interest is accepted.
+  rpc CreatePartnership(CreatePartnershipRequest) returns (CreatePartnershipResponse);
+  // List partnerships for an artisan or a company.
+  rpc ListPartnerships(ListPartnershipsRequest) returns (ListPartnershipsResponse);
+
+  // Boutique-specific: get recommended boutique matches for an artisan.
+  rpc ListBoutiqueMatches(ListBoutiqueMatchesRequest) returns (ListBoutiqueMatchesResponse);
+  // Artisan-initiated contact with a boutique.
+  rpc ContactBoutique(ContactBoutiqueRequest) returns (ContactBoutiqueResponse);
+  // List boutiques near a location (public discovery).
+  rpc ListNearbyBoutiques(ListNearbyBoutiquesRequest) returns (ListNearbyBoutiquesResponse);
+}
+
+// CompanyType classifies the business entity.
+enum CompanyType {
+  COMPANY_TYPE_UNSPECIFIED = 0;
+  COMPANY_TYPE_RETAILER = 1;
+  COMPANY_TYPE_BOUTIQUE = 2;
+  COMPANY_TYPE_EXPORTER = 3;
+  COMPANY_TYPE_INSTITUTION = 4;
+}
+
+// VerificationStatus tracks administrative legitimacy checks.
+enum VerificationStatus {
+  VERIFICATION_STATUS_UNSPECIFIED = 0;
+  VERIFICATION_STATUS_PENDING = 1;
+  VERIFICATION_STATUS_VERIFIED = 2;
+  VERIFICATION_STATUS_REJECTED = 3;
+}
+
+// InterestStatus tracks the lifecycle of a company's interest in an artisan.
+enum InterestStatus {
+  INTEREST_STATUS_UNSPECIFIED = 0;
+  INTEREST_STATUS_PENDING = 1;
+  INTEREST_STATUS_ACCEPTED = 2;
+  INTEREST_STATUS_DECLINED = 3;
+}
+
+// MatchStatus tracks the lifecycle of a boutique-artisan match suggestion.
+enum MatchStatus {
+  MATCH_STATUS_UNSPECIFIED = 0;
+  MATCH_STATUS_SUGGESTED = 1;
+  MATCH_STATUS_CONTACTED = 2;
+  MATCH_STATUS_ACTIVE = 3;
+  MATCH_STATUS_DECLINED = 4;
+}
+
+// Company is a business entity that purchases from artisans.
+message Company {
+  string id = 1;
+  // Identity subject id of the company user.
+  string user_id = 2;
+  string name = 3;
+  CompanyType type = 4;
+  // GSTIN for Indian companies.
+  optional string gstin = 5;
+  string contact_name = 6;
+  string contact_phone = 7;
+  optional string contact_email = 8;
+  optional string website = 9;
+  common.v1.GeoRegion region = 10;
+  bool verified = 11;
+  optional string verified_by = 12;
+  // Boutique-specific fields.
+  bool accepts_consignment = 13;
+  optional int64 min_order_value_paise = 14;
+  // Craft ids the company prefers to source.
+  repeated string preferred_craft_ids = 15;
+  // Store location for proximity matching (lat, lng, address as JSON).
+  optional StoreLocation store_location = 16;
+  common.v1.AuditMeta audit = 17;
+
+  // Legitimacy & Commission fields:
+  VerificationStatus verification_status = 18;
+  optional google.protobuf.Timestamp verified_at = 19;
+  optional string rejection_reason = 20;
+  string income_statement_url = 21;
+  int32 commission_rate_bps = 22;
+  int64 total_sales_paise = 23;
+  int64 commission_earned_paise = 24;
+}
+
+// StoreLocation holds physical coordinates for proximity matching.
+message StoreLocation {
+  double latitude = 1;
+  double longitude = 2;
+  string address = 3;
+  optional string city = 4;
+  optional string pincode = 5;
+}
+
+// CompanySaleSettlement records marketplace commission deduction.
+message CompanySaleSettlement {
+  string id = 1;
+  string company_id = 2;
+  string order_id = 3;
+  string product_name = 4;
+  string buyer_id = 5;
+  int64 gross_amount_paise = 6;
+  int32 commission_rate_bps = 7;
+  int64 platform_fee_paise = 8;
+  int64 net_payout_paise = 9;
+  google.protobuf.Timestamp settled_at = 10;
+}
+
+// CompanyInterest is a company's expression of interest in an artisan.
+message CompanyInterest {
+  string id = 1;
+  string company_id = 2;
+  string artisan_id = 3;
+  string message = 4;
+  InterestStatus status = 5;
+  optional google.protobuf.Timestamp responded_at = 6;
+  string company_name = 7;
+  CompanyType company_type = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+// SupplyPartnership is an ongoing relationship between a company and an artisan.
+message SupplyPartnership {
+  string id = 1;
+  string company_id = 2;
+  string artisan_id = 3;
+  string craft_id = 4;
+  string terms = 5;
+  optional google.protobuf.Timestamp renewal_date = 6;
+  bool active = 7;
+  string company_name = 8;
+  string artisan_name = 9;
+  common.v1.AuditMeta audit = 10;
+}
+
+// BoutiqueMatch is a scored recommendation pairing a boutique with an artisan.
+message BoutiqueMatch {
+  string id = 1;
+  string company_id = 2;
+  string artisan_id = 3;
+  float match_score = 4;
+  MatchStatus status = 5;
+  string boutique_name = 6;
+  optional StoreLocation boutique_location = 7;
+  repeated string overlapping_crafts = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+// --- Request / Response messages ---
+
+message RegisterCompanyRequest {
+  string name = 1;
+  CompanyType type = 2;
+  optional string gstin = 3;
+  string contact_name = 4;
+  string contact_phone = 5;
+  optional string contact_email = 6;
+  optional string website = 7;
+  common.v1.GeoRegion region = 8;
+  string income_statement_url = 9;
+  bool accepts_consignment = 10;
+  optional int64 min_order_value_paise = 11;
+  repeated string preferred_craft_ids = 12;
+  optional StoreLocation store_location = 13;
+  string idempotency_key = 14;
+}
+
+message RegisterCompanyResponse {
+  Company company = 1;
+}
+
+message GetCompanyRequest {
+  string company_id = 1;
+}
+
+message GetCompanyResponse {
+  Company company = 1;
+}
+
+message GetMyCompanyRequest {
+  string user_id = 1;
+}
+
+message GetMyCompanyResponse {
+  Company company = 1;
+}
+
+message ListCompaniesRequest {
+  optional CompanyType type = 1;
+  optional string state_code = 2;
+  optional VerificationStatus verification_status = 3;
+  optional bool verified_only = 4;
+  common.v1.PageRequest page = 5;
+}
+
+message ListCompaniesResponse {
+  repeated Company companies = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message VerifyCompanyRequest {
+  string company_id = 1;
+  VerificationStatus decision = 2;
+  optional string rejection_reason = 3;
+  string admin_user_id = 4;
+}
+
+message VerifyCompanyResponse {
+  Company company = 1;
+}
+
+message GetPlatformCommissionStatsRequest {}
+
+message GetPlatformCommissionStatsResponse {
+  int64 total_companies = 1;
+  int64 pending_verifications = 2;
+  int64 verified_companies = 3;
+  int64 total_sales_paise = 4;
+  int64 total_commission_paise = 5;
+}
+
+message RecordCompanySaleRequest {
+  string company_id = 1;
+  string order_id = 2;
+  string product_name = 3;
+  string buyer_id = 4;
+  int64 gross_amount_paise = 5;
+  string idempotency_key = 6;
+}
+
+message RecordCompanySaleResponse {
+  CompanySaleSettlement settlement = 1;
+}
+
+message ListCompanySalesRequest {
+  string company_id = 1;
+  common.v1.PageRequest page = 2;
+}
+
+message ListCompanySalesResponse {
+  repeated CompanySaleSettlement sales = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message ExpressInterestRequest {
+  string company_id = 1;
+  string artisan_id = 2;
+  string message = 3;
+  string idempotency_key = 4;
+}
+
+message ExpressInterestResponse {
+  CompanyInterest interest = 1;
+}
+
+message RespondToInterestRequest {
+  string interest_id = 1;
+  string artisan_id = 2;
+  InterestStatus decision = 3;
+}
+
+message RespondToInterestResponse {
+  CompanyInterest interest = 1;
+}
+
+message ListArtisanLeadsRequest {
+  string artisan_id = 1;
+  optional InterestStatus status = 2;
+  common.v1.PageRequest page = 3;
+}
+
+message ListArtisanLeadsResponse {
+  repeated CompanyInterest leads = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message CreatePartnershipRequest {
+  string company_id = 1;
+  string artisan_id = 2;
+  string craft_id = 3;
+  string terms = 4;
+  optional google.protobuf.Timestamp renewal_date = 5;
+  string idempotency_key = 6;
+}
+
+message CreatePartnershipResponse {
+  SupplyPartnership partnership = 1;
+}
+
+message ListPartnershipsRequest {
+  optional string artisan_id = 1;
+  optional string company_id = 2;
+  optional bool active_only = 3;
+  common.v1.PageRequest page = 4;
+}
+
+message ListPartnershipsResponse {
+  repeated SupplyPartnership partnerships = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message ListBoutiqueMatchesRequest {
+  string artisan_id = 1;
+  int32 limit = 2;
+}
+
+message ListBoutiqueMatchesResponse {
+  repeated BoutiqueMatch matches = 1;
+}
+
+message ContactBoutiqueRequest {
+  string artisan_id = 1;
+  string company_id = 2;
+  string message = 3;
+  string idempotency_key = 4;
+}
+
+message ContactBoutiqueResponse {
+  CompanyInterest interest = 1;
+}
+
+message ListNearbyBoutiquesRequest {
+  double latitude = 1;
+  double longitude = 2;
+  double radius_km = 3;
+  optional string craft_id = 4;
+  int32 limit = 5;
+}
+
+message ListNearbyBoutiquesResponse {
+  repeated Company boutiques = 1;
+}

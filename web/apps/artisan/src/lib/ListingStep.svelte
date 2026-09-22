@@ -15,7 +15,7 @@
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
-  import { Stepper, SpeakButton } from '@kalakriti/ui';
+  import { Button, SpeakButton, Stepper } from '@kalakriti/ui';
 
   interface Props {
     /** 0-indexed. */
@@ -50,10 +50,6 @@
     current={index}
   />
 
-  <button type="button" class="listing-step__back" onclick={() => goto(backHref)}>
-    {t('action.back')}
-  </button>
-
   <h1>{heading}</h1>
   <SpeakButton text={speakText ?? heading} label={t('action.speak')} />
 
@@ -64,7 +60,12 @@
   <p class="listing-step__saved">{t('listing.saved')}</p>
 
   <div class="listing-step__actions">
-    {@render actions()}
+    <Button size="xl" class="listing-step__back" onclick={() => goto(backHref)}>
+      ← {t('action.back')}
+    </Button>
+    <div class="listing-step__next">
+      {@render actions()}
+    </div>
   </div>
 </div>
 
@@ -76,18 +77,8 @@
     padding-block: var(--k-space-5);
   }
 
-  .listing-step__back {
-    align-self: start;
-    min-block-size: var(--k-touch-min);
-    padding-inline: var(--k-space-4);
-    padding-block: var(--k-space-2);
-    border: none;
-    border-radius: var(--k-radius-md);
-    background-color: var(--k-accent-primary-bg);
-    color: var(--k-text-on-accent);
-    font-size: var(--k-text-sm);
-    cursor: pointer;
-    font-weight: 600;
+  .listing-step__actions :global(.listing-step__back) {
+    flex: 1;
   }
 
   .listing-step h1 {
@@ -106,10 +97,14 @@
   }
 
   .listing-step__actions {
-    margin-block-start: var(--k-space-3);
     display: flex;
-    flex-direction: column;
-    gap: var(--k-space-2);
+    align-items: stretch;
+    gap: var(--k-space-3);
+    margin-block-start: var(--k-space-3);
+  }
+
+  .listing-step__actions .listing-step__next {
+    flex: 1;
   }
 
   .listing-step__actions :global(button) {

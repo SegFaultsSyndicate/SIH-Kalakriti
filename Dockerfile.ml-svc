@@ -17,7 +17,11 @@ ARG EXTRAS=
 COPY --from=ghcr.io/astral-sh/uv:0.4.9 /uv /bin/uv
 
 WORKDIR /srv
-ENV UV_SYSTEM_PYTHON=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+# uv's default 30s HTTP timeout is well under what EXTRAS=real's PyPI torch
+# wheel set needs -- each nvidia-cuda-* dependency is hundreds of MB, and 30s
+# reliably times out over ordinary bandwidth ("Failed to download distribution
+# due to network timeout"), not just on a slow link.
+ENV UV_SYSTEM_PYTHON=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 UV_HTTP_TIMEOUT=300
 
 COPY services/ml-svc/pyproject.toml ./
 COPY services/ml-svc/app ./app

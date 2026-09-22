@@ -10,68 +10,53 @@
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Marketplace', href: '/' },
-    { label: 'Terms of Service' },
-  ]);
+  const breadcrumbs = $derived([{ label: t('terms.breadcrumbLabel') }]);
 </script>
 
 <svelte:head>
-  <title>Terms of Service — {t('app.name')}</title>
-  <meta name="description" content="Official terms of service governing artisan protection, direct payouts, GI cryptographic certification, and institutional collective fulfillment on Kalakriti." />
+  <title>{t('terms.headTitle', { appName: t('app.name') })}</title>
+  <meta name="description" content={t('terms.metaDescription')} />
 </svelte:head>
 
 <div class="legal-page">
   <div class="legal-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <header class="legal-header">
-      <span class="legal-kicker">Government Governance & Guild Mandate</span>
-      <h1 class="legal-title">Terms of Service</h1>
-      <p class="legal-date">Last Updated: September 2026 • Ministry of Social Justice & Empowerment, Govt of India</p>
+      <span class="legal-kicker">{t('terms.kicker')}</span>
+      <h1 class="legal-title">{t('terms.title')}</h1>
+      <p class="legal-date">{t('terms.lastUpdated')}</p>
     </header>
 
     <div class="legal-content">
       <section class="legal-section">
-        <h2>1. Platform Mandate & Public Infrastructure</h2>
-        <p>
-          Kalakriti is a public digital goods infrastructure established to safeguard, preserve, and commercially empower traditional Indian craft communities, scheduled caste, tribal, and marginalized artisans across all recognized 28 States and Union Territories. Access to this platform is governed by the rules and guidelines issued by the Ministry of Social Justice & Empowerment.
-        </p>
+        <h2>{t('terms.section1.heading')}</h2>
+        <p>{t('terms.section1.body')}</p>
       </section>
 
       <section class="legal-section">
-        <h2>2. Geographical Indications (GI) & Authenticity Standard</h2>
-        <p>
-          All listings carrying the "GI Certified" distinction must correspond to authentic clusters registered under the Geographical Indications of Goods (Registration and Protection) Act, 1999. Every approved product is sealed with an immutable Ed25519 digital signature and public ledger entry verifiable via our cryptographic terminal.
-        </p>
+        <h2>{t('terms.section2.heading')}</h2>
+        <p>{t('terms.section2.body')}</p>
       </section>
 
       <section class="legal-section">
-        <h2>3. 100% Direct Payouts & 0% Platform Deductions</h2>
-        <p>
-          Unlike commercial brokerages, Kalakriti operates with zero commission. 100% of the item purchase price (excluding mandatory statutory GST and logistics tariffs) is transferred directly to the verified DBT bank account of the registered artisan or Self-Help Group (SHG) upon dispatch confirmation.
-        </p>
+        <h2>{t('terms.section3.heading')}</h2>
+        <p>{t('terms.section3.body')}</p>
       </section>
 
       <section class="legal-section">
-        <h2>4. Made-to-Order & Institutional Fulfillment</h2>
-        <p>
-          Purchases designated as Made-to-Order involve custom weaving, hand block-printing, or lost-wax casting. Buyers acknowledge that production lead times (typically 2 to 6 weeks) represent authentic handcrafted labor cycles. Cancellations requested after warp tensioning or raw alloy casting has commenced are subject to reimbursement for artisan material inputs.
-        </p>
+        <h2>{t('terms.section4.heading')}</h2>
+        <p>{t('terms.section4.body')}</p>
       </section>
 
       <section class="legal-section">
-        <h2>5. Intellectual Property of Traditional Cultural Expressions</h2>
-        <p>
-          Traditional motifs, weaving geometries, and regional craft heritage remain the inalienable intellectual property of the respective artisan guilds and traditional practitioner communities. Commercial replication, unauthorized digital cloning, or industrial imitation of Kalakriti-cataloged motifs is strictly prohibited under Indian law.
-        </p>
+        <h2>{t('terms.section5.heading')}</h2>
+        <p>{t('terms.section5.body')}</p>
       </section>
 
       <section class="legal-section">
-        <h2>6. Dispute Resolution & Jurisdiction</h2>
-        <p>
-          Any dispute arising under these terms shall be referred to the Cluster Grievance Redressal Committee under the Ministry of Social Justice & Empowerment, New Delhi, and shall be governed by the laws of India.
-        </p>
+        <h2>{t('terms.section6.heading')}</h2>
+        <p>{t('terms.section6.body')}</p>
       </section>
     </div>
   </div>

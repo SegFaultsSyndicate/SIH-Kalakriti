@@ -83,7 +83,9 @@ type Pipeline struct {
 	// MLSvcAddr is ml-svc's gRPC address.
 	MLSvcAddr string `env:"ML_SVC_ADDR" envDefault:"localhost:50055"`
 	// BuyerLanguages are translated into once an artisan approves their listing.
-	BuyerLanguages []string `env:"PIPELINE_BUYER_LANGUAGES" envSeparator:"," envDefault:"ENGLISH,HINDI"`
+	// Default is all 20 supported languages (the 22 scheduled languages minus
+	// Manipuri and Santali, see migrations/030_drop_manipuri_santali.sql).
+	BuyerLanguages []string `env:"PIPELINE_BUYER_LANGUAGES" envSeparator:"," envDefault:"ASSAMESE,BENGALI,BODO,DOGRI,GUJARATI,HINDI,KANNADA,KASHMIRI,KONKANI,MAITHILI,MALAYALAM,MARATHI,NEPALI,ODIA,PUNJABI,SANSKRIT,SINDHI,TAMIL,TELUGU,URDU,ENGLISH"`
 	// StepTimeout bounds one model call; the whole chain gets four of these.
 	StepTimeout time.Duration `env:"PIPELINE_STEP_TIMEOUT" envDefault:"90s"`
 }

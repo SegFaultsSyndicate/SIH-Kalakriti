@@ -16,10 +16,9 @@ import (
 )
 
 // idempotencyKey reads the caller's dedup key to forward as the gRPC
-// request's own idempotency_key field. This is separate from
-// middleware.Idempotency's X-Idempotency-Key replay cache (which wraps these
-// routes via withIdempotency): the client sends "Idempotency-Key" (see
-// packages/api/src/transport.ts), so that is what is read here too.
+// request's own idempotency_key field. middleware.Idempotency's replay cache
+// (which wraps these routes via withIdempotency) reads the same
+// "Idempotency-Key" header (see packages/api/src/transport.ts).
 func idempotencyKey(r *http.Request) string {
 	return r.Header.Get("Idempotency-Key")
 }
@@ -245,7 +244,11 @@ func (h *APIHandler) OnboardClusterArtisan(w http.ResponseWriter, r *http.Reques
 	}
 	fields["cluster_id"] = httpx.URLParam(r, "id")
 
-	artisanID, regErr := h.artisanSvc.Register(r.Context(), phone, idempotencyKey(r), fields)
+	// Tokens deliberately discarded: this is a cluster officer registering
+	// someone else, not self-registration -- returning the new artisan's
+	// tokens here would silently swap the officer's own session over to the
+	// artisan they just onboarded.
+	artisanID, _, _, regErr := h.artisanSvc.Register(r.Context(), phone, idempotencyKey(r), fields)
 	if regErr != nil {
 		httpx.Error(w, regErr)
 		return

@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -29,12 +28,17 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
+	"github.com/ZoroNewbie00/kalakriti/pkg/grpcdial"
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
 	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	b2bv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/b2b/v1"
 	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
 	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
+	badgesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1"
+	schemesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1"
+	trendsv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
 	pkgredis "github.com/ZoroNewbie00/kalakriti/pkg/redis"
 	"github.com/ZoroNewbie00/kalakriti/pkg/storage"
@@ -122,8 +126,7 @@ func run() error {
 	// ml-svc is dialled lazily: grpc.NewClient does not connect until the first
 	// RPC, so a cold ml-svc delays cataloguing rather than stopping core-svc
 	// from serving the artisan app.
-	mlConn, err := grpc.NewClient(cfg.pipeline.MLSvcAddr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()))
+	mlConn, err := grpcdial.Dial(cfg.pipeline.MLSvcAddr)
 	if err != nil {
 		return fmt.Errorf("dialling ml-svc at %s: %w", cfg.pipeline.MLSvcAddr, err)
 	}
@@ -220,7 +223,14 @@ func run() error {
 	ontologyHandler := handler.NewOntology(ontologySvc)
 	mediaHandler := handler.NewMedia(mediaSvc)
 	pricingHandler := handler.NewPricing(pricingSvc)
-	healthHandler := handler.NewHealth(pool, rdb)
+	b2bSvc := service.NewB2B(wiring.NewB2BStore(repository), log)
+	trendsSvc := service.NewTrends(repository, log)
+	b2bHandler := handler.NewB2B(b2bSvc)
+	trendsHandler := handler.NewTrends(trendsSvc)
+	badgesSvc := service.NewBadges(repository, log)
+	badgesHandler := handler.NewBadges(badgesSvc)
+	schemesSvc := service.NewSchemes(repository, log)
+	schemesHandler := handler.NewSchemes(schemesSvc)
 
 	// --- gRPC server ---------------------------------------------------------
 
@@ -239,6 +249,10 @@ func run() error {
 	catalogv1.RegisterOntologyServiceServer(grpcServer, ontologyHandler)
 	catalogv1.RegisterMediaServiceServer(grpcServer, mediaHandler)
 	pricingv1.RegisterPricingServiceServer(grpcServer, pricingHandler)
+	b2bv1.RegisterB2BServiceServer(grpcServer, b2bHandler)
+	trendsv1.RegisterTrendServiceServer(grpcServer, trendsHandler)
+	badgesv1.RegisterBadgeServiceServer(grpcServer, badgesHandler)
+	schemesv1.RegisterSchemeServiceServer(grpcServer, schemesHandler)
 
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)
@@ -250,20 +264,6 @@ func run() error {
 		// Reflection makes grpcurl work against a local stack; it is left off in
 		// production so the service does not advertise its whole schema.
 		reflection.Register(grpcServer)
-	}
-
-	// --- HTTP health server --------------------------------------------------
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
-	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
-	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
-	// hands it to the private health server rather than exposing it publicly.
-	mux.Handle("/debug/vars", http.DefaultServeMux)
-	httpServer := &http.Server{
-		Addr:              cfg.httpAddr,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	// --- run -----------------------------------------------------------------
@@ -286,14 +286,14 @@ func run() error {
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".media-enhanced",
 	}, log)
 
-	// The cataloguing pipeline. A message that exhausts its retries is recorded
-	// against the media row on its way to the dead-letter topic, so the artisan
-	// sees a reason rather than a photograph that quietly became nothing.
+	// The cataloguing pipeline: enriches a listing once photos are attached to
+	// it. Triggered by AttachListingMedia, not the raw upload -- a listing
+	// (and its product) already exist by then.
 	pipelineConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
 		Brokers:      cfg.kafka.Brokers,
-		Topic:        topics.MediaUploaded,
+		Topic:        topics.CatalogListingMediaAttached,
 		GroupID:      cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".pipeline",
-		OnDeadLetter: handler.MediaUploadedDeadLetter(pipelineSvc, log),
+		OnDeadLetter: handler.ListingMediaAttachedDeadLetter(log),
 	}, log)
 
 	translationConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
@@ -301,6 +301,49 @@ func run() error {
 		Topic:   topics.CatalogListingPublished,
 		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".translation",
 	}, log)
+
+	badgeListingConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.CatalogListingPublished,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.listing",
+	}, log)
+
+	badgeProvenanceConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.CatalogProvenanceSealed,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.provenance",
+	}, log)
+
+	badgeLotAcceptedConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.OrderLotAccepted,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-accepted",
+	}, log)
+
+	badgeLotCompletedConsumer := pkgkafka.NewConsumerGroup(pkgkafka.ConsumerConfig{
+		Brokers: cfg.kafka.Brokers,
+		Topic:   topics.OrderLotCompleted,
+		GroupID: cfg.kafka.ConsumerGroupPrefix + "." + serviceName + ".badges.lot-completed",
+	}, log)
+
+	// --- HTTP health server --------------------------------------------------
+
+	healthHandler := handler.NewHealth(pool, rdb,
+		enhancedConsumer, pipelineConsumer, translationConsumer,
+		badgeListingConsumer, badgeProvenanceConsumer, badgeLotAcceptedConsumer, badgeLotCompletedConsumer,
+	)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", healthHandler.LiveHandler())
+	mux.HandleFunc("/readyz", healthHandler.ReadyHandler())
+	// expvar's package init registers /debug/vars on http.DefaultServeMux; this
+	// hands it to the private health server rather than exposing it publicly.
+	mux.Handle("/debug/vars", http.DefaultServeMux)
+	httpServer := &http.Server{
+		Addr:              cfg.httpAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)
@@ -325,8 +368,8 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Info("cataloguing pipeline started", "topic", topics.MediaUploaded)
-		if err := pipelineConsumer.Run(bgCtx, handler.MediaUploadedHandler(pipelineSvc, log)); err != nil {
+		log.Info("cataloguing pipeline started", "topic", topics.CatalogListingMediaAttached)
+		if err := pipelineConsumer.Run(bgCtx, handler.ListingMediaAttachedHandler(pipelineSvc, log)); err != nil {
 			log.Error("cataloguing pipeline stopped", "error", err)
 		}
 	}()
@@ -337,6 +380,42 @@ func run() error {
 		log.Info("translation fan-out started", "topic", topics.CatalogListingPublished)
 		if err := translationConsumer.Run(bgCtx, handler.ListingPublishedHandler(pipelineSvc, log)); err != nil {
 			log.Error("translation fan-out stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge listing-published consumer started", "topic", topics.CatalogListingPublished)
+		if err := badgeListingConsumer.Run(bgCtx, handler.CatalogListingPublishedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge listing-published consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge provenance-sealed consumer started", "topic", topics.CatalogProvenanceSealed)
+		if err := badgeProvenanceConsumer.Run(bgCtx, handler.CatalogProvenanceSealedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge provenance-sealed consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge lot-accepted consumer started", "topic", topics.OrderLotAccepted)
+		if err := badgeLotAcceptedConsumer.Run(bgCtx, handler.OrderLotAcceptedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge lot-accepted consumer stopped", "error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("badge lot-completed consumer started", "topic", topics.OrderLotCompleted)
+		if err := badgeLotCompletedConsumer.Run(bgCtx, handler.OrderLotCompletedBadgeHandler(badgesSvc, log)); err != nil {
+			log.Error("badge lot-completed consumer stopped", "error", err)
 		}
 	}()
 

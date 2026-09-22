@@ -20,12 +20,19 @@ spec:
         image: kalakriti/search-svc:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8082
+        # Real ports per services/search-svc/cmd/search-svc/main.go's
+        # envOr defaults: SEARCH_SVC_GRPC_ADDR :50052, SEARCH_SVC_HTTP_ADDR
+        # :8082 -- this manifest previously had them backwards (8082 named
+        # "grpc") and probed a port 9092 the service never listens on.
+        - containerPort: 50052
           name: grpc
-        - containerPort: 9092
-          name: metrics
+        - containerPort: 8082
+          name: http
         env:
-        - name: DATABASE_URL
+        # pkg/config reads POSTGRES_DSN, not DATABASE_URL (see CLAUDE.md's
+        # .env.example section) -- this manifest set a name the service
+        # never reads and was never smoke-tested.
+        - name: POSTGRES_DSN
           valueFrom:
             secretKeyRef:
               name: kalakriti-secrets
@@ -47,14 +54,14 @@ spec:
               key: otlp-endpoint
         livenessProbe:
           httpGet:
-            path: /health
-            port: 9092
+            path: /healthz
+            port: 8082
           initialDelaySeconds: 10
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /ready
-            port: 9092
+            path: /readyz
+            port: 8082
           initialDelaySeconds: 5
           periodSeconds: 5
         resources:
@@ -73,15 +80,20 @@ kind: Service
 metadata:
   name: search-svc
 spec:
+  # Headless: bff dials "dns:///search-svc:50052" with round_robin load
+  # balancing (pkg/grpcdial), which needs CoreDNS to return one A record per
+  # pod -- a normal ClusterIP Service returns only the virtual IP and pins
+  # every client to a single pod regardless of replica count.
+  clusterIP: None
   selector:
     app: search-svc
   ports:
   - name: grpc
+    port: 50052
+    targetPort: 50052
+  - name: http
     port: 8082
     targetPort: 8082
-  - name: metrics
-    port: 9092
-    targetPort: 9092
   type: ClusterIP
 ---
 apiVersion: autoscaling/v2

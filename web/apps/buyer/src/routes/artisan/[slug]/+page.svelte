@@ -11,8 +11,8 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale } from '@kalakriti/i18n';
-  import { Button, EmptyState, Skeleton, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Button, EmptyState, Skeleton, showToast, BadgeChip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import {
     getArtisanStorefront,
@@ -22,6 +22,7 @@
     getProcessFeed,
     followArtisan,
     unfollowArtisan,
+    listArtisanBadges,
     type components,
   } from '@kalakriti/api';
   import { session } from '@kalakriti/api';
@@ -30,6 +31,7 @@
   type ArtisanStorefront = components['schemas']['ArtisanStorefront'];
   type ListingSummary = components['schemas']['ListingSummary'];
   type ProcessClip = components['schemas']['ProcessClip'];
+  type ArtisanBadge = components['schemas']['ArtisanBadge'];
 
   const t = $derived(locale.t);
   const slug = $derived(page.params.slug ?? '');
@@ -39,6 +41,7 @@
   let followerCount = $state<number | undefined>(undefined);
   let listings = $state<ListingSummary[]>([]);
   let clips = $state<ProcessClip[]>([]);
+  let badges = $state<ArtisanBadge[]>([]);
   // Follow state gap: The BFF exposes POST/DELETE /artisans/{id}/follow and
   // GET /artisans/{id}/follower-count, but has no GET /artisans/{id}/is-following
   // or caller-following query endpoint. Consequently, `following` initializes to false
@@ -52,12 +55,14 @@
       try {
         artisan = await getArtisanStorefront(slug);
         if (artisan?.id) {
-          const [count, own, feed] = await Promise.all([
+          const [count, own, feed, badgeRes] = await Promise.all([
             getFollowerCount(artisan.id).catch(() => undefined),
             listListings({ artisan_id: artisan.id, state: 'PUBLISHED' }),
             getProcessFeed().catch(() => ({ clips: [] })),
+            listArtisanBadges(artisan.id).catch(() => ({ artisan_badges: [] })),
           ]);
           followerCount = count?.count;
+          badges = badgeRes?.artisan_badges ?? [];
           const ids = (own.listings ?? []).map((l) => l.id!).filter(Boolean);
           const { summaries } = ids.length
             ? await batchGetListingSummaries(ids)
@@ -125,20 +130,20 @@
 {:else}
   {#if fairParam || stallParam}
     <aside class="fair-welcome-banner">
-      <div class="fair-welcome-banner__icon">🎪</div>
+      <div class="fair-welcome-banner__icon"><Icon name="calendar" size="1.5rem" /></div>
       <div class="fair-welcome-banner__content">
         <strong>
           {#if stallParam}
-            Visiting Stall #{stallParam} at {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+            {t('artisanStorefront.visitingStall', { stall: stallParam, fair: fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : t('artisanStorefront.fairFallback') })}
           {:else}
-            Visiting from {fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : 'National Craft Fair'}?
+            {t('artisanStorefront.visitingFrom', { fair: fairParam ? fairParam.replace(/-/g, ' ').toUpperCase() : t('artisanStorefront.fairFallback') })}
           {/if}
-          Welcome!
+          {t('artisanStorefront.welcome')}
         </strong>
-        <p>Reorder authentic handcrafted pieces directly from this master artisan year-round with cluster-direct delivery and GI certification.</p>
+        <p>{t('artisanStorefront.reorderDesc')}</p>
       </div>
       <a href="/card/{slug}" class="fair-welcome-banner__card-btn">
-        <Icon name="verified-artisan" size="0.85rem" /> Visiting Card
+        <Icon name="verified-artisan" size="0.85rem" /> {t('artisanStorefront.visitingCard')}
       </a>
     </aside>
   {/if}
@@ -170,11 +175,18 @@
       {#if artisan.verified}
         <p class="storefront-header__verified"><Icon name="verified-artisan" />{t('artisan.verified')}</p>
       {/if}
+      {#if badges.length > 0}
+        <div class="storefront-badges">
+          {#each badges as grant (grant.badge.id)}
+            <BadgeChip badge={grant.badge} granted={true} grantedAt={grant.granted_at} />
+          {/each}
+        </div>
+      {/if}
       {#if followerCount !== undefined}
         <p class="storefront-header__followers">{t('artisan.followerCount', { count: String(followerCount) })}</p>
       {/if}
       {#if session.status === 'authenticated'}
-        <Button variant={following ? 'secondary' : 'primary'} onclick={toggleFollow} loading={followBusy}>
+        <Button variant={following ? 'secondary' : 'primary'} onclick={toggleFollow} loading={followBusy} tooltip={tooltip(following ? 'tooltip.unfollow' : 'tooltip.follow')}>
           {following ? t('artisan.following') : t('artisan.follow')}
         </Button>
       {/if}
@@ -238,8 +250,8 @@
     inline-size: 100%;
     aspect-ratio: 1;
     border-radius: 50%;
-    background-color: var(--k-terracotta-700, #96381e);
-    color: #fff;
+    background-color: var(--k-terracotta-700, var(--k-accent-primary-bg));
+    color: var(--k-text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -252,6 +264,13 @@
   }
 
   .storefront-header__location,
+  .storefront-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--k-space-2);
+    margin: var(--k-space-2) 0;
+  }
+
   .storefront-header__verified {
     display: flex;
     align-items: center;
@@ -307,7 +326,7 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3) var(--k-space-4);
     background: linear-gradient(135deg, rgba(120, 53, 15, 0.1), rgba(180, 83, 9, 0.05));
-    border: 1px solid #d97706;
+    border: 1px solid var(--k-border-warning);
     border-radius: var(--k-radius-md);
     margin-block-end: var(--k-space-4);
   }
@@ -326,7 +345,7 @@
 
   .fair-welcome-banner__content strong {
     font-size: var(--k-text-sm);
-    color: #92400e;
+    color: var(--k-accent-primary-text);
   }
 
   .fair-welcome-banner__content p {
@@ -339,8 +358,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: var(--k-text-xs);
     font-weight: 700;
     padding: var(--k-space-2) var(--k-space-3);

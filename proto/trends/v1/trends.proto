@@ -1,0 +1,99 @@
+// proto/trends/v1/trends.proto
+syntax = "proto3";
+
+package trends.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1;trendsv1";
+
+// TrendService manages curated market trend links from Instagram, Pinterest,
+// YouTube, fashion blogs, and other sources that help artisans stay current.
+// Curated by both Admins (Ministry, Cluster Officers) and Artisans.
+service TrendService {
+  // Create a new trend link (both Admins and Artisans can curate).
+  rpc CreateTrendLink(CreateTrendLinkRequest) returns (CreateTrendLinkResponse);
+  // List trend links, optionally filtered by craft or source.
+  rpc ListTrendLinks(ListTrendLinksRequest) returns (ListTrendLinksResponse);
+  // Delete a trend link (Author or Admin).
+  rpc DeleteTrendLink(DeleteTrendLinkRequest) returns (DeleteTrendLinkResponse);
+  // Pin or unpin a trend link to the top of the feed (MINISTRY only).
+  rpc PinTrendLink(PinTrendLinkRequest) returns (PinTrendLinkResponse);
+}
+
+// TrendSourceType classifies where the linked content lives.
+enum TrendSourceType {
+  TREND_SOURCE_TYPE_UNSPECIFIED = 0;
+  TREND_SOURCE_TYPE_INSTAGRAM = 1;
+  TREND_SOURCE_TYPE_PINTEREST = 2;
+  TREND_SOURCE_TYPE_BLOG = 3;
+  TREND_SOURCE_TYPE_NEWS = 4;
+  TREND_SOURCE_TYPE_YOUTUBE = 5;
+  TREND_SOURCE_TYPE_OTHER = 6;
+}
+
+// TrendLink is one curated reference to external market-trend content.
+message TrendLink {
+  // UUIDv7.
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string url = 4;
+  TrendSourceType source_type = 5;
+  optional string craft_id = 6;
+  optional string craft_name = 7;
+  optional string thumbnail_url = 8;
+  optional string embed_html = 9;
+  optional string embed_metadata_json = 10;
+  bool pinned = 11;
+  string created_by = 12;
+  optional google.protobuf.Timestamp expires_at = 13;
+  google.protobuf.Timestamp created_at = 14;
+  string curator_role = 15;
+  string curator_name = 16;
+}
+
+// --- Request / Response messages ---
+
+message CreateTrendLinkRequest {
+  string title = 1;
+  string description = 2;
+  string url = 3;
+  TrendSourceType source_type = 4;
+  optional string craft_id = 5;
+  optional string thumbnail_url = 6;
+  bool auto_fetch_embed = 7;
+  string idempotency_key = 8;
+}
+
+message CreateTrendLinkResponse {
+  TrendLink trend_link = 1;
+}
+
+message ListTrendLinksRequest {
+  optional string craft_id = 1;
+  optional TrendSourceType source_type = 2;
+  bool exclude_expired = 3;
+  common.v1.PageRequest page = 4;
+}
+
+message ListTrendLinksResponse {
+  repeated TrendLink trend_links = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message DeleteTrendLinkRequest {
+  string trend_link_id = 1;
+}
+
+message DeleteTrendLinkResponse {}
+
+message PinTrendLinkRequest {
+  string trend_link_id = 1;
+  bool pinned = 2;
+}
+
+message PinTrendLinkResponse {
+  TrendLink trend_link = 1;
+}

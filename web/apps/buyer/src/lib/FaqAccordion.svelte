@@ -9,45 +9,50 @@
   - Live Loom Video Consultations
 -->
 <script lang="ts">
+  import { locale, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
+  import { tooltip } from '@kalakriti/i18n';
+  import { Tooltip } from '@kalakriti/ui';
+
+  const t = $derived(locale.t);
 
   interface FaqItem {
     id: string;
-    question: string;
-    answer: string;
-    tag: string;
+    questionKey: MessageKey;
+    answerKey: MessageKey;
+    tagKey: MessageKey;
   }
 
   const FAQS: FaqItem[] = [
     {
       id: 'gi-verification',
-      tag: 'Cryptographic Provenance',
-      question: 'How is Geographical Indication (GI) authenticity verified on Kalakriti?',
-      answer: 'Every GI-certified piece undergoes cluster verification where physical loom warp-weft weave structures and authentic raw materials are validated. Upon approval, the Ministry of Social Justice & Empowerment issues an Ed25519 cryptographic seal and SHA-256 hash printed on an tamper-proof QR label, allowing anyone to verify its provenance on-chain.',
+      tagKey: 'faq.giVerification.tag',
+      questionKey: 'faq.giVerification.question',
+      answerKey: 'faq.giVerification.answer',
     },
     {
       id: 'direct-payouts',
-      tag: '0% Platform Fee',
-      question: 'How does 100% direct-to-artisan payout work with zero middleman deductions?',
-      answer: 'Kalakriti is built as National Public Digital Goods sponsored by the Government of India. Unlike private marketplaces that extract 25-40% broker commissions, 100% of your payment is disbursed directly into the verified DBT bank account of the artisan or Self-Help Group (SHG) upon dispatch.',
+      tagKey: 'faq.directPayouts.tag',
+      questionKey: 'faq.directPayouts.question',
+      answerKey: 'faq.directPayouts.answer',
     },
     {
       id: 'bespoke-lead-times',
-      tag: 'Loom Timelines',
-      question: 'What is the lead time for Made-To-Order and bespoke heirloom commissions?',
-      answer: 'Ready-stock craft lots dispatch within 48 to 72 hours. For Made-to-Order and custom bridal or architectural pieces, lead times typically range from 2 to 6 weeks depending on pit-loom complexity, natural vegetable dye fermentation, and warp tensioning. Buyers receive real-time loom video milestones as their piece is woven.',
+      tagKey: 'faq.bespokeLeadTimes.tag',
+      questionKey: 'faq.bespokeLeadTimes.question',
+      answerKey: 'faq.bespokeLeadTimes.answer',
     },
     {
       id: 'authenticity-guarantee',
-      tag: 'Buyer Protection',
-      question: 'What is the Kalakriti transit damage and authenticity guarantee?',
-      answer: 'Every shipment is packed in climate-sealed khadi-lined archival packaging and covered under the Central Craft Transit Guarantee. In the rare event of transit damage or motif mismatch, we offer 100% free restoration at the artisan guild or an immediate full refund.',
+      tagKey: 'faq.authenticityGuarantee.tag',
+      questionKey: 'faq.authenticityGuarantee.question',
+      answerKey: 'faq.authenticityGuarantee.answer',
     },
     {
       id: 'loom-video-tour',
-      tag: 'VIP Concierge',
-      question: 'Can buyers schedule a live video consultation with the artisan before acquiring high-value pieces?',
-      answer: 'Yes. Through our VIP Concierge service, prospective collectors and institutional procurement officers can reserve a 10-minute live video meeting with the master weaver directly at their loom to inspect the drape, zari count, and natural indigo sheen before placing an order.',
+      tagKey: 'faq.loomVideoTour.tag',
+      questionKey: 'faq.loomVideoTour.question',
+      answerKey: 'faq.loomVideoTour.answer',
     },
   ];
 
@@ -60,30 +65,35 @@
 
 <div class="faq-container">
   <div class="faq-header">
-    <span class="faq-kicker">Transparent Guild Standards</span>
-    <h2 class="faq-title">Frequently Asked Questions</h2>
-    <p class="faq-subhead">Everything you need to know about certified provenance, direct payments, and bespoke heirloom fulfillment.</p>
+    <span class="faq-kicker">{t('faq.kicker')}</span>
+    <h2 class="faq-title">{t('faq.title')}</h2>
+    <p class="faq-subhead">{t('faq.subhead')}</p>
   </div>
 
-  <div class="faq-accordion" role="region" aria-label="Frequently Asked Questions">
+  <div class="faq-accordion" role="region" aria-label={t('faq.ariaLabel')}>
     {#each FAQS as item (item.id)}
       {@const isOpen = openId === item.id}
       <div class="faq-item" class:open={isOpen}>
-        <button
-          type="button"
-          class="faq-trigger"
-          aria-expanded={isOpen}
-          aria-controls={`faq-answer-${item.id}`}
-          onclick={() => toggle(item.id)}
-        >
-          <div class="faq-trigger__content">
-            <span class="faq-tag">{item.tag}</span>
-            <span class="faq-question">{item.question}</span>
-          </div>
-          <span class="faq-icon" class:rotate={isOpen} aria-hidden="true">
-            <Icon name="chevron-down" size="1.1rem" />
-          </span>
-        </button>
+        <Tooltip text={tooltip('tooltip.selectTab')} fill>
+          {#snippet trigger(props)}
+            <button
+              type="button"
+              class="faq-trigger"
+              aria-expanded={isOpen}
+              aria-controls={`faq-answer-${item.id}`}
+              onclick={() => toggle(item.id)}
+              {...props}
+            >
+              <div class="faq-trigger__content">
+                <span class="faq-tag">{t(item.tagKey)}</span>
+                <span class="faq-question">{t(item.questionKey)}</span>
+              </div>
+              <span class="faq-icon" class:rotate={isOpen} aria-hidden="true">
+                <Icon name="chevron-down" size="1.1rem" />
+              </span>
+            </button>
+          {/snippet}
+        </Tooltip>
 
         {#if isOpen}
           <div
@@ -92,7 +102,7 @@
             role="region"
             aria-labelledby={`faq-trigger-${item.id}`}
           >
-            <p class="faq-text">{item.answer}</p>
+            <p class="faq-text">{t(item.answerKey)}</p>
           </div>
         {/if}
       </div>
@@ -143,7 +153,7 @@
     flex-direction: column;
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-card, #ffffff);
+    background-color: var(--k-surface-card, var(--k-surface-base));
     overflow: hidden;
   }
 
@@ -157,7 +167,7 @@
   }
 
   .faq-item.open {
-    background-color: var(--k-surface-sunken, #fbf9f6);
+    background-color: var(--k-surface-sunken, var(--k-surface-base));
   }
 
   .faq-trigger {

@@ -13,8 +13,12 @@
   - Svelte 5 runes ($state, $derived, $effect)
 -->
 <script lang="ts">
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
+import { Tooltip } from '@kalakriti/ui';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
+
+  const t = $derived(locale.t);
 
   let activeMenu = $state<string | null>(null);
   let navContainer: HTMLElement | null = $state(null);
@@ -90,7 +94,7 @@
 
 <nav
   class="category-subnav"
-  aria-label="Craft Taxonomy & Categories"
+  aria-label={t('subnav.ariaLabel')}
   bind:this={navContainer}
   onmouseleave={handleMenuLeave}
 >
@@ -105,19 +109,23 @@
       <div class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}">
         <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu}>
           <Icon name="cluster" size="0.85rem" />
-          <span>All Crafts</span>
+          <span>{t('subnav.allCrafts')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
-          aria-expanded={activeMenu === 'all-crafts'}
-          aria-haspopup="true"
-          aria-label="Toggle All 12 Crafts"
-          title="Browse All 12 Artisan Craft Disciplines"
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (allCraftsWrap) toggleMenu('all-crafts', allCraftsWrap); }}
+              aria-expanded={activeMenu === 'all-crafts'}
+              aria-haspopup="true"
+              aria-label={t('subnav.allCraftsToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'all-crafts'}
@@ -128,11 +136,11 @@
         >
           <div class="all-crafts-header">
             <div class="all-crafts-title-group">
-              <h4 class="col-title">12 National Artisan Craft Disciplines</h4>
-              <p class="all-crafts-desc">Direct from registered master looms, foundries &amp; carving ateliers across India</p>
+              <h4 class="col-title">{t('subnav.allCraftsHeading')}</h4>
+              <p class="all-crafts-desc">{t('subnav.allCraftsDesc')}</p>
             </div>
             <a href="/catalog" class="all-crafts-all-link" onclick={closeMenu}>
-              View All 74 GI Clusters ➔
+              {t('subnav.allCraftsLink')}
             </a>
           </div>
 
@@ -148,10 +156,10 @@
                 </span>
                 <span class="craft-mega-card__info">
                   <span class="craft-mega-card__name">
-                    <strong>{craft.name}</strong>
-                    <span class="craft-mega-card__hindi">{craft.hindiName}</span>
+                    <strong>{t(craft.nameKey)}</strong>
+                    <span class="craft-mega-card__hindi">{t(craft.nativeNameKey)}</span>
                   </span>
-                  <small>{craft.subtitle}</small>
+                  <small>{t(craft.subtitleKey)}</small>
                 </span>
               </a>
             {/each}
@@ -164,32 +172,32 @@
 
     <!-- 1. Weaving & Handlooms -->
     <a href="/search?category=Weaving" class="subnav-item" onclick={closeMenu}>
-      <span>Weaving &amp; Looms</span>
+      <span>{t('subnav.weaving')}</span>
     </a>
 
     <!-- 2. Block Printing -->
     <a href="/search?category=Block+printing" class="subnav-item" onclick={closeMenu}>
-      <span>Block Printing</span>
+      <span>{t('subnav.blockPrinting')}</span>
     </a>
 
     <!-- 3. Pottery -->
     <a href="/search?category=Pottery" class="subnav-item" onclick={closeMenu}>
-      <span>Pottery</span>
+      <span>{t('subnav.pottery')}</span>
     </a>
 
     <!-- 4. Metalwork -->
     <a href="/search?category=Metalwork" class="subnav-item" onclick={closeMenu}>
-      <span>Metalwork</span>
+      <span>{t('subnav.metalwork')}</span>
     </a>
 
     <!-- 5. Woodwork -->
     <a href="/search?category=Woodwork" class="subnav-item" onclick={closeMenu}>
-      <span>Woodwork</span>
+      <span>{t('subnav.woodwork')}</span>
     </a>
 
     <!-- 6. Embroidery -->
     <a href="/search?category=Embroidery" class="subnav-item" onclick={closeMenu}>
-      <span>Embroidery</span>
+      <span>{t('subnav.embroidery')}</span>
     </a>
 
     <!-- 1. Home & Living (Image 1 reference) -->
@@ -205,19 +213,23 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Home & Living</span>
+          <span>{t('subnav.home')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
-          aria-expanded={activeMenu === 'home'}
-          aria-haspopup="true"
-          aria-label="Toggle Home & Living categories"
-          title="Open Home & Living subcategories"
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (homeWrap) toggleMenu('home', homeWrap); }}
+              aria-expanded={activeMenu === 'home'}
+              aria-haspopup="true"
+              aria-label={t('subnav.homeToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'home'}
@@ -229,71 +241,71 @@
           <div class="dropdown-grid-4">
             <!-- Col 1: Décor & Utility -->
             <div class="dropdown-col">
-              <h4 class="col-title">Home Décor & Utility</h4>
+              <h4 class="col-title">{t('subnav.home.decor')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=candle" onclick={closeMenu}>Artistic Candles</a></li>
-                <li><a href="/search?q=clock" onclick={closeMenu}>Ethnic Wall Clocks</a></li>
-                <li><a href="/search?q=metalware" onclick={closeMenu}>Metal Wares & Bell Metal</a></li>
-                <li><a href="/search?q=mirror" onclick={closeMenu}>Handcrafted Mirrors</a></li>
-                <li><a href="/search?q=papier+mache" onclick={closeMenu}>Kashmir Paper Mache</a></li>
-                <li><a href="/search?q=stoneware" onclick={closeMenu}>Agra Inlaid Stone Wares</a></li>
-                <li><a href="/search?q=tapestry" onclick={closeMenu}>Tapestries & Wall Hangings</a></li>
+                <li><a href="/search?q=candle" onclick={closeMenu}>{t('subnav.home.decor.candles')}</a></li>
+                <li><a href="/search?q=clock" onclick={closeMenu}>{t('subnav.home.decor.clocks')}</a></li>
+                <li><a href="/search?q=metalware" onclick={closeMenu}>{t('subnav.home.decor.metalware')}</a></li>
+                <li><a href="/search?q=mirror" onclick={closeMenu}>{t('subnav.home.decor.mirrors')}</a></li>
+                <li><a href="/search?q=papier+mache" onclick={closeMenu}>{t('subnav.home.decor.papierMache')}</a></li>
+                <li><a href="/search?q=stoneware" onclick={closeMenu}>{t('subnav.home.decor.stoneware')}</a></li>
+                <li><a href="/search?q=tapestry" onclick={closeMenu}>{t('subnav.home.decor.tapestry')}</a></li>
               </ul>
             </div>
 
             <!-- Col 2: Kitchen & Furnishings -->
             <div class="dropdown-col">
-              <h4 class="col-title">Kitchen & Dining</h4>
+              <h4 class="col-title">{t('subnav.home.kitchen')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=placemat" onclick={closeMenu}>Woven Place Mats</a></li>
-                <li><a href="/search?q=copper" onclick={closeMenu}>Hand-Hammered Copper Bottles</a></li>
-                <li><a href="/search?q=table+mat" onclick={closeMenu}>Natural Grass Table Mats</a></li>
-                <li><a href="/search?q=kitchen" onclick={closeMenu}>Traditional Brass Cookware</a></li>
+                <li><a href="/search?q=placemat" onclick={closeMenu}>{t('subnav.home.kitchen.placemats')}</a></li>
+                <li><a href="/search?q=copper" onclick={closeMenu}>{t('subnav.home.kitchen.copper')}</a></li>
+                <li><a href="/search?q=table+mat" onclick={closeMenu}>{t('subnav.home.kitchen.tableMats')}</a></li>
+                <li><a href="/search?q=kitchen" onclick={closeMenu}>{t('subnav.home.kitchen.cookware')}</a></li>
               </ul>
 
-              <h4 class="col-title sub-title-margin">Home Furnishings</h4>
+              <h4 class="col-title sub-title-margin">{t('subnav.home.furnishings')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=bedsheet" onclick={closeMenu}>Hand-Block Bedsheets</a></li>
-                <li><a href="/search?q=quilt" onclick={closeMenu}>Jaipuri Razai & Throws</a></li>
-                <li><a href="/search?q=cushion" onclick={closeMenu}>Kantha Cushion Covers</a></li>
+                <li><a href="/search?q=bedsheet" onclick={closeMenu}>{t('subnav.home.furnishings.bedsheets')}</a></li>
+                <li><a href="/search?q=quilt" onclick={closeMenu}>{t('subnav.home.furnishings.quilts')}</a></li>
+                <li><a href="/search?q=cushion" onclick={closeMenu}>{t('subnav.home.furnishings.cushions')}</a></li>
               </ul>
             </div>
 
             <!-- Col 3: Floor Coverings & Musical -->
             <div class="dropdown-col">
-              <h4 class="col-title">Floor Coverings</h4>
+              <h4 class="col-title">{t('subnav.home.floorCoverings')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=carpet" onclick={closeMenu}>Bhadohi Hand-Knotted Carpets</a></li>
-                <li><a href="/search?q=durrie" onclick={closeMenu}>Panipat Cotton Durries</a></li>
-                <li><a href="/search?q=rug" onclick={closeMenu}>Jute & Wool Area Rugs</a></li>
-                <li><a href="/search?q=yoga+mat" onclick={closeMenu}>Organic Grass Yoga Mats</a></li>
+                <li><a href="/search?q=carpet" onclick={closeMenu}>{t('subnav.home.floorCoverings.carpets')}</a></li>
+                <li><a href="/search?q=durrie" onclick={closeMenu}>{t('subnav.home.floorCoverings.durries')}</a></li>
+                <li><a href="/search?q=rug" onclick={closeMenu}>{t('subnav.home.floorCoverings.rugs')}</a></li>
+                <li><a href="/search?q=yoga+mat" onclick={closeMenu}>{t('subnav.home.floorCoverings.yogaMats')}</a></li>
               </ul>
 
-              <h4 class="col-title sub-title-margin">Musical Instruments</h4>
+              <h4 class="col-title sub-title-margin">{t('subnav.home.musical')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=flute" onclick={closeMenu}>Bamboo Flutes (Bansuri)</a></li>
-                <li><a href="/search?q=tabla" onclick={closeMenu}>Handcrafted Tabla Sets</a></li>
-                <li><a href="/search?q=sitar" onclick={closeMenu}>Miraj Classical Sitars</a></li>
-                <li><a href="/search?q=dholak" onclick={closeMenu}>Folk Dholaks & Percussions</a></li>
+                <li><a href="/search?q=flute" onclick={closeMenu}>{t('subnav.home.musical.flutes')}</a></li>
+                <li><a href="/search?q=tabla" onclick={closeMenu}>{t('subnav.home.musical.tabla')}</a></li>
+                <li><a href="/search?q=sitar" onclick={closeMenu}>{t('subnav.home.musical.sitars')}</a></li>
+                <li><a href="/search?q=dholak" onclick={closeMenu}>{t('subnav.home.musical.dholaks')}</a></li>
               </ul>
             </div>
 
             <!-- Col 4: Wellness & Temple Items -->
             <div class="dropdown-col highlight-col">
-              <h4 class="col-title">Temple & Wellness</h4>
+              <h4 class="col-title">{t('subnav.home.templeWellness')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=pooja" onclick={closeMenu}>Hand-Cast Brass Pooja Kalash</a></li>
-                <li><a href="/search?q=incense" onclick={closeMenu}>Natural Flora Incense Sticks</a></li>
-                <li><a href="/search?q=tulsi" onclick={closeMenu}>Hand-Carved Tulsi Kanthi</a></li>
-                <li><a href="/search?q=towel" onclick={closeMenu}>Loom Khadi Towels & Gamchas</a></li>
-                <li><a href="/search?q=meditation" onclick={closeMenu}>Handloom Meditation Asanas</a></li>
+                <li><a href="/search?q=pooja" onclick={closeMenu}>{t('subnav.home.templeWellness.kalash')}</a></li>
+                <li><a href="/search?q=incense" onclick={closeMenu}>{t('subnav.home.templeWellness.incense')}</a></li>
+                <li><a href="/search?q=tulsi" onclick={closeMenu}>{t('subnav.home.templeWellness.tulsiKanthi')}</a></li>
+                <li><a href="/search?q=towel" onclick={closeMenu}>{t('subnav.home.templeWellness.towels')}</a></li>
+                <li><a href="/search?q=meditation" onclick={closeMenu}>{t('subnav.home.templeWellness.meditationAsanas')}</a></li>
               </ul>
 
               <div class="direct-gi-callout">
-                <span class="callout-tag">GI Authenticated</span>
-                <p>All home crafts are stamped with digital Ed25519 provenance seals.</p>
+                <span class="callout-tag">{t('subnav.home.giCalloutTag')}</span>
+                <p>{t('subnav.home.giCalloutDesc')}</p>
                 <a href="/gi-tagged" class="callout-link" onclick={closeMenu}>
-                  Browse Certified Pieces ➔
+                  {t('subnav.home.giCalloutLink')}
                 </a>
               </div>
             </div>
@@ -315,19 +327,23 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Furniture</span>
+          <span>{t('subnav.furniture')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
-          aria-expanded={activeMenu === 'furniture'}
-          aria-haspopup="true"
-          aria-label="Toggle Furniture categories"
-          title="Open Furniture subcategories"
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (furnitureWrap) toggleMenu('furniture', furnitureWrap); }}
+              aria-expanded={activeMenu === 'furniture'}
+              aria-haspopup="true"
+              aria-label={t('subnav.furnitureToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'furniture'}
@@ -338,30 +354,30 @@
         >
           <div class="dropdown-grid-3">
             <div class="dropdown-col">
-              <h4 class="col-title">Home Outdoors</h4>
+              <h4 class="col-title">{t('subnav.furniture.outdoors')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=patio+chair" onclick={closeMenu}>Cane & Wicker Patio Chairs</a></li>
-                <li><a href="/search?q=patio+sofa" onclick={closeMenu}>Handcrafted Bamboo Loungers</a></li>
-                <li><a href="/search?q=swing" onclick={closeMenu}>Traditional Wood & Brass Swings (Jhula)</a></li>
+                <li><a href="/search?q=patio+chair" onclick={closeMenu}>{t('subnav.furniture.outdoors.patioChairs')}</a></li>
+                <li><a href="/search?q=patio+sofa" onclick={closeMenu}>{t('subnav.furniture.outdoors.loungers')}</a></li>
+                <li><a href="/search?q=swing" onclick={closeMenu}>{t('subnav.furniture.outdoors.swings')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col">
-              <h4 class="col-title">Home Indoor</h4>
+              <h4 class="col-title">{t('subnav.furniture.indoor')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=table" onclick={closeMenu}>Saharanpur Carved Bedside Tables</a></li>
-                <li><a href="/search?q=dining" onclick={closeMenu}>Solid Sheesham Dining Tables</a></li>
-                <li><a href="/search?q=stool" onclick={closeMenu}>Jodhpur Inlaid Stools & Moodas</a></li>
+                <li><a href="/search?q=table" onclick={closeMenu}>{t('subnav.furniture.indoor.bedsideTables')}</a></li>
+                <li><a href="/search?q=dining" onclick={closeMenu}>{t('subnav.furniture.indoor.diningTables')}</a></li>
+                <li><a href="/search?q=stool" onclick={closeMenu}>{t('subnav.furniture.indoor.stools')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col">
-              <h4 class="col-title">Office & Study</h4>
+              <h4 class="col-title">{t('subnav.furniture.office')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=cabinet" onclick={closeMenu}>Brass-Fitted Wood Cabinets</a></li>
-                <li><a href="/search?q=chair" onclick={closeMenu}>Hand-Carved Accent Chairs</a></li>
-                <li><a href="/search?q=rack" onclick={closeMenu}>Hand-Bent Cane Magazine Racks</a></li>
-                <li><a href="/search?q=sofa" onclick={closeMenu}>Solid Teakwood Sofa Sets</a></li>
+                <li><a href="/search?q=cabinet" onclick={closeMenu}>{t('subnav.furniture.office.cabinets')}</a></li>
+                <li><a href="/search?q=chair" onclick={closeMenu}>{t('subnav.furniture.office.accentChairs')}</a></li>
+                <li><a href="/search?q=rack" onclick={closeMenu}>{t('subnav.furniture.office.magazineRacks')}</a></li>
+                <li><a href="/search?q=sofa" onclick={closeMenu}>{t('subnav.furniture.office.sofaSets')}</a></li>
               </ul>
             </div>
           </div>
@@ -382,19 +398,23 @@
           class="subnav-pill-link"
           onclick={closeMenu}
         >
-          <span>Paintings</span>
+          <span>{t('subnav.paintings')}</span>
         </a>
-        <button
-          type="button"
-          class="subnav-chevron-btn"
-          onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
-          aria-expanded={activeMenu === 'paintings'}
-          aria-haspopup="true"
-          aria-label="Toggle Paintings categories"
-          title="Open Paintings subcategories"
-        >
-          <Icon name="chevron-down" size="0.7rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.menu')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="subnav-chevron-btn"
+              onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (paintingsWrap) toggleMenu('paintings', paintingsWrap); }}
+              aria-expanded={activeMenu === 'paintings'}
+              aria-haspopup="true"
+              aria-label={t('subnav.paintingsToggle')}
+              {...tp}
+            >
+              <Icon name="chevron-down" size="0.7rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       {#if activeMenu === 'paintings'}
@@ -405,28 +425,28 @@
         >
           <div class="dropdown-grid-2">
             <div class="dropdown-col">
-              <h4 class="col-title">Traditional Folk & Heritage</h4>
+              <h4 class="col-title">{t('subnav.paintings.traditional')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=madhubani" onclick={closeMenu}>Mithila Madhubani Paintings (GI-105)</a></li>
-                <li><a href="/search?q=pattachitra" onclick={closeMenu}>Raghurajpur Palm Leaf Pattachitra (GI-220)</a></li>
-                <li><a href="/search?q=warli" onclick={closeMenu}>Maharashtra Warli Tribal Art (GI-183)</a></li>
-                <li><a href="/search?q=aipan" onclick={closeMenu}>Kumaon Aipan Floor & Wall Art (GI-696)</a></li>
-                <li><a href="/search?q=pichwai" onclick={closeMenu}>Nathdwara Gold Leaf Pichwai (GI-753)</a></li>
-                <li><a href="/search?q=thangka" onclick={closeMenu}>Himalayan Buddhist Thangkas</a></li>
+                <li><a href="/search?q=madhubani" onclick={closeMenu}>{t('subnav.paintings.traditional.madhubani')}</a></li>
+                <li><a href="/search?q=pattachitra" onclick={closeMenu}>{t('subnav.paintings.traditional.pattachitra')}</a></li>
+                <li><a href="/search?q=warli" onclick={closeMenu}>{t('subnav.paintings.traditional.warli')}</a></li>
+                <li><a href="/search?q=aipan" onclick={closeMenu}>{t('subnav.paintings.traditional.aipan')}</a></li>
+                <li><a href="/search?q=pichwai" onclick={closeMenu}>{t('subnav.paintings.traditional.pichwai')}</a></li>
+                <li><a href="/search?q=thangka" onclick={closeMenu}>{t('subnav.paintings.traditional.thangka')}</a></li>
               </ul>
             </div>
 
             <div class="dropdown-col highlight-col">
-              <h4 class="col-title">Modern & Contemporary</h4>
+              <h4 class="col-title">{t('subnav.paintings.modern')}</h4>
               <ul class="col-links">
-                <li><a href="/search?q=modern+folk" onclick={closeMenu}>Contemporary Natural Pigment Abstracts</a></li>
-                <li><a href="/search?q=canvas" onclick={closeMenu}>Botanical Dye Hand-Painted Canvases</a></li>
-                <li><a href="/search?q=framed" onclick={closeMenu}>Archival Framed Masterpiece Editions</a></li>
+                <li><a href="/search?q=modern+folk" onclick={closeMenu}>{t('subnav.paintings.modern.abstracts')}</a></li>
+                <li><a href="/search?q=canvas" onclick={closeMenu}>{t('subnav.paintings.modern.canvases')}</a></li>
+                <li><a href="/search?q=framed" onclick={closeMenu}>{t('subnav.paintings.modern.framedEditions')}</a></li>
               </ul>
 
               <div class="direct-gi-callout">
-                <span class="callout-tag">Direct Guild Studio</span>
-                <p>100% natural earth pigments: charcoal, lampblack, indigo, turmeric, and vermillion.</p>
+                <span class="callout-tag">{t('subnav.paintings.calloutTag')}</span>
+                <p>{t('subnav.paintings.calloutDesc')}</p>
               </div>
             </div>
           </div>
@@ -436,33 +456,33 @@
 
     <!-- 7. Jewellery -->
     <a href="/search?category=Jewellery" class="subnav-item" onclick={closeMenu}>
-      <span>Jewellery</span>
+      <span>{t('subnav.jewellery')}</span>
     </a>
 
     <!-- 8. Bamboo & Basketry -->
     <a href="/search?category=Bamboo+craft" class="subnav-item" onclick={closeMenu}>
-      <span>Bamboo &amp; Cane</span>
+      <span>{t('subnav.bambooCane')}</span>
     </a>
 
     <!-- 9. Stone Carving & Leather -->
     <a href="/search?category=Stone+carving" class="subnav-item" onclick={closeMenu}>
-      <span>Stone &amp; Leather</span>
+      <span>{t('subnav.stoneLeather')}</span>
     </a>
 
     <!-- 10. GI Tagged Direct Link (Image 3 reference) -->
     <a href="/gi-tagged" class="subnav-item gi-tagged-link" onclick={closeMenu}>
       <span class="gi-tricolor-dot"></span>
-      <span>GI Tagged Products</span>
+      <span>{t('subnav.giTaggedProducts')}</span>
     </a>
 
     <!-- 11. ODOP Corridors -->
     <a href="/catalog" class="subnav-item" onclick={closeMenu}>
-      <span>One District One Product</span>
+      <span>{t('subnav.odop')}</span>
     </a>
 
     <!-- 12. Bulk Institutional Orders -->
     <a href="/bulk-order" class="subnav-item" onclick={closeMenu}>
-      <span>Institutional RFQs</span>
+      <span>{t('subnav.institutionalRfqs')}</span>
     </a>
   </div>
 </nav>
@@ -470,8 +490,8 @@
 <style>
   .category-subnav {
     position: relative;
-    background-color: #fbf9f5;
-    border-block-end: 1px solid #e8e2d8;
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-border-subtle);
     z-index: 80;
   }
 
@@ -498,7 +518,7 @@
     border-radius: 6px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     white-space: nowrap;
     background: transparent;
@@ -509,8 +529,8 @@
   }
 
   .subnav-item:hover {
-    color: #b84a39;
-    background-color: #f0eae1;
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-raised);
   }
 
   /* Split pill navigation: Left side navigates, Right side toggles */
@@ -524,7 +544,7 @@
 
   .subnav-split-pill:hover,
   .subnav-split-pill.is-active {
-    background-color: #f0eae1;
+    background-color: var(--k-surface-raised);
   }
 
   .subnav-pill-link {
@@ -533,7 +553,7 @@
     padding: 0.35rem 0.3rem 0.35rem 0.65rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     white-space: nowrap;
     transition: color 0.12s ease;
@@ -541,7 +561,7 @@
 
   .subnav-split-pill:hover .subnav-pill-link,
   .subnav-split-pill.is-active .subnav-pill-link {
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .subnav-chevron-btn {
@@ -552,29 +572,29 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     border-radius: 0 6px 6px 0;
     transition: color 0.12s ease;
   }
 
   .subnav-split-pill:hover .subnav-chevron-btn,
   .subnav-split-pill.is-active .subnav-chevron-btn {
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
   }
 
   .all-btn {
-    color: #1e1915;
+    color: var(--k-text-primary);
     font-weight: 700;
   }
 
   .subnav-divider {
-    color: #dcd5ca;
+    color: var(--k-khadi-200);
     font-size: 0.75rem;
     margin-inline: 0.15rem;
   }
 
   .gi-tagged-link {
-    color: #92400e;
+    color: var(--k-accent-primary-text);
     font-weight: 700;
   }
 
@@ -582,8 +602,8 @@
     inline-size: 0.55rem;
     block-size: 0.55rem;
     border-radius: 50%;
-    background: linear-gradient(180deg, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%);
-    border: 1px solid #c7beaf;
+    background: linear-gradient(180deg, #ff9933 33%, var(--k-surface-base) 33%, var(--k-surface-base) 66%, #138808 66%);
+    border: 1px solid var(--k-border-hairline);
     flex: none;
   }
 
@@ -596,8 +616,8 @@
     position: absolute;
     inset-inline-start: 0;
     inset-block-start: calc(100% + 0.35rem);
-    background-color: #ffffff;
-    border: 1px solid #ded7cc;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-muted);
     border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
     padding: 1.5rem;
@@ -627,19 +647,19 @@
     justify-content: space-between;
     padding-block-end: 0.85rem;
     margin-block-end: 1rem;
-    border-block-end: 1px solid #eee8df;
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .all-crafts-desc {
     font-size: 0.775rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     margin: 0.2rem 0 0 0;
   }
 
   .all-crafts-all-link {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
     white-space: nowrap;
   }
@@ -686,16 +706,16 @@
     gap: 0.75rem;
     padding: 0.65rem 0.75rem;
     border-radius: 8px;
-    background-color: #faf7f2;
-    border: 1px solid #ece5da;
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-border-subtle);
     text-decoration: none;
     color: inherit;
     transition: all 0.15s ease;
   }
 
   .craft-mega-card:hover {
-    background-color: #ffffff;
-    border-color: #b84a39;
+    background-color: var(--k-surface-base);
+    border-color: var(--k-border-danger);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transform: translateY(-1px);
   }
@@ -704,18 +724,18 @@
     inline-size: 2.2rem;
     block-size: 2.2rem;
     border-radius: 6px;
-    background-color: #f0eae1;
+    background-color: var(--k-surface-raised);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #8c3b2d;
+    color: var(--k-terracotta-600);
     flex: none;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   .craft-mega-card:hover .craft-mega-card__icon {
-    background-color: #b84a39;
-    color: #ffffff;
+    background-color: var(--k-accent-danger-bg);
+    color: var(--k-text-on-accent);
   }
 
   .craft-mega-card__info {
@@ -733,7 +753,7 @@
   .craft-mega-card__name strong {
     font-size: 0.825rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -741,12 +761,12 @@
 
   .craft-mega-card__hindi {
     font-size: 0.725rem;
-    color: #8c8278;
+    color: var(--k-stone-400);
   }
 
   .craft-mega-card__info small {
     font-size: 0.68rem;
-    color: #7a7269;
+    color: var(--k-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -799,20 +819,20 @@
   }
 
   .highlight-col {
-    background-color: #faf7f2;
+    background-color: var(--k-surface-base);
     padding: 0.85rem;
     border-radius: 8px;
-    border: 1px solid #eee8df;
+    border: 1px solid var(--k-border-subtle);
   }
 
   .col-title {
     font-family: var(--k-font-display, Georgia, serif);
     font-size: 0.85rem;
     font-weight: 700;
-    color: #1e1915;
+    color: var(--k-text-primary);
     margin: 0 0 0.65rem;
     padding-block-end: 0.35rem;
-    border-block-end: 1px solid #eee8df;
+    border-block-end: 1px solid var(--k-border-subtle);
   }
 
   .sub-title-margin {
@@ -830,21 +850,21 @@
 
   .col-links li a {
     font-size: 0.775rem;
-    color: #59524a;
+    color: var(--k-stone-600);
     text-decoration: none;
     transition: color 0.12s ease;
     line-height: 1.3;
   }
 
   .col-links li a:hover {
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: underline;
   }
 
   .direct-gi-callout {
     margin-block-start: 1rem;
     padding-block-start: 0.75rem;
-    border-block-start: 1px dashed #d5cec5;
+    border-block-start: 1px dashed var(--k-border-hairline);
   }
 
   .callout-tag {
@@ -852,15 +872,15 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #2e7d32;
-    background-color: #e8f5e9;
+    color: var(--k-accent-success-muted);
+    background-color: var(--k-surface-raised);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
   }
 
   .direct-gi-callout p {
     font-size: 0.725rem;
-    color: #6b635b;
+    color: var(--k-text-tertiary);
     margin: 0.35rem 0 0.5rem;
     line-height: 1.35;
   }
@@ -868,7 +888,7 @@
   .callout-link {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #b84a39;
+    color: var(--k-accent-danger-muted);
     text-decoration: none;
   }
 

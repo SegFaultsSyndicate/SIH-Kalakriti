@@ -4,8 +4,24 @@
     {
       "name": "buyer-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["-F", "@kalakriti/buyer", "dev"],
+      "runtimeArgs": [
+        "-F",
+        "@kalakriti/buyer",
+        "dev"
+      ],
       "port": 5174
+    },
+    {
+      "name": "artisan-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-F",
+        "@kalakriti/artisan",
+        "dev",
+        "--port",
+        "5175"
+      ],
+      "port": 5175
     }
   ]
 }

@@ -50,6 +50,62 @@ func TestAuthMiddleware_Unauthenticated(t *testing.T) {
 	}
 }
 
+// Test the phone-change routes through the real router: they must be reachable
+// under /api/v1 (not the bare path a hand-rolled frontend fetch() once used),
+// and reject an unauthenticated caller.
+func TestPhoneChange_RequestAndVerify(t *testing.T) {
+	issuer := mustIssuer(t)
+	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+
+	srv, _ := bff.NewServer(bff.Config{
+		Addr:                  ":0",
+		BaseURL:               "http://test",
+		WebDist:               "/tmp",
+		Issuer:                issuer,
+		Redis:                 rdb,
+		IdempStore:            &mockIdempStore{responses: make(map[string][]byte)},
+		RateLimitPerIP:        1000,
+		RateLimitPerPrincipal: 1000,
+		RateLimitWindow:       time.Minute,
+		AuthSvc:               &mockAuthSvc{},
+		ArtisanSvc:            &mockArtisanSvc{nextID: "art-1"},
+	})
+
+	token := mustToken(t, issuer, auth.Subject{ID: "user-1", Role: auth.RoleArtisan})
+
+	// Unauthenticated request must be rejected, not silently 404 or 200.
+	unauth := httptest.NewRequest(http.MethodPost, "/api/v1/auth/phone/change/request", bytes.NewBufferString(`{"new_phone":"+919876543210"}`))
+	wUnauth := httptest.NewRecorder()
+	srv.ServeHTTP(wUnauth, unauth)
+	if wUnauth.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for unauthenticated request, got %d", wUnauth.Code)
+	}
+
+	// The real route lives under /api/v1 -- confirms server.go's mount path
+	// matches what the frontend client now calls.
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/phone/change/request", bytes.NewBufferString(`{"new_phone":"+919876543210"}`))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	verifyReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/phone/change/verify", bytes.NewBufferString(`{"new_phone":"+919876543210","otp":"123456"}`))
+	verifyReq.Header.Set("Authorization", "Bearer "+token)
+	wVerify := httptest.NewRecorder()
+	srv.ServeHTTP(wVerify, verifyReq)
+	if wVerify.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", wVerify.Code, wVerify.Body.String())
+	}
+
+	var resp map[string]string
+	json.NewDecoder(wVerify.Body).Decode(&resp)
+	if resp["access_token"] == "" || resp["refresh_token"] == "" {
+		t.Errorf("expected fresh access_token/refresh_token in response, got %v", resp)
+	}
+}
+
 // Test that replaying a POST with the same Idempotency-Key returns the original response.
 func TestIdempotency_Replay(t *testing.T) {
 	issuer := mustIssuer(t)
@@ -182,15 +238,30 @@ func (m *mockIdempStore) SaveResponse(ctx context.Context, scope, key string, re
 	return nil
 }
 
+// mockAuthSvc is a no-op auth-svc stub for routes that only need it present.
+type mockAuthSvc struct{}
+
+func (m *mockAuthSvc) RequestOTP(ctx context.Context, phone string) error {
+	return nil
+}
+
+func (m *mockAuthSvc) VerifyOTP(ctx context.Context, phone, otp, devRole string) (string, string, error) {
+	return "new-access-token", "new-refresh-token", nil
+}
+
+func (m *mockAuthSvc) RefreshToken(ctx context.Context, refreshToken string) (string, error) {
+	return "new-access-token", nil
+}
+
 // mockArtisanSvc returns sequential IDs for testing idempotency.
 type mockArtisanSvc struct {
 	nextID string
 }
 
-func (m *mockArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
+func (m *mockArtisanSvc) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, string, string, error) {
 	id := m.nextID
 	m.nextID = "art-" + id[4:] + "1" // increment for next call
-	return id, nil
+	return id, "mock-access-token", "mock-refresh-token", nil
 }
 
 func (m *mockArtisanSvc) GetProfile(ctx context.Context, artisanID string) (map[string]any, error) {

@@ -1,0 +1,108 @@
+// proto/schemes/v1/schemes.proto
+
+syntax = "proto3";
+
+package schemes.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1;schemesv1";
+
+// SchemeService surfaces government scheme reference data and matches the
+// calling artisan against it. MatchSchemes is guidance only -- see
+// MatchStatus's comment.
+service SchemeService {
+  rpc ListSchemes(ListSchemesRequest) returns (ListSchemesResponse);
+  // Matches the CALLER (never an arbitrary artisan id) against every active
+  // scheme.
+  rpc MatchSchemes(MatchSchemesRequest) returns (MatchSchemesResponse);
+  rpc UpsertScheme(UpsertSchemeRequest) returns (UpsertSchemeResponse);
+  rpc DeleteScheme(DeleteSchemeRequest) returns (DeleteSchemeResponse);
+}
+
+// MatchStatus is guidance, never a determination. There is deliberately no
+// "eligible" value.
+enum MatchStatus {
+  MATCH_STATUS_UNSPECIFIED = 0;
+  MATCH_STATUS_MAY_QUALIFY = 1;
+  MATCH_STATUS_CHECK_REQUIRED = 2;
+  MATCH_STATUS_UNLIKELY = 3;
+}
+
+enum SchemeAuthority {
+  SCHEME_AUTHORITY_UNSPECIFIED = 0;
+  SCHEME_AUTHORITY_CENTRAL = 1;
+  SCHEME_AUTHORITY_STATE = 2;
+}
+
+enum SchemeCriterionType {
+  SCHEME_CRITERION_TYPE_UNSPECIFIED = 0;
+  SCHEME_CRITERION_TYPE_SOCIAL_CATEGORY = 1;
+  SCHEME_CRITERION_TYPE_STATE_CODE = 2;
+  SCHEME_CRITERION_TYPE_CRAFT_ID = 3;
+  SCHEME_CRITERION_TYPE_MIN_YEARS_EXPERIENCE = 4;
+  SCHEME_CRITERION_TYPE_HAS_PEHCHAN_ID = 5;
+  SCHEME_CRITERION_TYPE_HAS_PM_VISHWAKARMA_ID = 6;
+  SCHEME_CRITERION_TYPE_CLUSTER_MEMBER = 7;
+  SCHEME_CRITERION_TYPE_SHG_MEMBER = 8;
+}
+
+message GovernmentScheme {
+  string id = 1;
+  string code = 2;
+  SchemeAuthority authority = 3;
+  string ministry = 4;
+  string official_url = 5;
+  optional string state_code = 6;
+  optional string name_i18n_key = 7;
+  optional string name_text = 8;
+  optional string summary_i18n_key = 9;
+  optional string summary_text = 10;
+  int32 sort_order = 11;
+}
+
+message SchemeCriterionProto {
+  SchemeCriterionType type = 1;
+  repeated string string_values = 2;
+  optional int64 int_value = 3;
+  bool negate = 4;
+}
+
+message SchemeManualCheckProto {
+  optional string i18n_key = 1;
+  optional string check_text = 2;
+}
+
+message SchemeMatch {
+  GovernmentScheme scheme = 1;
+  MatchStatus status = 2;
+  repeated string matched_criteria_labels = 3;
+  repeated string unmet_criteria_labels = 4;
+  repeated SchemeManualCheckProto manual_checks = 5;
+}
+
+message ListSchemesRequest {}
+message ListSchemesResponse { repeated GovernmentScheme schemes = 1; }
+
+message MatchSchemesRequest {}
+message MatchSchemesResponse { repeated SchemeMatch matches = 1; }
+
+message UpsertSchemeRequest {
+  optional string id = 1; // empty/unset = create
+  string code = 2;
+  SchemeAuthority authority = 3;
+  string ministry = 4;
+  string official_url = 5;
+  optional string state_code = 6;
+  optional string name_i18n_key = 7;
+  optional string name_text = 8;
+  optional string summary_i18n_key = 9;
+  optional string summary_text = 10;
+  int32 sort_order = 11;
+  repeated SchemeCriterionProto criteria = 12;
+  repeated SchemeManualCheckProto manual_checks = 13;
+}
+message UpsertSchemeResponse { GovernmentScheme scheme = 1; }
+
+message DeleteSchemeRequest { string id = 1; }
+message DeleteSchemeResponse { bool deleted = 1; }

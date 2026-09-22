@@ -6,16 +6,13 @@
   Dilli Haat) with year-round digital storefronts and repeat ordering.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'Exhibition Calendar' },
-  ]);
+  const breadcrumbs = $derived([{ label: t('exhibition.fairs.breadcrumbLabel') }]);
 
   interface Fair {
     id: string;
@@ -133,13 +130,13 @@
 
 <div class="fairs-page">
   <div class="fairs-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <!-- Header Section -->
     <header class="fairs-header">
       <div class="gov-badge-strip">
-        <span class="gov-badge">GOVERNMENT OF INDIA • EXHIBITION CORRIDOR</span>
-        <span class="gov-badge-sub">PHYSICAL-TO-DIGITAL FAIR BRIDGE</span>
+        <span class="gov-badge">{t('exhibition.fairs.govBadge')}</span>
+        <span class="gov-badge-sub">{t('exhibition.fairs.govBadgeSub')}</span>
       </div>
       <h1 class="fairs-title">{t('exhibition.fairs.title')}</h1>
       <p class="fairs-subhead">
@@ -148,30 +145,45 @@
 
       <!-- Filter Tabs -->
       <div class="filter-strip" role="tablist">
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'all'}
-          onclick={() => (selectedFilter = 'all')}
-        >
-          All Exhibitions ({FAIRS.length})
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'active'}
-          onclick={() => (selectedFilter = 'active')}
-        >
-          🎪 Happening Now (2)
-        </button>
-        <button
-          type="button"
-          class="filter-btn"
-          class:filter-btn--active={selectedFilter === 'upcoming'}
-          onclick={() => (selectedFilter = 'upcoming')}
-        >
-          📅 Upcoming Fairs (3)
-        </button>
+        <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'all'}
+                onclick={() => (selectedFilter = 'all')}
+                {...tp}
+              >
+                {t('exhibition.fairs.filterAll', { count: String(FAIRS.length) })}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'active'}
+                onclick={() => (selectedFilter = 'active')}
+                {...tp}
+              >
+                <Icon name="calendar" size="1rem" /> {t('exhibition.fairs.filterActive', { count: '2' })}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.selectFilter')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="filter-btn"
+                class:filter-btn--active={selectedFilter === 'upcoming'}
+                onclick={() => (selectedFilter = 'upcoming')}
+                {...tp}
+              >
+                <Icon name="clock" size="1rem" /> {t('exhibition.fairs.filterUpcoming', { count: '3' })}
+              </button>
+            {/snippet}
+          </Tooltip>
       </div>
     </header>
 
@@ -183,9 +195,9 @@
             <img src={fair.bannerUrl} alt={fair.title} loading="lazy" />
             <div class="fair-status-badge" class:fair-status-badge--live={fair.status === 'active'}>
               {#if fair.status === 'active'}
-                <span class="pulse-dot"></span> HAPPENING NOW
+                <span class="pulse-dot"></span> {t('exhibition.fairs.statusLive')}
               {:else}
-                UPCOMING
+                {t('exhibition.fairs.statusUpcoming')}
               {/if}
             </div>
           </div>
@@ -213,7 +225,7 @@
             <p class="fair-card__desc">{fair.description}</p>
 
             <div class="fair-crafts-section">
-              <span class="crafts-label">Featured GI Craft Traditions:</span>
+              <span class="crafts-label">{t('exhibition.fairs.craftsLabel')}</span>
               <div class="crafts-tags">
                 {#each fair.crafts as craft}
                   <span class="craft-tag">{craft}</span>
@@ -223,7 +235,7 @@
 
             <div class="fair-card__footer">
               <div class="artisan-count-badge">
-                <strong>{fair.artisanCount}+</strong> Master Artisans Exhibiting
+                <strong>{fair.artisanCount}+</strong> {t('exhibition.fairs.artisansExhibitingSuffix')}
               </div>
               <a
                 href="/search?q={encodeURIComponent(fair.crafts[0])}"
@@ -265,8 +277,8 @@
   }
 
   .gov-badge {
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -316,9 +328,9 @@
   }
 
   .filter-btn--active {
-    background: var(--k-accent-primary-bg, #b45309);
-    color: #ffffff;
-    border-color: var(--k-accent-primary-bg, #b45309);
+    background: var(--k-accent-primary-bg, var(--k-accent-primary-bg));
+    color: var(--k-text-on-accent);
+    border-color: var(--k-accent-primary-bg, var(--k-border-accent));
   }
 
   .fairs-grid {
@@ -361,7 +373,7 @@
     inset-block-start: var(--k-space-3);
     inset-inline-start: var(--k-space-3);
     background: rgba(15, 23, 42, 0.85);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.7rem;
     font-weight: 800;
     padding: 4px 10px;
@@ -373,14 +385,14 @@
   }
 
   .fair-status-badge--live {
-    background: #15803d;
+    background: var(--k-accent-success-bg);
   }
 
   .pulse-dot {
     inline-size: 7px;
     block-size: 7px;
     border-radius: 50%;
-    background: #4ade80;
+    background: var(--k-neem-400);
     box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.4);
     animation: pulse 1.5s infinite;
   }
@@ -417,7 +429,7 @@
 
   .fair-edition {
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
   }
 
   .fair-card__title {
@@ -499,8 +511,8 @@
     display: inline-flex;
     align-items: center;
     gap: var(--k-space-2);
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     padding: var(--k-space-2) var(--k-space-4);
     border-radius: var(--k-radius-md);
     font-size: var(--k-text-xs);
@@ -510,7 +522,7 @@
   }
 
   .explore-btn:hover {
-    background: #92400e;
+    background: var(--k-accent-primary-bg);
   }
 
   @media (max-width: 768px) {

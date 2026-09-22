@@ -17,7 +17,7 @@
 import { getCached, setCached, network, getPref, setPref } from '@kalakriti/offline';
 import { db } from '@kalakriti/offline';
 import { listListings, getListing, updateListing, type components } from '@kalakriti/api';
-import type { MessageKey } from '@kalakriti/i18n';
+import { matchesLocale, type LocaleCode, type MessageKey } from '@kalakriti/i18n';
 import { getArtisanId } from './registration';
 import { createDraft, patchFields } from './listing-draft';
 
@@ -62,10 +62,10 @@ export function groupFor(listing: Listing): StateGroup {
 }
 
 /** Picks the artisan's active-language title, falling back to whichever translation exists. */
-export function titleFor(listing: Listing, language: string): string {
+export function titleFor(listing: Listing, locale: LocaleCode): string {
   const translations = listing.translations ?? [];
   return (
-    translations.find((t) => t.language === language)?.title ??
+    translations.find((t) => matchesLocale(t.language, locale))?.title ??
     translations[0]?.title ??
     ''
   );

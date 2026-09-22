@@ -6,8 +6,8 @@
   transparent lead-time math, and direct handoff to /bulk-order.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { SectionHeader } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
@@ -30,15 +30,15 @@
   });
 
   function downloadCatalog() {
-    const content = `KALAKRITI INSTITUTIONAL & ENTERPRISE PROCUREMENT CATALOGUE 2024-2025\n` +
-      `Ministry of Social Justice and Empowerment, Government of India\n\n` +
-      `DIRECT CLUSTER PROCUREMENT FOR CORPORATE & STATE BANQUET GIFTING\n` +
+    const content = `${t('home.b2b.catalog.title')}\n` +
+      `${t('home.b2b.catalog.ministry')}\n\n` +
+      `${t('home.b2b.catalog.heading')}\n` +
       `-----------------------------------------------------------------\n` +
-      `Tier 1: Boutique Executive (25-100 units) - Custom Brass Seal & Artisan Certificate\n` +
-      `Tier 2: Institutional & Summit (100-500 units) - GI Guild Allocation & Unified Billing\n` +
-      `Tier 3: National Enterprise (500+ units) - Multi-Cluster Orchestration & Lead-Time Guarantee\n\n` +
-      `All orders carry SHA-256 Cryptographic Provenance Seals.\n` +
-      `GST-Compliant Invoicing | 100% Direct Weaver Bank Transfers.`;
+      `${t('home.b2b.catalog.tier1Line')}\n` +
+      `${t('home.b2b.catalog.tier2Line')}\n` +
+      `${t('home.b2b.catalog.tier3Line')}\n\n` +
+      `${t('home.b2b.catalog.provenanceLine')}\n` +
+      `${t('home.b2b.catalog.gstLine')}`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -101,14 +101,19 @@
           <Icon name="arrow-right" size="1rem" />
         </a>
 
-        <button
-          type="button"
-          class="k-deck-btn"
-          onclick={downloadCatalog}
-        >
-          <Icon name="download" size="0.95rem" />
-          <span>{t('home.b2b.downloadDeck')}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.downloadCatalog')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="k-deck-btn"
+              onclick={downloadCatalog}
+              {...tp}
+            >
+              <Icon name="download" size="0.95rem" />
+              <span>{t('home.b2b.downloadDeck')}</span>
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
 
@@ -116,7 +121,7 @@
     <div class="tiers-panel">
       <div class="tier-entry" class:active={activeTier === 1}>
         <div class="tier-heading-row">
-          <span class="tier-tag">Tier 1</span>
+          <span class="tier-tag">{t('home.b2b.tierLabel', { n: '1' })}</span>
           <h3 class="tier-name">{t('home.b2b.tier1')}</h3>
         </div>
         <p class="tier-explanation">{t('home.b2b.tier1.desc')}</p>
@@ -124,7 +129,7 @@
 
       <div class="tier-entry" class:active={activeTier === 2}>
         <div class="tier-heading-row">
-          <span class="tier-tag">Tier 2</span>
+          <span class="tier-tag">{t('home.b2b.tierLabel', { n: '2' })}</span>
           <h3 class="tier-name">{t('home.b2b.tier2')}</h3>
         </div>
         <p class="tier-explanation">{t('home.b2b.tier2.desc')}</p>
@@ -132,7 +137,7 @@
 
       <div class="tier-entry" class:active={activeTier === 3}>
         <div class="tier-heading-row">
-          <span class="tier-tag">Tier 3</span>
+          <span class="tier-tag">{t('home.b2b.tierLabel', { n: '3' })}</span>
           <h3 class="tier-name">{t('home.b2b.tier3')}</h3>
         </div>
         <p class="tier-explanation">{t('home.b2b.tier3.desc')}</p>
@@ -205,7 +210,7 @@
 
   .calc-slider {
     inline-size: 100%;
-    accent-color: var(--k-terracotta-700);
+    accent-color: var(--k-accent-primary-text);
     cursor: pointer;
   }
 

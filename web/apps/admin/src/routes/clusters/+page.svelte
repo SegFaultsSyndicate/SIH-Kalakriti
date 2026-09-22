@@ -60,10 +60,10 @@
         artisan_count: 38,
       },
       members: [
-        { artisan_id: 'art-1', display_name: 'Ismail Khatri', role: 'MASTER', joined_at: '2024-01-15T10:00:00Z' },
-        { artisan_id: 'art-2', display_name: 'Pabiben Rabari', role: 'COORDINATOR', joined_at: '2024-02-10T11:30:00Z' },
-        { artisan_id: 'art-3', display_name: 'Vankar Vishram Valji', role: 'MEMBER', joined_at: '2024-03-01T09:15:00Z' },
-        { artisan_id: 'art-4', display_name: 'Devji Premji Vankar', role: 'MEMBER', joined_at: '2024-03-20T14:00:00Z' },
+        { artisan_id: 'art-1', display_name: 'Ismail Khatri', role: 'CLUSTER_MEMBER_ROLE_MASTER', joined_at: '2024-01-15T10:00:00Z' },
+        { artisan_id: 'art-2', display_name: 'Pabiben Rabari', role: 'CLUSTER_MEMBER_ROLE_COORDINATOR', joined_at: '2024-02-10T11:30:00Z' },
+        { artisan_id: 'art-3', display_name: 'Vankar Vishram Valji', role: 'CLUSTER_MEMBER_ROLE_MEMBER', joined_at: '2024-03-01T09:15:00Z' },
+        { artisan_id: 'art-4', display_name: 'Devji Premji Vankar', role: 'CLUSTER_MEMBER_ROLE_MEMBER', joined_at: '2024-03-20T14:00:00Z' },
       ],
     },
     'jaipur-blue-pottery': {
@@ -75,8 +75,8 @@
         artisan_count: 24,
       },
       members: [
-        { artisan_id: 'art-5', display_name: 'Kripal Kumbhar', role: 'MASTER', joined_at: '2024-01-12T08:00:00Z' },
-        { artisan_id: 'art-6', display_name: 'Ram Gopal Saini', role: 'COORDINATOR', joined_at: '2024-02-18T10:00:00Z' },
+        { artisan_id: 'art-5', display_name: 'Kripal Kumbhar', role: 'CLUSTER_MEMBER_ROLE_MASTER', joined_at: '2024-01-12T08:00:00Z' },
+        { artisan_id: 'art-6', display_name: 'Ram Gopal Saini', role: 'CLUSTER_MEMBER_ROLE_COORDINATOR', joined_at: '2024-02-18T10:00:00Z' },
       ],
     },
   };
@@ -91,7 +91,8 @@
       members = m.members ?? [];
       clusterIdInput = targetId;
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadCluster:', cause);
         const mock = MOCK_CLUSTERS[targetId] ?? {
           cluster: {
             id: targetId,
@@ -118,7 +119,7 @@
   }
 
   $effect(() => {
-    if (authorized && import.meta.env.DEV && !cluster && !clusterIdInput) {
+    if (authorized && import.meta.env.VITE_USE_MOCKS === '1' && !cluster && !clusterIdInput) {
       void loadCluster('kutch-weavers');
     }
   });
@@ -134,7 +135,8 @@
       showToast({ variant: 'success', message: t('clusters.created') });
       if (created.id) await loadCluster(created.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createNewCluster:', cause);
         const generatedId = `cluster-${Date.now().toString(36)}`;
         MOCK_CLUSTERS[generatedId] = {
           cluster: {
@@ -163,6 +165,11 @@
   let newMemberArtisanId = $state('');
   let newMemberRole = $state('MEMBER');
 
+  /** The request enum ("MEMBER") is short-form; the response enum ("CLUSTER_MEMBER_ROLE_MEMBER") is fully qualified -- see services/bff/openapi.json's two distinct role schemas on this endpoint. */
+  function toMemberRoleResponse(role: string): 'CLUSTER_MEMBER_ROLE_MEMBER' | 'CLUSTER_MEMBER_ROLE_COORDINATOR' | 'CLUSTER_MEMBER_ROLE_MASTER' {
+    return `CLUSTER_MEMBER_ROLE_${role}` as 'CLUSTER_MEMBER_ROLE_MEMBER' | 'CLUSTER_MEMBER_ROLE_COORDINATOR' | 'CLUSTER_MEMBER_ROLE_MASTER';
+  }
+
   async function addMember(): Promise<void> {
     if (!cluster?.id) return;
     try {
@@ -170,13 +177,14 @@
       newMemberArtisanId = '';
       await loadCluster(cluster.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] addMember:', cause);
         members = [
           ...members,
           {
             artisan_id: newMemberArtisanId,
             display_name: `Artisan (${newMemberArtisanId})`,
-            role: newMemberRole as 'MEMBER' | 'COORDINATOR' | 'MASTER',
+            role: toMemberRoleResponse(newMemberRole),
             joined_at: new Date().toISOString(),
           },
         ];
@@ -194,7 +202,8 @@
       await removeClusterMember(cluster.id, artisanId);
       await loadCluster(cluster.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] removeMember:', cause);
         members = members.filter((m) => m.artisan_id !== artisanId);
         showToast({ variant: 'success', message: t('action.remove') });
       } else {
@@ -241,13 +250,14 @@
         });
         commitResults = [...commitResults, { rowNumber: row.rowNumber, ok: true, message: t('clusters.onboarded') }];
       } catch (cause) {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.VITE_USE_MOCKS === '1') {
+          console.warn('[mock fallback] commitSheet row', row.rowNumber, ':', cause);
           members = [
             ...members,
             {
               artisan_id: `art-${row.phone_e164.slice(-4)}`,
               display_name: row.display_name,
-              role: 'MEMBER',
+              role: 'CLUSTER_MEMBER_ROLE_MEMBER',
               joined_at: new Date().toISOString(),
             },
           ];
@@ -287,7 +297,8 @@
       const existing = (shg as { members?: ShareRow[] }).members ?? [];
       shareRows = existing.length > 0 ? existing.map((m) => ({ artisan_id: m.artisan_id, share_pct: m.share_pct })) : [{ artisan_id: '', share_pct: 0 }];
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] loadShg:', cause);
         shg = {
           id,
           name: id === 'shg-1' ? 'Maa Saraswati Mahila Bachat Gat' : `Self Help Group ${id}`,
@@ -322,7 +333,8 @@
       showToast({ variant: 'success', message: t('clusters.shgCreated') });
       if (created.id) await loadShg(created.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createNewShg:', cause);
         const genId = `shg-${Date.now().toString(36)}`;
         showToast({ variant: 'success', message: t('clusters.shgCreated') });
         await loadShg(genId);
@@ -341,7 +353,8 @@
       showToast({ variant: 'success', message: t('clusters.shgSaved') });
       await loadShg(shg.id);
     } catch (cause) {
-      if (import.meta.env.DEV) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] saveShgMembers:', cause);
         showToast({ variant: 'success', message: t('clusters.shgSaved') });
       } else {
         showToast({ variant: 'error', message: cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown') });

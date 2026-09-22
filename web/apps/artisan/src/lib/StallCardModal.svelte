@@ -7,9 +7,9 @@
   reorder directly from their digital storefront year-round.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button } from '@kalakriti/ui';
+  import { Button, Tooltip } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
 
   interface Props {
@@ -38,15 +38,15 @@
 
   interface FairConfig {
     value: string;
-    label: string;
-    shortName: string;
-    fullName: string;
-    edition: string;
-    venue: string;
-    dates: string;
-    ministry: string;
-    subDept: string;
-    badge: string;
+    labelKey: MessageKey;
+    shortNameKey: MessageKey;
+    fullNameKey: MessageKey;
+    editionKey: MessageKey;
+    venueKey: MessageKey;
+    datesKey: MessageKey;
+    ministryKey: MessageKey;
+    subDeptKey: MessageKey;
+    badgeKey: MessageKey;
     accentColor: string;
     accentBg: string;
     borderAccent: string;
@@ -55,75 +55,75 @@
   const FAIRS: FairConfig[] = [
     {
       value: 'surajkund-2026',
-      label: 'Surajkund International Crafts Mela (Faridabad, Haryana)',
-      shortName: 'Surajkund Crafts Mela',
-      fullName: 'Surajkund International Crafts Mela',
-      edition: '39th Annual International Edition • 2026',
-      venue: 'Surajkund Mela Grounds, Faridabad, Haryana',
-      dates: '02 Feb – 18 Feb 2026',
-      ministry: 'MINISTRY OF TOURISM & MINISTRY OF TEXTILES • GOVT. OF INDIA',
-      subDept: 'DEVELOPMENT COMMISSIONER (HANDICRAFTS) & HARYANA TOURISM',
-      badge: 'OFFICIAL CRAFTS MELA PLACARD',
+      labelKey: 'exhibition.stallCard.fair.surajkund.label',
+      shortNameKey: 'exhibition.stallCard.fair.surajkund.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.surajkund.fullName',
+      editionKey: 'exhibition.stallCard.fair.surajkund.edition',
+      venueKey: 'exhibition.stallCard.fair.surajkund.venue',
+      datesKey: 'exhibition.stallCard.fair.surajkund.dates',
+      ministryKey: 'exhibition.stallCard.fair.surajkund.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.surajkund.subDept',
+      badgeKey: 'exhibition.stallCard.fair.surajkund.badge',
       accentColor: '#78350f',
       accentBg: '#fef3c7',
       borderAccent: '#d97706',
     },
     {
       value: 'shilp-samagam-2026',
-      label: 'Shilp Samagam (Major Dhyan Chand Stadium, New Delhi)',
-      shortName: 'Shilp Samagam Expo',
-      fullName: 'Shilp Samagam Apex Handicraft Expo',
-      edition: 'Apex National Pavilion • 2026',
-      venue: 'Major Dhyan Chand National Stadium, India Gate, New Delhi',
-      dates: '01 Nov – 15 Nov 2026',
-      ministry: 'MINISTRY OF SOCIAL JUSTICE & MINISTRY OF TEXTILES • GOVT. OF INDIA',
-      subDept: 'DEVELOPMENT COMMISSIONER (HANDICRAFTS & HANDLOOMS)',
-      badge: 'APEX EXHIBITION STALL PLACARD',
+      labelKey: 'exhibition.stallCard.fair.shilpSamagam.label',
+      shortNameKey: 'exhibition.stallCard.fair.shilpSamagam.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.shilpSamagam.fullName',
+      editionKey: 'exhibition.stallCard.fair.shilpSamagam.edition',
+      venueKey: 'exhibition.stallCard.fair.shilpSamagam.venue',
+      datesKey: 'exhibition.stallCard.fair.shilpSamagam.dates',
+      ministryKey: 'exhibition.stallCard.fair.shilpSamagam.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.shilpSamagam.subDept',
+      badgeKey: 'exhibition.stallCard.fair.shilpSamagam.badge',
       accentColor: '#1e3a8a',
       accentBg: '#dbeafe',
       borderAccent: '#2563eb',
     },
     {
       value: 'dilli-haat-ina',
-      label: 'Dilli Haat Master Crafts Fortnight (INA, New Delhi)',
-      shortName: 'Dilli Haat Fortnight',
-      fullName: 'Dilli Haat Master Crafts Fortnight',
-      edition: 'National Master Craftsmen Rotation • 2026',
-      venue: 'INA Market Complex, Sri Aurobindo Marg, New Delhi',
-      dates: 'Year-Round Rotating Fortnight',
-      ministry: 'DELHI TOURISM & TRANSPORT DEVELOPMENT CORP • GOVT. OF NCT',
-      subDept: 'OFFICE OF DEVELOPMENT COMMISSIONER (HANDICRAFTS)',
-      badge: 'OFFICIAL DILLI HAAT STALL PASS',
+      labelKey: 'exhibition.stallCard.fair.dilliHaat.label',
+      shortNameKey: 'exhibition.stallCard.fair.dilliHaat.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.dilliHaat.fullName',
+      editionKey: 'exhibition.stallCard.fair.dilliHaat.edition',
+      venueKey: 'exhibition.stallCard.fair.dilliHaat.venue',
+      datesKey: 'exhibition.stallCard.fair.dilliHaat.dates',
+      ministryKey: 'exhibition.stallCard.fair.dilliHaat.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.dilliHaat.subDept',
+      badgeKey: 'exhibition.stallCard.fair.dilliHaat.badge',
       accentColor: '#065f46',
       accentBg: '#d1fae5',
       borderAccent: '#059669',
     },
     {
       value: 'saras-mela-2026',
-      label: 'Saras Mela National Exhibition (Patna, Bihar)',
-      shortName: 'Saras Mela National Expo',
-      fullName: 'Saras Mela National Rural Crafts Exhibition',
-      edition: 'National Livelihoods Pavilion • 2026',
-      venue: 'Gandhi Maidan, Patna, Bihar',
-      dates: '10 Dec – 22 Dec 2026',
-      ministry: 'MINISTRY OF RURAL DEVELOPMENT (MoRD) • GOVT. OF INDIA',
-      subDept: 'NATIONAL RURAL LIVELIHOOD MISSION (NRLM) / DEENDAYAL ANTYODAYA',
-      badge: 'OFFICIAL SARAS MELA STALL CARD',
+      labelKey: 'exhibition.stallCard.fair.sarasMela.label',
+      shortNameKey: 'exhibition.stallCard.fair.sarasMela.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.sarasMela.fullName',
+      editionKey: 'exhibition.stallCard.fair.sarasMela.edition',
+      venueKey: 'exhibition.stallCard.fair.sarasMela.venue',
+      datesKey: 'exhibition.stallCard.fair.sarasMela.dates',
+      ministryKey: 'exhibition.stallCard.fair.sarasMela.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.sarasMela.subDept',
+      badgeKey: 'exhibition.stallCard.fair.sarasMela.badge',
       accentColor: '#831843',
       accentBg: '#fce7f3',
       borderAccent: '#db2777',
     },
     {
       value: 'hunar-haat-mumbai',
-      label: 'Hunar Haat Craft Pavilion (BKC, Mumbai)',
-      shortName: 'Hunar Haat Pavilion',
-      fullName: 'Hunar Haat Heritage Craft Pavilion',
-      edition: 'Western Metropolitan Pavilion • 2026',
-      venue: 'MMRDA Grounds, Bandra-Kurla Complex (BKC), Mumbai',
-      dates: '14 Jan – 25 Jan 2026',
-      ministry: 'MINISTRY OF MINORITY AFFAIRS • GOVT. OF INDIA',
-      subDept: 'USTTAD & CRAFT REVIVAL INITIATIVE',
-      badge: 'OFFICIAL HUNAR HAAT PAVILION PLACARD',
+      labelKey: 'exhibition.stallCard.fair.hunarHaat.label',
+      shortNameKey: 'exhibition.stallCard.fair.hunarHaat.shortName',
+      fullNameKey: 'exhibition.stallCard.fair.hunarHaat.fullName',
+      editionKey: 'exhibition.stallCard.fair.hunarHaat.edition',
+      venueKey: 'exhibition.stallCard.fair.hunarHaat.venue',
+      datesKey: 'exhibition.stallCard.fair.hunarHaat.dates',
+      ministryKey: 'exhibition.stallCard.fair.hunarHaat.ministry',
+      subDeptKey: 'exhibition.stallCard.fair.hunarHaat.subDept',
+      badgeKey: 'exhibition.stallCard.fair.hunarHaat.badge',
       accentColor: '#4c1d95',
       accentBg: '#ede9fe',
       borderAccent: '#7c3aed',
@@ -172,7 +172,13 @@
   }
 
   function handleShare(): void {
-    const text = `Namaste! Visit ${artisanName}'s stall (${currentStallDisplay}) at ${selectedFairConfig.shortName} or scan to order authentic handmade ${craftName} anytime: ${targetUrl}`;
+    const text = t('exhibition.stallCard.shareMessage', {
+      name: artisanName,
+      stall: currentStallDisplay,
+      fair: t(selectedFairConfig.shortNameKey),
+      craft: craftName,
+      url: targetUrl,
+    });
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   }
 </script>
@@ -193,9 +199,13 @@
           <h2>{t('exhibition.stallCard.title')}</h2>
           <p class="modal-subhead">{t('exhibition.stallCard.subtitle')}</p>
         </div>
-        <button type="button" class="close-btn" onclick={onclose} aria-label="Close">
-          <Icon name="close" />
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+              <Icon name="close" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </header>
 
       <!-- Exhibition Controls -->
@@ -204,14 +214,19 @@
           <label for="fair-select" class="field-label">{t('exhibition.stallCard.selectFair')}</label>
           <select id="fair-select" bind:value={selectedFair} class="field-select">
             {#each FAIRS as fair}
-              <option value={fair.value}>{fair.label}</option>
+              <option value={fair.value}>{t(fair.labelKey)}</option>
             {/each}
           </select>
         </div>
 
         <div class="field-item">
           <label for="stall-num" class="field-label">{t('exhibition.stallCard.stallNumber')}</label>
-          <input id="stall-num" bind:value={stallNumber} placeholder="e.g. B-42" class="field-input" />
+          <input
+            id="stall-num"
+            bind:value={stallNumber}
+            placeholder={t('exhibition.stallCard.stallNumberPlaceholder')}
+            class="field-input"
+          />
         </div>
       </div>
 
@@ -229,29 +244,29 @@
             <div class="placard-gov-header" style="border-color: {selectedFairConfig.accentColor}">
               <div class="emblem-strip">
                 <span class="emblem-text" style="color: {selectedFairConfig.accentColor}">
-                  {selectedFairConfig.ministry}
+                  {t(selectedFairConfig.ministryKey)}
                 </span>
                 <span class="emblem-sub">
-                  {selectedFairConfig.subDept}
+                  {t(selectedFairConfig.subDeptKey)}
                 </span>
               </div>
               <div class="fair-banner">
                 <span class="fair-badge" style="background: {selectedFairConfig.accentColor}">
-                  {selectedFairConfig.badge}
+                  {t(selectedFairConfig.badgeKey)}
                 </span>
-                <h3 class="fair-name">{selectedFairConfig.fullName}</h3>
+                <h3 class="fair-name">{t(selectedFairConfig.fullNameKey)}</h3>
                 <div class="fair-submeta">
-                  <span class="fair-edition">{selectedFairConfig.edition}</span>
+                  <span class="fair-edition">{t(selectedFairConfig.editionKey)}</span>
                   <span class="dot">•</span>
-                  <span class="fair-venue">{selectedFairConfig.venue}</span>
+                  <span class="fair-venue">{t(selectedFairConfig.venueKey)}</span>
                   <span class="dot">•</span>
-                  <span class="fair-dates">{selectedFairConfig.dates}</span>
+                  <span class="fair-dates">{t(selectedFairConfig.datesKey)}</span>
                 </div>
                 <div
                   class="stall-pill"
                   style="background: {selectedFairConfig.accentBg}; border-color: {selectedFairConfig.borderAccent}; color: {selectedFairConfig.accentColor}"
                 >
-                  STALL NUMBER: {currentStallDisplay}
+                  {t('exhibition.stallCard.stallNumberDisplay', { number: currentStallDisplay })}
                 </div>
               </div>
             </div>
@@ -271,10 +286,22 @@
                 <p class="craft-title" style="color: {selectedFairConfig.accentColor}">{craftName}</p>
 
                 <div class="artisan-tags">
-                  <span class="placard-tag">🏛️ {clusterName || 'Varanasi Weavers Cluster'}</span>
-                  <span class="placard-tag">📍 {districtName || 'Uttar Pradesh'}</span>
-                  <span class="placard-tag placard-tag--gold">🎖️ PM Vishwakarma ID: {pehchanId || 'UP-VNS-2024-0982'}</span>
-                  <span class="placard-tag placard-tag--gi">🇮🇳 Certified GI Handicraft</span>
+                  <span class="placard-tag"
+                    ><Icon name="cluster" size="0.85rem" /> {clusterName ||
+                      'Varanasi Weavers Cluster'}</span
+                  >
+                  <span class="placard-tag"
+                    ><Icon name="location" size="0.85rem" /> {districtName || 'Uttar Pradesh'}</span
+                  >
+                  <span class="placard-tag placard-tag--gold"
+                    ><Icon name="verified-artisan" size="0.85rem" />
+                    {t('exhibition.stallCard.pmVishwakarmaId', {
+                      id: pehchanId || 'UP-VNS-2024-0982',
+                    })}</span
+                  >
+                  <span class="placard-tag placard-tag--gi"
+                    ><Icon name="gi-tagged" size="0.85rem" /> {t('exhibition.stallCard.giCertified')}</span
+                  >
                 </div>
               </div>
 
@@ -282,14 +309,14 @@
               <div class="placard-qr-section">
                 <div class="qr-box">
                   {#if qrDataUrl}
-                    <img src={qrDataUrl} alt="Scan QR Code to order" class="qr-image" />
+                    <img src={qrDataUrl} alt={t('exhibition.stallCard.qrAlt')} class="qr-image" />
                   {:else}
-                    <div class="qr-placeholder">Generating QR...</div>
+                    <div class="qr-placeholder">{t('exhibition.stallCard.generatingQr')}</div>
                   {/if}
                 </div>
                 <p class="qr-prompt">
-                  <strong>SCAN TO REORDER ANYTIME</strong>
-                  <span>Direct Artisan Delivery • Zero Middlemen • Authentic GI</span>
+                  <strong>{t('exhibition.stallCard.scanCta')}</strong>
+                  <span>{t('exhibition.stallCard.scanPrompt')}</span>
                 </p>
               </div>
             </div>
@@ -298,7 +325,7 @@
             <footer class="placard-footer">
               <div class="footer-seal" style="color: {selectedFairConfig.accentColor}">
                 <Icon name="verified-artisan" />
-                <span>Verified Public Digital Infrastructure — Powered by Kalakriti</span>
+                <span>{t('exhibition.stallCard.poweredBy')}</span>
               </div>
               <span class="footer-url">{targetUrl}</span>
             </footer>
@@ -308,15 +335,15 @@
 
       <!-- Action Buttons -->
       <footer class="modal-actions">
-        <Button variant="secondary" size="sm" onclick={handleShare} class="placard-btn">
+        <Button variant="secondary" size="sm" onclick={handleShare} class="placard-btn" tooltip={tooltip('tooltip.shareCard')}>
           <Icon name="share" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.shareWhatsapp')}</span>
-          <span class="btn-label--mobile">WhatsApp</span>
+          <span class="btn-label--mobile">{t('exhibition.stallCard.shareWhatsappShort')}</span>
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint} class="placard-btn">
+        <Button variant="primary" size="sm" onclick={handlePrint} class="placard-btn" tooltip={tooltip('tooltip.printCard')}>
           <Icon name="print" size="0.85rem" />
           <span class="btn-label--desktop">{t('exhibition.stallCard.print')}</span>
-          <span class="btn-label--mobile">Print Placard</span>
+          <span class="btn-label--mobile">{t('exhibition.stallCard.printShort')}</span>
         </Button>
       </footer>
     </div>
@@ -421,16 +448,16 @@
 
   /* Placard Card */
   .placard-container {
-    background: #fdfbf7;
+    background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-4);
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-border-on-inverse);
   }
 
   :global(.placard-card) {
     position: relative;
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
     padding: 2.5rem 2rem;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
   }
@@ -472,13 +499,13 @@
   .emblem-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #57534e;
+    color: var(--k-stone-600);
     letter-spacing: 0.05em;
   }
 
   .fair-badge {
     display: inline-block;
-    color: #fff;
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -491,7 +518,7 @@
   .fair-name {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 4px 0 2px;
     letter-spacing: -0.01em;
   }
@@ -503,17 +530,17 @@
     flex-wrap: wrap;
     gap: var(--k-space-2);
     font-size: 0.72rem;
-    color: #57534e;
+    color: var(--k-stone-600);
     margin: 3px 0 6px;
   }
 
   .fair-submeta .dot {
-    color: #cbd5e1;
+    color: var(--k-indigo-300);
   }
 
   .fair-edition {
     font-weight: 700;
-    color: #44403c;
+    color: var(--k-stone-700);
   }
 
   .fair-venue,
@@ -553,15 +580,15 @@
     block-size: 4.5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #d97706;
+    border: 3px solid var(--k-border-warning);
   }
 
   .placard-avatar-fallback {
     inline-size: 4.5rem;
     block-size: 4.5rem;
     border-radius: 50%;
-    background: #78350f;
-    color: #fff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 1.8rem;
     font-weight: 800;
     display: flex;
@@ -572,14 +599,14 @@
   .artisan-name {
     font-size: 1.3rem;
     font-weight: 800;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
   }
 
   .craft-title {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -588,16 +615,16 @@
     flex-direction: column;
     gap: 4px;
     font-size: 0.72rem;
-    color: #44403c;
+    color: var(--k-stone-700);
   }
 
   .placard-tag--gold {
-    color: #92400e;
+    color: var(--k-accent-primary-text);
     font-weight: 700;
   }
 
   .placard-tag--gi {
-    color: #15803d;
+    color: var(--k-accent-success-muted);
     font-weight: 700;
   }
 
@@ -608,15 +635,15 @@
     text-align: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2);
-    background: #f8fafc;
+    background: var(--k-surface-base);
     border-radius: var(--k-radius-md);
-    border: 1px dashed #cbd5e1;
+    border: 1px dashed var(--k-indigo-300);
   }
 
   .qr-box {
     inline-size: 10rem;
     block-size: 10rem;
-    background: #fff;
+    background: var(--k-surface-base);
     padding: 6px;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -635,7 +662,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--k-indigo-400);
   }
 
   .qr-prompt {
@@ -647,16 +674,16 @@
   .qr-prompt strong {
     font-size: 0.8rem;
     letter-spacing: 0.05em;
-    color: #0f172a;
+    color: var(--k-ink-950);
   }
 
   .qr-prompt span {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--k-indigo-500);
   }
 
   .placard-footer {
-    border-block-start: 1px solid #e7e5e4;
+    border-block-start: 1px solid var(--k-border-on-inverse);
     padding-block-start: var(--k-space-2);
     display: flex;
     flex-direction: column;
@@ -670,12 +697,12 @@
     gap: 4px;
     font-size: 0.68rem;
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .footer-url {
     font-size: 0.6rem;
-    color: #a8a29e;
+    color: var(--k-stone-300);
     font-family: monospace;
   }
 
@@ -787,12 +814,12 @@
       inset: 0;
       margin: auto;
       inline-size: 100%;
-      background: #fff;
+      background: var(--k-surface-base);
       border: none;
       padding: 0;
     }
     :global(.placard-card) {
-      border: 4px solid #78350f !important;
+      border: 4px solid var(--k-border-accent) !important;
       box-shadow: none;
     }
   }

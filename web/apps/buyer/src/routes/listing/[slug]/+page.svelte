@@ -24,10 +24,11 @@
 -->
 <script lang="ts">
   import { page } from '$app/state';
-  import { locale, type DntTerm } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast } from '@kalakriti/ui';
+  import { locale, matchesLocale, tooltip, type DntTerm } from '@kalakriti/i18n';
+  import { EmptyState, Skeleton, Money, AudioPlayback, CraftTerm, Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getListingSummary, type components } from '@kalakriti/api';
+  import { getCached, setCached } from '@kalakriti/offline';
   import PurchaseForm from '$lib/PurchaseForm.svelte';
 
   type ListingSummary = components['schemas']['ListingSummary'];
@@ -59,6 +60,15 @@
 
   const artisanAvatar = $derived((listing as Record<string, unknown> | undefined)?.artisan_image_url as string | undefined || devAvatar);
 
+  // Caches the full response -- every language's translations[], not just the
+  // one active at fetch time -- so a buyer who switches language offline on a
+  // listing they've already viewed still sees it correctly translated instead
+  // of falling back to whatever locale was active when it was cached. Same
+  // network -> cache pattern as apps/artisan/src/lib/ontology.ts's loadCrafts.
+  function listingCacheKey(id: string): string {
+    return `listing.summary.${id}`;
+  }
+
   $effect(() => {
     const id = listingId;
     void (async () => {
@@ -66,8 +76,9 @@
       activeMediaIndex = 0;
       try {
         listing = await getListingSummary(id);
+        await setCached(listingCacheKey(id), listing);
       } catch {
-        listing = undefined;
+        listing = await getCached<ListingSummary>(listingCacheKey(id));
       } finally {
         loading = false;
       }
@@ -75,12 +86,12 @@
   });
 
   const title = $derived(
-    listing?.translations?.find((tr) => tr.language === locale.code)?.title ??
+    listing?.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.title ??
       listing?.translations?.[0]?.title ??
       '',
   );
   const description = $derived(
-    listing?.translations?.find((tr) => tr.language === locale.code)?.description ??
+    listing?.translations?.find((tr) => matchesLocale(tr.language, locale.code))?.description ??
       listing?.translations?.[0]?.description ??
       '',
   );
@@ -193,20 +204,25 @@
       {#if media.length > 1}
         <div class="listing__thumbs" role="tablist" aria-label={t('listing.gallery.processVideo')}>
           {#each media as item, index (index)}
-            <button
-              type="button"
-              role="tab"
-              aria-selected={index === activeMediaIndex}
-              class="listing__thumb"
-              class:listing__thumb--active={index === activeMediaIndex}
-              onclick={() => (activeMediaIndex = index)}
-            >
-              {#if item.kind === 'VIDEO'}
-                <span class="listing__thumb-video"><Icon name="process-video" title={t('listing.gallery.processVideo')} /></span>
-              {:else if item.url}
-                <img src={item.url} alt={title ? `${title} photo ${index + 1}` : `Photo ${index + 1}`} />
-              {/if}
-            </button>
+            <Tooltip text={tooltip('tooltip.selectImage')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={index === activeMediaIndex}
+                class="listing__thumb"
+                class:listing__thumb--active={index === activeMediaIndex}
+                onclick={() => (activeMediaIndex = index)}
+                {...tp}
+              >
+                {#if item.kind === 'VIDEO'}
+                  <span class="listing__thumb-video"><Icon name="process-video" title={t('listing.gallery.processVideo')} /></span>
+                {:else if item.url}
+                  <img src={item.url} alt={title ? `${title} photo ${index + 1}` : `Photo ${index + 1}`} />
+                {/if}
+              </button>
+            {/snippet}
+          </Tooltip>
           {/each}
         </div>
       {/if}
@@ -221,16 +237,21 @@
           {/if}
         </p>
 
-        <button
-          type="button"
-          class="listing__share-btn"
-          onclick={handleShare}
-          title="Share this authentic craft piece"
-          aria-label="Share this listing"
-        >
-          <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
-          <span>{copied ? 'Copied!' : 'Share'}</span>
-        </button>
+        <Tooltip text={tooltip('tooltip.share')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="listing__share-btn"
+              onclick={handleShare}
+              title={t('listing.shareTitle')}
+              aria-label={t('listing.shareAriaLabel')}
+              {...tp}
+            >
+              <Icon name={copied ? 'check' : 'share'} size="0.95rem" />
+              <span>{copied ? t('listing.shareCopied') : t('listing.shareButton')}</span>
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <h1>{title}</h1>
@@ -239,30 +260,36 @@
       <div class="listing__promise-card">
         <Icon name="verified-artisan" size="1.25rem" />
         <div class="listing__promise-copy">
-          <strong>24-Hour Artisan Response Guarantee</strong>
-          <span>Direct weaver communication • No middlemen • Verified GI Registry</span>
+          <strong>{t('listing.responseGuarantee')}</strong>
+          <span>{t('listing.responseGuaranteeSub')}</span>
         </div>
       </div>
       {#if listing.artisan_name}
-        <a href="/artisan/{encodeURIComponent(listing.artisan_name.toLowerCase())}" class="listing__artisan-badge" title="View artisan profile">
-          <div class="listing__artisan-avatar">
-            {#if artisanAvatar}
-              <img src={artisanAvatar} alt={listing.artisan_name} class="listing__artisan-avatar-img" />
-            {:else}
-              <span class="listing__artisan-avatar-initial">{listing.artisan_name.charAt(0).toUpperCase()}</span>
-            {/if}
-            <span class="listing__artisan-verified" title="Govt & AI Verified Artisan">
-              <Icon name="verified-artisan" />
-            </span>
-          </div>
-          <div class="listing__artisan-info">
-            <span class="listing__artisan-name">{t('listing.by', { name: listing.artisan_name })}</span>
-            <span class="listing__artisan-sub">
-              {#if listing.artisan_district}<span>{listing.artisan_district}</span> • {/if}
-              <span class="listing__artisan-view">View artisan storefront →</span>
-            </span>
-          </div>
-        </a>
+        {@const artisanName = listing.artisan_name}
+        {@const artisanDistrict = listing.artisan_district}
+        <Tooltip text={tooltip('tooltip.viewArtisan')}>
+        {#snippet trigger(tp)}
+          <a href="/artisan/{encodeURIComponent(artisanName.toLowerCase())}" class="listing__artisan-badge" title={t('listing.viewArtisanProfileTitle')} {...tp}>
+            <div class="listing__artisan-avatar">
+              {#if artisanAvatar}
+                <img src={artisanAvatar} alt={artisanName} class="listing__artisan-avatar-img" />
+              {:else}
+                <span class="listing__artisan-avatar-initial">{artisanName.charAt(0).toUpperCase()}</span>
+              {/if}
+              <span class="listing__artisan-verified" title={t('profile.verifiedBadgeTitle')}>
+                <Icon name="verified-artisan" />
+              </span>
+            </div>
+            <div class="listing__artisan-info">
+              <span class="listing__artisan-name">{t('listing.by', { name: artisanName })}</span>
+              <span class="listing__artisan-sub">
+                {#if artisanDistrict}<span>{artisanDistrict}</span> • {/if}
+                <span class="listing__artisan-view">{t('listing.viewArtisanStorefront')}</span>
+              </span>
+            </div>
+          </a>
+        {/snippet}
+      </Tooltip>
       {/if}
       <p class="listing__price"><Money paise={listing.price?.amount_paise ?? 0} /></p>
 
@@ -335,22 +362,27 @@
   </div>
 
   <!-- Sticky Mobile CTA Dock -->
-  <aside class="sticky-mobile-dock" aria-label="Quick order dock">
+  <aside class="sticky-mobile-dock" aria-label={t('listing.quickOrderDockAriaLabel')}>
     <div class="sticky-mobile-dock__price">
       <span class="dock-label">{madeToOrder ? 'Advance Split' : 'Direct Price'}</span>
       <span class="dock-amount"><Money paise={listing.price?.amount_paise ?? 0} /></span>
     </div>
-    <button
-      type="button"
-      class="sticky-mobile-dock__action"
-      onclick={() => {
-        const form = document.querySelector('.listing__info');
-        form?.scrollIntoView({ behavior: 'smooth' });
-      }}
-    >
-      <Icon name={madeToOrder ? 'made-to-order' : 'ready-stock'} size="1rem" />
-      <span>{madeToOrder ? 'Commission Piece' : 'Acquire Now'}</span>
-    </button>
+    <Tooltip text={tooltip('tooltip.next')}>
+      {#snippet trigger(tp)}
+        <button
+          type="button"
+          class="sticky-mobile-dock__action"
+          onclick={() => {
+            const form = document.querySelector('.listing__info');
+            form?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          {...tp}
+        >
+          <Icon name={madeToOrder ? 'made-to-order' : 'ready-stock'} size="1rem" />
+          <span>{madeToOrder ? 'Commission Piece' : 'Acquire Now'}</span>
+        </button>
+      {/snippet}
+    </Tooltip>
   </aside>
 </div>
 {/if}
@@ -446,7 +478,7 @@
 
   .listing__artisan-badge:hover {
     background-color: var(--k-surface-raised);
-    border-color: var(--k-accent-primary-border, #c45b37);
+    border-color: var(--k-accent-primary-border, var(--k-border-accent));
   }
 
   .listing__artisan-avatar {
@@ -457,8 +489,8 @@
     inline-size: 2.75rem;
     block-size: 2.75rem;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-terracotta-700, #96381e);
-    color: #fff;
+    background-color: var(--k-terracotta-700, var(--k-accent-primary-bg));
+    color: var(--k-text-on-accent);
     font-weight: var(--k-weight-bold);
     font-size: var(--k-text-md);
     flex-shrink: 0;
@@ -480,10 +512,10 @@
     justify-content: center;
     inline-size: 1.2rem;
     block-size: 1.2rem;
-    border: 1.5px solid var(--k-surface-base, #fff);
+    border: 1.5px solid var(--k-surface-base, var(--k-khadi-50));
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-neem-600, #2e7d32);
-    color: #fff;
+    background-color: var(--k-neem-600, var(--k-accent-success-bg));
+    color: var(--k-text-on-accent);
   }
 
   .listing__artisan-info {
@@ -505,7 +537,7 @@
   }
 
   .listing__artisan-view {
-    color: var(--k-accent-primary-text, #96381e);
+    color: var(--k-accent-primary-text, var(--k-accent-primary-text));
   }
 
   .listing__price {
@@ -637,8 +669,8 @@
   }
 
   .listing__share-btn:hover {
-    color: var(--k-terracotta-700, #96381e);
-    border-color: var(--k-terracotta-500, #c45b37);
+    color: var(--k-terracotta-700, var(--k-accent-primary-text));
+    border-color: var(--k-terracotta-500, var(--k-border-accent));
   }
 
   .listing__promise-card {
@@ -647,8 +679,8 @@
     gap: var(--k-space-3);
     padding: var(--k-space-3);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-khadi-100, #fcf9f5);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-100, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     margin-block: var(--k-space-2) var(--k-space-3);
     color: var(--k-text-primary);
   }
@@ -661,7 +693,7 @@
   }
 
   .listing__promise-copy strong {
-    color: var(--k-terracotta-800, #7a2010);
+    color: var(--k-terracotta-800, var(--k-terracotta-800));
     font-weight: var(--k-weight-semibold);
   }
 
@@ -721,8 +753,8 @@
       gap: var(--k-space-2);
       padding: var(--k-space-2) var(--k-space-4);
       border-radius: var(--k-radius-md);
-      background-color: var(--k-terracotta-700, #96381e);
-      color: #ffffff;
+      background-color: var(--k-terracotta-700, var(--k-accent-primary-bg));
+      color: var(--k-text-on-accent);
       font-weight: var(--k-weight-semibold);
       font-size: var(--k-text-sm);
       border: none;

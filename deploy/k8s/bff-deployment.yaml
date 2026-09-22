@@ -35,7 +35,10 @@ spec:
           value: "channel-svc:9096"
         - name: INSIGHT_SVC_ADDR
           value: "insight-svc:8085"
-        - name: DATABASE_URL
+        # pkg/config reads POSTGRES_DSN, not DATABASE_URL (see CLAUDE.md's
+        # .env.example section) -- this manifest set a name the service
+        # never reads and was never smoke-tested.
+        - name: POSTGRES_DSN
           valueFrom:
             secretKeyRef:
               name: kalakriti-secrets

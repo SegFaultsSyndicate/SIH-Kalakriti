@@ -10,7 +10,7 @@ import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.j
 
 /**
  * Initial-JS budget, gzip. Recorded in web/README.md with the measurement that
- * produced it. `SIZE_BUDGET_ENFORCE=1 pnpm build` turns it from a report into
+ * produced it. Enforced on every build; `SIZE_BUDGET_ENFORCE=0` downgrades it to
  * a build failure -- that is what CI runs.
  */
 const ARTISAN_JS_BUDGET_KB = 120;
@@ -118,10 +118,18 @@ export default defineConfig({
         // The revision is the build id, so a redeploy replaces the cached
         // shell rather than serving a stale one.
         additionalManifestEntries: [{ url: '/', revision: BUILD_ID }],
-        // The shell, the fonts, the icons and the message catalogues. The
-        // catalogues are separate chunks per language, so precaching the JS
-        // glob picks up the active one on first visit and leaves the rest to
-        // runtime caching -- a Hindi phone never downloads the Tamil strings.
+        // The shell, the fonts, the icons and the message catalogues. NOTE:
+        // this comment used to claim the JS glob below "picks up the active
+        // one [locale chunk] on first visit and leaves the rest to runtime
+        // caching" -- unverified, and almost certainly wrong: globPatterns
+        // enumerates the build OUTPUT directory at BUILD time, with no
+        // runtime concept of which language a given install ever selects,
+        // so it is likely every locale's chunk gets swept into the
+        // precache, not just one. Left as-is rather than "fixed" blind --
+        // confirm against a real build's sw.js precache manifest (grep for
+        // messages/<code> chunk names) before touching globPatterns itself,
+        // since excluding the inactive ones for real needs a manifest
+        // transform, not a comment edit. See I18N_PLAN.md's F-5.
         /*
          * woff2 is deliberately NOT in this list. Anek Latin ships three
          * subsets totalling 90.7KB and only the `latin` one (43.7KB) is
@@ -215,7 +223,10 @@ export default defineConfig({
     sizeReport({
       app: 'artisan',
       budgetKb: ARTISAN_JS_BUDGET_KB,
-      enforce: process.env.SIZE_BUDGET_ENFORCE === '1',
+      // Enforced by default: a budget that only fails when someone remembers to
+      // set an env var is a report, not a budget. SIZE_BUDGET_ENFORCE=0 is the
+      // escape hatch for a local build you knowingly want to finish anyway.
+      enforce: process.env.SIZE_BUDGET_ENFORCE !== '0',
     }),
   ],
 

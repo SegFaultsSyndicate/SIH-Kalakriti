@@ -8,8 +8,8 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { locale } from '@kalakriti/i18n';
-  import { Dialog, Button } from '@kalakriti/ui';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { Dialog, Button, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { getProcessFeed, type components } from '@kalakriti/api';
 
@@ -17,7 +17,7 @@
 
   const t = $derived(locale.t);
 
-  let clips = $state<ProcessClip[]>([]);
+  let apiClips = $state<ProcessClip[] | null>(null);
   let activeIndex = $state<number | null>(null);
   let isStoryOpen = $state(false);
   let isAudioMuted = $state(true);
@@ -29,79 +29,103 @@
     cluster_origin?: string;
   }
 
-  const FALLBACK_STORIES: StoryItem[] = [
+  interface FallbackStory {
+    listing_id: string;
+    listing_slug: string;
+    titleKey: MessageKey;
+    artisanNameKey: MessageKey;
+    thumbnail_url: string;
+    craftDisciplineKey: MessageKey;
+    cluster_origin: string;
+    video_url: string;
+  }
+
+  const FALLBACK_STORIES: FallbackStory[] = [
     {
       listing_id: 'story-1',
       listing_slug: 'ajrakh-indigo-stole',
-      title: '16-Stage Natural Indigo Vat Immersion',
-      artisan_name: 'Ismail Khatri',
+      titleKey: 'home.voices.story.1.title',
+      artisanNameKey: 'home.voices.story.1.artisanName',
       thumbnail_url: '/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg',
-      craft_discipline: 'Ajrakh Print',
+      craftDisciplineKey: 'home.voices.story.1.craftDiscipline',
       cluster_origin: 'Dhamadka, Kutch',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     },
     {
       listing_id: 'story-2',
       listing_slug: 'banarasi-kadwa-silk',
-      title: 'Kadwa Pit-Loom Zari Interlocking',
-      artisan_name: 'Mohammad Kabir Ansari',
+      titleKey: 'home.voices.story.2.title',
+      artisanNameKey: 'home.voices.story.2.artisanName',
       thumbnail_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
-      craft_discipline: 'Kadwa Weave',
+      craftDisciplineKey: 'home.voices.story.2.craftDiscipline',
       cluster_origin: 'Varanasi, UP',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     },
     {
       listing_id: 'story-3',
       listing_slug: 'kashmir-pashmina-shawl',
-      title: 'Sozni Needle Stitching on Changthangi Wool',
-      artisan_name: 'Ghulam Nabi Mir',
+      titleKey: 'home.voices.story.3.title',
+      artisanNameKey: 'home.voices.story.3.artisanName',
       thumbnail_url: '/craft-images/embroidery/kashmir_pashmina_sozni_01.jpeg',
-      craft_discipline: 'Sozni Needle',
+      craftDisciplineKey: 'home.voices.story.3.craftDiscipline',
       cluster_origin: 'Srinagar, J&K',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     },
     {
       listing_id: 'story-4',
       listing_slug: 'dhokra-brass-figurine',
-      title: 'Lost-Wax Molten Bell Metal Curing',
-      artisan_name: 'Budheshwar Ghadwa',
+      titleKey: 'home.voices.story.4.title',
+      artisanNameKey: 'home.voices.story.4.artisanName',
       thumbnail_url: '/craft-images/metalwork/dhokra-casting.jpg',
-      craft_discipline: 'Lost-Wax',
+      craftDisciplineKey: 'home.voices.story.4.craftDiscipline',
       cluster_origin: 'Bastar, CG',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
     },
     {
       listing_id: 'story-5',
       listing_slug: 'pochampally-double-ikat',
-      title: 'Tie-and-Dye Warp Tension Calculation',
-      artisan_name: 'Savitriamma Devadas',
+      titleKey: 'home.voices.story.5.title',
+      artisanNameKey: 'home.voices.story.5.artisanName',
       thumbnail_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
-      craft_discipline: 'Double-Ikat',
+      craftDisciplineKey: 'home.voices.story.5.craftDiscipline',
       cluster_origin: 'Pochampally, TG',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
     },
     {
       listing_id: 'story-6',
       listing_slug: 'nizamabad-black-pottery',
-      title: 'Smoke Kiln Clay Reduction Firing',
-      artisan_name: 'Ram Prakash Prajapati',
+      titleKey: 'home.voices.story.6.title',
+      artisanNameKey: 'home.voices.story.6.artisanName',
       thumbnail_url: '/craft-images/pottery/nizamabad-black-pottery.jpg',
-      craft_discipline: 'Black Pottery',
+      craftDisciplineKey: 'home.voices.story.6.craftDiscipline',
       cluster_origin: 'Nizamabad, UP',
       video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
     },
   ];
 
+  function toStoryItem(raw: FallbackStory): StoryItem {
+    return {
+      listing_id: raw.listing_id,
+      listing_slug: raw.listing_slug,
+      title: t(raw.titleKey),
+      artisan_name: t(raw.artisanNameKey),
+      thumbnail_url: raw.thumbnail_url,
+      craft_discipline: t(raw.craftDisciplineKey),
+      cluster_origin: raw.cluster_origin,
+      video_url: raw.video_url,
+    };
+  }
+
+  const clips = $derived(
+    apiClips && apiClips.length > 0 ? apiClips : FALLBACK_STORIES.map(toStoryItem)
+  );
+
   onMount(async () => {
     try {
       const res = await getProcessFeed();
-      if (res.clips && res.clips.length > 0) {
-        clips = res.clips;
-      } else {
-        clips = FALLBACK_STORIES;
-      }
+      apiClips = res.clips ?? [];
     } catch {
-      clips = FALLBACK_STORIES;
+      apiClips = [];
     }
   });
 
@@ -138,14 +162,17 @@
     <ul class="reels-list" role="list">
       {#each clips as clip, i (clip.listing_id || i)}
         {@const thumb = (clip as StoryItem).thumbnail_url}
-        {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : 'Craft')}
+        {@const discipline = (clip as StoryItem).craft_discipline || (clip.title ? clip.title.split(' ')[0] : t('home.voices.craftFallback'))}
         <li>
-          <button
-            type="button"
-            class="reel-card"
-            onclick={() => openStory(i)}
-            aria-label={`${t('home.voices.playStory')}: ${clip.artisan_name ?? clip.title}`}
-          >
+          <Tooltip text={tooltip('tooltip.play')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="reel-card"
+                onclick={() => openStory(i)}
+                aria-label={`${t('home.voices.playStory')}: ${clip.artisan_name ?? clip.title}`}
+                {...tp}
+              >
             <div class="reel-frame">
               {#if thumb}
                 <img src={thumb} alt="" class="reel-thumb" loading="lazy" />
@@ -158,10 +185,12 @@
               </span>
             </div>
             <div class="reel-meta">
-              <span class="artisan-name">{clip.artisan_name || 'Master Artisan'}</span>
+              <span class="artisan-name">{clip.artisan_name || t('home.voices.masterArtisanFallback')}</span>
               <span class="craft-discipline">{discipline}</span>
             </div>
           </button>
+            {/snippet}
+          </Tooltip>
         </li>
       {/each}
     </ul>
@@ -170,7 +199,7 @@
 
 <!-- Accessible Dialog for Process Video -->
 {#if activeClip}
-  <Dialog bind:open={isStoryOpen} title={activeClip.title ?? 'Artisan Story'}>
+  <Dialog bind:open={isStoryOpen} title={activeClip.title ?? t('home.voices.artisanStoryFallback')}>
     <div class="story-dialog-body">
       <div class="video-wrapper">
         <video
@@ -189,23 +218,28 @@
         <div class="artisan-headline">
           <div>
             <p class="artisan-title">{activeClip.artisan_name}</p>
-            <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> Verified Master Guild Loom</p>
+            <p class="artisan-badge-tag"><Icon name="verified-artisan" size="0.9rem" /> {t('home.voices.verifiedMasterGuildLoom')}</p>
           </div>
-          <button
-            type="button"
-            class="audio-toggle-btn"
-            onclick={() => (isAudioMuted = !isAudioMuted)}
-          >
-            <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
-            <span>{isAudioMuted ? t('home.voices.listenAudio') : 'Mute Voice'}</span>
-          </button>
+          <Tooltip text={tooltip('tooltip.toggleAudio')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="audio-toggle-btn"
+                onclick={() => (isAudioMuted = !isAudioMuted)}
+                {...tp}
+              >
+                <Icon name={isAudioMuted ? 'speaker' : 'volume'} size="1rem" />
+                <span>{isAudioMuted ? t('home.voices.listenAudio') : t('home.voices.muteVoice')}</span>
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
 
         <div class="dialog-actions">
           {#if activeIndex !== null && activeIndex > 0}
-            <Button variant="secondary" onclick={prevStory}>
+            <Button variant="secondary" onclick={prevStory} tooltip={tooltip('tooltip.prev')}>
               <Icon name="chevron-left" />
-              <span>Previous</span>
+              <span>{t('action.previous')}</span>
             </Button>
           {/if}
 
@@ -217,8 +251,8 @@
           {/if}
 
           {#if activeIndex !== null && activeIndex < clips.length - 1}
-            <Button variant="secondary" onclick={nextStory}>
-              <span>Next</span>
+            <Button variant="secondary" onclick={nextStory} tooltip={tooltip('tooltip.next')}>
+              <span>{t('action.next')}</span>
               <Icon name="chevron-right" />
             </Button>
           {/if}
@@ -277,13 +311,13 @@
     inline-size: 4.5rem;
     block-size: 4.5rem;
     border-radius: var(--k-radius-full, 999px);
-    border: 2px solid var(--k-terracotta-700);
+    border: 2px solid var(--k-border-accent);
     background-color: var(--k-surface-base);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--k-terracotta-700);
+    color: var(--k-accent-primary-text);
     position: relative;
     box-sizing: border-box;
     overflow: hidden;
@@ -311,8 +345,8 @@
     width: 1.15rem;
     height: 1.15rem;
     border-radius: 50%;
-    background-color: var(--k-terracotta-700);
-    color: var(--k-khadi-50);
+    background-color: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -359,7 +393,7 @@
   .video-wrapper {
     inline-size: 100%;
     aspect-ratio: 16 / 9;
-    background-color: var(--k-ink-950);
+    background-color: var(--k-surface-inverse);
     border-radius: var(--k-radius-sm);
     overflow: hidden;
   }

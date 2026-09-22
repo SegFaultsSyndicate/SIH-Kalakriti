@@ -19,10 +19,10 @@
     8. ODOP (One District One Product directory)
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { goto } from '$app/navigation';
-  import { showToast } from '@kalakriti/ui';
+  import { showToast, Tooltip } from '@kalakriti/ui';
 
   const t = $derived(locale.t);
 
@@ -60,7 +60,7 @@
     const nextLang = locale.code === 'hi' ? 'en' : 'hi';
     await locale.set(nextLang, { persist: true });
     showToast({
-      message: nextLang === 'hi' ? 'भाषा हिन्दी में बदली गई' : 'Language switched to English',
+      message: nextLang === 'hi' ? t('nav.lang.switchedHindi') : t('nav.lang.switchedEnglish'),
       variant: 'info',
     });
   }
@@ -73,21 +73,29 @@
     <div class="k-gov-ribbon-container">
       <div class="k-gov-left">
         <span class="flag-icon" aria-hidden="true">🇮🇳</span>
-        <span class="gov-title">Government of India</span>
+        <span class="gov-title">{t('nav.gov.title')}</span>
         <span class="gov-divider">|</span>
         <span class="gov-ministry">{t('app.ministry') || 'Ministry of Social Justice & Empowerment'}</span>
       </div>
 
       <div class="k-gov-right">
-        <a href="/accessibility" class="gov-a11y-link" title="Accessibility & Screen Reader Access">
-          Screen Reader Access
-        </a>
+        <Tooltip text={t('nav.a11y.title')}>
+          {#snippet trigger(tp)}
+            <a href="/accessibility" class="gov-a11y-link" {...tp}>
+              {t('nav.a11y.label')}
+            </a>
+          {/snippet}
+        </Tooltip>
         <span class="gov-divider">|</span>
-        <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label="Toggle language">
-          <span class="lang-symbol">Aअ</span>
-          <span class="lang-name">{locale.code === 'hi' ? 'English' : 'हिन्दी'}</span>
-          <Icon name="chevron-down" size="0.75rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.language')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="gov-lang-btn" onclick={toggleLang} aria-label={t('nav.lang.toggle')} {...tp}>
+              <span class="lang-symbol">Aअ</span>
+              <span class="lang-name">{locale.code === 'hi' ? 'English' : 'हिन्दी'}</span>
+              <Icon name="chevron-down" size="0.75rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
     </div>
   </div>
@@ -96,15 +104,20 @@
   <div class="k-main-header">
     <div class="k-main-header-container">
       <!-- Mobile hamburger -->
-      <button
-        type="button"
-        class="mobile-menu-toggle"
-        onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
-        aria-label="Toggle navigation menu"
-        aria-expanded={isMobileMenuOpen}
-      >
-        <Icon name={isMobileMenuOpen ? 'close' : 'menu'} size="1.4rem" />
-      </button>
+      <Tooltip text={tooltip('tooltip.menu')}>
+        {#snippet trigger(tp)}
+          <button
+            type="button"
+            class="mobile-menu-toggle"
+            onclick={() => (isMobileMenuOpen = !isMobileMenuOpen)}
+            aria-label={t('nav.mobileMenu.toggle')}
+            aria-expanded={isMobileMenuOpen}
+            {...tp}
+          >
+            <Icon name={isMobileMenuOpen ? 'close' : 'menu'} size="1.4rem" />
+          </button>
+        {/snippet}
+      </Tooltip>
 
       <!-- Brand Lockup -->
       <a class="k-brand-lockup" href="/">
@@ -117,55 +130,63 @@
         />
         <div class="k-brand-text">
           <span class="k-brand-name">Kalakriti</span>
-          <span class="k-brand-tagline">Gateway to Indian GI Heritage</span>
+          <span class="k-brand-tagline">{t('nav.brand.tagline')}</span>
         </div>
       </a>
 
       <!-- Centered Comprehensive Search Box -->
       <form class="k-search-bar" onsubmit={handleSearchSubmit} role="search">
         <div class="search-category-select">
-          <select bind:value={searchCategory} aria-label="Filter search domain">
-            <option value="all">All Heritage</option>
-            <option value="gi">GI Tagged Only</option>
-            <option value="home">Home & Living</option>
-            <option value="apparel">Apparel & Silk</option>
-            <option value="paintings">Paintings</option>
+          <select bind:value={searchCategory} aria-label={t('nav.search.domainLabel')}>
+            <option value="all">{t('nav.search.allHeritage')}</option>
+            <option value="gi">{t('nav.search.giOnly')}</option>
+            <option value="home">{t('nav.search.home')}</option>
+            <option value="apparel">{t('nav.search.apparel')}</option>
+            <option value="paintings">{t('nav.search.paintings')}</option>
           </select>
         </div>
         <input
           type="search"
           class="k-search-input"
-          placeholder="Search authentic GI crafts, handlooms, master artisans..."
+          placeholder={t('nav.search.placeholder')}
           bind:value={searchQuery}
-          aria-label="Search authentic GI crafts"
+          aria-label={t('nav.search.ariaLabel')}
         />
-        <button type="submit" class="k-search-submit" aria-label="Submit search">
-          <Icon name="search" size="1.15rem" />
-        </button>
+        <Tooltip text={tooltip('tooltip.search')}>
+          {#snippet trigger(tp)}
+            <button type="submit" class="k-search-submit" aria-label={t('nav.search.submit')} {...tp}>
+              <Icon name="search" size="1.15rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </form>
 
       <!-- Right Action Tools -->
       <div class="k-header-tools">
-        <a href="/gi-tagged" class="k-tool-badge" title="Verified Geographical Indications">
-          <span class="gi-pin-dot"></span>
-          <span class="tool-text">GI Registry</span>
-        </a>
+        <Tooltip text={t('nav.tools.giRegistryTitle')}>
+          {#snippet trigger(tp)}
+            <a href="/gi-tagged" class="k-tool-badge" {...tp}>
+              <span class="gi-pin-dot"></span>
+              <span class="tool-text">{t('nav.tools.giRegistry')}</span>
+            </a>
+          {/snippet}
+        </Tooltip>
 
-        <a href="/orders" class="k-tool-link" aria-label="Artisan Direct Orders">
+        <a href="/orders" class="k-tool-link" aria-label={t('nav.tools.orders')}>
           <Icon name="collective-order" size="1.2rem" />
-          <span class="tool-label">Orders</span>
+          <span class="tool-label">{t('nav.tools.ordersLabel')}</span>
         </a>
 
-        <a href="/orders/thank-you" class="k-tool-link k-tool-link--highlight" aria-label="Sign In or Track Lots">
+        <a href="/orders/thank-you" class="k-tool-link k-tool-link--highlight" aria-label={t('nav.tools.signIn')}>
           <Icon name="user" size="1.2rem" />
-          <span class="tool-label">Sign In</span>
+          <span class="tool-label">{t('nav.tools.signInLabel')}</span>
         </a>
       </div>
     </div>
   </div>
 
   <!-- 3. Primary Horizontal Category Menu Bar -->
-  <nav class="k-category-nav" aria-label="Main Merchandise Categories">
+  <nav class="k-category-nav" aria-label={t('nav.category.ariaLabel')}>
     <div class="k-category-container">
       <ul class="k-category-list" role="menubar">
         <!-- 1. HOME AND LIVING (MEGA MENU) -->
@@ -174,17 +195,22 @@
           role="none"
           onmouseenter={() => handleMenuHover('home')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'home'}
-            onclick={() => toggleMenu('home')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'home'}
-          >
-            <span>HOME AND LIVING</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'home'}
+                onclick={() => toggleMenu('home')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'home'}
+                {...tp}
+              >
+                <span>{t('nav.category.home')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'home'}
             <div class="k-mega-dropdown" role="menu">
@@ -311,21 +337,21 @@
         <!-- 2. WOMEN -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=women" class="k-nav-link" role="menuitem">
-            <span>WOMEN</span>
+            <span>{t('nav.category.women')}</span>
           </a>
         </li>
 
         <!-- 3. KIDS -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=toys" class="k-nav-link" role="menuitem">
-            <span>KIDS</span>
+            <span>{t('nav.category.kids')}</span>
           </a>
         </li>
 
         <!-- 4. MEN -->
         <li class="k-nav-item" role="none">
           <a href="/search?q=men" class="k-nav-link" role="menuitem">
-            <span>MEN</span>
+            <span>{t('nav.category.men')}</span>
           </a>
         </li>
 
@@ -335,22 +361,27 @@
           role="none"
           onmouseenter={() => handleMenuHover('furniture')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'furniture'}
-            onclick={() => toggleMenu('furniture')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'furniture'}
-          >
-            <span>FURNITURE</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'furniture'}
+                onclick={() => toggleMenu('furniture')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'furniture'}
+                {...tp}
+              >
+                <span>{t('nav.category.furniture')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'furniture'}
             <div class="k-simple-dropdown" role="menu">
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Home Outdoors</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.outdoors')}</h4>
                 <ul>
                   <li><a href="/search?q=patiochair">Patio Chairs</a></li>
                   <li><a href="/search?q=patiosofa">Patio Sofas</a></li>
@@ -360,7 +391,7 @@
               </div>
 
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Home Indoor</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.indoor')}</h4>
                 <ul>
                   <li><a href="/search?q=bedsidetable">Bedside Tables</a></li>
                   <li><a href="/search?q=diningtable">Dining Tables</a></li>
@@ -368,7 +399,7 @@
               </div>
 
               <div class="dropdown-group">
-                <h4 class="dropdown-heading">Offices</h4>
+                <h4 class="dropdown-heading">{t('nav.furniture.offices')}</h4>
                 <ul>
                   <li><a href="/search?q=cabinet">Cabinets & Bookcases</a></li>
                   <li><a href="/search?q=chair">Solid Teak Chairs</a></li>
@@ -386,30 +417,35 @@
           role="none"
           onmouseenter={() => handleMenuHover('paintings')}
         >
-          <button
-            type="button"
-            class="k-nav-link"
-            class:active={activeMenu === 'paintings'}
-            onclick={() => toggleMenu('paintings')}
-            aria-haspopup="true"
-            aria-expanded={activeMenu === 'paintings'}
-          >
-            <span>PAINTINGS</span>
-            <Icon name="chevron-down" size="0.7rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.openMenu')}>
+            {#snippet trigger(tp)}
+              <button
+                type="button"
+                class="k-nav-link"
+                class:active={activeMenu === 'paintings'}
+                onclick={() => toggleMenu('paintings')}
+                aria-haspopup="true"
+                aria-expanded={activeMenu === 'paintings'}
+                {...tp}
+              >
+                <span>{t('nav.category.paintings')}</span>
+                <Icon name="chevron-down" size="0.7rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
 
           {#if activeMenu === 'paintings'}
             <div class="k-simple-dropdown k-simple-dropdown--compact" role="menu">
               <div class="dropdown-group">
                 <a href="/search?q=traditional+painting" class="dropdown-block-link">
-                  <strong>TRADITIONAL PAINTINGS</strong>
-                  <span>Madhubani, Pattachitra, Warli, Pichwai, Tanjore, Gond</span>
+                  <strong>{t('nav.paintings.traditionalTitle')}</strong>
+                  <span>{t('nav.paintings.traditionalDesc')}</span>
                 </a>
               </div>
               <div class="dropdown-group">
                 <a href="/search?q=modern+painting" class="dropdown-block-link">
-                  <strong>MODERN PAINTINGS</strong>
-                  <span>Contemporary Folk, Canvas Murals, Stylized Tribal Motifs</span>
+                  <strong>{t('nav.paintings.modernTitle')}</strong>
+                  <span>{t('nav.paintings.modernDesc')}</span>
                 </a>
               </div>
             </div>
@@ -419,15 +455,15 @@
         <!-- 7. GI TAGGED (Image 3 Direct Corridor) -->
         <li class="k-nav-item k-nav-item--gi" role="none">
           <a href="/gi-tagged" class="k-nav-link k-nav-link--gi" role="menuitem">
-            <span class="gi-tag-star">★</span>
-            <span>GI TAGGED</span>
+            <span class="gi-tag-star"><Icon name="gi-tagged" size="0.85rem" /></span>
+            <span>{t('nav.category.giTagged')}</span>
           </a>
         </li>
 
         <!-- 8. ODOP -->
         <li class="k-nav-item" role="none">
           <a href="/catalog" class="k-nav-link" role="menuitem">
-            <span>ODOP</span>
+            <span>{t('nav.category.odop')}</span>
           </a>
         </li>
       </ul>
@@ -444,48 +480,52 @@
       onkeydown={(e) => e.key === 'Escape' && (isMobileMenuOpen = false)}
       tabindex="-1"
       role="dialog"
-      aria-label="Mobile Navigation"
+      aria-label={t('nav.mobile.ariaLabel')}
     >
       <div class="mobile-drawer-head">
         <div class="brand-mini">
           <img src="/favicon.svg" alt="" width="28" height="28" />
-          <span>Kalakriti Categories</span>
+          <span>{t('nav.mobile.brand')}</span>
         </div>
-        <button type="button" class="drawer-close" onclick={() => (isMobileMenuOpen = false)}>
-          &times;
-        </button>
+        <Tooltip text={tooltip('tooltip.closeMenu')}>
+          {#snippet trigger(tp)}
+            <button type="button" class="drawer-close" onclick={() => (isMobileMenuOpen = false)} {...tp}>
+              &times;
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <div class="mobile-drawer-content">
         <a href="/gi-tagged" class="mobile-cat-link mobile-cat-link--gi" onclick={() => (isMobileMenuOpen = false)}>
-          ★ GI TAGGED PRODUCTS
+          <Icon name="gi-tagged" size="0.9rem" /> {t('nav.mobile.giProducts')}
         </a>
         <a href="/search?q=home" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Home and Living
+          {t('nav.mobile.home')}
         </a>
         <a href="/search?q=women" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Women Apparel & Sarees
+          {t('nav.mobile.women')}
         </a>
         <a href="/search?q=men" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Men Khadi & Kurtas
+          {t('nav.mobile.men')}
         </a>
         <a href="/search?q=toys" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Kids Wooden Toys
+          {t('nav.mobile.kids')}
         </a>
         <a href="/search?q=furniture" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Furniture & Atelier
+          {t('nav.mobile.furniture')}
         </a>
         <a href="/search?q=paintings" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Traditional & Folk Paintings
+          {t('nav.mobile.paintings')}
         </a>
         <a href="/catalog" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          ODOP - One District One Product
+          {t('nav.mobile.odop')}
         </a>
         <a href="/case-studies" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          Guild Case Studies
+          {t('nav.mobile.caseStudies')}
         </a>
         <a href="/orders" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          My Purchase Lots & Orders
+          {t('nav.mobile.orders')}
         </a>
       </div>
     </div>
@@ -496,16 +536,16 @@
   .k-mega-header {
     position: relative;
     inline-size: 100%;
-    background-color: var(--k-surface-base, #ffffff);
-    border-block-end: 1px solid var(--k-border-hairline, #e6ded3);
+    background-color: var(--k-surface-base, var(--k-surface-base));
+    border-block-end: 1px solid var(--k-border-hairline, var(--k-border-subtle));
     z-index: 40;
     font-family: inherit;
   }
 
   /* 1. Government Ribbon */
   .k-gov-ribbon {
-    background-color: #7b1c1c; /* Official deep maroon ribbon */
-    color: #ffffff;
+    background-color: var(--k-madder-800); /* Official deep maroon ribbon */
+    color: var(--k-text-on-accent);
     font-size: 0.75rem;
     padding: 0.35rem 1rem;
     border-block-end: 1px solid rgba(0, 0, 0, 0.1);
@@ -548,7 +588,7 @@
   }
 
   .gov-a11y-link {
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     text-decoration: none;
     font-size: 0.72rem;
   }
@@ -560,7 +600,7 @@
   .gov-lang-btn {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 0.72rem;
     display: inline-flex;
     align-items: center;
@@ -576,8 +616,8 @@
   /* 2. Main Header Bar */
   .k-main-header {
     padding: 0.85rem 1rem;
-    background-color: #ffffff;
-    border-block-end: 1px solid var(--k-stone-200, #e6ded3);
+    background-color: var(--k-surface-base);
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .k-main-header-container {
@@ -631,7 +671,7 @@
     font-size: 1.45rem;
     font-weight: 700;
     line-height: 1.1;
-    color: #7b1c1c; /* Heritage burgundy */
+    color: var(--k-accent-danger-strong); /* Heritage burgundy */
     letter-spacing: -0.01em;
   }
 
@@ -639,7 +679,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
     font-weight: 500;
   }
 
@@ -649,8 +689,8 @@
     max-inline-size: 38rem;
     display: flex;
     align-items: center;
-    background-color: #ffffff;
-    border: 1.5px solid #7b1c1c;
+    background-color: var(--k-surface-base);
+    border: 1.5px solid var(--k-madder-800);
     border-radius: 4px;
     overflow: hidden;
   }
@@ -662,9 +702,9 @@
   }
 
   .search-category-select select {
-    background-color: #f7f4ee;
+    background-color: var(--k-surface-raised);
     border: none;
-    border-inline-end: 1px solid var(--k-stone-300, #d5cec5);
+    border-inline-end: 1px solid var(--k-stone-300, var(--k-border-hairline));
     font-size: 0.8rem;
     color: var(--k-text-primary);
     padding: 0.65rem 0.75rem;
@@ -682,8 +722,8 @@
   }
 
   .k-search-submit {
-    background-color: #7b1c1c;
-    color: #ffffff;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
     border: none;
     padding: 0.65rem 1.15rem;
     cursor: pointer;
@@ -694,7 +734,7 @@
   }
 
   .k-search-submit:hover {
-    background-color: #5c1414;
+    background-color: var(--k-madder-800);
   }
 
   /* Header Right Tools */
@@ -711,9 +751,9 @@
     gap: 0.4rem;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    background-color: #fcf6e8;
-    border: 1px solid #d4a037;
-    color: #8c5b05;
+    background-color: var(--k-surface-raised);
+    border: 1px solid var(--k-haldi-500);
+    color: var(--k-haldi-700);
     text-decoration: none;
     font-size: 0.75rem;
     font-weight: 600;
@@ -723,33 +763,33 @@
     inline-size: 0.55rem;
     block-size: 0.55rem;
     border-radius: 50%;
-    background-color: #e65100;
-    box-shadow: 0 0 0 2px #ffb74d;
+    background-color: var(--k-accent-primary-bg);
+    box-shadow: 0 0 0 2px var(--k-haldi-500);
   }
 
   .k-tool-link {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    color: var(--k-text-primary, #2d2621);
+    color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 500;
   }
 
   .k-tool-link:hover {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
   }
 
   .k-tool-link--highlight {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     font-weight: 600;
   }
 
   /* 3. Horizontal Category Navigation Bar */
   .k-category-nav {
-    background-color: #ffffff;
-    border-block-end: 1.5px solid #7b1c1c;
+    background-color: var(--k-surface-base);
+    border-block-end: 1.5px solid var(--k-madder-800);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   }
 
@@ -785,7 +825,7 @@
     background: none;
     border: none;
     border-block-end: 3px solid transparent;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     text-decoration: none;
     font-size: 0.82rem;
     font-weight: 700;
@@ -797,18 +837,18 @@
 
   .k-nav-link:hover,
   .k-nav-link.active {
-    background-color: #fdfaf6;
-    border-block-end-color: #e65100; /* Saffron underline */
-    color: #e65100;
+    background-color: var(--k-surface-base);
+    border-block-end-color: var(--k-border-accent); /* Saffron underline */
+    color: var(--k-accent-primary-text);
   }
 
   .k-nav-link--gi {
-    color: #c0392b;
+    color: var(--k-accent-danger-muted);
     font-weight: 800;
   }
 
   .gi-tag-star {
-    color: #d4a037;
+    color: var(--k-haldi-500);
     font-size: 0.9rem;
   }
 
@@ -819,8 +859,8 @@
     inset-inline-start: 0;
     inline-size: 78rem;
     max-inline-size: 92vw;
-    background-color: #ffffff;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     border-block-start: none;
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
     padding: 1.5rem;
@@ -838,7 +878,7 @@
   .mega-col {
     display: flex;
     flex-direction: column;
-    border-inline-end: 1px solid #f0eae1;
+    border-inline-end: 1px solid var(--k-khadi-100);
     padding-inline-end: 0.85rem;
   }
 
@@ -850,11 +890,11 @@
     font-size: 0.78rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.65rem 0;
     letter-spacing: 0.04em;
     line-height: 1.3;
-    border-block-end: 1.5px solid #f5e4d7;
+    border-block-end: 1.5px solid var(--k-border-subtle);
     padding-block-end: 0.35rem;
   }
 
@@ -868,7 +908,7 @@
   }
 
   .mega-sublist a {
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     font-size: 0.78rem;
     line-height: 1.3;
@@ -876,7 +916,7 @@
   }
 
   .mega-sublist a:hover {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     text-decoration: underline;
   }
 
@@ -886,8 +926,8 @@
     inset-block-start: 100%;
     inset-inline-start: 0;
     min-inline-size: 16rem;
-    background-color: #ffffff;
-    border: 1px solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-surface-base);
+    border: 1px solid var(--k-stone-300, var(--k-border-hairline));
     border-block-start: none;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
     padding: 1.25rem;
@@ -905,7 +945,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     font-weight: 700;
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     margin: 0 0 0.5rem 0;
     letter-spacing: 0.03em;
   }
@@ -920,14 +960,14 @@
   }
 
   .dropdown-group a {
-    color: #4a423a;
+    color: var(--k-text-secondary);
     text-decoration: none;
     font-size: 0.8rem;
     transition: color 0.15s ease;
   }
 
   .dropdown-group a:hover {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     text-decoration: underline;
   }
 
@@ -943,17 +983,17 @@
   }
 
   .dropdown-block-link:hover {
-    background-color: #fcf6e8;
+    background-color: var(--k-surface-raised);
   }
 
   .dropdown-block-link strong {
-    color: #7b1c1c;
+    color: var(--k-accent-danger-strong);
     font-size: 0.82rem;
   }
 
   .dropdown-block-link span {
     font-size: 0.72rem;
-    color: var(--k-text-secondary, #6b635b);
+    color: var(--k-text-secondary, var(--k-text-tertiary));
   }
 
   /* Mobile Drawer Overlay */
@@ -968,7 +1008,7 @@
     inline-size: 20rem;
     max-inline-size: 85vw;
     block-size: 100%;
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
@@ -979,8 +1019,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    background-color: #7b1c1c;
-    color: #ffffff;
+    background-color: var(--k-madder-800);
+    color: var(--k-text-on-accent);
   }
 
   .brand-mini {
@@ -993,7 +1033,7 @@
   .drawer-close {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-size: 1.5rem;
     cursor: pointer;
   }
@@ -1008,15 +1048,15 @@
 
   .mobile-cat-link {
     padding: 0.65rem 0.5rem;
-    border-block-end: 1px solid var(--k-stone-200, #e6ded3);
-    color: var(--k-text-primary, #2d2621);
+    border-block-end: 1px solid var(--k-stone-200, var(--k-border-subtle));
+    color: var(--k-text-primary, var(--k-text-primary));
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 600;
   }
 
   .mobile-cat-link--gi {
-    color: #e65100;
+    color: var(--k-accent-primary-text);
     font-weight: 700;
   }
 </style>

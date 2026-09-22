@@ -47,6 +47,17 @@ func (t *Tx) CreateArtisan(ctx context.Context, id uuid.UUID, in domain.Register
 		}
 	}
 
+	if in.SocialCategory != nil && *in.SocialCategory != "" {
+		sc := db.SocialCategory(*in.SocialCategory)
+		row, err = t.q.UpdateArtisanSocialCategory(ctx, db.UpdateArtisanSocialCategoryParams{
+			ID:             id,
+			SocialCategory: &sc,
+		})
+		if err != nil {
+			return domain.Artisan{}, translate(err, "artisan social category")
+		}
+	}
+
 	out := artisanFromRow(row)
 	out.CraftIDs = in.CraftIDs
 	return out, nil
@@ -170,6 +181,7 @@ func artisanFromRow(row db.Artisan) domain.Artisan {
 		PhotoMediaID:      row.PhotoMediaID,
 		Verified:          row.Verified,
 		CreatedBy:         row.CreatedBy,
+		SocialCategory:    (*string)(row.SocialCategory),
 		CreatedAt:         row.CreatedAt,
 		UpdatedAt:         row.UpdatedAt,
 	}

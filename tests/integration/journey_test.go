@@ -198,7 +198,7 @@ func registerArtisan(ctx context.Context, _ uuid.UUID, name, _, _ string) error 
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -312,7 +312,7 @@ func approveListing(ctx context.Context, _, listingID uuid.UUID) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -374,7 +374,7 @@ func placeBulkOrder(ctx context.Context, _ uuid.UUID, _ string, qty int) (uuid.U
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+buyerToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -439,7 +439,7 @@ func artisanDropsOut(ctx context.Context, _, _ uuid.UUID) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -463,7 +463,7 @@ func markAllocationCompleted(ctx context.Context, _, _ uuid.UUID) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -529,7 +529,7 @@ func createListing(ctx context.Context, _, _ uuid.UUID, title string) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -564,7 +564,7 @@ func sealProvenance(ctx context.Context, listingID, artisanID uuid.UUID, videos 
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -619,7 +619,7 @@ func generateIncomeStatement(ctx context.Context, artisanID uuid.UUID, _, _ int)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+artisanToken)
-	req.Header.Set("X-Idempotency-Key", uuid.New().String())
+	req.Header.Set("Idempotency-Key", uuid.New().String())
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

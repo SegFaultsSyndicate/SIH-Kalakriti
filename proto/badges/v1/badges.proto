@@ -1,0 +1,90 @@
+// proto/badges/v1/badges.proto
+
+syntax = "proto3";
+
+package badges.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1;badgesv1";
+
+// BadgeService manages the artisan recognition badge catalog and grants.
+service BadgeService {
+  // List the active badge catalog (public reference data).
+  rpc ListBadgeCatalog(ListBadgeCatalogRequest) returns (ListBadgeCatalogResponse);
+  // List one artisan's active badge grants (public).
+  rpc ListArtisanBadges(ListArtisanBadgesRequest) returns (ListArtisanBadgesResponse);
+  // Get the caller's own progress toward each earned-badge metric.
+  rpc GetBadgeProgress(GetBadgeProgressRequest) returns (GetBadgeProgressResponse);
+  // Confer a CONFERRED badge on an artisan (MINISTRY only).
+  rpc GrantBadge(GrantBadgeRequest) returns (GrantBadgeResponse);
+  // Revoke a badge grant (MINISTRY only).
+  rpc RevokeBadge(RevokeBadgeRequest) returns (RevokeBadgeResponse);
+}
+
+enum BadgeKind {
+  BADGE_KIND_UNSPECIFIED = 0;
+  BADGE_KIND_EARNED = 1;
+  BADGE_KIND_CONFERRED = 2;
+}
+
+enum BadgeTier {
+  BADGE_TIER_UNSPECIFIED = 0;
+  BADGE_TIER_BRONZE = 1;
+  BADGE_TIER_SILVER = 2;
+  BADGE_TIER_GOLD = 3;
+}
+
+enum BadgeMetric {
+  BADGE_METRIC_UNSPECIFIED = 0;
+  BADGE_METRIC_LISTINGS_PUBLISHED = 1;
+  BADGE_METRIC_PROVENANCE_SEALED = 2;
+  BADGE_METRIC_LOTS_ACCEPTED = 3;
+  BADGE_METRIC_LOTS_COMPLETED = 4;
+}
+
+message Badge {
+  string id = 1;
+  string code = 2;
+  BadgeKind kind = 3;
+  BadgeTier tier = 4; // BADGE_TIER_UNSPECIFIED for an untiered badge
+  string icon_name = 5;
+  BadgeMetric metric = 6; // BADGE_METRIC_UNSPECIFIED for a conferred badge
+  optional int64 threshold = 7;
+  int32 sort_order = 8;
+}
+
+message ArtisanBadge {
+  Badge badge = 1;
+  google.protobuf.Timestamp granted_at = 2;
+  string granted_by = 3;
+}
+
+message BadgeProgressEntry {
+  BadgeMetric metric = 1;
+  int64 value = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message ListBadgeCatalogRequest {}
+message ListBadgeCatalogResponse { repeated Badge badges = 1; }
+
+message ListArtisanBadgesRequest { string artisan_id = 1; }
+message ListArtisanBadgesResponse { repeated ArtisanBadge artisan_badges = 1; }
+
+message GetBadgeProgressRequest { string artisan_id = 1; }
+message GetBadgeProgressResponse { repeated BadgeProgressEntry entries = 1; }
+
+message GrantBadgeRequest {
+  string artisan_id = 1;
+  string badge_id = 2;
+  optional string evidence_json = 3;
+}
+message GrantBadgeResponse { ArtisanBadge artisan_badge = 1; }
+
+message RevokeBadgeRequest {
+  string artisan_id = 1;
+  string badge_id = 2;
+  string reason = 3;
+}
+message RevokeBadgeResponse { bool revoked = 1; }

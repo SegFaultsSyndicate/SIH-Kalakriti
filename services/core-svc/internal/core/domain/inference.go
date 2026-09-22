@@ -84,3 +84,21 @@ type GeneratedCopy struct {
 	AttributeKeysUsed []string
 	ModelVersion      string
 }
+
+// TranslateRequest asks ml-svc to translate listing copy from one language into
+// another. Do-not-translate placeholders are the caller's concern: mask before
+// sending, unmask what comes back.
+type TranslateRequest struct {
+	Title          string
+	Description    string
+	Highlights     []string
+	SourceLanguage string
+	TargetLanguage string
+}
+
+// TranslatedCopy is what came back.
+type TranslatedCopy struct {
+	Title       string
+	Description string
+	Highlights  []string
+}

@@ -9,9 +9,9 @@
   - High-resolution HTML5 Canvas render export
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { Button } from '@kalakriti/ui';
+  import { Button, Tooltip } from '@kalakriti/ui';
 
   interface Props {
     imageSrc: string;
@@ -157,7 +157,7 @@
     onkeydown={(e) => (e.key === 'Escape' || e.key === 'Enter') && oncancel()}
     role="button"
     tabindex="0"
-    aria-label="Close crop modal"
+    aria-label={t('imageCrop.closeAriaLabel')}
   >
     <div
       class="crop-dialog"
@@ -176,9 +176,13 @@
           </h2>
           <p class="crop-subtitle">{t('profile.crop.instruction')}</p>
         </div>
-        <button type="button" class="crop-close-btn" onclick={oncancel} title="Close">
-          ✕
-        </button>
+        <Tooltip text={tooltip('tooltip.close')}>
+          {#snippet trigger(props)}
+            <button type="button" class="crop-close-btn" onclick={oncancel} {...props}>
+              <Icon name="close" size="1.1rem" />
+            </button>
+          {/snippet}
+        </Tooltip>
       </div>
 
       <!-- Interactive Viewport -->
@@ -191,12 +195,12 @@
         onpointercancel={handlePointerUp}
         onwheel={handleWheel}
         role="application"
-        aria-label="Drag to reposition photo"
+        aria-label={t('imageCrop.dragAriaLabel')}
       >
         <!-- The scaled, translated, rotated image -->
         <img
           src={imageSrc}
-          alt="Preview to crop"
+          alt={t('imageCrop.previewAlt')}
           class="crop-img"
           class:is-dragging={isDragging}
           style="
@@ -226,9 +230,13 @@
       <!-- Zoom & Adjustment Controls -->
       <div class="crop-controls">
         <div class="crop-zoom-bar">
-          <button type="button" class="crop-tool-btn" onclick={zoomOut} title="Zoom Out">
-            <Icon name="chevron-down" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.zoomOut')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-tool-btn" onclick={zoomOut} {...props}>
+                <Icon name="chevron-down" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
           <input
             type="range"
             min="0.8"
@@ -238,29 +246,41 @@
             class="crop-slider"
             aria-label={t('profile.crop.zoom')}
           />
-          <button type="button" class="crop-tool-btn" onclick={zoomIn} title="Zoom In">
-            <Icon name="chevron-up" size="1rem" />
-          </button>
+          <Tooltip text={tooltip('tooltip.zoomIn')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-tool-btn" onclick={zoomIn} {...props}>
+                <Icon name="chevron-up" size="1rem" />
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
 
         <div class="crop-tool-actions">
-          <button type="button" class="crop-action-btn" onclick={rotateClockwise} title="Rotate 90°">
-            <Icon name="refresh" size="0.9rem" />
-            {t('profile.crop.rotate')}
-          </button>
-          <button type="button" class="crop-action-btn" onclick={resetPosition} title="Reset position">
-            <Icon name="refresh" size="0.9rem" />
-            {t('profile.crop.reset')}
-          </button>
+          <Tooltip text={tooltip('profile.crop.rotate')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-action-btn" onclick={rotateClockwise} {...props}>
+                <Icon name="refresh" size="0.9rem" />
+                {t('profile.crop.rotate')}
+              </button>
+            {/snippet}
+          </Tooltip>
+          <Tooltip text={tooltip('tooltip.resetPosition')}>
+            {#snippet trigger(props)}
+              <button type="button" class="crop-action-btn" onclick={resetPosition} {...props}>
+                <Icon name="refresh" size="0.9rem" />
+                {t('profile.crop.reset')}
+              </button>
+            {/snippet}
+          </Tooltip>
         </div>
       </div>
 
       <!-- Footer Buttons -->
       <div class="crop-footer">
-        <Button variant="secondary" size="md" onclick={oncancel}>
+        <Button variant="secondary" size="md" onclick={oncancel} tooltip={tooltip('tooltip.cancel')}>
           {t('profile.crop.cancel')}
         </Button>
-        <Button variant="primary" size="md" onclick={applyCrop}>
+        <Button variant="primary" size="md" onclick={applyCrop} tooltip={tooltip('tooltip.applyCrop')}>
           <Icon name="check" size="1rem" />
           {t('profile.crop.apply')}
         </Button>
@@ -291,8 +311,8 @@
     width: 100%;
     max-width: 22rem;
     padding: var(--k-space-4);
-    background-color: var(--k-khadi-50, #fffcf7);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-50, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-lg, 12px);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
     user-select: none;
@@ -316,7 +336,7 @@
     justify-content: space-between;
     width: 100%;
     padding-block-end: var(--k-space-2);
-    border-block-end: var(--k-hairline) solid var(--k-stone-200, #e8e2d8);
+    border-block-end: var(--k-hairline) solid var(--k-stone-200, var(--k-border-subtle));
   }
 
   .crop-header__text {
@@ -332,13 +352,13 @@
     margin: 0;
     font-size: var(--k-text-base);
     font-weight: var(--k-weight-semibold);
-    color: var(--k-terracotta-900, #421008);
+    color: var(--k-terracotta-900, var(--k-stone-800));
   }
 
   .crop-subtitle {
     margin: 0;
     font-size: var(--k-text-xs);
-    color: var(--k-text-secondary, #60574c);
+    color: var(--k-text-secondary, var(--k-stone-600));
     line-height: 1.35;
   }
 
@@ -367,7 +387,7 @@
     overflow: hidden;
     margin-block: var(--k-space-2);
     border-radius: var(--k-radius-md, 8px);
-    background-color: #1a1614;
+    background-color: var(--k-ink-900);
     cursor: grab;
     touch-action: none;
   }
@@ -446,7 +466,7 @@
     right: 0.5rem;
     padding: 0.15rem 0.4rem;
     background: rgba(0, 0, 0, 0.65);
-    color: #fff;
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: var(--k-weight-medium);
     border-radius: var(--k-radius-xs, 4px);
@@ -467,8 +487,8 @@
     gap: var(--k-space-2);
     width: 100%;
     padding: var(--k-space-1) var(--k-space-2);
-    background-color: var(--k-khadi-100, #f6f1e8);
-    border: var(--k-hairline) solid var(--k-stone-300, #d5cec5);
+    background-color: var(--k-khadi-100, var(--k-surface-raised));
+    border: var(--k-hairline) solid var(--k-stone-300, var(--k-border-hairline));
     border-radius: var(--k-radius-pill, 999px);
   }
 
@@ -492,7 +512,7 @@
   .crop-slider {
     flex: 1;
     height: 4px;
-    accent-color: var(--k-terracotta-700, #9b2c16);
+    accent-color: var(--k-terracotta-700, var(--k-terracotta-800));
     cursor: pointer;
   }
 
@@ -518,7 +538,7 @@
   }
 
   .crop-action-btn:hover {
-    background-color: var(--k-khadi-200);
+    background-color: var(--k-surface-pressed);
     color: var(--k-text-primary);
     border-color: var(--k-terracotta-600);
   }
@@ -531,6 +551,6 @@
     gap: var(--k-space-2);
     width: 100%;
     padding-block-start: var(--k-space-2);
-    border-block-start: var(--k-hairline) solid var(--k-stone-200);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 </style>

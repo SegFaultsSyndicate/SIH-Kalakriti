@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kalakriti API",
-    "description": "REST API for the Kalakriti platform \u2014 web and mobile clients",
+    "description": "REST API for the Kalakriti platform — web and mobile clients",
     "version": "1.0.0"
   },
   "servers": [
@@ -72,6 +72,10 @@
                   },
                   "otp": {
                     "type": "string"
+                  },
+                  "dev_role": {
+                    "type": "string",
+                    "description": "Requests a token minted for BUYER, CLUSTER_OFFICER, or MINISTRY instead of the default ARTISAN. Only honored when the server is running with dev OTP enabled (AUTH_DEV_OTP_ENABLED) -- ignored otherwise, so this never does anything against a real deployment. There is currently no other way to obtain a token for any of these three roles."
                   }
                 }
               }
@@ -133,6 +137,110 @@
                   ],
                   "properties": {
                     "access_token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/phone/change/request": {
+      "post": {
+        "summary": "Request OTP to change the caller's registered phone number",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "new_phone"
+                ],
+                "properties": {
+                  "new_phone": {
+                    "type": "string",
+                    "description": "E.164 phone number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent to the new number",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "otp_sent"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/phone/change/verify": {
+      "post": {
+        "summary": "Verify OTP and complete the phone number change",
+        "description": "On success, invalidates the caller's other active sessions and returns a fresh token pair.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "new_phone",
+                  "otp"
+                ],
+                "properties": {
+                  "new_phone": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone updated, new tokens issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "phone_updated"
+                    },
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
                       "type": "string"
                     }
                   }
@@ -217,13 +325,19 @@
         },
         "responses": {
           "201": {
-            "description": "Artisan created",
+            "description": "Artisan created. The caller's prior token (minted at OTP-verify time, before this profile existed) has no subject and cannot authenticate further calls -- switch to access_token/refresh_token immediately, the same as after /auth/otp/verify.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "artisan_id": {
+                      "type": "string"
+                    },
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
                       "type": "string"
                     }
                   }
@@ -383,6 +497,104 @@
         "responses": {
           "204": {
             "description": "Listing updated"
+          }
+        }
+      }
+    },
+    "/listings/{id}/attributes": {
+      "get": {
+        "summary": "Get a listing's attributes",
+        "description": "What the model inferred (source MODEL) and what the artisan has since overridden (source ARTISAN). Same visibility as the listing itself: public once PUBLISHED, otherwise only the owning artisan or a curator.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "attributes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingAttribute"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}/media": {
+      "post": {
+        "summary": "Attach photos to a listing",
+        "description": "Replaces the listing's media set wholesale, ordered, with at most one primary image and one process video. Triggers the cataloguing pipeline (enhance/extract attributes/generate description) once photos land on the listing.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ListingMediaItem"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The listing's media, ordered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ListingMediaItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3003,6 +3215,1281 @@
           }
         }
       }
+    },
+    "/companies": {
+      "post": {
+        "summary": "Register company or boutique",
+        "description": "Onboard a business entity through the buyer portal with GSTIN and income statement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterCompanyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Company registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List companies",
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "verification_status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "verified_only",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "companies": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Company"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/me": {
+      "get": {
+        "summary": "Get caller company profile",
+        "responses": {
+          "200": {
+            "description": "Company profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{id}": {
+      "get": {
+        "summary": "Get company by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{id}/verify": {
+      "post": {
+        "summary": "Verify or reject company",
+        "description": "Admin decision based on legitimacy check of income statement and GSTIN",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyCompanyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Company verified/rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Company"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/commission-stats": {
+      "get": {
+        "summary": "Get platform commission statistics",
+        "description": "Platform ledger earnings and company verification counts",
+        "responses": {
+          "200": {
+            "description": "Platform commission statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommissionStatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/sales/settle": {
+      "post": {
+        "summary": "Record company sale settlement",
+        "description": "Deducts platform commission (0.5% or 1%) and records payout",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "company_id",
+                  "order_id",
+                  "product_name",
+                  "buyer_id",
+                  "gross_amount_paise"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string"
+                  },
+                  "order_id": {
+                    "type": "string"
+                  },
+                  "product_name": {
+                    "type": "string"
+                  },
+                  "buyer_id": {
+                    "type": "string"
+                  },
+                  "gross_amount_paise": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settlement recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "settlement": {
+                      "$ref": "#/components/schemas/CompanySaleSettlement"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{id}/sales": {
+      "get": {
+        "summary": "List company sales settlements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company sales settlements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sales": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CompanySaleSettlement"
+                      }
+                    },
+                    "page": {
+                      "type": "object",
+                      "properties": {
+                        "next_page_token": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{id}/interest": {
+      "post": {
+        "summary": "Express interest in an artisan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "artisan_id",
+                  "message"
+                ],
+                "properties": {
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Interest expressed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInterest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leads/{id}/respond": {
+      "post": {
+        "summary": "Artisan response to interest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "artisan_id",
+                  "decision"
+                ],
+                "properties": {
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "ACCEPTED",
+                      "DECLINED"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interest response recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyInterest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/me/leads": {
+      "get": {
+        "summary": "List inbound leads for authenticated artisan",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artisan leads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CompanyInterest"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/me/boutique-matches": {
+      "get": {
+        "summary": "List recommended boutique matches for artisan",
+        "responses": {
+          "200": {
+            "description": "Boutique matches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BoutiqueMatch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boutiques/nearby": {
+      "get": {
+        "summary": "List nearby boutiques",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius_km",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "craft_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nearby boutiques",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "boutiques": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Company"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trends": {
+      "get": {
+        "summary": "List curated market trend links",
+        "parameters": [
+          {
+            "name": "craft_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "exclude_expired",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trend links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "trend_links": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TrendLink"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create curated market trend link",
+        "description": "Dual curated by both Admins and Artisans",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrendLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trend link created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendLink"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trends/{id}": {
+      "delete": {
+        "summary": "Delete trend link",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trends/{id}/pin": {
+      "post": {
+        "summary": "Pin or unpin trend link",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pinned"
+                ],
+                "properties": {
+                  "pinned": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pinned trend link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendLink"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/badges": {
+      "get": {
+        "summary": "List active badge catalog",
+        "responses": {
+          "200": {
+            "description": "Badge catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "badges": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Badge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/badges": {
+      "get": {
+        "summary": "List an artisan's active badges",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artisan badges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "artisan_badges": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ArtisanBadge"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Confer badge on an artisan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantBadgeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Badge granted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtisanBadge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/badges/me/progress": {
+      "get": {
+        "summary": "Get authenticated artisan's badge progress",
+        "responses": {
+          "200": {
+            "description": "Badge progress entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "progress": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BadgeProgressEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artisans/{id}/badges/{code}": {
+      "delete": {
+        "summary": "Revoke an artisan's badge",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeBadgeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Badge revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemes": {
+      "get": {
+        "summary": "List government schemes",
+        "responses": {
+          "200": {
+            "description": "Government schemes list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "schemes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GovernmentScheme"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Upsert government scheme",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSchemeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upserted government scheme",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernmentScheme"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemes/match": {
+      "get": {
+        "summary": "Match caller against active government schemes",
+        "responses": {
+          "200": {
+            "description": "Government scheme match results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SchemeMatch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemes/{id}": {
+      "patch": {
+        "summary": "Update government scheme by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSchemeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated government scheme",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernmentScheme"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete government scheme by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/partnerships": {
+      "post": {
+        "summary": "Form a supply partnership between a company and an artisan",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "company_id",
+                  "artisan_id",
+                  "craft_id"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string"
+                  },
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "craft_id": {
+                    "type": "string"
+                  },
+                  "terms": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "company_id": {
+                      "type": "string"
+                    },
+                    "artisan_id": {
+                      "type": "string"
+                    },
+                    "craft_id": {
+                      "type": "string"
+                    },
+                    "terms": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "company_name": {
+                      "type": "string"
+                    },
+                    "artisan_name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List supply partnerships, optionally filtered by artisan or company",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "artisan_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "partnerships": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "company_id": {
+                            "type": "string"
+                          },
+                          "artisan_id": {
+                            "type": "string"
+                          },
+                          "craft_id": {
+                            "type": "string"
+                          },
+                          "terms": {
+                            "type": "string"
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "company_name": {
+                            "type": "string"
+                          },
+                          "artisan_name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions": {
+      "post": {
+        "summary": "Create an outbound webhook subscription for the caller",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "secret",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "secret": {
+                    "type": "string"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List the caller's outbound webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "subscriptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "subscriber_id": {
+                            "type": "string"
+                          },
+                          "subscriber_type": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "events": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "active": {
+                            "type": "boolean"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          },
+                          "consecutive_failures": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/subscriptions/{id}": {
+      "delete": {
+        "summary": "Delete one of the caller's outbound webhook subscriptions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3489,6 +4976,64 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ListingAttribute": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "In [0,1]; an artisan's own answer is always 1."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "MODEL",
+              "ARTISAN",
+              "CURATOR"
+            ]
+          }
+        }
+      },
+      "ListingMediaItem": {
+        "type": "object",
+        "required": [
+          "media_id",
+          "ordinal",
+          "role"
+        ],
+        "properties": {
+          "media_id": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "description": "Display position; unique within the listing."
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "GALLERY",
+              "PRIMARY_IMAGE",
+              "PROCESS_VIDEO"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Kind of the underlying asset; returned on reads, ignored on writes.",
+            "enum": [
+              "IMAGE",
+              "VIDEO",
+              "AUDIO",
+              "DOCUMENT"
+            ]
           }
         }
       },
@@ -4108,6 +5653,833 @@
           },
           "years_of_experience": {
             "type": "integer"
+          }
+        }
+      },
+      "Company": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "contact_name",
+          "contact_phone",
+          "verification_status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "COMPANY_TYPE_RETAILER",
+              "COMPANY_TYPE_BOUTIQUE",
+              "COMPANY_TYPE_EXPORTER",
+              "COMPANY_TYPE_INSTITUTION",
+              "RETAILER",
+              "BOUTIQUE",
+              "EXPORTER",
+              "INSTITUTION"
+            ]
+          },
+          "gstin": {
+            "type": "string"
+          },
+          "contact_name": {
+            "type": "string"
+          },
+          "contact_phone": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "region": {
+            "type": "object",
+            "properties": {
+              "state_code": {
+                "type": "string"
+              },
+              "district": {
+                "type": "string"
+              }
+            }
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "verified_by": {
+            "type": "string"
+          },
+          "verified_at": {
+            "type": "string"
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "VERIFICATION_STATUS_PENDING",
+              "VERIFICATION_STATUS_VERIFIED",
+              "VERIFICATION_STATUS_REJECTED",
+              "PENDING",
+              "VERIFIED",
+              "REJECTED"
+            ]
+          },
+          "rejection_reason": {
+            "type": "string"
+          },
+          "income_statement_url": {
+            "type": "string"
+          },
+          "commission_rate_bps": {
+            "type": "integer"
+          },
+          "total_sales_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "commission_earned_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "accepts_consignment": {
+            "type": "boolean"
+          },
+          "min_order_value_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "preferred_craft_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "store_location": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              },
+              "address": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "pincode": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "RegisterCompanyRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "contact_name",
+          "contact_phone"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "RETAILER",
+              "BOUTIQUE",
+              "EXPORTER",
+              "INSTITUTION"
+            ]
+          },
+          "gstin": {
+            "type": "string"
+          },
+          "contact_name": {
+            "type": "string"
+          },
+          "contact_phone": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "income_statement_url": {
+            "type": "string"
+          },
+          "accepts_consignment": {
+            "type": "boolean"
+          },
+          "min_order_value_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "region": {
+            "type": "object",
+            "properties": {
+              "state_code": {
+                "type": "string"
+              },
+              "district": {
+                "type": "string"
+              }
+            }
+          },
+          "preferred_craft_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "store_location": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              },
+              "address": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "pincode": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "VerifyCompanyRequest": {
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "REJECTED"
+            ]
+          },
+          "rejection_reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CommissionStatsResponse": {
+        "type": "object",
+        "required": [
+          "total_companies",
+          "pending_verifications",
+          "verified_companies",
+          "total_sales_paise",
+          "total_commission_paise"
+        ],
+        "properties": {
+          "total_companies": {
+            "type": "integer"
+          },
+          "pending_verifications": {
+            "type": "integer"
+          },
+          "verified_companies": {
+            "type": "integer"
+          },
+          "total_sales_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total_commission_paise": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CompanySaleSettlement": {
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "order_id",
+          "gross_amount_paise",
+          "commission_rate_bps",
+          "platform_fee_paise",
+          "net_payout_paise",
+          "settled_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "buyer_id": {
+            "type": "string"
+          },
+          "gross_amount_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "commission_rate_bps": {
+            "type": "integer"
+          },
+          "platform_fee_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "net_payout_paise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "settled_at": {
+            "type": "string"
+          }
+        }
+      },
+      "CompanyInterest": {
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "artisan_id",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "company_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "BoutiqueMatch": {
+        "type": "object",
+        "required": [
+          "id",
+          "company_id",
+          "artisan_id",
+          "match_score",
+          "status",
+          "boutique_name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "match_score": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "boutique_name": {
+            "type": "string"
+          },
+          "overlapping_crafts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "boutique_location": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              },
+              "address": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "TrendLink": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "url",
+          "source_type",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "TREND_SOURCE_TYPE_INSTAGRAM",
+              "TREND_SOURCE_TYPE_PINTEREST",
+              "TREND_SOURCE_TYPE_BLOG",
+              "TREND_SOURCE_TYPE_NEWS",
+              "TREND_SOURCE_TYPE_YOUTUBE",
+              "TREND_SOURCE_TYPE_OTHER",
+              "INSTAGRAM",
+              "PINTEREST",
+              "BLOG",
+              "NEWS",
+              "YOUTUBE",
+              "OTHER"
+            ]
+          },
+          "craft_id": {
+            "type": "string"
+          },
+          "craft_name": {
+            "type": "string"
+          },
+          "thumbnail_url": {
+            "type": "string"
+          },
+          "embed_html": {
+            "type": "string"
+          },
+          "embed_metadata_json": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "curator_role": {
+            "type": "string"
+          },
+          "curator_name": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateTrendLinkRequest": {
+        "type": "object",
+        "required": [
+          "title",
+          "url",
+          "source_type"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "INSTAGRAM",
+              "PINTEREST",
+              "BLOG",
+              "NEWS",
+              "YOUTUBE",
+              "OTHER"
+            ]
+          },
+          "craft_id": {
+            "type": "string"
+          },
+          "thumbnail_url": {
+            "type": "string"
+          },
+          "auto_fetch_embed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Badge": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "kind",
+          "icon_name",
+          "sort_order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "EARNED",
+              "CONFERRED"
+            ]
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "BRONZE",
+              "SILVER",
+              "GOLD"
+            ]
+          },
+          "icon_name": {
+            "type": "string"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "LISTINGS_PUBLISHED",
+              "PROVENANCE_SEALED",
+              "LOTS_ACCEPTED",
+              "LOTS_COMPLETED"
+            ]
+          },
+          "threshold": {
+            "type": "integer"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "ArtisanBadge": {
+        "type": "object",
+        "required": [
+          "badge",
+          "granted_at",
+          "granted_by"
+        ],
+        "properties": {
+          "badge": {
+            "$ref": "#/components/schemas/Badge"
+          },
+          "granted_at": {
+            "type": "string"
+          },
+          "granted_by": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          }
+        }
+      },
+      "BadgeProgressEntry": {
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "updated_at"
+        ],
+        "properties": {
+          "metric": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        }
+      },
+      "GrantBadgeRequest": {
+        "type": "object",
+        "required": [
+          "badge_id"
+        ],
+        "properties": {
+          "badge_id": {
+            "type": "string"
+          },
+          "evidence_json": {
+            "type": "string"
+          }
+        }
+      },
+      "RevokeBadgeRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "GovernmentScheme": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "authority",
+          "ministry",
+          "official_url",
+          "sort_order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "CENTRAL",
+              "STATE"
+            ]
+          },
+          "ministry": {
+            "type": "string"
+          },
+          "official_url": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "name_i18n_key": {
+            "type": "string"
+          },
+          "name_text": {
+            "type": "string"
+          },
+          "summary_i18n_key": {
+            "type": "string"
+          },
+          "summary_text": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "SchemeCriterion": {
+        "type": "object",
+        "required": [
+          "type",
+          "string_values",
+          "negate"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SOCIAL_CATEGORY",
+              "STATE_CODE",
+              "CRAFT_ID",
+              "MIN_YEARS_EXPERIENCE",
+              "HAS_PEHCHAN_ID",
+              "HAS_PM_VISHWAKARMA_ID",
+              "CLUSTER_MEMBER",
+              "SHG_MEMBER"
+            ]
+          },
+          "string_values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "int_value": {
+            "type": "integer"
+          },
+          "negate": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SchemeManualCheck": {
+        "type": "object",
+        "properties": {
+          "i18n_key": {
+            "type": "string"
+          },
+          "check_text": {
+            "type": "string"
+          }
+        }
+      },
+      "SchemeMatch": {
+        "type": "object",
+        "required": [
+          "scheme",
+          "status",
+          "matched_criteria_labels",
+          "unmet_criteria_labels",
+          "manual_checks"
+        ],
+        "properties": {
+          "scheme": {
+            "$ref": "#/components/schemas/GovernmentScheme"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MAY_QUALIFY",
+              "CHECK_REQUIRED",
+              "UNLIKELY"
+            ]
+          },
+          "matched_criteria_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "unmet_criteria_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "manual_checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeManualCheck"
+            }
+          }
+        }
+      },
+      "UpsertSchemeRequest": {
+        "type": "object",
+        "required": [
+          "code",
+          "ministry",
+          "official_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string",
+            "enum": [
+              "CENTRAL",
+              "STATE"
+            ]
+          },
+          "ministry": {
+            "type": "string"
+          },
+          "official_url": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "name_i18n_key": {
+            "type": "string"
+          },
+          "name_text": {
+            "type": "string"
+          },
+          "summary_i18n_key": {
+            "type": "string"
+          },
+          "summary_text": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeCriterion"
+            }
+          },
+          "manual_checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeManualCheck"
+            }
           }
         }
       }

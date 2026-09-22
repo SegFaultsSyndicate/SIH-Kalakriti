@@ -1,16 +1,20 @@
 package bff
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	"github.com/ZoroNewbie00/kalakriti/pkg/i18n"
+	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
@@ -51,6 +55,14 @@ type Config struct {
 	StmtSvc    handler.StatementService
 	InsightSvc handler.InsightService
 	CatalogSvc handler.CatalogService
+	B2BSvc     handler.B2BService
+	TrendSvc   handler.TrendService
+	BadgeSvc   handler.BadgeService
+	SchemeSvc  handler.SchemeService
+
+	// WebhookMgr backs buyer/seller-facing subscribe/list/unsubscribe
+	// endpoints; delivery itself runs out-of-process (cmd/webhook-worker).
+	WebhookMgr *webhook.Manager
 
 	// Rate limiting.
 	RateLimitPerIP        int
@@ -74,6 +86,7 @@ func NewServer(cfg Config) (*Server, error) {
 	r := httpx.Mux(httpx.Config{
 		Logger:         cfg.Logger,
 		AllowedOrigins: cfg.AllowedOrigins,
+		SelfOrigin:     selfOrigin(cfg.BaseURL),
 		RequestTimeout: 30 * time.Second,
 	})
 
@@ -93,13 +106,37 @@ func (s *Server) mountRoutes() {
 	r := s.router
 	cfg := s.cfg
 
+	// A path that exists under a different verb should be distinguishable
+	// from one that doesn't exist at all -- without this, gin sends both to
+	// NoRoute (the SPA fallback, guarded against /api/* above but still not
+	// the same signal as "wrong method").
+	r.HandleMethodNotAllowed = true
+	r.NoMethod(httpx.WrapHandler(func(w http.ResponseWriter, r *http.Request) {
+		httpx.JSON(w, http.StatusMethodNotAllowed, domain.HTTPErrorBody{
+			Error:   "method_not_allowed",
+			Message: fmt.Sprintf("method %s not allowed for %s", r.Method, r.URL.Path),
+		})
+	}))
+
+	// Liveness only -- bff has no single dependency whose failure should flip
+	// this (unlike core-svc's /readyz, which checks its own Postgres pool).
+	// Documented in QUICKSTART.md's smoke test; without this it fell through
+	// to NoRoute -> the SPA handler -> "index.html not found", since bff's
+	// own container never has a built frontend at cfg.WebDist (that's the
+	// separate `web` NGINX container's job in docker-compose.yml).
+	r.GET("/healthz", func(c *gin.Context) {
+		httpx.JSON(c.Writer, http.StatusOK, map[string]string{"status": "ok"})
+	})
+
 	// Build handlers.
 	apiH := handler.NewAPIHandler(
 		cfg.AuthSvc, cfg.ArtisanSvc, cfg.MediaSvc, cfg.ListingSvc,
 		cfg.SearchSvc, cfg.PricingSvc, cfg.OrderSvc, cfg.FollowSvc,
 		cfg.StmtSvc, cfg.InsightSvc, cfg.CatalogSvc,
+		cfg.B2BSvc, cfg.TrendSvc, cfg.BadgeSvc, cfg.SchemeSvc,
 	)
 	apiH.SetSecurity(cfg.Redis, cfg.Logger, "kalakriti-production-webhook-hmac-key")
+	apiH.SetWebhookManager(cfg.WebhookMgr)
 
 	verifyH, _ := handler.NewVerificationHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL, cfg.ProvenancePublicKeyHex)
 	seoH, _ := handler.NewSEOHandler(cfg.CatalogSvc, cfg.Redis, cfg.BaseURL)
@@ -137,10 +174,22 @@ func (s *Server) mountRoutes() {
 	api.GET("/search", httpx.WrapHandler(apiH.Search))
 	api.GET("/search/suggest", httpx.WrapHandler(apiH.Suggest))
 	api.POST("/search/voice", httpx.WrapHandler(apiH.SearchVoice))
-	api.GET("/listings", httpx.WrapHandler(apiH.ListListings))
+	// OptionalAuth: all three handlers below want the caller's own identity
+	// when present (ListListings' own clamp only shows a DRAFT/PENDING
+	// listing back when filter.ArtisanID matches principal.Subject; GetListing/
+	// GetListingAttributes call authoriseFor server-side for the same reason,
+	// and are both in core-svc's own PublicMethods() list for exactly this
+	// reason) -- without it, a token-carrying request here never reaches
+	// core-svc with any identity at all, and both checks always see an
+	// anonymous caller. Confirmed live twice: an artisan reading back a
+	// listing they had just created 404'd every time (row correctly present
+	// and correctly owned in Postgres), and GET /listings?artisan_id=<self>
+	// came back empty for the same reason.
+	api.GET("/listings", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.ListListings))
 	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
-	api.GET("/listings/:id", httpx.WrapHandler(apiH.GetListing))
+	api.GET("/listings/:id", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
+	api.GET("/listings/:id/attributes", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListingAttributes))
 
 	// Public craft ontology, artisan storefront and process feed reads.
 	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
@@ -149,9 +198,47 @@ func (s *Server) mountRoutes() {
 	api.GET("/artisans/:id/follower-count", httpx.WrapHandler(apiH.GetFollowerCount))
 	api.GET("/feed/process", httpx.WrapHandler(apiH.GetProcessFeed))
 
+	// Public company, boutique and trend reads/writes.
+	api.POST("/companies", httpx.WrapHandler(withIdempotency(apiH.RegisterCompany, cfg.IdempStore)))
+	api.GET("/companies", httpx.WrapHandler(apiH.ListCompanies))
+	api.GET("/companies/:id", httpx.WrapHandler(apiH.GetCompany))
+	api.GET("/trends", httpx.WrapHandler(apiH.ListTrendLinks))
+	api.GET("/badges", httpx.WrapHandler(apiH.ListBadgeCatalog))
+	api.GET("/schemes", httpx.WrapHandler(apiH.ListSchemes))
+	api.GET("/artisans/:id/badges", httpx.WrapHandler(apiH.ListArtisanBadges))
+	api.GET("/boutiques/nearby", httpx.WrapHandler(apiH.ListNearbyBoutiques))
+
 	// Protected routes group (JWT required).
 	authed := api.Group("")
 	authed.Use(httpx.Wrap(middleware.Auth(cfg.Issuer)))
+
+	// B2B companies, boutiques, leads, partnerships, and market trends.
+	authed.GET("/companies/me", httpx.WrapHandler(apiH.GetMyCompany))
+	authed.POST("/companies/:id/verify", httpx.WrapHandler(apiH.VerifyCompany))
+	authed.GET("/companies/commission-stats", httpx.WrapHandler(apiH.GetPlatformCommissionStats))
+	authed.POST("/companies/sales/settle", httpx.WrapHandler(withIdempotency(apiH.RecordCompanySale, cfg.IdempStore)))
+	authed.GET("/companies/:id/sales", httpx.WrapHandler(apiH.ListCompanySales))
+	authed.POST("/companies/:id/interest", httpx.WrapHandler(withIdempotency(apiH.ExpressInterest, cfg.IdempStore)))
+	authed.POST("/leads/:id/respond", httpx.WrapHandler(apiH.RespondToInterest))
+	authed.GET("/artisans/me/leads", httpx.WrapHandler(apiH.ListArtisanLeads))
+	authed.GET("/artisans/me/boutique-matches", httpx.WrapHandler(apiH.ListBoutiqueMatches))
+	authed.POST("/partnerships", httpx.WrapHandler(withIdempotency(apiH.CreatePartnership, cfg.IdempStore)))
+	authed.GET("/partnerships", httpx.WrapHandler(apiH.ListPartnerships))
+	authed.POST("/trends", httpx.WrapHandler(withIdempotency(apiH.CreateTrendLink, cfg.IdempStore)))
+	authed.DELETE("/trends/:id", httpx.WrapHandler(apiH.DeleteTrendLink))
+	authed.POST("/trends/:id/pin", httpx.WrapHandler(apiH.PinTrendLink))
+	authed.GET("/badges/me/progress", httpx.WrapHandler(apiH.GetBadgeProgress))
+	authed.GET("/schemes/match", httpx.WrapHandler(apiH.MatchSchemes))
+	authed.POST("/schemes", httpx.WrapHandler(withIdempotency(apiH.UpsertScheme, cfg.IdempStore)))
+	authed.PATCH("/schemes/:id", httpx.WrapHandler(withIdempotency(apiH.UpsertScheme, cfg.IdempStore)))
+	authed.DELETE("/schemes/:id", httpx.WrapHandler(apiH.DeleteScheme))
+	authed.POST("/artisans/:id/badges", httpx.WrapHandler(withIdempotency(apiH.GrantBadge, cfg.IdempStore)))
+	authed.DELETE("/artisans/:id/badges/:code", httpx.WrapHandler(apiH.RevokeBadge))
+
+	// Outbound webhook subscriptions (delivery runs in cmd/webhook-worker).
+	authed.POST("/webhooks/subscriptions", httpx.WrapHandler(withIdempotency(apiH.CreateWebhookSubscription, cfg.IdempStore)))
+	authed.GET("/webhooks/subscriptions", httpx.WrapHandler(apiH.ListWebhookSubscriptions))
+	authed.DELETE("/webhooks/subscriptions/:id", httpx.WrapHandler(apiH.DeleteWebhookSubscription))
 
 	// Artisan endpoints.
 	authed.POST("/artisans", httpx.WrapHandler(withIdempotency(apiH.RegisterArtisan, cfg.IdempStore)))
@@ -167,6 +254,7 @@ func (s *Server) mountRoutes() {
 	// Listing mutations.
 	authed.POST("/listings", httpx.WrapHandler(withIdempotency(apiH.CreateListing, cfg.IdempStore)))
 	authed.PATCH("/listings/:id", httpx.WrapHandler(apiH.UpdateListing))
+	authed.POST("/listings/:id/media", httpx.WrapHandler(withIdempotency(apiH.AttachListingMedia, cfg.IdempStore)))
 	authed.POST("/listings/:id/submit", httpx.WrapHandler(apiH.SubmitListing))
 	authed.POST("/listings/:id/approve", httpx.WrapHandler(apiH.ApproveListing))
 	authed.POST("/listings/:id/seal-provenance", httpx.WrapHandler(apiH.SealProvenance))
@@ -228,6 +316,21 @@ func (s *Server) mountRoutes() {
 
 	// SPA fallback for everything else.
 	r.NoRoute(httpx.WrapHandler(spaH.ServeHTTP))
+}
+
+// selfOrigin extracts the scheme+host Origin header this server's own
+// public address would present, from its configured BaseURL, for
+// httpx.Config.SelfOrigin. An Origin header never carries a path, so
+// "http://localhost:8000/foo" and "http://localhost:8000" must compare
+// equal to it -- BaseURL is documented as just scheme+host today, but this
+// normalises defensively rather than assuming that never changes. An
+// unparseable or empty BaseURL yields "", the same as never setting it.
+func selfOrigin(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
 }
 
 // withIdempotency wraps a handler with idempotency middleware.

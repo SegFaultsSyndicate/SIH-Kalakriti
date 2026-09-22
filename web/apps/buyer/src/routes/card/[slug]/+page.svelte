@@ -11,6 +11,7 @@
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import {
     getArtisanStorefront,
     listListings,
@@ -20,6 +21,8 @@
 
   type ArtisanStorefront = components['schemas']['ArtisanStorefront'];
   type ListingSummary = components['schemas']['ListingSummary'];
+
+  const t = $derived(locale.t);
 
   const slug = $derived(page.params.slug ?? 'master-artisan');
 
@@ -87,10 +90,10 @@
     })();
   });
 
-  const displayName = $derived(artisan?.display_name || 'Master Artisan');
-  const craftTitle = $derived(artisan?.craft_name || 'Traditional Handcrafted Art');
+  const displayName = $derived(artisan?.display_name || t('shareCard.fallbackName'));
+  const craftTitle = $derived(artisan?.craft_name || t('shareCard.fallbackCraft'));
   const locationText = $derived(
-    [artisan?.district, artisan?.state_code || 'India'].filter(Boolean).join(', '),
+    [artisan?.district, artisan?.state_code || t('account.page.addresses.country')].filter(Boolean).join(', '),
   );
   const avatarImage = $derived(artisan?.image_url || devAvatar);
 
@@ -105,11 +108,8 @@
 </script>
 
 <svelte:head>
-  <title>{displayName} — Digital Business Card | Kalakriti</title>
-  <meta
-    name="description"
-    content="Official digital business card and mini-storefront for master artisan {displayName}. Verified PM Vishwakarma and GI-Tagged craft."
-  />
+  <title>{t('shareCard.headTitle', { name: displayName })}</title>
+  <meta name="description" content={t('shareCard.metaDescription', { name: displayName })} />
 </svelte:head>
 
 <div class="card-page">
@@ -118,17 +118,17 @@
     <div class="card-top-bar">
       <a href="/artisan/{slug}" class="back-link">
         <Icon name="arrow-left" size="0.9rem" />
-        <span>View Full Storefront</span>
+        <span>{t('shareCard.viewFullStorefront')}</span>
       </a>
 
       <div class="top-actions">
-        <Button variant="secondary" size="sm" onclick={handleWhatsApp}>
+        <Button variant="secondary" size="sm" onclick={handleWhatsApp} tooltip={tooltip('tooltip.share')}>
           <Icon name="whatsapp" size="0.9rem" />
-          WhatsApp
+          {t('shareCard.whatsappButton')}
         </Button>
-        <Button variant="primary" size="sm" onclick={handlePrint}>
+        <Button variant="primary" size="sm" onclick={handlePrint} tooltip={tooltip('tooltip.print')}>
           <Icon name="print" size="0.9rem" />
-          Print Visiting Card
+          {t('shareCard.printButton')}
         </Button>
       </div>
     </div>
@@ -146,12 +146,12 @@
           <!-- Government Header Strip -->
           <header class="card-header">
             <div class="gov-lockup">
-              <span class="gov-title">MINISTRY OF TEXTILES • GOVERNMENT OF INDIA</span>
-              <span class="gov-sub">OFFICIAL ARTISAN DIGITAL IDENTITY & MINI-STOREFRONT</span>
+              <span class="gov-title">{t('shareCard.govTitle')}</span>
+              <span class="gov-sub">{t('shareCard.govSub')}</span>
             </div>
             <div class="gi-pill">
               <Icon name="verified-artisan" size="0.85rem" />
-              <span>GI-TAGGED MASTER LINEAGE</span>
+              <span>{t('shareCard.giPill')}</span>
             </div>
           </header>
 
@@ -180,45 +180,45 @@
             <div class="qr-side">
               <div class="qr-frame">
                 {#if qrDataUrl}
-                  <img src={qrDataUrl} alt="Scan QR Code" class="qr-img" />
+                  <img src={qrDataUrl} alt={t('shareCard.qrAlt')} class="qr-img" />
                 {:else}
-                  <div class="qr-placeholder">QR Code</div>
+                  <div class="qr-placeholder">{t('shareCard.qrPlaceholder')}</div>
                 {/if}
               </div>
-              <span class="qr-hint">Scan to Buy & Reorder</span>
+              <span class="qr-hint">{t('shareCard.qrHint')}</span>
             </div>
           </div>
 
           <!-- Trust Badges Strip -->
           <div class="trust-strip">
             <div class="trust-badge">
-              <span class="badge-icon">🎖️</span>
+              <span class="badge-icon"><Icon name="verified-artisan" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>PM Vishwakarma</strong>
-                <small>ID: UP-VNS-2024-0982</small>
+                <strong>{t('shareCard.badge.pmVishwakarma')}</strong>
+                <small>{t('card.idLabel', { id: 'UP-VNS-2024-0982' })}</small>
               </div>
             </div>
 
             <div class="trust-badge">
-              <span class="badge-icon">🏛️</span>
+              <span class="badge-icon"><Icon name="cluster" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>Weaver Guild CFC</strong>
-                <small>Varanasi Silk Cluster</small>
+                <strong>{t('shareCard.badge.weaverGuild')}</strong>
+                <small>{t('shareCard.badge.weaverGuildSub')}</small>
               </div>
             </div>
 
             <div class="trust-badge">
-              <span class="badge-icon">🛡️</span>
+              <span class="badge-icon"><Icon name="provenance" size="1.25rem" /></span>
               <div class="badge-text">
-                <strong>Cryptographic Seal</strong>
-                <small>Ed25519 Provenance</small>
+                <strong>{t('shareCard.badge.cryptoSeal')}</strong>
+                <small>{t('shareCard.badge.cryptoSealSub')}</small>
               </div>
             </div>
           </div>
 
           <!-- Mini Catalog Showcase (Featured Work) -->
           <div class="card-catalog-section">
-            <h2 class="catalog-heading">Signature Handcrafted Pieces</h2>
+            <h2 class="catalog-heading">{t('shareCard.catalogHeading')}</h2>
 
             <div class="mini-catalog-grid">
               {#if listings.length > 0}
@@ -235,7 +235,7 @@
                     <div class="mini-info">
                       <span class="mini-title">{itemTitle}</span>
                       <strong class="mini-price">
-                        {item.price?.amount_paise ? `₹${(item.price.amount_paise / 100).toLocaleString('en-IN')}` : 'Request Price'}
+                        {item.price?.amount_paise ? `₹${(item.price.amount_paise / 100).toLocaleString('en-IN')}` : t('shareCard.priceRequest')}
                       </strong>
                     </div>
                   </a>
@@ -243,21 +243,21 @@
               {:else}
                 <!-- Fallback sample pieces if empty -->
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🧵</div>
+                  <div class="mini-img-fallback"><Icon name="weaving" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Pure Katan Silk Kadwa Saree</span>
                     <strong class="mini-price">₹18,500</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🧣</div>
+                  <div class="mini-img-fallback"><Icon name="embroidery" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Zari Brocade Stole Yardage</span>
                     <strong class="mini-price">₹4,200</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
-                  <div class="mini-img-fallback">🏺</div>
+                  <div class="mini-img-fallback"><Icon name="pottery" size="1.2rem" /></div>
                   <div class="mini-info">
                     <span class="mini-title">Hand-Spun Raw Silk Dupatta</span>
                     <strong class="mini-price">₹3,850</strong>
@@ -270,23 +270,23 @@
           <!-- Direct Call to Action Footer -->
           <footer class="card-footer">
             <div class="contact-buttons">
-              <Button variant="secondary" size="md" onclick={handleWhatsApp}>
+              <Button variant="secondary" size="md" onclick={handleWhatsApp} tooltip={tooltip('tooltip.share')}>
                 <Icon name="whatsapp" />
-                Message on WhatsApp
+                {t('shareCard.messageWhatsapp')}
               </Button>
               <a href="tel:+918779279060" class="call-btn">
                 <Icon name="phone" size="0.95rem" />
-                Direct Call
+                {t('shareCard.directCall')}
               </a>
               <a href="/artisan/{slug}" class="storefront-cta">
-                <span>View Full Catalog & Buy</span>
+                <span>{t('shareCard.viewCatalogCta')}</span>
                 <Icon name="arrow-right" size="0.9rem" />
               </a>
             </div>
 
             <div class="verified-seal-strip">
               <Icon name="verified-artisan" size="0.8rem" />
-              <span>Public Digital Infrastructure for Indian Handicrafts & Handlooms • Kalakriti Platform</span>
+              <span>{t('shareCard.footerSeal')}</span>
             </div>
           </footer>
         </div>
@@ -299,7 +299,7 @@
   .card-page {
     padding-block: var(--k-space-6) var(--k-space-12);
     min-block-size: 80vh;
-    background: #faf8f5;
+    background: var(--k-surface-base);
   }
 
   .card-container {
@@ -339,14 +339,14 @@
 
   :global(.visiting-card) {
     position: relative;
-    background: #ffffff;
+    background: var(--k-surface-base);
     box-shadow: 0 8px 32px rgba(120, 53, 15, 0.08);
     padding: 2.5rem 2rem;
-    color: #1c1917;
+    color: var(--k-text-primary);
   }
 
   :global(.visiting-card .k-kolam-corner) {
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     inline-size: 2.75rem;
     block-size: 2.75rem;
     opacity: 0.75;
@@ -363,7 +363,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-block-end: 2px solid #78350f;
+    border-block-end: 2px solid var(--k-border-accent);
     padding-block-end: var(--k-space-3);
     flex-wrap: wrap;
     gap: var(--k-space-2);
@@ -379,13 +379,13 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   .gov-sub {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     letter-spacing: 0.04em;
   }
 
@@ -393,9 +393,9 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #fef3c7;
-    border: 1px solid #d97706;
-    color: #92400e;
+    background: var(--k-surface-pressed);
+    border: 1px solid var(--k-border-warning);
+    color: var(--k-accent-primary-text);
     font-size: 0.68rem;
     font-weight: 800;
     padding: 3px 10px;
@@ -423,7 +423,7 @@
     block-size: 5rem;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #d97706;
+    border: 3px solid var(--k-border-warning);
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
   }
 
@@ -431,8 +431,8 @@
     inline-size: 5rem;
     block-size: 5rem;
     border-radius: 50%;
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: 2rem;
     font-weight: 800;
     display: flex;
@@ -449,7 +449,7 @@
   .artisan-name {
     font-size: 1.45rem;
     font-weight: 900;
-    color: #1c1917;
+    color: var(--k-text-primary);
     margin: 0;
     line-height: 1.2;
   }
@@ -457,7 +457,7 @@
   .craft-name {
     font-size: 0.88rem;
     font-weight: 700;
-    color: #b45309;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -466,7 +466,7 @@
     align-items: center;
     gap: 4px;
     font-size: 0.75rem;
-    color: #57534e;
+    color: var(--k-stone-600);
     margin-block-start: 2px;
   }
 
@@ -480,8 +480,8 @@
   .qr-frame {
     inline-size: 6.5rem;
     block-size: 6.5rem;
-    background: #ffffff;
-    border: 1px solid #e7e5e4;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-border-on-inverse);
     padding: 4px;
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -500,13 +500,13 @@
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--k-indigo-400);
   }
 
   .qr-hint {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
   }
 
   /* Trust Strip */
@@ -514,8 +514,8 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--k-space-3);
-    background: #fdfbf7;
-    border: 1px solid #e7e5e4;
+    background: var(--k-surface-base);
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-md);
     padding: var(--k-space-3);
   }
@@ -538,12 +538,12 @@
 
   .badge-text strong {
     font-size: 0.75rem;
-    color: #1c1917;
+    color: var(--k-text-primary);
   }
 
   .badge-text small {
     font-size: 0.65rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
   }
 
   /* Mini Catalog */
@@ -558,7 +558,7 @@
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #78350f;
+    color: var(--k-accent-primary-text);
     margin: 0;
   }
 
@@ -569,10 +569,10 @@
   }
 
   .mini-product-card {
-    border: 1px solid #e7e5e4;
+    border: 1px solid var(--k-border-on-inverse);
     border-radius: var(--k-radius-sm);
     overflow: hidden;
-    background: #ffffff;
+    background: var(--k-surface-base);
     text-decoration: none;
     color: inherit;
     display: flex;
@@ -593,7 +593,7 @@
   .mini-img-fallback {
     inline-size: 100%;
     aspect-ratio: 1;
-    background: #f5f5f4;
+    background: var(--k-surface-base);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -609,7 +609,7 @@
 
   .mini-title {
     font-size: 0.7rem;
-    color: #44403c;
+    color: var(--k-stone-700);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -617,13 +617,13 @@
 
   .mini-price {
     font-size: 0.8rem;
-    color: #16a34a;
+    color: var(--k-accent-success-muted);
     font-weight: 800;
   }
 
   /* Footer */
   .card-footer {
-    border-block-start: 1px solid #e7e5e4;
+    border-block-start: 1px solid var(--k-border-on-inverse);
     padding-block-start: var(--k-space-4);
     display: flex;
     flex-direction: column;
@@ -642,8 +642,8 @@
     align-items: center;
     gap: 6px;
     border: 1px solid var(--k-border-interactive);
-    background: #ffffff;
-    color: #1c1917;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
     font-size: var(--k-text-xs);
     font-weight: 700;
     padding: var(--k-space-2) var(--k-space-3);
@@ -655,8 +655,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #78350f;
-    color: #ffffff;
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
     font-size: var(--k-text-xs);
     font-weight: 700;
     padding: var(--k-space-2) var(--k-space-4);
@@ -671,7 +671,7 @@
     justify-content: center;
     gap: 4px;
     font-size: 0.65rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     font-weight: 600;
   }
 
@@ -681,7 +681,7 @@
       visibility: hidden;
     }
     .card-page {
-      background: #fff;
+      background: var(--k-surface-base);
       padding: 0;
     }
     .card-top-bar,
@@ -702,7 +702,7 @@
     }
     :global(.visiting-card) {
       box-shadow: none !important;
-      border: 2px solid #78350f !important;
+      border: 2px solid var(--k-border-accent) !important;
       padding: 8px !important;
     }
   }

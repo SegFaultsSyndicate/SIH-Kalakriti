@@ -41,7 +41,7 @@ type LoginResult struct {
 // subject. That is what lets RegisterArtisan authenticate the registration and
 // bind it to a phone the caller has proven they control, without a second
 // unauthenticated endpoint.
-func (s *Identity) VerifyOtp(ctx context.Context, challengeID, phone, code string) (LoginResult, error) {
+func (s *Identity) VerifyOtp(ctx context.Context, challengeID, phone, code, devRole string) (LoginResult, error) {
 	if challengeID == "" || code == "" {
 		return LoginResult{}, fmt.Errorf("challenge_id and code are required: %w", pkgdomain.ErrInvalidInput)
 	}
@@ -51,6 +51,36 @@ func (s *Identity) VerifyOtp(ctx context.Context, challengeID, phone, code strin
 
 	if err := s.otp.Verify(ctx, challengeID, phone, code); err != nil {
 		return LoginResult{}, err
+	}
+
+	// devRole requests a token for a role other than ARTISAN. BUYER,
+	// CLUSTER_OFFICER and MINISTRY currently have no other issuance path
+	// anywhere in the product -- see cmd/seed-demo/main.go, which mints
+	// them directly with pkg/auth.Issuer as a documented workaround for
+	// exactly this gap. Only honored when the server is actually running
+	// with dev OTP enabled: the same condition that makes `code`
+	// DevOTPCode ("000000") always accepted, so this can never mint a
+	// non-artisan token against a real deployment. See
+	// WIRING_AUDIT_PLAN.md F-5.
+	if devRole != "" {
+		if !s.otp.DevMode() {
+			return LoginResult{}, fmt.Errorf("dev_role is only honored when dev OTP is enabled: %w", pkgdomain.ErrInvalidInput)
+		}
+		role, err := auth.ParseRole(devRole)
+		if err != nil {
+			return LoginResult{}, fmt.Errorf("dev_role %q: %w", devRole, pkgdomain.ErrInvalidInput)
+		}
+		if role != auth.RoleArtisan {
+			tokens, err := s.tokens.Issue(auth.Subject{ID: phone, Role: role, PhoneE164: phone})
+			if err != nil {
+				return LoginResult{}, fmt.Errorf("issuing dev-role tokens after otp verification: %w", err)
+			}
+			s.log.WarnContext(ctx, "dev-role otp login", "role", role, "phone", phone)
+			// Registered: true -- this LoginResult field means "must still
+			// call RegisterArtisan", an artisan-only flow this role never
+			// goes through.
+			return LoginResult{Tokens: tokens, Registered: true}, nil
+		}
 	}
 
 	artisanID, registered, err := s.store.ArtisanExistsByPhone(ctx, phone)

@@ -1,7 +1,7 @@
 <!-- apps/artisan/src/routes/register/district/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { locale } from '@kalakriti/i18n';
+  import { locale, tooltip } from '@kalakriti/i18n';
   import { Input, Button, Select, FieldGroup } from '@kalakriti/ui';
   import { listen, listenSupported } from '@kalakriti/voice';
   import RegisterStep from '$lib/RegisterStep.svelte';
@@ -120,9 +120,6 @@
           {listening ? t('ui.voice.recording') : t('register.district.voice')}
         </button>
       {/if}
-      <button type="button" class="text-link" onclick={() => (notListed = false)}>
-        {t('action.back')}
-      </button>
     {:else}
       <div class="district-search">
         <Input
@@ -166,7 +163,7 @@
     {/if}
   {/snippet}
   {#snippet actions()}
-    <Button size="xl" disabled={!canProceed} onclick={next}>{t('action.next')}</Button>
+    <Button size="xl" disabled={!canProceed} onclick={next} tooltip={tooltip('tooltip.next')}>{t('action.next')} →</Button>
   {/snippet}
 </RegisterStep>
 

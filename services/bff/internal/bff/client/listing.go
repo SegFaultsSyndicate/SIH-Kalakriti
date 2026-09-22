@@ -57,7 +57,7 @@ func NewListing(conn grpc.ClientConnInterface) *Listing {
 //	requires_custom_crating?, packed_dimensions?}), translations (array of
 //	{language, title, description, highlights?})
 //
-// idempotencyKey (from X-Idempotency-Key or minted by the handler) is reused,
+// idempotencyKey (from Idempotency-Key or minted by the handler) is reused,
 // suffixed, for both chained calls, so a retried HTTP call replays each RPC
 // instead of creating a second product when only the second call failed.
 //

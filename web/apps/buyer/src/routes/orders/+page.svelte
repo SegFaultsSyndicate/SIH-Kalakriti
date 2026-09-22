@@ -54,7 +54,7 @@
     {#each orders as order (order.id)}
       <li class="orders-list__item">
         <a href={`/orders/${order.id}`}>
-          <span class="orders-list__quantity">{order.quantity} units</span>
+          <span class="orders-list__quantity">{t('orders.units', { count: String(order.quantity) })}</span>
           <span class="orders-list__state">{order.state}</span>
           {#if order.total_value}<Money paise={order.total_value.amount_paise ?? 0} />{/if}
           <span class="orders-list__link">{t('orders.viewAllocation')}</span>

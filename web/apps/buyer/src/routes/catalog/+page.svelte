@@ -6,16 +6,13 @@
   and traditional techniques across India.
 -->
 <script lang="ts">
-  import { locale } from '@kalakriti/i18n';
-  import { Breadcrumbs } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
 
   const t = $derived(locale.t);
 
-  const breadcrumbs = $derived([
-    { label: t('nav.home') || 'Home', href: '/' },
-    { label: 'All GI Craft Clusters' },
-  ]);
+  const breadcrumbs = $derived([{ label: t('catalog.breadcrumbLabel') }]);
 
   let searchQuery = $state('');
   let selectedBelt = $state('all');
@@ -137,20 +134,18 @@
 </script>
 
 <svelte:head>
-  <title>National GI Craft & Cluster Catalog - Kalakriti</title>
-  <meta name="description" content="Explore India's complete national registry of Geographical Indication (GI) handlooms, tribal metallurgy, and authentic handicraft traditions." />
+  <title>{t('catalog.headTitle')}</title>
+  <meta name="description" content={t('catalog.metaDescription')} />
 </svelte:head>
 
 <div class="catalog-page">
   <div class="catalog-container">
-    <Breadcrumbs items={breadcrumbs} homeLabel="Marketplace" />
+    <Breadcrumbs items={breadcrumbs} homeLabel={t('nav.marketplace')} />
 
     <header class="catalog-header">
-      <span class="catalog-kicker">Geographical Indications Registry of India</span>
-      <h1 class="catalog-title">National Craft & Cluster Catalog</h1>
-      <p class="catalog-subhead">
-        Explore 74 certified Geographical Indication (GI) craft clusters across India. Every tradition is cataloged with statutory registration numbers, master techniques, and verifiable loom provenance.
-      </p>
+      <span class="catalog-kicker">{t('catalog.kicker')}</span>
+      <h1 class="catalog-title">{t('catalog.title')}</h1>
+      <p class="catalog-subhead">{t('catalog.subhead')}</p>
 
       <!-- Filter Controls -->
       <div class="filter-controls">
@@ -158,62 +153,92 @@
           <Icon name="search" size="1rem" />
           <input
             type="search"
-            placeholder="Search by craft, GI tag, or state..."
+            placeholder={t('catalog.searchPlaceholder')}
             bind:value={searchQuery}
             class="catalog-search"
-            aria-label="Search craft catalog"
+            aria-label={t('catalog.searchAriaLabel')}
           />
         </div>
 
-        <div class="belt-chips" role="tablist" aria-label="Craft Belt Filter">
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'all'}
-            onclick={() => (selectedBelt = 'all')}
-          >
-            All Belts ({FALLBACK_CRAFTS.length})
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'north'}
-            onclick={() => (selectedBelt = 'north')}
-          >
-            Northern Plains
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'west'}
-            onclick={() => (selectedBelt = 'west')}
-          >
-            Western Deserts
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'south'}
-            onclick={() => (selectedBelt = 'south')}
-          >
-            Deccan & South
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'east'}
-            onclick={() => (selectedBelt = 'east')}
-          >
-            Eastern Loomlands
-          </button>
-          <button
-            type="button"
-            class="belt-chip"
-            class:active={selectedBelt === 'central'}
-            onclick={() => (selectedBelt = 'central')}
-          >
-            Central Heartland
-          </button>
+        <div class="belt-chips" role="tablist" aria-label={t('catalog.beltFilterAriaLabel')}>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'all'}
+              onclick={() => (selectedBelt = 'all')}
+              {...tp}
+            >
+              {t('catalog.belt.all', { count: String(FALLBACK_CRAFTS.length) })}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'north'}
+              onclick={() => (selectedBelt = 'north')}
+              {...tp}
+            >
+              {t('catalog.belt.north')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'west'}
+              onclick={() => (selectedBelt = 'west')}
+              {...tp}
+            >
+              {t('catalog.belt.west')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'south'}
+              onclick={() => (selectedBelt = 'south')}
+              {...tp}
+            >
+              {t('catalog.belt.south')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'east'}
+              onclick={() => (selectedBelt = 'east')}
+              {...tp}
+            >
+              {t('catalog.belt.east')}
+            </button>
+          {/snippet}
+        </Tooltip>
+        <Tooltip text={tooltip('tooltip.selectBelt')}>
+          {#snippet trigger(tp)}
+            <button
+              type="button"
+              class="belt-chip"
+              class:active={selectedBelt === 'central'}
+              onclick={() => (selectedBelt = 'central')}
+              {...tp}
+            >
+              {t('catalog.belt.central')}
+            </button>
+          {/snippet}
+        </Tooltip>
         </div>
       </div>
     </header>
@@ -241,7 +266,7 @@
 
           <div class="cluster-card__footer">
             <a href={`/search?craft=${craft.slug}`} class="cluster-card__link">
-              <span>View Certified Lots</span>
+              <span>{t('catalog.viewCertifiedLots')}</span>
               <Icon name="arrow-right" size="0.85rem" />
             </a>
           </div>
@@ -307,7 +332,7 @@
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-sm);
     padding: var(--k-space-2) var(--k-space-3);
-    background-color: #ffffff;
+    background-color: var(--k-surface-base);
     max-inline-size: 32rem;
   }
 
@@ -344,7 +369,7 @@
   .belt-chip.active {
     background-color: var(--k-accent-secondary);
     border-color: var(--k-accent-secondary);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     font-weight: var(--k-weight-semibold);
   }
 
@@ -371,7 +396,7 @@
   .cluster-card {
     border: 1px solid var(--k-border-subtle);
     border-radius: var(--k-radius-md);
-    background-color: var(--k-surface-card, #ffffff);
+    background-color: var(--k-surface-card, var(--k-surface-base));
     padding: var(--k-space-5);
     display: flex;
     flex-direction: column;
@@ -438,7 +463,7 @@
 
   .tech-tag {
     font-size: 0.65rem;
-    background-color: var(--k-surface-sunken, #f7f4ee);
+    background-color: var(--k-surface-sunken, var(--k-surface-raised));
     color: var(--k-text-secondary);
     padding: 0.15rem 0.4rem;
     border-radius: var(--k-radius-sm);

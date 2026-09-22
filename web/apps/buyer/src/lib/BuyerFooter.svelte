@@ -12,47 +12,50 @@
   - Official Copyright & Attribution to Ministry of Social Justice & Empowerment & Digital India Corporation (DIC)
 -->
 <script lang="ts">
-  import { LanguageSelector, showToast } from '@kalakriti/ui';
+  import { locale, tooltip } from '@kalakriti/i18n';
+  import { showToast, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
+
+  const t = $derived(locale.t);
 
   function copyAppShareLink(type: 'buyer' | 'artisan') {
     const url = type === 'buyer'
       ? `${window.location.origin}/app/buyer`
       : `${window.location.origin.replace('5174', '5173')}/app/artisan`;
-    
+
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       showToast({
-        message: `${type === 'buyer' ? 'Buyer App' : 'Artisan Voice App'} link copied to clipboard. Share with craft patrons and weavers.`,
+        message: type === 'buyer' ? t('footer.app.copiedBuyer') : t('footer.app.copiedSeller'),
         variant: 'success'
       });
     }
   }
 
   const seoKeywords = [
-    { label: 'Buy Handicraft and Handloom Items Online', href: '/catalog' },
-    { label: 'Home and Living Products for Sale', href: '/search?category=home' },
-    { label: 'Buy Mens Handloom and Handicraft Items', href: '/search?category=men' },
-    { label: 'Handmade Furniture for Sale', href: '/search?category=furniture' },
-    { label: 'Buy Home Decor Items Online', href: '/search?q=home+decor' },
-    { label: 'Handloom Bedsheets and Cushions Online', href: '/search?q=bedsheets' },
-    { label: 'Womens Handloom Sarees for Sale', href: '/search?category=women' },
-    { label: 'Buy Western Wear for Women Online', href: '/search?q=western+wear' },
-    { label: 'Beautiful Ethnic Wear for Women', href: '/search?q=ethnic+wear' },
-    { label: 'Buy Mens Handmade Accessories', href: '/search?q=mens+accessories' },
-    { label: 'Womens Handmade Accessories for Sale', href: '/search?q=womens+accessories' },
-    { label: 'Handmade Floor Coverings Online', href: '/search?q=floor+coverings' },
-    { label: 'Handmade Religious Items for Sale Online', href: '/search?q=religious' },
-    { label: 'Buy Handmade Mens Footwear', href: '/search?q=mens+footwear' },
-    { label: 'Buy Handmade Womens Footwear', href: '/search?q=womens+footwear' },
-    { label: 'Handcrafted Lighting Items Online', href: '/search?q=lighting' },
-    { label: 'Handmade Stationery Items for Sale', href: '/search?q=stationery' },
-    { label: 'Buy Handmade Bags for Women', href: '/search?q=bags' },
-    { label: 'Bath Accessories for Sale', href: '/search?q=bath' },
-  ];
+    { key: 'footer.seo.buyHandicraft', href: '/catalog' },
+    { key: 'footer.seo.homeLiving', href: '/search?category=home' },
+    { key: 'footer.seo.mensHandloom', href: '/search?category=men' },
+    { key: 'footer.seo.furniture', href: '/search?category=furniture' },
+    { key: 'footer.seo.homeDecor', href: '/search?q=home+decor' },
+    { key: 'footer.seo.bedsheets', href: '/search?q=bedsheets' },
+    { key: 'footer.seo.womensSarees', href: '/search?category=women' },
+    { key: 'footer.seo.westernWear', href: '/search?q=western+wear' },
+    { key: 'footer.seo.ethnicWear', href: '/search?q=ethnic+wear' },
+    { key: 'footer.seo.mensAccessories', href: '/search?q=mens+accessories' },
+    { key: 'footer.seo.womensAccessories', href: '/search?q=womens+accessories' },
+    { key: 'footer.seo.floorCoverings', href: '/search?q=floor+coverings' },
+    { key: 'footer.seo.religious', href: '/search?q=religious' },
+    { key: 'footer.seo.mensFootwear', href: '/search?q=mens+footwear' },
+    { key: 'footer.seo.womensFootwear', href: '/search?q=womens+footwear' },
+    { key: 'footer.seo.lighting', href: '/search?q=lighting' },
+    { key: 'footer.seo.stationery', href: '/search?q=stationery' },
+    { key: 'footer.seo.bags', href: '/search?q=bags' },
+    { key: 'footer.seo.bath', href: '/search?q=bath' },
+  ] as const;
 </script>
 
-<footer class="buyer-footer" aria-label="Official Site Footer">
+<footer class="buyer-footer" aria-label={t('footer.ariaLabel')}>
   <!-- 1. Top Trust Assurance Strip (6 Key Guarantees) -->
   <div class="footer-trust-strip">
     <div class="footer-trust-container">
@@ -67,8 +70,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">Free Shipping</span>
-          <span class="trust-pill__sub">Orders above ₹999</span>
+          <span class="trust-pill__title">{t('footer.trust.shipping.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.shipping.sub')}</span>
         </div>
       </div>
 
@@ -84,8 +87,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">100% Purchase Protection</span>
-          <span class="trust-pill__sub">Escrow Authenticity</span>
+          <span class="trust-pill__title">{t('footer.trust.protection.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.protection.sub')}</span>
         </div>
       </div>
 
@@ -98,8 +101,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">Secure Payment</span>
-          <span class="trust-pill__sub">256-Bit Encrypted</span>
+          <span class="trust-pill__title">{t('footer.trust.payment.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.payment.sub')}</span>
         </div>
       </div>
 
@@ -112,8 +115,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">Assured Quality</span>
-          <span class="trust-pill__sub">Certified GI Heritage</span>
+          <span class="trust-pill__title">{t('footer.trust.quality.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.quality.sub')}</span>
         </div>
       </div>
 
@@ -128,8 +131,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">Handcrafted Products</span>
-          <span class="trust-pill__sub">0% Machine Imitations</span>
+          <span class="trust-pill__title">{t('footer.trust.handcrafted.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.handcrafted.sub')}</span>
         </div>
       </div>
 
@@ -142,8 +145,8 @@
           </svg>
         </div>
         <div class="trust-pill__content">
-          <span class="trust-pill__title">Best Price Promise</span>
-          <span class="trust-pill__sub">Direct DBT to Weavers</span>
+          <span class="trust-pill__title">{t('footer.trust.price.title')}</span>
+          <span class="trust-pill__sub">{t('footer.trust.price.sub')}</span>
         </div>
       </div>
     </div>
@@ -155,54 +158,54 @@
       
       <!-- Column 1: Resources -->
       <div class="footer-col">
-        <h3 class="footer-col-heading">Resources</h3>
+        <h3 class="footer-col-heading">{t('footer.col.resources.heading')}</h3>
         <ul class="footer-nav-list" role="list">
-          <li><a href="/privacy">Privacy and Cookie Policy</a></li>
-          <li><a href="/catalog">Search Terms</a></li>
-          <li><a href="/#faq">FAQs</a></li>
-          <li><a href="/catalog">Advanced Search</a></li>
-          <li><a href="/orders">Orders and Returns</a></li>
-          <li><a href="/account">Contact Us</a></li>
-          <li><a href="/feed">RSS Feed</a></li>
-          <li><a href="/orders">Return Requests</a></li>
-          <li><a href="http://localhost:5173" target="_blank" rel="noopener noreferrer">Vendor & Artisan Login</a></li>
-          <li><a href="http://localhost:5173/onboarding" target="_blank" rel="noopener noreferrer">Vendor Registration</a></li>
-          <li><a href="/case-studies">Indiahandmade & Guild Blog</a></li>
-          <li><a href="/feed">Vendor Help & Guides</a></li>
+          <li><a href="/privacy">{t('footer.col.resources.privacy')}</a></li>
+          <li><a href="/catalog">{t('footer.col.resources.searchTerms')}</a></li>
+          <li><a href="/#faq">{t('footer.col.resources.faqs')}</a></li>
+          <li><a href="/catalog">{t('footer.col.resources.advancedSearch')}</a></li>
+          <li><a href="/orders">{t('footer.col.resources.orders')}</a></li>
+          <li><a href="/account">{t('footer.col.resources.contact')}</a></li>
+          <li><a href="/feed">{t('footer.col.resources.rss')}</a></li>
+          <li><a href="/orders">{t('footer.col.resources.returnRequests')}</a></li>
+          <li><a href="http://localhost:5173" target="_blank" rel="noopener noreferrer">{t('footer.col.resources.vendorLogin')}</a></li>
+          <li><a href="http://localhost:5173/onboarding" target="_blank" rel="noopener noreferrer">{t('footer.col.resources.vendorRegistration')}</a></li>
+          <li><a href="/case-studies">{t('footer.col.resources.blog')}</a></li>
+          <li><a href="/feed">{t('footer.col.resources.vendorHelp')}</a></li>
         </ul>
       </div>
 
       <!-- Column 2: Policies & Info -->
       <div class="footer-col">
-        <h3 class="footer-col-heading">Policies & Info</h3>
+        <h3 class="footer-col-heading">{t('footer.col.policies.heading')}</h3>
         <ul class="footer-nav-list" role="list">
-          <li><a href="/about">About Kalakriti & Indiahandmade</a></li>
-          <li><a href="/#faq">FAQs & Inquiries</a></li>
-          <li><a href="/case-studies">Media & Craft Gallery</a></li>
-          <li><a href="/privacy#grievance">Grievance Redressal Mechanism</a></li>
-          <li><a href="/terms#disclaimer">Legal Disclaimer</a></li>
-          <li><a href="/terms#refunds">Returns, Cancel, Refund Policy</a></li>
-          <li><a href="/privacy">Privacy Policy (DPDP Act 2023)</a></li>
-          <li><a href="/terms#shipping">Shipping & Transit Policy</a></li>
-          <li><a href="/terms">Terms of Use (Buyers)</a></li>
-          <li><a href="/terms#sellers">Terms of Use (Sellers & Weavers)</a></li>
+          <li><a href="/about">{t('footer.col.policies.about')}</a></li>
+          <li><a href="/#faq">{t('footer.col.policies.faqs')}</a></li>
+          <li><a href="/case-studies">{t('footer.col.policies.gallery')}</a></li>
+          <li><a href="/privacy#grievance">{t('footer.col.policies.grievance')}</a></li>
+          <li><a href="/terms#disclaimer">{t('footer.col.policies.disclaimer')}</a></li>
+          <li><a href="/terms#refunds">{t('footer.col.policies.refunds')}</a></li>
+          <li><a href="/privacy">{t('footer.col.policies.privacy')}</a></li>
+          <li><a href="/terms#shipping">{t('footer.col.policies.shipping')}</a></li>
+          <li><a href="/terms">{t('footer.col.policies.termsBuyers')}</a></li>
+          <li><a href="/terms#sellers">{t('footer.col.policies.termsSellers')}</a></li>
         </ul>
       </div>
 
       <!-- Column 3: Regional Corridors & Procurement -->
       <div class="footer-col">
-        <h3 class="footer-col-heading">Craft Corridors & B2B</h3>
+        <h3 class="footer-col-heading">{t('footer.col.corridors.heading')}</h3>
         <ul class="footer-nav-list" role="list">
-          <li><a href="/search?belt=north">Northern Plains & Foothills</a></li>
-          <li><a href="/search?belt=west">Western Deserts & Kutch Rann</a></li>
-          <li><a href="/search?belt=south">Deccan & Southern Temple Looms</a></li>
-          <li><a href="/search?belt=east">Eastern & Assam Loomlands</a></li>
-          <li><a href="/search?belt=central">Central Heartland & Tribal Bell Metal</a></li>
-          <li><a href="/gi-tagged">All 74 Certified GI Clusters</a></li>
-          <li><a href="/bulk-order">Institutional & Summit Procurement</a></li>
-          <li><a href="/bulk-order?preset=hospitality">Handloom Hospitality Linen</a></li>
-          <li><a href="/bulk-order?preset=corporate">Eco-Festive Corporate Gifting</a></li>
-          <li><a href="/verify">Cryptographic Provenance Terminal</a></li>
+          <li><a href="/search?belt=north">{t('footer.col.corridors.north')}</a></li>
+          <li><a href="/search?belt=west">{t('footer.col.corridors.west')}</a></li>
+          <li><a href="/search?belt=south">{t('footer.col.corridors.south')}</a></li>
+          <li><a href="/search?belt=east">{t('footer.col.corridors.east')}</a></li>
+          <li><a href="/search?belt=central">{t('footer.col.corridors.central')}</a></li>
+          <li><a href="/gi-tagged">{t('footer.col.corridors.giClusters')}</a></li>
+          <li><a href="/bulk-order">{t('footer.col.corridors.procurement')}</a></li>
+          <li><a href="/bulk-order?preset=hospitality">{t('footer.col.corridors.hospitality')}</a></li>
+          <li><a href="/bulk-order?preset=corporate">{t('footer.col.corridors.corporateGifting')}</a></li>
+          <li><a href="/verify">{t('footer.col.corridors.provenance')}</a></li>
         </ul>
       </div>
 
@@ -211,8 +214,8 @@
         
         <!-- Social Media Row -->
         <div class="footer-block">
-          <h3 class="footer-col-heading">Social Media</h3>
-          <div class="social-links-row" aria-label="Official Social Channels">
+          <h3 class="footer-col-heading">{t('footer.social.heading')}</h3>
+          <div class="social-links-row" aria-label={t('footer.social.ariaLabel')}>
             <!-- Facebook -->
             <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Facebook">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -248,23 +251,23 @@
 
         <!-- We Accept Payment Instruments -->
         <div class="footer-block">
-          <h3 class="footer-col-heading">We Accept</h3>
+          <h3 class="footer-col-heading">{t('footer.accept.heading')}</h3>
           <div class="payment-badges-grid">
-            <span class="pay-badge pay-badge--card">💳 Credit Card</span>
-            <span class="pay-badge pay-badge--debit">💳 Debit Card</span>
-            <span class="pay-badge pay-badge--netbank">🏦 Net Banking</span>
-            <span class="pay-badge pay-badge--upi">⚡ UPI / RuPay</span>
+            <span class="pay-badge pay-badge--card">{t('footer.accept.creditCard')}</span>
+            <span class="pay-badge pay-badge--debit">{t('footer.accept.debitCard')}</span>
+            <span class="pay-badge pay-badge--netbank">{t('footer.accept.netBanking')}</span>
+            <span class="pay-badge pay-badge--upi">{t('footer.accept.upi')}</span>
           </div>
         </div>
 
         <!-- Direct Contact Strip -->
         <div class="footer-contact-box">
           <div class="contact-row">
-            <span class="contact-label">Tollfree Helpline:</span>
+            <span class="contact-label">{t('footer.contact.helpline')}</span>
             <a href="tel:1800112026" class="contact-value">1800-11-2026</a>
           </div>
           <div class="contact-row">
-            <span class="contact-label">Direct Email:</span>
+            <span class="contact-label">{t('footer.contact.email')}</span>
             <a href="mailto:care@kalakriti.gov.in" class="contact-value">care@kalakriti.gov.in</a>
           </div>
         </div>
@@ -275,26 +278,30 @@
           <!-- Buyer App Card -->
           <div class="app-qr-card">
             <div class="app-qr-card__meta">
-              <span class="app-qr-card__label">Download Buyer App</span>
+              <span class="app-qr-card__label">{t('footer.app.downloadBuyer')}</span>
               <div class="google-play-badge">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                   <path d="m3.609 1.814 11.275 11.275L3.609 24.364A2.08 2.08 0 0 1 2 22.427V3.75c0-.853.51-1.603 1.609-1.936zM16.31 14.515 19.4 12.73a1.9 1.9 0 0 0 0-3.3l-3.09-1.785-2.148 2.148 2.148 2.148zM4.938 1.05 15.02 11.133l-2.148 2.148L3.25 3.656a2.02 2.02 0 0 1 1.688-2.606zM15.02 13.025l-10.082 10.08a2.02 2.02 0 0 1-1.688-2.606l9.622-9.622 2.148 2.148z"/>
                 </svg>
-                <span>Google Play</span>
+                <span>{t('footer.app.googlePlay')}</span>
               </div>
-              <button 
-                type="button" 
-                class="app-share-btn" 
-                onclick={() => copyAppShareLink('buyer')}
-                title="Share Buyer App download link"
-              >
-                <Icon name="share" size="0.85rem" />
-                <span>Share</span>
-              </button>
+              <Tooltip text={tooltip('tooltip.share')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="app-share-btn"
+                    onclick={() => copyAppShareLink('buyer')}
+                    {...tp}
+                  >
+                    <Icon name="share" size="0.85rem" />
+                    <span>{t('footer.app.share')}</span>
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
             <!-- Scalable Crisp Vector QR Code -->
             <div class="qr-preview-box">
-              <svg viewBox="0 0 100 100" class="qr-svg" aria-label="QR Code to Download Buyer App">
+              <svg viewBox="0 0 100 100" class="qr-svg" aria-label={t('footer.app.qrAltBuyer')}>
                 <!-- Outer Border -->
                 <rect width="100" height="100" fill="#ffffff" rx="6" />
                 <!-- Corner 1 (Top Left) -->
@@ -340,26 +347,30 @@
           <!-- Seller / Artisan Voice App Card -->
           <div class="app-qr-card">
             <div class="app-qr-card__meta">
-              <span class="app-qr-card__label">Download Seller App</span>
+              <span class="app-qr-card__label">{t('footer.app.downloadSeller')}</span>
               <div class="google-play-badge">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                   <path d="m3.609 1.814 11.275 11.275L3.609 24.364A2.08 2.08 0 0 1 2 22.427V3.75c0-.853.51-1.603 1.609-1.936zM16.31 14.515 19.4 12.73a1.9 1.9 0 0 0 0-3.3l-3.09-1.785-2.148 2.148 2.148 2.148zM4.938 1.05 15.02 11.133l-2.148 2.148L3.25 3.656a2.02 2.02 0 0 1 1.688-2.606zM15.02 13.025l-10.082 10.08a2.02 2.02 0 0 1-1.688-2.606l9.622-9.622 2.148 2.148z"/>
                 </svg>
-                <span>Google Play</span>
+                <span>{t('footer.app.googlePlay')}</span>
               </div>
-              <button 
-                type="button" 
-                class="app-share-btn" 
-                onclick={() => copyAppShareLink('artisan')}
-                title="Share Artisan Voice App download link"
-              >
-                <Icon name="share" size="0.85rem" />
-                <span>Share</span>
-              </button>
+              <Tooltip text={tooltip('tooltip.share')}>
+                {#snippet trigger(tp)}
+                  <button
+                    type="button"
+                    class="app-share-btn"
+                    onclick={() => copyAppShareLink('artisan')}
+                    {...tp}
+                  >
+                    <Icon name="share" size="0.85rem" />
+                    <span>{t('footer.app.share')}</span>
+                  </button>
+                {/snippet}
+              </Tooltip>
             </div>
             <!-- Scalable Crisp Vector QR Code -->
             <div class="qr-preview-box">
-              <svg viewBox="0 0 100 100" class="qr-svg" aria-label="QR Code to Download Artisan Seller App">
+              <svg viewBox="0 0 100 100" class="qr-svg" aria-label={t('footer.app.qrAltSeller')}>
                 <!-- Outer Border -->
                 <rect width="100" height="100" fill="#ffffff" rx="6" />
                 <!-- Corner 1 (Top Left) -->
@@ -412,9 +423,9 @@
   <!-- 3. SEO Category Keyword Cloud / Craft Directory Ribbon -->
   <div class="footer-seo-cloud">
     <div class="footer-seo-container">
-      <nav aria-label="Craft and Handloom Directory Keywords" class="seo-keywords-nav">
+      <nav aria-label={t('footer.seo.ariaLabel')} class="seo-keywords-nav">
         {#each seoKeywords as item, i}
-          <a href={item.href} class="seo-keyword-link">{item.label}</a>
+          <a href={item.href} class="seo-keyword-link">{t(item.key)}</a>
           {#if i < seoKeywords.length - 1}
             <span class="seo-keyword-sep" aria-hidden="true">|</span>
           {/if}
@@ -428,20 +439,16 @@
     <div class="footer-bottom-container">
       <div class="bottom-legal">
         <span class="legal-copy">
-          Copyright © 2026 <strong>Ministry of Social Justice & Empowerment</strong>, Government of India. All rights reserved.
+          {t('footer.legal.copyrightPrefix')} <strong>{t('footer.legal.ministry')}</strong>{t('footer.legal.copyrightSuffix')}
         </span>
         <span class="dot-sep" aria-hidden="true">•</span>
         <span class="legal-dev">
-          Designed &amp; Developed by : <strong>Digital India Corporation (DIC)</strong>
+          {t('footer.legal.developedByPrefix')} <strong>{t('footer.legal.org')}</strong>
         </span>
         <span class="dot-sep" aria-hidden="true">•</span>
         <span class="legal-host">
-          Hosted on National NIC Cloud Infrastructure (GIGW 3.0 &amp; WCAG 2.1 AAA Compliant)
+          {t('footer.legal.hosting')}
         </span>
-      </div>
-
-      <div class="bottom-controls">
-        <LanguageSelector />
       </div>
     </div>
   </div>
@@ -450,8 +457,8 @@
 <style>
   /* Base Footer Container — Warm Antique Walnut & Deep Charcoal Theme */
   .buyer-footer {
-    background-color: #171513;
-    color: #a8a29e;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-stone-300);
     font-size: 0.8125rem;
     line-height: 1.5;
     border-block-start: 1px solid rgba(255, 255, 255, 0.08);
@@ -460,7 +467,7 @@
 
   /* 1. Trust Assurance Strip */
   .footer-trust-strip {
-    background-color: #1f1c19;
+    background-color: var(--k-ink-900);
     border-block-end: 1px solid rgba(255, 255, 255, 0.07);
     padding-block: 1.25rem;
   }
@@ -528,7 +535,7 @@
     aspect-ratio: 1;
     border-radius: 50%;
     background-color: rgba(198, 93, 59, 0.14);
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     flex-shrink: 0;
     transition: transform 0.2s ease, background-color 0.2s ease;
   }
@@ -547,7 +554,7 @@
   .trust-pill__title {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -555,7 +562,7 @@
 
   .trust-pill__sub {
     font-size: 0.69rem;
-    color: #a8a29e;
+    color: var(--k-stone-300);
     white-space: nowrap;
   }
 
@@ -602,7 +609,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     margin: 0;
     padding-block-end: 0.35rem;
     border-block-end: 1px solid rgba(255, 255, 255, 0.1);
@@ -619,7 +626,7 @@
   }
 
   .footer-nav-list a {
-    color: #a8a29e;
+    color: var(--k-stone-300);
     text-decoration: none;
     font-size: 0.775rem;
     line-height: 1.4;
@@ -627,7 +634,7 @@
   }
 
   .footer-nav-list a:hover {
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     text-decoration: underline;
     text-underline-offset: 3px;
   }
@@ -648,13 +655,13 @@
     aspect-ratio: 1;
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.06);
-    color: #d6d3d1;
+    color: var(--k-stone-200);
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
 
   .social-btn:hover {
-    background-color: #c65d3b;
-    color: #ffffff;
+    background-color: var(--k-terracotta-600);
+    color: var(--k-text-on-accent);
     transform: translateY(-2px);
   }
 
@@ -673,7 +680,7 @@
     border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e7e5e4;
+    color: var(--k-stone-100);
     letter-spacing: 0.02em;
   }
 
@@ -696,11 +703,11 @@
   }
 
   .contact-label {
-    color: #a8a29e;
+    color: var(--k-stone-300);
   }
 
   .contact-value {
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     font-weight: 600;
     text-decoration: none;
   }
@@ -743,7 +750,7 @@
   .app-qr-card__label {
     font-size: 0.72rem;
     font-weight: 600;
-    color: #f5f5f4;
+    color: var(--k-text-on-accent);
     line-height: 1.2;
   }
 
@@ -751,8 +758,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: var(--k-surface-inverse);
+    color: var(--k-text-on-accent);
     font-size: 0.65rem;
     font-weight: 600;
     padding: 0.2rem 0.45rem;
@@ -767,7 +774,7 @@
     gap: 0.3rem;
     background: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    color: #d6d3d1;
+    color: var(--k-stone-200);
     font-size: 0.68rem;
     font-weight: 500;
     padding: 0.18rem 0.5rem;
@@ -779,7 +786,7 @@
 
   .app-share-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    color: var(--k-text-on-accent);
     border-color: rgba(255, 255, 255, 0.3);
   }
 
@@ -800,7 +807,7 @@
 
   /* 3. SEO Category Keyword Cloud Ribbon */
   .footer-seo-cloud {
-    background-color: #131110;
+    background-color: var(--k-surface-inverse);
     border-block-start: 1px solid rgba(255, 255, 255, 0.05);
     border-block-end: 1px solid rgba(255, 255, 255, 0.05);
     padding-block: 1rem;
@@ -824,13 +831,13 @@
 
   .seo-keyword-link {
     font-size: 0.7125rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
     text-decoration: none;
     transition: color 0.15s ease;
   }
 
   .seo-keyword-link:hover {
-    color: #e0805a;
+    color: var(--k-terracotta-600);
     text-decoration: underline;
   }
 
@@ -841,7 +848,7 @@
 
   /* 4. Bottom Government Copyright & Attribution Ribbon */
   .footer-bottom {
-    background-color: #0f0d0c;
+    background-color: var(--k-surface-inverse);
     padding-block: 1.25rem;
   }
 
@@ -850,12 +857,12 @@
     margin-inline: auto;
     padding-inline: 1.5rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.72rem;
-    color: #78716c;
+    color: var(--k-text-tertiary);
   }
 
   .bottom-legal {
@@ -867,15 +874,11 @@
   }
 
   .bottom-legal strong {
-    color: #d6d3d1;
+    color: var(--k-stone-200);
     font-weight: 600;
   }
 
   .dot-sep {
     color: rgba(255, 255, 255, 0.12);
-  }
-
-  .bottom-controls {
-    flex-shrink: 0;
   }
 </style>

@@ -1,5 +1,11 @@
 # Final Completion Assessment — 2026-08-28
 
+> **Historical, superseded.** This is a point-in-time status snapshot from
+> 2026-08-28, not living documentation. Several things it describes as
+> missing/in-progress have since shipped or changed — see `docs/PORTS_AND_APIS.md`,
+> `docs/BACKEND_FLOW.md`, and `docs/MICROSERVICES.md` for current state, and
+> `CLAUDE.md` for the accumulated list of fixes made since.
+
 **Time:** 12:05 UTC  
 **Deadline:** Sept 20, 2026 (23 days remaining)
 

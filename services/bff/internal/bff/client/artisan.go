@@ -31,21 +31,21 @@ func NewArtisan(conn grpc.ClientConnInterface) *Artisan {
 // as languageToProto expects), region ({state_code, district?, block?,
 // village?, pincode?}), and the optional cluster_id/pehchan_id/
 // pm_vishwakarma_id/years_of_experience/bio.
-func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (string, error) {
+func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fields map[string]any) (artisanID, accessToken, refreshToken string, err error) {
 	craftIDs, err := stringSlice(fields, "craft_ids")
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	if len(craftIDs) == 0 {
-		return "", domain.InvalidInput("craft_ids: at least one is required")
+		return "", "", "", domain.InvalidInput("craft_ids: at least one is required")
 	}
 	if len(craftIDs) > maxCraftIDs {
-		return "", domain.InvalidInput("craft_ids: too many")
+		return "", "", "", domain.InvalidInput("craft_ids: too many")
 	}
 
 	langNames, err := stringSlice(fields, "languages")
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	languages := make([]commonv1.Language, len(langNames))
 	for i, name := range langNames {
@@ -54,7 +54,7 @@ func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fi
 
 	region, err := geoRegion(fields["region"])
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
 	displayName, _ := fields["display_name"].(string)
@@ -83,15 +83,18 @@ func (a *Artisan) Register(ctx context.Context, phone, idempotencyKey string, fi
 	if v, ok := fields["bio"].(string); ok {
 		req.Bio = &v
 	}
+	if v, ok := fields["social_category"].(string); ok && v != "" {
+		req.SocialCategory = &v
+	}
 
 	ctx, cancel := withTimeout(ctx)
 	defer cancel()
 
 	resp, err := a.identity.RegisterArtisan(ctx, req)
 	if err != nil {
-		return "", grpcErr(err)
+		return "", "", "", grpcErr(err)
 	}
-	return resp.GetArtisan().GetId(), nil
+	return resp.GetArtisan().GetId(), resp.GetTokens().GetAccessToken(), resp.GetTokens().GetRefreshToken(), nil
 }
 
 // stringSlice reads a JSON-decoded []any field as []string, rejecting any
