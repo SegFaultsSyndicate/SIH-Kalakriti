@@ -60,17 +60,16 @@
   }
 
   const priceAmountPaise = $derived(toPaise(priceRupees));
+  const materialCostAmountPaise = $derived(toPaise(materialCostRupees));
 
   async function getAdvice(): Promise<void> {
-    if (!remoteId) return;
-    const materialCost = toPaise(materialCostRupees);
-    if (materialCost === undefined || hours <= 0) return;
+    if (!remoteId || materialCostAmountPaise === undefined || hours <= 0) return;
     advising = true;
     advisoryError = undefined;
     try {
       advisory = await advisePricing({
         listing_id: remoteId,
-        material_cost: { amount_paise: materialCost },
+        material_cost: { amount_paise: materialCostAmountPaise },
         hours,
         // Lets the server run its own below-floor/above-ceiling check
         // (CheckAnomaly) against what the artisan has actually typed, rather
@@ -170,7 +169,14 @@
             <NumberStepper {id} bind:value={hours} min={0} />
           {/snippet}
         </FieldGroup>
-        <Button size="sm" variant="secondary" loading={advising} onclick={getAdvice} tooltip={tooltip('tooltip.getPriceAdvice')}>
+        <Button
+          size="sm"
+          variant="secondary"
+          loading={advising}
+          disabled={materialCostAmountPaise === undefined || hours <= 0}
+          onclick={getAdvice}
+          tooltip={tooltip('tooltip.getPriceAdvice')}
+        >
           {t('listing.pricing.adviceButton')}
         </Button>
         {#if advisory}

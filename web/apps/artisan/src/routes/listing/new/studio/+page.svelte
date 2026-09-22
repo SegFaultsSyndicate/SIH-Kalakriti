@@ -522,7 +522,10 @@
   }
 
   .split-viewer__img--isolated {
-    /* Soft vignette/mask simulating alpha isolate */
+    /* Clip to an oval so the swatch background behind it is actually visible --
+       without this, object-fit: cover fills the container edge-to-edge and
+       Studio White / Transparent look identical. */
+    clip-path: ellipse(42% 44% at 50% 48%);
     filter: brightness(1.16) contrast(1.12) saturate(1.08) drop-shadow(0 14px 20px rgba(0, 0, 0, 0.22));
   }
 
