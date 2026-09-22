@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -137,6 +138,10 @@ func run() error {
 		RateLimitPerIP:         100,
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
+		// Unset/0 leaves the OTP route on its built-in 5-per-10-minutes; see
+		// bff.Config.OTPRateLimit for why this is worth overriding locally.
+		OTPRateLimit:       intEnv("OTP_RATE_LIMIT", 0),
+		OTPRateLimitWindow: durationEnv("OTP_RATE_LIMIT_WINDOW", 0),
 		// Service clients wired to real backends where the RPC shapes line up
 		// 1:1 with these interfaces.
 		AuthSvc:    client.NewAuth(coreConn, rdb),
@@ -204,6 +209,33 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// intEnv reads an integer env var, returning fallback when unset or unparseable.
+func intEnv(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
+}
+
+// durationEnv reads a Go duration env var (e.g. "10m"), returning fallback when
+// unset or unparseable.
+func durationEnv(key string, fallback time.Duration) time.Duration {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return fallback
+	}
+	return d
 }
 
 // splitEnv reads a comma-separated env var into a slice, or nil if unset.

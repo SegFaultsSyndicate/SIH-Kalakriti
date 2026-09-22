@@ -21,6 +21,14 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/mosje"
 )
 
+// Defaults for the POST /auth/otp/request limiter, used when Config leaves
+// OTPRateLimit/OTPRateLimitWindow unset. These are the values the route
+// carried hardcoded before they became configurable.
+const (
+	defaultOTPRateLimit       = 5
+	defaultOTPRateLimitWindow = 10 * time.Minute
+)
+
 // Config holds all dependencies the BFF needs.
 type Config struct {
 	Addr    string
@@ -74,6 +82,16 @@ type Config struct {
 	RateLimitPerIP        int
 	RateLimitPerPrincipal int
 	RateLimitWindow       time.Duration
+
+	// OTPRateLimit caps POST /auth/otp/request per client IP within
+	// OTPRateLimitWindow. Zero falls back to defaultOTPRateLimit /
+	// defaultOTPRateLimitWindow below. It is configurable because the limit
+	// exists to cap real SMS spend and phone enumeration, neither of which
+	// applies to a stack running the logging OTP stub -- and at the default
+	// 5-per-10-minutes a local `make demo-up` (one OTP request per seeded
+	// artisan) could not be re-run until the window expired.
+	OTPRateLimit       int
+	OTPRateLimitWindow time.Duration
 }
 
 // Server is the BFF HTTP server.
@@ -176,8 +194,15 @@ func (s *Server) mountRoutes() {
 		Window:            cfg.RateLimitWindow,
 	})))
 
-	// Public auth routes (no JWT required) with strict OTP rate limiting (max 5 per 10min).
-	api.POST("/auth/otp/request", httpx.Wrap(middleware.RateLimitEndpoint(cfg.Redis, "otp", 5, 10*time.Minute)), httpx.WrapHandler(apiH.RequestOTP))
+	// Public auth routes (no JWT required) with strict OTP rate limiting.
+	otpLimit, otpWindow := cfg.OTPRateLimit, cfg.OTPRateLimitWindow
+	if otpLimit <= 0 {
+		otpLimit = defaultOTPRateLimit
+	}
+	if otpWindow <= 0 {
+		otpWindow = defaultOTPRateLimitWindow
+	}
+	api.POST("/auth/otp/request", httpx.Wrap(middleware.RateLimitEndpoint(cfg.Redis, "otp", otpLimit, otpWindow)), httpx.WrapHandler(apiH.RequestOTP))
 	api.POST("/auth/otp/verify", httpx.WrapHandler(apiH.VerifyOTP))
 	api.POST("/auth/refresh", httpx.WrapHandler(apiH.RefreshToken))
 

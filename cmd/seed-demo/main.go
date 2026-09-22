@@ -116,12 +116,19 @@ func main() {
 		}
 		artisanID := artisanResp["artisan_id"].(string)
 
-		// Re-verify: the profile now exists, so this token carries artisanID
-		// as its subject (see VerifyOtp in services/core-svc/internal/core/
-		// service/auth.go) -- the pre-registration token above never will.
-		artisanToken, err := c.otpLogin(phone)
-		if err != nil {
-			log.Fatalf("otp login (post-registration) for %s: %v", phone, err)
+		// POST /artisans already mints the artisan-scoped token pair this
+		// needs: the pre-registration token was issued before the profile
+		// existed and carries no subject, so RegisterArtisan returns fresh
+		// ones (see its handler in services/bff/internal/bff/handler/api.go,
+		// and auth-flow.ts's completeOtpVerification for the client-side
+		// counterpart). This used to throw that pair away and run a second
+		// full OTP login per artisan instead -- which, at 2 OTP requests per
+		// artisan against the /auth/otp/request limiter's 5-per-10-minutes-
+		// per-IP budget (server.go), made `make demo-up` fail on the third
+		// artisan every single time, from a completely clean stack.
+		artisanToken, _ := artisanResp["access_token"].(string)
+		if artisanToken == "" {
+			log.Fatalf("registering artisan %s: response carried no access_token: %v", phone, artisanResp)
 		}
 
 		listingResp, err := c.postJSON("/api/v1/listings", artisanToken, map[string]any{
@@ -141,7 +148,12 @@ func main() {
 		if err != nil {
 			log.Fatalf("creating listing for artisan %s: %v", artisanID, err)
 		}
-		listingID := listingResp["id"].(string)
+		// The bff returns "listing_id" here, not "id" -- see CreateListing in
+		// services/bff/internal/bff/handler/api.go.
+		listingID, _ := listingResp["listing_id"].(string)
+		if listingID == "" {
+			log.Fatalf("creating listing for artisan %s: response carried no listing_id: %v", artisanID, listingResp)
+		}
 
 		if _, err := c.postJSON(fmt.Sprintf("/api/v1/listings/%s/submit", listingID), officerToken, nil); err != nil {
 			log.Fatalf("submitting listing %s: %v", listingID, err)
@@ -170,7 +182,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("creating bulk order for listing %s: %v", listingID, err)
 		}
-		log.Printf("  bulk order %s placed against listing %s", orderResp["id"], listingID)
+		log.Printf("  bulk order %s placed against listing %s", orderResp["order_id"], listingID)
 	}
 
 	mosjeArtisanIDs, err := seedMosjeTier4(c, crafts, officerToken)
