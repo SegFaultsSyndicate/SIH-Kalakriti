@@ -124,7 +124,7 @@
         <img
           class="k-brand-emblem"
           src="/favicon.svg"
-          alt="State Emblem of India"
+          alt={t('nav.stateEmblemAlt')}
           width="42"
           height="42"
         />
@@ -217,116 +217,116 @@
               <div class="mega-grid-6">
                 <!-- Col 1: Home Décor & Utility -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Home Décor and Utility</h4>
+                  <h4 class="mega-heading">{t('nav.mega.home-decor-and-utility.heading.1')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=candle">Artistic Candles</a></li>
-                    <li><a href="/search?q=painting">Artworks & Paintings</a></li>
-                    <li><a href="/search?q=candlestick">Candle Sticks</a></li>
-                    <li><a href="/search?q=clock">Ethnic Clock</a></li>
-                    <li><a href="/search?q=incense">Incense Sticks</a></li>
-                    <li><a href="/search?q=metal">Metal Wares & Dhokra</a></li>
-                    <li><a href="/search?q=mirror">Mirrors & Inlay</a></li>
-                    <li><a href="/search?q=papermache">Paper Works & Papier Mâché</a></li>
-                    <li><a href="/search?q=stoneware">Stone Wares & Soapstone</a></li>
-                    <li><a href="/search?q=tapestry">Tapestries & Wall Hangings</a></li>
-                    <li><a href="/search?q=wood">Wooden Handicrafts</a></li>
-                    <li><a href="/search?q=walkingstick">Walking Sticks</a></li>
+                    <li><a href="/search?q=candle">{t('nav.mega.home-decor-and-utility.candle')}</a></li>
+                    <li><a href="/search?q=painting">{t('nav.mega.home-decor-and-utility.painting')}</a></li>
+                    <li><a href="/search?q=candlestick">{t('nav.mega.home-decor-and-utility.candlestick')}</a></li>
+                    <li><a href="/search?q=clock">{t('nav.mega.home-decor-and-utility.clock')}</a></li>
+                    <li><a href="/search?q=incense">{t('nav.mega.home-decor-and-utility.incense')}</a></li>
+                    <li><a href="/search?q=metal">{t('nav.mega.home-decor-and-utility.metal')}</a></li>
+                    <li><a href="/search?q=mirror">{t('nav.mega.home-decor-and-utility.mirror')}</a></li>
+                    <li><a href="/search?q=papermache">{t('nav.mega.home-decor-and-utility.papermache')}</a></li>
+                    <li><a href="/search?q=stoneware">{t('nav.mega.home-decor-and-utility.stoneware')}</a></li>
+                    <li><a href="/search?q=tapestry">{t('nav.mega.home-decor-and-utility.tapestry')}</a></li>
+                    <li><a href="/search?q=wood">{t('nav.mega.home-decor-and-utility.wood')}</a></li>
+                    <li><a href="/search?q=walkingstick">{t('nav.mega.home-decor-and-utility.walkingstick')}</a></li>
                   </ul>
                 </div>
 
                 <!-- Col 2: Kitchen & Furnishings -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Kitchen and Dining</h4>
+                  <h4 class="mega-heading">{t('nav.mega.kitchen-and-furnishings.heading.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=placemat">Place Mats</a></li>
-                    <li><a href="/search?q=towel">Dish Cloths & Towels</a></li>
-                    <li><a href="/search?q=napkin">Table Napkins</a></li>
-                    <li><a href="/search?q=copper">Copper Bottles & Jugs</a></li>
-                    <li><a href="/search?q=claypot">Vedic Clay Cookware</a></li>
+                    <li><a href="/search?q=placemat">{t('nav.mega.kitchen-and-furnishings.placemat')}</a></li>
+                    <li><a href="/search?q=towel">{t('nav.mega.kitchen-and-furnishings.towel')}</a></li>
+                    <li><a href="/search?q=napkin">{t('nav.mega.kitchen-and-furnishings.napkin')}</a></li>
+                    <li><a href="/search?q=copper">{t('nav.mega.kitchen-and-furnishings.copper')}</a></li>
+                    <li><a href="/search?q=claypot">{t('nav.mega.kitchen-and-furnishings.claypot')}</a></li>
                   </ul>
 
-                  <h4 class="mega-heading" style="margin-top: 1rem;">Home Furnishings</h4>
+                  <h4 class="mega-heading" style="margin-top: 1rem;">{t('nav.mega.kitchen-and-furnishings.heading.2.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=bedsheet">Handloom Bedsheets</a></li>
-                    <li><a href="/search?q=quilt">Kantha Throws & Quilts</a></li>
-                    <li><a href="/search?q=pillow">Pillow Covers</a></li>
-                    <li><a href="/search?q=tablerunner">Table Runners</a></li>
-                    <li><a href="/search?q=cushion">Cushion Covers</a></li>
+                    <li><a href="/search?q=bedsheet">{t('nav.mega.kitchen-and-furnishings.bedsheet')}</a></li>
+                    <li><a href="/search?q=quilt">{t('nav.mega.kitchen-and-furnishings.quilt')}</a></li>
+                    <li><a href="/search?q=pillow">{t('nav.mega.kitchen-and-furnishings.pillow')}</a></li>
+                    <li><a href="/search?q=tablerunner">{t('nav.mega.kitchen-and-furnishings.tablerunner')}</a></li>
+                    <li><a href="/search?q=cushion">{t('nav.mega.kitchen-and-furnishings.cushion')}</a></li>
                   </ul>
                 </div>
 
                 <!-- Col 3: Floor Coverings & Sports -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Floor Coverings</h4>
+                  <h4 class="mega-heading">{t('nav.mega.floor-coverings-and-sports.heading.3')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=carpet">Mirzapur Hand-Knotted Carpets</a></li>
-                    <li><a href="/search?q=rug">Kashmir Silk Rugs</a></li>
-                    <li><a href="/search?q=durrie">Bhavani Jamakkalam Durries</a></li>
-                    <li><a href="/search?q=doormat">Coir & Jute Doormats</a></li>
-                    <li><a href="/search?q=yogamat">Natural Kusha Grass Mats</a></li>
+                    <li><a href="/search?q=carpet">{t('nav.mega.floor-coverings-and-sports.carpet')}</a></li>
+                    <li><a href="/search?q=rug">{t('nav.mega.floor-coverings-and-sports.rug')}</a></li>
+                    <li><a href="/search?q=durrie">{t('nav.mega.floor-coverings-and-sports.durrie')}</a></li>
+                    <li><a href="/search?q=doormat">{t('nav.mega.floor-coverings-and-sports.doormat')}</a></li>
+                    <li><a href="/search?q=yogamat">{t('nav.mega.floor-coverings-and-sports.yogamat')}</a></li>
                   </ul>
 
-                  <h4 class="mega-heading" style="margin-top: 1rem;">Sports & Fitness</h4>
+                  <h4 class="mega-heading" style="margin-top: 1rem;">{t('nav.mega.floor-coverings-and-sports.heading.3.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=bow">Traditional Bow & Arrow</a></li>
-                    <li><a href="/search?q=yogamat">Organic Yoga Mats</a></li>
-                    <li><a href="/search?q=massager">Wooden Acupressure Massager</a></li>
+                    <li><a href="/search?q=bow">{t('nav.mega.floor-coverings-and-sports.bow')}</a></li>
+                    <li><a href="/search?q=yogamat">{t('nav.mega.floor-coverings-and-sports.yogamat.2')}</a></li>
+                    <li><a href="/search?q=massager">{t('nav.mega.floor-coverings-and-sports.massager')}</a></li>
                   </ul>
                 </div>
 
                 <!-- Col 4: Musical Instruments & Accessories -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Musical Instruments</h4>
+                  <h4 class="mega-heading">{t('nav.mega.musical-instruments-and-accessories.heading.4')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=flute">Bamboo Flutes</a></li>
-                    <li><a href="/search?q=tabla">Handcrafted Tabla Pair</a></li>
-                    <li><a href="/search?q=sitar">Miraj Sitar & Tanpura</a></li>
-                    <li><a href="/search?q=dholak">Wood Dholak</a></li>
-                    <li><a href="/search?q=shehnai">Varanasi Shehnai</a></li>
+                    <li><a href="/search?q=flute">{t('nav.mega.musical-instruments-and-accessories.flute')}</a></li>
+                    <li><a href="/search?q=tabla">{t('nav.mega.musical-instruments-and-accessories.tabla')}</a></li>
+                    <li><a href="/search?q=sitar">{t('nav.mega.musical-instruments-and-accessories.sitar')}</a></li>
+                    <li><a href="/search?q=dholak">{t('nav.mega.musical-instruments-and-accessories.dholak')}</a></li>
+                    <li><a href="/search?q=shehnai">{t('nav.mega.musical-instruments-and-accessories.shehnai')}</a></li>
                   </ul>
 
-                  <h4 class="mega-heading" style="margin-top: 1rem;">Accessories</h4>
+                  <h4 class="mega-heading" style="margin-top: 1rem;">{t('nav.mega.musical-instruments-and-accessories.heading.4.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=travelbag">Shantiniketan Leather Bags</a></li>
-                    <li><a href="/search?q=bottlebag">Jute Bottle Bags</a></li>
-                    <li><a href="/search?q=handfan">Palm Leaf Hand Fans</a></li>
+                    <li><a href="/search?q=travelbag">{t('nav.mega.musical-instruments-and-accessories.travelbag')}</a></li>
+                    <li><a href="/search?q=bottlebag">{t('nav.mega.musical-instruments-and-accessories.bottlebag')}</a></li>
+                    <li><a href="/search?q=handfan">{t('nav.mega.musical-instruments-and-accessories.handfan')}</a></li>
                   </ul>
                 </div>
 
                 <!-- Col 5: Stationery & Lighting -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Stationery</h4>
+                  <h4 class="mega-heading">{t('nav.mega.stationery-and-lighting.heading.5')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=diary">Handmade Paper Diaries</a></li>
-                    <li><a href="/search?q=bookmark">Leather & Silk Bookmarks</a></li>
-                    <li><a href="/search?q=folder">Kalamkari File Folders</a></li>
-                    <li><a href="/search?q=penstand">Brass & Wood Pen Stands</a></li>
+                    <li><a href="/search?q=diary">{t('nav.mega.stationery-and-lighting.diary')}</a></li>
+                    <li><a href="/search?q=bookmark">{t('nav.mega.stationery-and-lighting.bookmark')}</a></li>
+                    <li><a href="/search?q=folder">{t('nav.mega.stationery-and-lighting.folder')}</a></li>
+                    <li><a href="/search?q=penstand">{t('nav.mega.stationery-and-lighting.penstand')}</a></li>
                   </ul>
 
-                  <h4 class="mega-heading" style="margin-top: 1rem;">Lighting</h4>
+                  <h4 class="mega-heading" style="margin-top: 1rem;">{t('nav.mega.stationery-and-lighting.heading.5.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=floorlamp">Lacquered Wood Floor Lamps</a></li>
-                    <li><a href="/search?q=pendant">Terracotta Pendant Lights</a></li>
-                    <li><a href="/search?q=tealight">Brass Tea Light Holders</a></li>
-                    <li><a href="/search?q=sconce">Moradabad Wall Sconces</a></li>
+                    <li><a href="/search?q=floorlamp">{t('nav.mega.stationery-and-lighting.floorlamp')}</a></li>
+                    <li><a href="/search?q=pendant">{t('nav.mega.stationery-and-lighting.pendant')}</a></li>
+                    <li><a href="/search?q=tealight">{t('nav.mega.stationery-and-lighting.tealight')}</a></li>
+                    <li><a href="/search?q=sconce">{t('nav.mega.stationery-and-lighting.sconce')}</a></li>
                   </ul>
                 </div>
 
                 <!-- Col 6: Bath, Wellness & Religious Items -->
                 <div class="mega-col">
-                  <h4 class="mega-heading">Bath & Wellness</h4>
+                  <h4 class="mega-heading">{t('nav.mega.bath-wellness-and-religious-items.heading.6')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=gamcha">Assam Gamchas</a></li>
-                    <li><a href="/search?q=towels">Khadi Bath Towels</a></li>
-                    <li><a href="/search?q=wellness">Herbal & Meditation</a></li>
+                    <li><a href="/search?q=gamcha">{t('nav.mega.bath-wellness-and-religious-items.gamcha')}</a></li>
+                    <li><a href="/search?q=towels">{t('nav.mega.bath-wellness-and-religious-items.towels')}</a></li>
+                    <li><a href="/search?q=wellness">{t('nav.mega.bath-wellness-and-religious-items.wellness')}</a></li>
                   </ul>
 
-                  <h4 class="mega-heading" style="margin-top: 1rem;">Religious Items</h4>
+                  <h4 class="mega-heading" style="margin-top: 1rem;">{t('nav.mega.bath-wellness-and-religious-items.heading.6.2')}</h4>
                   <ul class="mega-sublist">
-                    <li><a href="/search?q=kalash">Pooja Brass Kalash</a></li>
-                    <li><a href="/search?q=tulsi">Tulsi Kanthi Mala</a></li>
-                    <li><a href="/search?q=idols">Swamimalai Bronze Idols</a></li>
-                    <li><a href="/search?q=japamala">Sandalwood Japa Mala</a></li>
+                    <li><a href="/search?q=kalash">{t('nav.mega.bath-wellness-and-religious-items.kalash')}</a></li>
+                    <li><a href="/search?q=tulsi">{t('nav.mega.bath-wellness-and-religious-items.tulsi')}</a></li>
+                    <li><a href="/search?q=idols">{t('nav.mega.bath-wellness-and-religious-items.idols')}</a></li>
+                    <li><a href="/search?q=japamala">{t('nav.mega.bath-wellness-and-religious-items.japamala')}</a></li>
                   </ul>
                 </div>
               </div>
@@ -383,28 +383,28 @@
               <div class="dropdown-group">
                 <h4 class="dropdown-heading">{t('nav.furniture.outdoors')}</h4>
                 <ul>
-                  <li><a href="/search?q=patiochair">Patio Chairs</a></li>
-                  <li><a href="/search?q=patiosofa">Patio Sofas</a></li>
-                  <li><a href="/search?q=sunlounger">Sun Loungers</a></li>
-                  <li><a href="/search?q=swing">Hand-carved Swings & Accessories</a></li>
+                  <li><a href="/search?q=patiochair">{t('nav.mega.furniture.patiochair')}</a></li>
+                  <li><a href="/search?q=patiosofa">{t('nav.mega.furniture.patiosofa')}</a></li>
+                  <li><a href="/search?q=sunlounger">{t('nav.mega.furniture.sunlounger')}</a></li>
+                  <li><a href="/search?q=swing">{t('nav.mega.furniture.swing')}</a></li>
                 </ul>
               </div>
 
               <div class="dropdown-group">
                 <h4 class="dropdown-heading">{t('nav.furniture.indoor')}</h4>
                 <ul>
-                  <li><a href="/search?q=bedsidetable">Bedside Tables</a></li>
-                  <li><a href="/search?q=diningtable">Dining Tables</a></li>
+                  <li><a href="/search?q=bedsidetable">{t('nav.mega.furniture.bedsidetable')}</a></li>
+                  <li><a href="/search?q=diningtable">{t('nav.mega.furniture.diningtable')}</a></li>
                 </ul>
               </div>
 
               <div class="dropdown-group">
                 <h4 class="dropdown-heading">{t('nav.furniture.offices')}</h4>
                 <ul>
-                  <li><a href="/search?q=cabinet">Cabinets & Bookcases</a></li>
-                  <li><a href="/search?q=chair">Solid Teak Chairs</a></li>
-                  <li><a href="/search?q=rack">Magazines & Newspaper Racks</a></li>
-                  <li><a href="/search?q=sofa">Sofa Sets & Couches</a></li>
+                  <li><a href="/search?q=cabinet">{t('nav.mega.furniture.cabinet')}</a></li>
+                  <li><a href="/search?q=chair">{t('nav.mega.furniture.chair')}</a></li>
+                  <li><a href="/search?q=rack">{t('nav.mega.furniture.rack')}</a></li>
+                  <li><a href="/search?q=sofa">{t('nav.mega.furniture.sofa')}</a></li>
                 </ul>
               </div>
             </div>

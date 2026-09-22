@@ -30,6 +30,9 @@
   import { getListingSummary, type components } from '@kalakriti/api';
   import { getCached, setCached } from '@kalakriti/offline';
   import PurchaseForm from '$lib/PurchaseForm.svelte';
+  import ProductDetailSections from '$lib/ProductDetailSections.svelte';
+  import { wishlist } from '$lib/wishlist.svelte';
+  import { demoListingById, demoSocial, productDetails, relatedListings } from '$lib/demo-catalog';
 
   type ListingSummary = components['schemas']['ListingSummary'];
 
@@ -37,7 +40,20 @@
   const listingId = $derived(page.params.slug ?? '');
 
   let loading = $state(true);
-  let listing = $state<ListingSummary | undefined>(undefined);
+  let fetched = $state<ListingSummary | undefined>(undefined);
+  // Demo ids (home/GI/search fallbacks) never exist in the backend -- resolve
+  // them locally. $derived, not assigned in the effect, so a language switch
+  // retranslates the demo piece like any other UI text.
+  const demo = $derived(fetched ? undefined : demoListingById(listingId, t));
+  const listing = $derived(fetched ?? demo);
+  const social = $derived(demo ? demoSocial(demo, t) : undefined);
+  const details = $derived(listing ? productDetails(listing, t) : undefined);
+  const related = $derived(listing ? relatedListings(listing, t) : undefined);
+  const discountPct = $derived(
+    social && listing?.price?.amount_paise
+      ? Math.round((1 - listing.price.amount_paise / social.mrpPaise) * 100)
+      : 0,
+  );
   let activeMediaIndex = $state(0);
   let devAvatar = $state<string | undefined>(undefined);
 
@@ -74,11 +90,12 @@
     void (async () => {
       loading = true;
       activeMediaIndex = 0;
+      fetched = undefined;
       try {
-        listing = await getListingSummary(id);
-        await setCached(listingCacheKey(id), listing);
+        fetched = await getListingSummary(id);
+        await setCached(listingCacheKey(id), fetched);
       } catch {
-        listing = await getCached<ListingSummary>(listingCacheKey(id));
+        fetched = await getCached<ListingSummary>(listingCacheKey(id));
       } finally {
         loading = false;
       }
@@ -95,7 +112,14 @@
       listing?.translations?.[0]?.description ??
       '',
   );
-  const media = $derived(listing?.media ?? []);
+  // Demo pieces only carry image_url; borrow same-craft photos so the gallery
+  // has thumbnails to flip through, like a real multi-photo listing.
+  const media = $derived.by(() => {
+    if (listing?.media?.length) return listing.media;
+    if (!listing?.image_url) return [];
+    const extra = demo ? (related?.sameCraft ?? []).map((l) => l.image_url).filter((u): u is string => !!u && u !== listing.image_url) : [];
+    return [listing.image_url, ...new Set(extra)].slice(0, 5).map((url) => ({ kind: 'IMAGE' as const, url }));
+  });
   const activeMedia = $derived(media[activeMediaIndex]);
   const madeToOrder = $derived(listing?.type === 'MADE_TO_ORDER');
   const terms = $derived(listing?.made_to_order_terms);
@@ -114,10 +138,53 @@
     { label: t('nav.home') || 'Home', href: '/' },
     {
       label: listing?.craft_name ?? 'Craft Corridor',
-      href: listing?.craft_slug ? `/craft/${listing.craft_slug}` : '/catalog',
+      // Demo pieces have no craft ontology record, so /craft/{slug} would 404.
+      href: demo
+        ? listingId.startsWith('gi-')
+          ? '/gi-tagged'
+          : `/search?q=${encodeURIComponent(listing?.craft_name ?? '')}`
+        : listing?.craft_slug
+          ? `/craft/${listing.craft_slug}`
+          : '/catalog',
     },
     { label: title || 'Listing' },
   ]);
+
+  // ponytail: delivery ETA is a flat lead-time estimate, not a courier quote --
+  // swap for a real serviceability API once one exists.
+  const PINCODE_KEY = 'kalakriti.buyer.pincode';
+  const PINCODE_RE = /^[1-9]\d{5}$/;
+  let pincode = $state('');
+  let pincodeDraft = $state('');
+  let pincodeError = $state('');
+  const pincodeOk = $derived(PINCODE_RE.test(pincode));
+
+  $effect(() => {
+    try {
+      pincode = localStorage.getItem(PINCODE_KEY) ?? '';
+      pincodeDraft = pincode;
+    } catch {}
+  });
+
+  function savePincode(): void {
+    const v = pincodeDraft.trim();
+    if (!PINCODE_RE.test(v)) {
+      pincodeError = t('pdp.delivery.invalid');
+      return;
+    }
+    pincodeError = '';
+    pincode = v;
+    try {
+      localStorage.setItem(PINCODE_KEY, v);
+    } catch {}
+  }
+
+  const deliveryLabel = $derived.by(() => {
+    const days = madeToOrder ? (terms?.lead_time_days ?? 21) + 5 : 4 + (Number(pincode.slice(0, 1) || 0) % 3);
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toLocaleDateString(locale.code, { weekday: 'short', day: 'numeric', month: 'short' });
+  });
 
   let copied = $state(false);
 
@@ -256,6 +323,14 @@
 
       <h1>{title}</h1>
 
+      {#if social}
+        <a class="pdp-rating" href="#reviews">
+          <span class="pdp-rating__value">{social.rating.toFixed(1)}</span>
+          <span class="pdp-stars" style="--pct: {(social.rating / 5) * 100}%" role="img" aria-label={t('pdp.starsAria', { rating: social.rating })}></span>
+          <span class="pdp-rating__count">{t('pdp.ratingsCount', { count: social.ratingCount.toLocaleString(locale.code) })}</span>
+        </a>
+      {/if}
+
       <!-- 24-Hour Response Time Promise -->
       <div class="listing__promise-card">
         <Icon name="verified-artisan" size="1.25rem" />
@@ -291,7 +366,31 @@
         {/snippet}
       </Tooltip>
       {/if}
-      <p class="listing__price"><Money paise={listing.price?.amount_paise ?? 0} /></p>
+      <div class="pdp-price">
+        {#if discountPct > 0}<span class="pdp-price__off">-{discountPct}%</span>{/if}
+        <p class="listing__price"><Money paise={listing.price?.amount_paise ?? 0} /></p>
+      </div>
+      {#if social && discountPct > 0}
+        <p class="pdp-mrp">{t('pdp.mrp')} <s><Money paise={social.mrpPaise} /></s></p>
+      {/if}
+      <p class="pdp-tax">{t('pdp.inclTax')}</p>
+
+      <ul class="pdp-trust" aria-label={t('pdp.trust.aria')}>
+        <li><Icon name="fair-price" /><span>{t('pdp.trust.direct')}</span></li>
+        <li><Icon name="ready-stock" /><span>{t('pdp.trust.freeDelivery')}</span></li>
+        {#if provenance}<li><Icon name="provenance" /><span>{t('pdp.trust.sealed')}</span></li>{/if}
+        {#if !madeToOrder}<li><Icon name="verified-artisan" /><span>{t('pdp.trust.returns')}</span></li>{/if}
+        {#if listing.gi_certified}<li><Icon name="gi-tagged" /><span>{t('pdp.trust.gi')}</span></li>{/if}
+      </ul>
+
+      {#if details}
+        <section class="pdp-about" aria-labelledby="about-heading">
+          <h2 id="about-heading">{t('pdp.about.heading')}</h2>
+          <ul>
+            {#each details.bullets as b (b)}<li>{b}</li>{/each}
+          </ul>
+        </section>
+      {/if}
 
       {#if madeToOrder && terms}
         <section class="listing__mto" aria-labelledby="mto-heading">
@@ -310,6 +409,40 @@
       {:else if listing.type === 'READY_STOCK'}
         <p class="listing__ready"><Icon name="ready-stock" />{t('listing.readyStock')}</p>
       {/if}
+
+      <div class="pdp-delivery">
+        <p class="pdp-delivery__eta">
+          <Icon name="ready-stock" />
+          <span>{pincodeOk ? t('pdp.delivery.etaTo', { date: deliveryLabel, pincode }) : t('pdp.delivery.eta', { date: deliveryLabel })}</span>
+        </p>
+        <form class="pdp-delivery__form" onsubmit={(e) => { e.preventDefault(); savePincode(); }}>
+          <label class="visually-hidden" for="pdp-pincode">{t('pdp.delivery.pincodeLabel')}</label>
+          <input id="pdp-pincode" inputmode="numeric" maxlength="6" placeholder={t('pdp.delivery.pincodePlaceholder')} bind:value={pincodeDraft} />
+          <button type="submit">{t('pdp.delivery.check')}</button>
+        </form>
+        {#if pincodeError}<p class="pdp-delivery__error" role="alert">{pincodeError}</p>{/if}
+        {#if social?.stockLeft !== undefined}
+          <p class="pdp-stock" class:pdp-stock--low={social.stockLeft <= 3}>
+            {social.stockLeft <= 3 ? t('pdp.stock.low', { count: social.stockLeft }) : t('pdp.stock.in')}
+          </p>
+        {/if}
+        <p class="pdp-seller">
+          {t('pdp.soldBy')}
+          <a href="/artisan/{encodeURIComponent((listing.artisan_name ?? '').toLowerCase())}">{listing.artisan_name ?? t('pdp.theArtisan')}</a>
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="pdp-wishlist"
+        aria-pressed={wishlist.has(listing.id ?? '')}
+        onclick={() => wishlist.toggle(listing.id ?? '', title)}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill={wishlist.has(listing.id ?? '') ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span>{wishlist.has(listing.id ?? '') ? t('listingCard.savedToWishlist') : t('listingCard.addToWishlist')}</span>
+      </button>
 
       <PurchaseForm {listing} />
 
@@ -360,6 +493,10 @@
       </section>
     </div>
   </div>
+
+  {#if details && related}
+    <ProductDetailSections {listing} {details} {social} {related} />
+  {/if}
 
   <!-- Sticky Mobile CTA Dock -->
   <aside class="sticky-mobile-dock" aria-label={t('listing.quickOrderDockAriaLabel')}>
@@ -543,7 +680,162 @@
   .listing__price {
     font-size: var(--k-text-xl);
     font-weight: var(--k-weight-semibold);
+    margin: 0;
+  }
+
+  /* Amazon-style buy box pieces */
+  .pdp-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    margin-block-end: var(--k-space-3);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    text-decoration: none;
+  }
+
+  .pdp-rating:hover .pdp-rating__count {
+    text-decoration: underline;
+  }
+
+  .pdp-rating__value {
+    font-weight: var(--k-weight-semibold);
+    color: var(--k-text-primary);
+  }
+
+  .pdp-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--k-space-3);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    padding-block-start: var(--k-space-3);
+  }
+
+  .pdp-price__off {
+    font-size: var(--k-text-xl);
+    color: var(--k-accent-danger-muted, #b12704);
+  }
+
+  .pdp-mrp,
+  .pdp-tax {
+    margin: var(--k-space-1) 0 0;
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+  }
+
+  .pdp-trust {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    gap: var(--k-space-3);
+    list-style: none;
+    padding: var(--k-space-4) 0;
+    margin: var(--k-space-3) 0;
+    border-block: var(--k-hairline) solid var(--k-border-hairline);
+    text-align: center;
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
+  }
+
+  .pdp-trust li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--k-space-1);
+  }
+
+  .pdp-trust :global(svg) {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    color: var(--k-accent-primary-text);
+  }
+
+  .pdp-about h2 {
+    font-size: var(--k-text-md);
+    margin: 0 0 var(--k-space-2);
+  }
+
+  .pdp-about ul {
+    margin: 0 0 var(--k-space-4);
+    padding-inline-start: 1.1rem;
+    display: grid;
+    gap: var(--k-space-1);
+    font-size: var(--k-text-sm);
+    line-height: 1.5;
+  }
+
+  .pdp-delivery {
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    padding: var(--k-space-3) var(--k-space-4);
+    margin-block: var(--k-space-3);
+    font-size: var(--k-text-sm);
+  }
+
+  .pdp-delivery p {
+    margin: 0 0 var(--k-space-2);
+  }
+
+  .pdp-delivery__eta {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+  }
+
+  .pdp-delivery__form {
+    display: flex;
+    gap: var(--k-space-2);
+    margin-block-end: var(--k-space-2);
+  }
+
+  .pdp-delivery__form input {
+    inline-size: 9rem;
+    padding: var(--k-space-1) var(--k-space-2);
+    border: var(--k-hairline) solid var(--k-border-interactive);
+    border-radius: var(--k-radius-sm);
+    font: inherit;
+    background: var(--k-surface-base);
+    color: var(--k-text-primary);
+  }
+
+  .pdp-delivery__form button,
+  .pdp-wishlist {
+    padding: var(--k-space-1) var(--k-space-3);
+    border: var(--k-hairline) solid var(--k-border-interactive);
+    border-radius: var(--k-radius-pill);
+    background: var(--k-surface-raised);
+    color: var(--k-text-primary);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .pdp-delivery__error {
+    color: var(--k-accent-danger-muted, #b12704);
+  }
+
+  .pdp-stock {
+    font-weight: var(--k-weight-semibold);
+    color: var(--k-accent-success-muted, #007600);
+  }
+
+  .pdp-stock--low {
+    color: var(--k-accent-danger-muted, #b12704);
+  }
+
+  .pdp-seller {
+    color: var(--k-text-secondary);
+  }
+
+  .pdp-wishlist {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
     margin-block-end: var(--k-space-4);
+    font-size: var(--k-text-sm);
+  }
+
+  .pdp-wishlist[aria-pressed='true'] {
+    color: #e11d48;
+    border-color: #e11d48;
   }
 
   .listing__mto {

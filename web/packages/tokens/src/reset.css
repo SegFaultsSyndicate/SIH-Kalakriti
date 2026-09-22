@@ -102,6 +102,13 @@
     outline-offset: var(--k-focus-offset);
   }
 
+  /* Exception: the page heading focusMainHeading() (packages/ui/src/focus.ts)
+     focuses after each navigation. It isn't interactive -- the focus exists
+     only so screen readers announce the new page -- so no ring. */
+  [data-route-focus]:focus-visible {
+    outline: none;
+  }
+
   [hidden] {
     display: none !important;
   }

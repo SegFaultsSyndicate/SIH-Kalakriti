@@ -81,7 +81,7 @@
   <title>{t('orders.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="orders-page">
+<div class="orders-page">
   <h1>{t('orders.heading')}</h1>
 
   {#if !network.online}
@@ -122,14 +122,14 @@
       {/each}
     </ul>
   {/if}
-</main>
+</div>
 
 <style>
   .orders-page {
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

@@ -134,7 +134,7 @@
   <title>{t('lotOffer.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="lot-offer-page">
+<div class="lot-offer-page">
   <h1>{t('lotOffer.heading')}</h1>
 
   {#if !network.online}
@@ -202,7 +202,7 @@
       </div>
     {/if}
   {/if}
-</main>
+</div>
 
 <Dialog bind:open={confirmingAccept} title={t('lotOffer.confirmAccept.title')}>
   <p>{t('lotOffer.confirmAccept.body')}</p>
@@ -235,7 +235,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

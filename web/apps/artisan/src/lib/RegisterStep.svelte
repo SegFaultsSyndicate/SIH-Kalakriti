@@ -40,6 +40,10 @@
     t('registration.socialCategory.label'),
     t('register.cluster.heading'),
   ]);
+
+  // Route segment per step, same order as stepLabels.
+  const STEP_ROUTES = ['name', 'craft', 'district', 'pehchan', 'social-category', 'cluster'];
+  const stepHref = (i: number): string => `/register/${STEP_ROUTES[i]}`;
 </script>
 
 <div class="register-step">
@@ -47,10 +51,11 @@
     label={t('register.step.label', { current: index + 1, total: stepLabels.length })}
     steps={stepLabels}
     current={index}
+    {stepHref}
   />
 
   <h1>{heading}</h1>
-  <SpeakButton text={speakText ?? heading} label={t('action.speak')} />
+  <SpeakButton class="register-step__speak" text={speakText ?? heading} label={t('action.speak')} />
 
   <div class="register-step__content">
     {@render children()}
@@ -59,7 +64,7 @@
   <p class="register-step__saved">{t('register.saved')}</p>
 
   <div class="register-step__actions">
-    <Button size="xl" class="register-step__back" onclick={() => goto(backHref)}>
+    <Button size="xl" variant="secondary" class="register-step__back" onclick={() => goto(backHref)}>
       ← {t('action.back')}
     </Button>
     <div class="register-step__next">
@@ -84,6 +89,10 @@
     font-size: var(--k-text-xl);
   }
 
+  .register-step :global(.register-step__speak) {
+    align-self: flex-start;
+  }
+
   .register-step__content {
     display: flex;
     flex-direction: column;
@@ -95,11 +104,19 @@
     font-size: var(--k-text-xs);
   }
 
+  /* Pinned to the viewport bottom (no bottom nav during onboarding) so
+     Back/Next are always in thumb reach without scrolling. */
   .register-step__actions {
+    position: sticky;
+    inset-block-end: env(safe-area-inset-bottom, 0px);
+    z-index: 1;
     display: flex;
     align-items: stretch;
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
+    padding-block: var(--k-space-3);
+    background: var(--k-premium-canvas, var(--k-surface-base));
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .register-step__actions .register-step__next {

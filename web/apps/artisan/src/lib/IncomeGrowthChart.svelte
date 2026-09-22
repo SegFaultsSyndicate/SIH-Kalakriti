@@ -47,46 +47,50 @@
 </script>
 
 <section class="income-growth-card" aria-label={t('growth.title')}>
-  <!-- Header / Hero Uplift -->
   <header class="growth-header">
-    <div class="growth-header__title-box">
-      <div class="growth-badge">
-        <Icon name="verified-artisan" size="0.85rem" />
-        <span>{t('growth.badge')}</span>
-      </div>
-      <h2 class="growth-title">{t('growth.title')}</h2>
-      <p class="growth-subhead">{t('growth.subtitle')}</p>
-    </div>
-
-    <!-- Main Uplift Hero Pill -->
-    <div class="uplift-hero">
-      <div class="uplift-hero__num">+{upliftPercentage}%</div>
-      <div class="uplift-hero__label">
-        <strong>{t('growth.annualUplift')}</strong>
-        <span>{t('growth.extraIncome', { amount: formatInr(totalUpliftPaise) })}</span>
-      </div>
-    </div>
+    <span class="growth-badge">
+      <Icon name="verified-artisan" size="0.85rem" />
+      {t('growth.badge')}
+    </span>
+    <h2 class="growth-title">{t('growth.title')}</h2>
+    <p class="growth-subhead">{t('growth.subtitle')}</p>
   </header>
 
-  <!-- 4-Stat Metric Row -->
-  <div class="stat-strip">
-    <div class="stat-item">
-      <span class="stat-item__val">+{upliftPercentage}%</span>
-      <span class="stat-item__lbl">{t('growth.statUplift')}</span>
+  <!-- Hero: the headline uplift, with a tiny per-quarter bar trail. -->
+  <div class="uplift-hero">
+    <div class="uplift-hero__text">
+      <span class="uplift-hero__label">{t('growth.annualUplift')}</span>
+      <span class="uplift-hero__num">+{upliftPercentage}%</span>
+      <span class="uplift-hero__sub">{t('growth.extraIncome', { amount: formatInr(totalUpliftPaise) })}</span>
     </div>
-    <div class="stat-item">
-      <span class="stat-item__val">{formatInr(totalUpliftPaise)}</span>
-      <span class="stat-item__lbl">{t('growth.statAdditional')}</span>
-    </div>
-    <div class="stat-item stat-item--zero">
-      <span class="stat-item__val">0%</span>
-      <span class="stat-item__lbl">{t('growth.statZeroBrokers')}</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-item__val">4.2x</span>
-      <span class="stat-item__lbl">{t('growth.statReach')}</span>
+    <div class="uplift-hero__spark" aria-hidden="true">
+      {#each QUARTERS as q (q.periodKey)}
+        <span class="spark-pair">
+          <span class="spark spark--base" style:block-size="{(q.baseline / maxVal) * 100}%"></span>
+          <span class="spark" style:block-size="{(q.kalakriti / maxVal) * 100}%"></span>
+        </span>
+      {/each}
     </div>
   </div>
+
+  <!-- Supporting stats (the uplift % already leads the hero above). -->
+  <ul class="stat-strip" role="list">
+    <li class="stat-item">
+      <span class="stat-item__icon"><Icon name="income-statement" size="1.1rem" /></span>
+      <span class="stat-item__val">{formatInr(totalUpliftPaise)}</span>
+      <span class="stat-item__lbl">{t('growth.statAdditional')}</span>
+    </li>
+    <li class="stat-item">
+      <span class="stat-item__icon"><Icon name="fair-price" size="1.1rem" /></span>
+      <span class="stat-item__val">0%</span>
+      <span class="stat-item__lbl">{t('growth.statZeroBrokers')}</span>
+    </li>
+    <li class="stat-item">
+      <span class="stat-item__icon"><Icon name="users" size="1.1rem" /></span>
+      <span class="stat-item__val">4.2x</span>
+      <span class="stat-item__lbl">{t('growth.statReach')}</span>
+    </li>
+  </ul>
 
   {#if !compact}
     <!-- Tabs: Chart vs Table -->
@@ -196,11 +200,11 @@
 
 <style>
   .income-growth-card {
-    background: var(--k-surface-base);
+    background: var(--k-surface-raised);
     border: var(--k-hairline) solid var(--k-border-hairline);
-    border-radius: var(--k-radius-lg);
-    padding: var(--k-space-5);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    border-radius: 1rem;
+    padding: var(--k-space-4);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.05);
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
@@ -208,105 +212,151 @@
 
   .growth-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: flex-start;
-    gap: var(--k-space-4);
-    flex-wrap: wrap;
+    gap: var(--k-space-1);
   }
 
   .growth-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(180, 83, 9, 0.12);
+    gap: 0.35rem;
+    background: color-mix(in srgb, var(--k-accent-primary-bg) 10%, transparent);
     color: var(--k-accent-primary-text);
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    padding: 3px 8px;
-    border-radius: 3px;
-    margin-block-end: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--k-radius-pill);
+    margin-block-end: var(--k-space-1);
   }
 
   .growth-title {
     font-size: var(--k-text-lg);
     font-weight: 800;
+    line-height: 1.2;
     color: var(--k-text-primary);
     margin: 0;
   }
 
   .growth-subhead {
-    font-size: var(--k-text-xs);
+    font-size: var(--k-text-sm);
+    line-height: var(--k-leading-normal);
     color: var(--k-text-secondary);
-    margin: 2px 0 0;
+    margin: 0;
   }
 
   .uplift-hero {
+    position: relative;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    gap: var(--k-space-3);
-    background: linear-gradient(135deg, var(--k-accent-success-bg), var(--k-neem-700));
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--k-space-4);
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgb(255 255 255 / 0.14), transparent 55%),
+      linear-gradient(135deg, var(--k-neem-700), var(--k-accent-success-bg));
     color: var(--k-text-on-accent);
-    padding: var(--k-space-3) var(--k-space-4);
-    border-radius: var(--k-radius-md);
-    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
+    padding: var(--k-space-4);
+    border-radius: 0.875rem;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--k-accent-success-bg) 30%, transparent);
   }
 
-  .uplift-hero__num {
-    font-size: 1.9rem;
-    font-weight: 900;
-    line-height: 1;
+  .uplift-hero__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-inline-size: 0;
   }
 
   .uplift-hero__label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    font-size: var(--k-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.85;
   }
 
-  .uplift-hero__label strong {
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
+  .uplift-hero__num {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
   }
 
-  .uplift-hero__label span {
-    font-size: 0.72rem;
+  .uplift-hero__sub {
+    font-size: var(--k-text-sm);
     opacity: 0.9;
   }
 
-  /* 4-Stat Strip */
+  .uplift-hero__spark {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    block-size: 3.5rem;
+    flex-shrink: 0;
+  }
+
+  .spark-pair {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    block-size: 100%;
+  }
+
+  .spark {
+    inline-size: 0.45rem;
+    border-radius: 3px 3px 1px 1px;
+    background: rgb(255 255 255 / 0.9);
+  }
+
+  .spark--base {
+    background: rgb(255 255 255 / 0.35);
+  }
+
   .stat-strip {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--k-space-3);
-    background: var(--k-surface-raised);
-    border-radius: var(--k-radius-md);
-    padding: var(--k-space-3);
-    border: var(--k-hairline) solid var(--k-border-hairline);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--k-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   .stat-item {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0.2rem;
+    padding: var(--k-space-3);
+    border-radius: 0.75rem;
+    background: var(--k-surface-base);
+    border: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .stat-item__icon {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    margin-block-end: var(--k-space-1);
+    border-radius: var(--k-radius-pill);
+    background: color-mix(in srgb, var(--k-accent-success-bg) 12%, transparent);
+    color: var(--k-accent-success-muted);
   }
 
   .stat-item__val {
     font-size: var(--k-text-md);
     font-weight: 800;
     color: var(--k-text-primary);
+    font-variant-numeric: tabular-nums;
   }
 
-  .stat-item--zero .stat-item__val {
-    color: var(--k-accent-success-muted);
-  }
-
+  /* Labels wrap rather than ellipsis-truncate: longer locales must stay readable. */
   .stat-item__lbl {
-    font-size: 0.7rem;
+    font-size: var(--k-text-xs);
+    line-height: 1.3;
     color: var(--k-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   /* Legend */
@@ -503,10 +553,53 @@
     border-block-start: 2px solid var(--k-border-hairline);
   }
 
-  @media (max-width: 640px) {
+  /* Narrow card: tiles become rows (icon · label · value) so a long
+     number like ₹1,17,000 never breaks mid-digit. */
+  .income-growth-card {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 34rem) {
     .stat-strip {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      border: var(--k-hairline) solid var(--k-border-hairline);
+      border-radius: 0.75rem;
+      background: var(--k-surface-base);
     }
+
+    .stat-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: var(--k-space-3);
+      border: none;
+      border-radius: 0;
+      background: none;
+    }
+
+    .stat-item + .stat-item {
+      border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    }
+
+    .stat-item__icon {
+      margin: 0;
+    }
+
+    .stat-item__val {
+      grid-column: 3;
+      grid-row: 1;
+      white-space: nowrap;
+    }
+
+    .stat-item__lbl {
+      grid-column: 2;
+      grid-row: 1;
+      font-size: var(--k-text-sm);
+    }
+  }
+
+  @media (max-width: 640px) {
     .bar-slot {
       inline-size: 1.4rem;
     }

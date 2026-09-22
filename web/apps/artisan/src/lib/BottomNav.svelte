@@ -43,7 +43,8 @@
 
 <style>
   .bottom-nav {
-    position: sticky;
+    position: fixed;
+    inset-inline: 0;
     inset-block-end: 0;
     z-index: var(--k-z-sticky);
     display: grid;

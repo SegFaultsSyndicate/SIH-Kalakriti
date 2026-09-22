@@ -65,12 +65,36 @@
       : bounds.bottom + gap + height <= window.innerHeight - VIEWPORT_MARGIN;
   }
 
+  /* The chip is portalled to <body> and positioned `fixed` from the anchor's
+     live rect, so an ancestor's `overflow: hidden/auto` (a scrolling pill
+     row, a rounded card) can never clip it -- CSS alone cannot escape that. */
+  let chipStyle = $state('');
+
   function show(): void {
     resolvedPlacement = roomFor(placement) ? placement : placement === 'top' ? 'bottom' : 'top';
+    if (anchor && chip) {
+      const r = anchor.getBoundingClientRect();
+      const gap = parseFloat(getComputedStyle(chip).paddingTop) || 8;
+      const top = resolvedPlacement === 'top' ? r.top - gap : r.bottom + gap;
+      const shiftY = resolvedPlacement === 'top' ? '-100%' : '0';
+      chipStyle = `position:fixed;inset:auto;top:${top}px;left:${r.left + r.width / 2}px;transform:translate(-50%,${shiftY})`;
+    }
     visible = true;
   }
   function hide(): void {
     visible = false;
+  }
+
+  /* A fixed chip would stay put while its anchor scrolls away. */
+  $effect(() => {
+    if (!visible) return;
+    addEventListener('scroll', hide, true);
+    return () => removeEventListener('scroll', hide, true);
+  });
+
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
   }
   function onkeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') hide();
@@ -93,6 +117,8 @@
     id={id}
     role="tooltip"
     bind:this={chip}
+    use:portal
+    style={chipStyle}
     class:k-tooltip--visible={visible}
   >
     {text}

@@ -29,7 +29,7 @@
     </header>
 
     <div class="legal-content">
-      <section class="legal-section">
+      <section class="legal-section" id="mandate">
         <h2>{t('terms.section1.heading')}</h2>
         <p>{t('terms.section1.body')}</p>
       </section>
@@ -39,12 +39,12 @@
         <p>{t('terms.section2.body')}</p>
       </section>
 
-      <section class="legal-section">
+      <section class="legal-section" id="payouts">
         <h2>{t('terms.section3.heading')}</h2>
         <p>{t('terms.section3.body')}</p>
       </section>
 
-      <section class="legal-section">
+      <section class="legal-section" id="fulfilment">
         <h2>{t('terms.section4.heading')}</h2>
         <p>{t('terms.section4.body')}</p>
       </section>
@@ -54,7 +54,7 @@
         <p>{t('terms.section5.body')}</p>
       </section>
 
-      <section class="legal-section">
+      <section class="legal-section" id="jurisdiction">
         <h2>{t('terms.section6.heading')}</h2>
         <p>{t('terms.section6.body')}</p>
       </section>

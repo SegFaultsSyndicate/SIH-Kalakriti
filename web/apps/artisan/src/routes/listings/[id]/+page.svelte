@@ -176,7 +176,7 @@
   <title>{listing ? (translations[0]?.title ?? t('listings.untitled')) : t('listings.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="listing-detail">
+<div class="listing-detail">
   <a href="/listings" class="listing-detail__back">
     <Icon name="arrow-left" />
     {t('listings.detail.back')}
@@ -323,14 +323,14 @@
       />
     {/if}
   {/if}
-</main>
+</div>
 
 <style>
   .listing-detail {
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

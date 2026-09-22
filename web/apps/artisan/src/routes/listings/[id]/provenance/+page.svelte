@@ -76,7 +76,7 @@
   <title>{t('provenance.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="provenance-page">
+<div class="provenance-page">
   <a href="/listings/{listingId}" class="provenance-page__back">
     <Icon name="arrow-left" />
     {t('provenance.back')}
@@ -222,14 +222,14 @@
       {/if}
     </div>
   {/if}
-</main>
+</div>
 
 <style>
   .provenance-page {
     display: flex;
     flex-direction: column;
     gap: var(--k-space-3);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

@@ -12,3 +12,15 @@ export const DNT_KEYS: ReadonlySet<string> = new Set<string>([
   'profile.email.placeholder', // example email address
   'login.phone.countryCode', // "+91" -- a dialling code, not prose
 ]);
+
+// Proper nouns (people, named crafts) that a Devanagari-script locale
+// legitimately spells exactly as Hindi does. Exempt from the same-as-hi
+// check ONLY -- they still have to be in the locale's script. Without this,
+// earlier batches padded names with "(मराठी)"/"जी"/zero-width spaces just
+// to look different from Hindi, and that padding shipped to the UI.
+export const PROPER_NOUN_KEY_PATTERNS: readonly RegExp[] = [
+  /^stub\.(artisanName|craftName)\./,
+  /^giTagged\.(artisan|productCraft)\./,
+  /^sellerShowcase\.testimonial\.\d+\.name$/,
+  /\.(artisanName|craftName|personName)$/,
+];

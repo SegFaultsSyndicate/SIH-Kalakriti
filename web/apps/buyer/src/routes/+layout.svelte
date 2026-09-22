@@ -46,6 +46,29 @@
 
   let mobileNavOpen = $state(false);
 
+  // Header hides on scroll-down past HIDE_AT, and only reappears once the
+  // user has scrolled back up REVEAL_DELTA px -- a small upward flick
+  // shouldn't yank it back in, only a deliberate scroll-up does.
+  const HIDE_AT = 80;
+  const REVEAL_DELTA = 60;
+  let headerHidden = $state(false);
+  let stickyHeight = $state(0);
+  let lastScrollY = 0;
+  let upAccum = 0;
+
+  function onScroll(): void {
+    const y = window.scrollY;
+    const dy = y - lastScrollY;
+    if (dy > 0) {
+      upAccum = 0;
+      if (y > HIDE_AT) headerHidden = true;
+    } else if (dy < 0) {
+      upAccum += -dy;
+      if (upAccum > REVEAL_DELTA || y <= HIDE_AT) headerHidden = false;
+    }
+    lastScrollY = y;
+  }
+
   function toggleMobileNav(): void {
     mobileNavOpen = !mobileNavOpen;
   }
@@ -136,9 +159,15 @@
 
 <SkipLink target="main-content" />
 <RouteAnnouncer />
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onscroll={onScroll} />
 
 <div class="shell">
+  <div class="shell__sticky-spacer" style:block-size="{stickyHeight}px"></div>
+  <div
+    class="shell__sticky-wrap"
+    class:shell__sticky-wrap--hidden={headerHidden}
+    bind:clientHeight={stickyHeight}
+  >
   <header class="shell__header">
     <button
       type="button"
@@ -193,6 +222,7 @@
   {/if}
 
   <CategorySubnav />
+  </div>
 
   <main class="shell__main" id="main-content" tabindex="-1">
     {#if localeReady}
@@ -214,6 +244,18 @@
 </div>
 
 <style>
+  .shell__sticky-wrap {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 90;
+    transition: transform 0.25s ease;
+  }
+
+  .shell__sticky-wrap--hidden {
+    transform: translateY(-100%);
+  }
+
   .shell__boot {
     padding-block: var(--k-space-6);
     text-align: center;

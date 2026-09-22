@@ -139,9 +139,10 @@ const ITEMS: StubItem[] = [
   { category: 'Woodwork', craftSlug: 'saharanpur-wood-carving', craftName: 'Saharanpur Wood Carving', craftNameKey: 'stub.craftName.saharanpurWoodCarving', giNo: 'GI-432', artisan: 'Irfan Ahmed Qureshi', artisanNameKey: 'stub.artisanName.saharanpurWoodCarving', district: 'Saharanpur', state: 'UP', titleKey: 'stub.listing.65.title', image: img('woodwork', 'saharanpur-wood-carving.jpg'), pricePaise: 165000 },
 ];
 
-let seq = 0;
+// Id is the item's fixed position in ITEMS, so the same piece always gets the
+// same /listing/{id} URL and stubListingById() can resolve it back.
 function toListing(item: StubItem, t: TFn): ListingSummary {
-  seq += 1;
+  const seq = ITEMS.indexOf(item) + 1;
   const id = `stub-${item.craftSlug}-${seq}`;
   return {
     id,
@@ -197,4 +198,16 @@ export function stubListingsForQuery(q: string, t: TFn): ListingSummary[] {
       item.craftSlug.toLowerCase().includes(needle) ||
       t(item.titleKey).toLowerCase().includes(needle),
   ).map((item) => toListing(item, t));
+}
+
+/** Every stub piece, in catalogue order -- for "customers also viewed" style rows. */
+export function allStubListings(t: TFn): ListingSummary[] {
+  return ITEMS.map((item) => toListing(item, t));
+}
+
+/** Resolves a `stub-<craftSlug>-<n>` id produced by toListing() above. */
+export function stubListingById(id: string, t: TFn): ListingSummary | undefined {
+  const n = Number(id.match(/-(\d+)$/)?.[1]);
+  const item = ITEMS[n - 1];
+  return item && id === `stub-${item.craftSlug}-${n}` ? toListing(item, t) : undefined;
 }

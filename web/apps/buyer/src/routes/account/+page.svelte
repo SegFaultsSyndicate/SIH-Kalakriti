@@ -33,9 +33,9 @@
   let activeTab = $state<'personal' | 'addresses' | 'security' | 'orders' | 'consultations'>('personal');
 
   // User details state
-  let fullName = $state('Aarav Sharma');
-  let displayName = $state('Aarav');
-  let email = $state('aarav.sharma@example.gov.in');
+  let fullName = $state('Jaash Upadhayay');
+  let displayName = $state('Jaash');
+  let email = $state('jaash.upadhayay@example.gov.in');
   let phone = $state('+91 98765 43210');
   let preferredLanguage = $state('en');
   let emailAlerts = $state(true);
@@ -63,7 +63,7 @@
       id: 'addr-1',
       type: 'Home',
       isDefault: true,
-      name: 'Aarav Sharma',
+      name: 'Jaash Upadhayay',
       lines: 'B-42 Defence Colony, Near Flyover',
       city: 'New Delhi',
       state: 'Delhi',
@@ -75,7 +75,7 @@
       id: 'addr-2',
       type: 'Institutional / Office',
       isDefault: false,
-      name: 'Aarav Sharma (MSJE)',
+      name: 'Jaash Upadhayay (MSJE)',
       lines: 'Shastri Bhawan, Dr. Rajendra Prasad Road',
       city: 'New Delhi',
       state: 'Delhi',
@@ -219,7 +219,7 @@
     <!-- Amazon-Style User Profile Header Banner -->
     <section class="profile-banner">
       <div class="profile-avatar-wrap">
-        <div class="profile-avatar">AS</div>
+        <div class="profile-avatar">JU</div>
         <Tooltip text={tooltip('tooltip.addPhoto')}>
           {#snippet trigger(tp)}
             <button type="button" class="avatar-edit-btn" aria-label={t('account.changePhotoLabel')} {...tp}>

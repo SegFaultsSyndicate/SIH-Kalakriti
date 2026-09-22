@@ -17,6 +17,7 @@
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, Select, NumberStepper, Textarea, Stepper, EmptyState, Skeleton, showToast, Tooltip } from '@kalakriti/ui';
   import { createBulkOrder, listCrafts, getCraft, listListings, getListingSummary, session, type components } from '@kalakriti/api';
@@ -37,6 +38,7 @@
   let current = $state(0);
   let loadingCrafts = $state(true);
   let crafts = $state<Craft[]>([]);
+  let craftsFailed = $state(false);
   let craftDetail = $state<CraftDetail | undefined>(undefined);
 
   let loadingListings = $state(false);
@@ -46,7 +48,13 @@
   let quantity = $state(50);
   let deadline = $state(defaultDeadline());
   let budgetBand = $state('');
-  let delivery = $state('');
+  // ?preset=hospitality|corporate (footer's "Handloom Hospitality Linen" /
+  // "Eco-Festive Corporate Gifting" links): there's no backend concept of a
+  // preset, no craft is unambiguously "for" one, so this only pre-fills the
+  // delivery notes the buyer would otherwise type themselves -- still
+  // editable, never silently submitted.
+  const preset = page.url.searchParams.get('preset');
+  let delivery = $state(preset === 'hospitality' ? t('bulkOrder.preset.hospitality.deliveryPrefill') : preset === 'corporate' ? t('bulkOrder.preset.corporate.deliveryPrefill') : '');
   let submitting = $state(false);
 
   function defaultDeadline(): string {
@@ -61,6 +69,8 @@
       try {
         const res = await listCrafts();
         crafts = res.crafts ?? [];
+      } catch {
+        craftsFailed = true;
       } finally {
         loadingCrafts = false;
       }
@@ -68,16 +78,19 @@
   });
 
   async function chooseCraft(slug: string): Promise<void> {
-    craftDetail = await getCraft(slug);
     loadingListings = true;
     selectedListing = undefined;
     try {
+      craftDetail = await getCraft(slug);
       const own = await listListings({ craft_id: craftDetail?.id, state: 'PUBLISHED' });
       const ids = (own.listings ?? []).map((l) => l.id!).filter(Boolean);
       const fetched = await Promise.allSettled(ids.map((id) => getListingSummary(id)));
       listings = fetched
         .filter((r): r is PromiseFulfilledResult<ListingSummary> => r.status === 'fulfilled')
         .map((r) => r.value);
+    } catch {
+      showToast({ variant: 'error', message: t('api.error.unavailable') });
+      return;
     } finally {
       loadingListings = false;
     }
@@ -127,13 +140,24 @@
 <Stepper label={t('bulkOrder.heading')} {steps} {current} />
 
 {#if session.status !== 'authenticated'}
-  <EmptyState illustration="empty-error" heading={t('purchase.error')} />
+  <EmptyState illustration="empty-error" heading={t('tooltip.signIn')}>
+    {#snippet action()}
+      <a class="k-button k-button--primary" href="/login?next={encodeURIComponent(page.url.pathname + page.url.search)}">{t('login.signIn')}</a>
+    {/snippet}
+  </EmptyState>
 {:else}
   {#if current === 0}
     <section>
+      {#if preset === 'hospitality' || preset === 'corporate'}
+        <p class="bulk-order__preset-banner">
+          {t(preset === 'hospitality' ? 'bulkOrder.preset.hospitality.banner' : 'bulkOrder.preset.corporate.banner')}
+        </p>
+      {/if}
       <h2>{t('bulkOrder.craft.label')}</h2>
       {#if loadingCrafts}
         <Skeleton shape="text" height="2.5rem" />
+      {:else if craftsFailed}
+        <EmptyState illustration="empty-error" heading={t('api.error.unavailable')} />
       {:else}
         <div class="bulk-order__craft-grid">
           {#each crafts as craft (craft.id)}
@@ -253,6 +277,16 @@
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
     margin-block-end: var(--k-space-3);
+  }
+
+  .bulk-order__preset-banner {
+    background: var(--k-surface-raised, var(--k-surface-base));
+    border: 1px solid var(--k-border-subtle);
+    border-radius: var(--k-radius-md);
+    padding: var(--k-space-3);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    margin-block-end: var(--k-space-4);
   }
 
   .bulk-order__form {

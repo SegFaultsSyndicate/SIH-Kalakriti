@@ -60,7 +60,7 @@
         <p>{t('privacy.section5.body')}</p>
       </section>
 
-      <section class="legal-section">
+      <section class="legal-section" id="grievance">
         <h2>{t('privacy.section6.heading')}</h2>
         <p>{t('privacy.section6.body')} <code>dpo-grievance@kalakriti.gov.in</code>.</p>
       </section>

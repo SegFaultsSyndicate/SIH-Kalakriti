@@ -27,10 +27,12 @@
   --k-page-grain: url('/paper-grain.svg');
 }
 
+/* clip, not hidden: hidden turns body into a (never-scrolling) scroll
+   container, which silently breaks every position: sticky in the app. */
 html,
 body {
   max-inline-size: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Apply Heritage Artisan premium theme */
@@ -50,7 +52,7 @@ body {
     grid-template-rows: auto 1fr;
     min-block-size: 100dvb;
     max-inline-size: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .shell__header {

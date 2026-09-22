@@ -161,7 +161,8 @@ export default defineConfig({
       // pnpm dev:buyer never reaches the bff for it: the request hits vite's
       // own dev server, which has no route for /v/*, and returns its dev
       // error page instead of proxying through like /api already does.
-      '/v': {
+      // Anchored: a bare '/v' prefix also swallowed the /verify pages themselves.
+      '^/v/': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

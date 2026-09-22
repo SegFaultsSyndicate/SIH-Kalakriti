@@ -315,6 +315,9 @@
   }
 
   .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
     border: 1px solid var(--k-border-interactive);
     background: var(--k-surface-raised);
     color: var(--k-text-secondary);

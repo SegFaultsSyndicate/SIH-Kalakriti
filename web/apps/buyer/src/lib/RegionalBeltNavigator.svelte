@@ -6,6 +6,7 @@
   authentic typography, and first-class GI tag status.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
   import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { SectionHeader, Tooltip } from '@kalakriti/ui';
   import { Icon, type IconName } from '@kalakriti/icons';
@@ -97,12 +98,18 @@
 
   let selectedBeltId = $state<'north' | 'west' | 'south' | 'east' | 'central'>('west');
 
+  // Footer corridor links land on /?belt=<id>#belts.
+  $effect(() => {
+    const belt = BELTS.find((b) => b.id === page.url.searchParams.get('belt'));
+    if (belt) selectedBeltId = belt.id;
+  });
+
   const selectedBelt = $derived(
     BELTS.find((b) => b.id === selectedBeltId) ?? BELTS[1]
   );
 </script>
 
-<div class="navigator-container">
+<div class="navigator-container" id="belts">
   <SectionHeader
     kicker={t('home.belts.kicker')}
     heading={t('home.belts.heading')}

@@ -119,7 +119,7 @@
   {#if !network.online}
     <p class="verify__offline" role="status">{t('verify.offline')}</p>
   {:else}
-    <OtpInput bind:value={code} label={t('verify.code.label')} disabled={verifying} oncomplete={submit} />
+    <OtpInput bind:value={code} label={t('verify.code.label')} disabled={verifying} oncomplete={submit} autofocus />
 
     {#if verifying}
       <p role="status" aria-live="polite">{t('verify.submitting')}</p>

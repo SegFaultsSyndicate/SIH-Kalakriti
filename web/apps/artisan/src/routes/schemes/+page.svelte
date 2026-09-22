@@ -1,7 +1,7 @@
 <!-- apps/artisan/src/routes/schemes/+page.svelte -->
 <script lang="ts">
   import { locale, type MessageKey } from '@kalakriti/i18n';
-  import { SectionHeader, EmptyState, SpeakButton } from '@kalakriti/ui';
+  import { EmptyState, SpeakButton } from '@kalakriti/ui';
   import type { PageData } from './$types';
 
   interface Props {
@@ -45,14 +45,16 @@
   <title>{t('schemes.title')} — {t('app.name')}</title>
 </svelte:head>
 
-<main id="main-content" class="schemes-page">
-  <SectionHeader heading={t('schemes.title')} kicker={t('schemes.subtitle')} />
+<div class="schemes-page">
+  <header class="schemes-page__header">
+    <h1>{t('schemes.title')}</h1>
+    <p>{t('schemes.subtitle')}</p>
+  </header>
 
   {#if mayQualify.length === 0 && checkRequired.length === 0}
     <EmptyState
       illustration="empty-no-search-results"
       heading={t('schemes.empty')}
-      body={t('schemes.subtitle')}
     />
   {/if}
 
@@ -131,9 +133,21 @@
       </div>
     </details>
   {/if}
-</main>
+</div>
 
 <style>
+  .schemes-page__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+  }
+
+  .schemes-page__header p {
+    margin: 0;
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+  }
+
   .schemes-page {
     display: flex;
     flex-direction: column;

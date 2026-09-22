@@ -12,6 +12,8 @@
   that media row) and isn't surfaced on this screen yet.
 -->
 <script lang="ts">
+  import type { Component } from 'svelte';
+  import type { SVGAttributes } from 'svelte/elements';
   import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
@@ -22,6 +24,10 @@
   import ListingStep from '$lib/ListingStep.svelte';
   import SahayakTooltip from '$lib/SahayakTooltip.svelte';
   import { addCapturedMedia, removeCapturedMedia } from '$lib/listing-draft';
+  import PhotographRaw from '@kalakriti/illustrations/src/onboard-photograph.svg';
+
+  // Same cast as HandloomVerdict.svelte: a bare .svg import types as string.
+  const Photograph = PhotographRaw as unknown as Component<SVGAttributes<SVGSVGElement>>;
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
@@ -126,6 +132,18 @@
             {/if}
           </li>
         {/each}
+        {#if !locked}
+          <li>
+            <button
+              type="button"
+              class="photo-grid__add"
+              onclick={openPicker}
+              aria-label={t('listing.capture.add')}
+            >
+              <Icon name="camera" size="1.75rem" />
+            </button>
+          </li>
+        {/if}
       </ul>
     {/if}
 
@@ -133,14 +151,17 @@
       <p class="capture-status" role="status">{t('listing.capture.locked')}</p>
     {/if}
 
-
     {#if !locked}
-      <button type="button" class="add-photo" onclick={openPicker}>
-        <Icon name="camera" />
-        {t('listing.capture.add')}
-      </button>
-
-      <p class="capture-hint">{t('listing.capture.hint')}</p>
+      {#if photos.length === 0}
+        <button type="button" class="dropzone" onclick={openPicker}>
+          <Photograph class="dropzone__art" aria-hidden="true" focusable="false" />
+          <span class="dropzone__label">
+            <Icon name="camera" />
+            {t('listing.capture.add')}
+          </span>
+          <span class="dropzone__hint">{t('listing.capture.hint')}</span>
+        </button>
+      {/if}
       <SahayakTooltip text={t('literacy.sahayak.tooltip.camera')} />
     {/if}
   {/snippet}
@@ -162,6 +183,7 @@
     border-radius: var(--k-radius-md);
     overflow: hidden;
     border: var(--k-hairline) solid var(--k-border-hairline);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
   }
 
   .photo-grid__item img {
@@ -174,13 +196,42 @@
     position: absolute;
     inset-block-start: var(--k-space-1);
     inset-inline-end: var(--k-space-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-block-size: 1.75rem;
     min-inline-size: 1.75rem;
     border: none;
     border-radius: var(--k-radius-pill);
-    background-color: var(--k-surface-raised);
-    color: var(--k-text-primary);
+    background-color: rgb(0 0 0 / 0.55);
+    color: #fff;
     cursor: pointer;
+  }
+
+  .photo-grid__add,
+  .dropzone {
+    border: var(--k-rule) dashed var(--k-accent-primary-bg);
+    background-color: color-mix(in srgb, var(--k-accent-primary-bg) 5%, var(--k-surface-raised));
+    color: var(--k-accent-primary-text);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-style 0.15s ease;
+  }
+
+  .photo-grid__add:hover,
+  .photo-grid__add:focus-visible,
+  .dropzone:hover,
+  .dropzone:focus-visible {
+    border-style: solid;
+    background-color: color-mix(in srgb, var(--k-accent-primary-bg) 11%, var(--k-surface-raised));
+  }
+
+  .photo-grid__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--k-radius-md);
   }
 
   .capture-status {
@@ -188,21 +239,31 @@
     font-size: var(--k-text-sm);
   }
 
-  .add-photo {
+  .dropzone {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: var(--k-space-2);
-    min-block-size: calc(var(--k-touch-min) * 1.2);
-    border: var(--k-rule) dashed var(--k-border-interactive);
-    border-radius: var(--k-radius-md);
-    background: none;
-    color: var(--k-text-primary);
-    font-size: var(--k-text-md);
-    cursor: pointer;
+    padding: var(--k-space-5) var(--k-space-4);
+    border-radius: var(--k-radius-lg);
+    text-align: center;
   }
 
-  .capture-hint {
+  .dropzone :global(.dropzone__art) {
+    inline-size: 9rem;
+    block-size: auto;
+    color: var(--k-text-secondary);
+  }
+
+  .dropzone__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    font-size: var(--k-text-md);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  .dropzone__hint {
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
   }

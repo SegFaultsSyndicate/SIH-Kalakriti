@@ -14,6 +14,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { locale } from '@kalakriti/i18n';
   import { Button, SpeakButton, Stepper } from '@kalakriti/ui';
 
@@ -41,6 +42,11 @@
     t('listing.step.pricing'),
     t('listing.step.terms'),
   ]);
+
+  // Route segment per step, same order as stepLabels.
+  const STEP_ROUTES = ['capture', 'studio', 'video', 'story', 'processing', 'review', 'pricing', 'terms'];
+  const draftId = $derived(page.url.searchParams.get('d') ?? '');
+  const stepHref = (i: number): string => `/listing/new/${STEP_ROUTES[i]}?d=${draftId}`;
 </script>
 
 <div class="listing-step">
@@ -48,10 +54,11 @@
     label={t('listing.step.label', { current: index + 1, total: stepLabels.length })}
     steps={stepLabels}
     current={index}
+    {stepHref}
   />
 
   <h1>{heading}</h1>
-  <SpeakButton text={speakText ?? heading} label={t('action.speak')} />
+  <SpeakButton class="listing-step__speak" text={speakText ?? heading} label={t('action.speak')} />
 
   <div class="listing-step__content">
     {@render children()}
@@ -60,7 +67,7 @@
   <p class="listing-step__saved">{t('listing.saved')}</p>
 
   <div class="listing-step__actions">
-    <Button size="xl" class="listing-step__back" onclick={() => goto(backHref)}>
+    <Button size="xl" variant="secondary" class="listing-step__back" onclick={() => goto(backHref)}>
       ← {t('action.back')}
     </Button>
     <div class="listing-step__next">
@@ -85,6 +92,10 @@
     font-size: var(--k-text-xl);
   }
 
+  .listing-step :global(.listing-step__speak) {
+    align-self: flex-start;
+  }
+
   .listing-step__content {
     display: flex;
     flex-direction: column;
@@ -96,11 +107,19 @@
     font-size: var(--k-text-xs);
   }
 
+  /* Pinned above the bottom nav so Back/Next are always in thumb reach
+     without scrolling (the shell uses overflow-x: clip, so sticky works). */
   .listing-step__actions {
+    position: sticky;
+    inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    z-index: 1;
     display: flex;
     align-items: stretch;
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
+    padding-block: var(--k-space-3);
+    background: var(--k-premium-canvas, var(--k-surface-base));
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .listing-step__actions .listing-step__next {

@@ -27,6 +27,7 @@
   } from '@kalakriti/api';
   import { session } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
+  import { demoStorefront } from '$lib/demo-catalog';
 
   type ArtisanStorefront = components['schemas']['ArtisanStorefront'];
   type ListingSummary = components['schemas']['ListingSummary'];
@@ -71,7 +72,10 @@
           clips = (feed.clips ?? []).filter((c) => c.artisan_id === artisan!.id);
         }
       } catch {
-        artisan = undefined;
+        // Demo artisans (home/GI/search fallback pieces) have no backend record.
+        const demo = demoStorefront(slug, t);
+        artisan = demo?.artisan;
+        listings = demo?.listings ?? [];
       } finally {
         loading = false;
       }

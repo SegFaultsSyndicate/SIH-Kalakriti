@@ -24,6 +24,8 @@
     label: string;
     /** Fires once, the moment the code reaches `length` digits. */
     oncomplete?: (code: string) => void;
+    /** Focus the first box on mount, and again whenever the code is cleared (e.g. after a wrong code), so the user can type without tapping. */
+    autofocus?: boolean;
   }
 
   let {
@@ -33,6 +35,7 @@
     invalid = false,
     label,
     oncomplete,
+    autofocus = false,
   }: Props = $props();
 
   const t = $derived(locale.t);
@@ -49,6 +52,10 @@
       firedFor = value;
       oncomplete?.(value);
     }
+  });
+
+  $effect(() => {
+    if (autofocus && value === '' && !disabled) boxes[0]?.focus();
   });
 
   function onlyDigits(raw: string): string {
@@ -121,6 +128,7 @@
 <style>
   .k-otp {
     display: flex;
+    justify-content: center;
     gap: var(--k-space-2);
   }
 

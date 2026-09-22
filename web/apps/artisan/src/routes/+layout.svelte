@@ -191,7 +191,7 @@
     </header>
   {/if}
 
-  <main class="shell__main" id="main-content" tabindex="-1">
+  <main class="shell__main" id="main-content" tabindex="-1" class:has-bottom-nav={showBottomNav}>
     {#if booted}
       <ErrorBoundary
         source="artisan-shell"
@@ -216,7 +216,7 @@
 <InstallPrompt />
 <ToastRegion />
 {#if showChrome}
-  <div class:has-bottom-nav={showBottomNav}>
+  <div class="read-screen-slot" class:has-bottom-nav={showBottomNav}>
     <ReadScreen />
   </div>
 {/if}
@@ -227,7 +227,9 @@
     flex-direction: column;
     min-block-size: 100dvh;
     max-inline-size: 100%;
-    overflow-x: hidden;
+    /* clip, not hidden: hidden makes .shell a scroll container, which
+       silently breaks position: sticky for everything inside it. */
+    overflow-x: clip;
   }
 
   .shell__header {
@@ -258,18 +260,36 @@
     padding-inline: var(--k-gutter);
   }
 
+  .shell__main.has-bottom-nav {
+    padding-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .shell__boot {
     padding-block: var(--k-space-6);
     text-align: center;
     color: var(--k-text-secondary);
   }
 
-  :global(.has-bottom-nav .k-read-screen) {
-    inset-block-end: calc(var(--k-space-4) + 4.5rem + env(safe-area-inset-bottom, 0px));
+  /* --k-float-lift: extra room for a wizard's pinned Back/Next bar, so the
+     Read-screen pill floats above it instead of covering Next. */
+  :global(:root:has(.listing-step__actions, .register-step__actions)) {
+    --k-float-lift: 5.5rem;
   }
 
-  :global(.has-bottom-nav .k-read-screen__unavailable) {
-    inset-block-end: calc(var(--k-space-4) + 4.5rem + var(--k-touch-min) + var(--k-space-2) + env(safe-area-inset-bottom, 0px));
+  :global(.read-screen-slot .k-read-screen) {
+    inset-block-end: calc(var(--k-space-4) + var(--k-float-lift, 0px) + env(safe-area-inset-bottom, 0px));
+  }
+
+  :global(.read-screen-slot .k-read-screen__unavailable) {
+    inset-block-end: calc(var(--k-space-4) + var(--k-float-lift, 0px) + var(--k-touch-min) + var(--k-space-2) + env(safe-area-inset-bottom, 0px));
+  }
+
+  :global(.read-screen-slot.has-bottom-nav .k-read-screen) {
+    inset-block-end: calc(var(--k-space-4) + 4.5rem + var(--k-float-lift, 0px) + env(safe-area-inset-bottom, 0px));
+  }
+
+  :global(.read-screen-slot.has-bottom-nav .k-read-screen__unavailable) {
+    inset-block-end: calc(var(--k-space-4) + 4.5rem + var(--k-float-lift, 0px) + var(--k-touch-min) + var(--k-space-2) + env(safe-area-inset-bottom, 0px));
   }
 
   @media (max-width: 32rem) {

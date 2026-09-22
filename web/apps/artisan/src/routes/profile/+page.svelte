@@ -16,7 +16,6 @@
   import { Icon } from '@kalakriti/icons';
   import {
     Button,
-    SpeakButton,
     Skeleton,
     showToast,
     Tooltip,
@@ -32,6 +31,7 @@
     session,
     ApiError,
   } from '@kalakriti/api';
+  import { SELF_BADGES, loadSelfBadges } from '$lib/self-badges';
 
   /** Narrows an unknown throw to something showable. Never leaks a raw status number. */
   function errorText(err: unknown, fallback: string): string {
@@ -61,6 +61,13 @@
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
   let followerCount = $state<number>(48);
+
+  // Badges the artisan applied to themselves on /badges (device-local).
+  let selfBadgeIds = $state<string[]>([]);
+  $effect(() => {
+    void loadSelfBadges().then((ids) => (selfBadgeIds = ids));
+  });
+  const selfBadges = $derived(SELF_BADGES.filter((b) => selfBadgeIds.includes(b.id)));
   let craftId = $state<string | undefined>(undefined);
   let craftName = $state('Weaving & Handloom (बुनकरी)');
   let districtName = $state('Varanasi, Uttar Pradesh');
@@ -205,10 +212,6 @@
     }
     return craftName;
   });
-
-  const spokenProfileText = $derived(
-    t('profile.spokenSummary', { name, district: districtName, craft: localizedCraftName }),
-  );
 
   const initial = $derived((name.trim()[0] ?? 'A').toUpperCase());
 
@@ -526,11 +529,25 @@
           <Icon name="users" size="1.1rem" />
           <span>{t('profile.followers', { count: String(followerCount) })}</span>
         </div>
+
+        {#if selfBadges.length > 0}
+          <ul class="profile-self-badges" role="list">
+            {#each selfBadges as badge (badge.id)}
+              <li class="profile-self-badge">
+                <Icon name={badge.icon} size="0.9rem" />
+                {t(badge.labelKey)}
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
     </div>
 
     <div class="profile-hero__actions">
-      <SpeakButton class="profile-action-btn" text={spokenProfileText} label={t('action.speak')} />
+      <a class="profile-action-btn" href="/earnings">
+        <Icon name="income-statement" size="1rem" />
+        <span>{t('home.earnings')}</span>
+      </a>
       <a class="profile-action-btn" href="/schemes">
         <Icon name="verified-artisan" size="1rem" />
         <span>{t('nav.schemes')}</span>
@@ -1198,6 +1215,28 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  .profile-self-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--k-space-1) var(--k-space-2);
+    margin: var(--k-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .profile-self-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--k-radius-pill);
+    background: color-mix(in srgb, var(--k-accent-primary-bg) 10%, transparent);
+    color: var(--k-accent-primary-text);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-semibold);
   }
 
   .profile-hero__followers {

@@ -172,7 +172,7 @@
   <title>{t('listings.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="listings-page">
+<div class="listings-page">
   <header class="listings-page__header">
     <h1>{t('listings.heading')}</h1>
     <Button size="sm" onclick={() => goto('/listing/new/capture')} tooltip={tooltip('tooltip.newListing')}>
@@ -191,7 +191,7 @@
         aria-label={t('listings.search.placeholder')}
       />
     </div>
-    <VoiceInput onrecording={onVoiceSearch} disabled={!network.online || voiceSearching} />
+    <VoiceInput class="k-voice--inline" onrecording={onVoiceSearch} disabled={!network.online || voiceSearching} />
   </div>
 
   <div class="listings-page__filters" role="group" aria-label={t('listings.filter.label')}>
@@ -297,14 +297,14 @@
       {/if}
     {/each}
   {/if}
-</main>
+</div>
 
 <style>
   .listings-page {
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 
@@ -351,25 +351,20 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding-block: var(--k-space-1);
-    margin-inline: calc(-1 * var(--k-space-4));
-    padding-inline: var(--k-space-4);
+    /* Fade the trailing edge so it's obvious more chips scroll into view. */
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  :global([dir='rtl']) .listings-page__filters {
+    mask-image: linear-gradient(to left, #000 85%, transparent);
   }
 
   .listings-page__filters::-webkit-scrollbar {
     display: none;
   }
 
-  @media (max-width: 32rem) {
-    .listings-page {
-      padding: var(--k-space-3);
-    }
-    .listings-page__filters {
-      margin-inline: calc(-1 * var(--k-space-3));
-      padding-inline: var(--k-space-3);
-    }
-  }
-
   .listings-page__filter {
+    min-block-size: var(--k-touch-min);
     flex-shrink: 0;
     padding-block: var(--k-space-1);
     padding-inline: var(--k-space-3);

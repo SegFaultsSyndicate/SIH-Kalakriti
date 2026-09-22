@@ -28,7 +28,7 @@
       clusterKey: 'sellerShowcase.testimonial.1.cluster',
       craftKey: 'sellerShowcase.testimonial.1.craft',
       quoteKey: 'sellerShowcase.testimonial.1.quote',
-      image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1712166424478-eb9b7103e460?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-2',
@@ -37,7 +37,7 @@
       clusterKey: 'sellerShowcase.testimonial.2.cluster',
       craftKey: 'sellerShowcase.testimonial.2.craft',
       quoteKey: 'sellerShowcase.testimonial.2.quote',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1782486072366-34564a7030be?auto=format&fit=crop&w=600&q=80',
     },
     {
       id: 'seller-3',
@@ -46,7 +46,7 @@
       clusterKey: 'sellerShowcase.testimonial.3.cluster',
       craftKey: 'sellerShowcase.testimonial.3.craft',
       quoteKey: 'sellerShowcase.testimonial.3.quote',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1638310533874-6c124c012e1d?auto=format&fit=crop&w=600&q=80',
     },
   ];
 </script>
@@ -109,7 +109,7 @@
       <!-- Action Button -->
       <div class="seller-cta-action">
         <a
-          href="http://localhost:5173/onboarding"
+          href="http://localhost:5173/welcome"
           target="_blank"
           rel="noopener noreferrer"
           class="seller-register-btn"

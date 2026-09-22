@@ -102,7 +102,7 @@
   <title>{t('earnings.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="earnings-page">
+<div class="earnings-page">
   <h1>{t('earnings.heading')}</h1>
 
   <IncomeGrowthChart />
@@ -227,14 +227,14 @@
       </ul>
     </section>
   {/if}
-</main>
+</div>
 
 <style>
   .earnings-page {
     display: flex;
     flex-direction: column;
     gap: var(--k-space-5);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

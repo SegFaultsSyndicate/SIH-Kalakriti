@@ -12,7 +12,7 @@
 // can load catalogues however suits them and share this one check.
 
 import { LOCALES, type LocaleCode } from './locales';
-import { DNT_KEYS } from './dnt-keys';
+import { DNT_KEYS, PROPER_NOUN_KEY_PATTERNS } from './dnt-keys';
 
 export type IssueKind =
   | 'missing'
@@ -134,7 +134,7 @@ export function auditCatalogue(
       }
     } else {
       const hiValue = hi[key];
-      if (hiValue !== undefined && value === hiValue) {
+      if (hiValue !== undefined && value === hiValue && !PROPER_NOUN_KEY_PATTERNS.some((re) => re.test(key))) {
         issues.push({ locale: code, key, kind: 'same-as-hi', detail: 'identical to Hindi' });
       }
     }

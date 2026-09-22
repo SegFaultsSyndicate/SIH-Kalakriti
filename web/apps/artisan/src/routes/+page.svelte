@@ -113,6 +113,25 @@
     ),
   );
 
+  // First photo of each in-progress draft, so the resume card shows the piece.
+  let draftThumbs = $state<Record<string, string>>({});
+  $effect(() => {
+    const urls: Record<string, string> = {};
+    let cancelled = false;
+    void (async () => {
+      for (const d of inProgressDrafts) {
+        const media = await db.media.get(d.mediaIds[0]);
+        if (media?.blob) urls[d.id] = URL.createObjectURL(media.blob);
+      }
+      if (cancelled) for (const url of Object.values(urls)) URL.revokeObjectURL(url);
+      else draftThumbs = urls;
+    })();
+    return () => {
+      cancelled = true;
+      for (const url of Object.values(urls)) URL.revokeObjectURL(url);
+    };
+  });
+
   const attentionEntries = $derived(
     outbox.entries.filter(
       (entry) =>
@@ -252,11 +271,22 @@
       {#each inProgressDrafts as draft (draft.id)}
         <li class="drafts__row">
           <a class="drafts__link" href="/listing/new/capture?d={draft.id}">
-            <span class="drafts__title">
-              {(draft.fields as { workingTitle?: string }).workingTitle || t('home.drafts.untitled')}
+            {#if draftThumbs[draft.id]}
+              <img class="drafts__thumb" src={draftThumbs[draft.id]} alt="" />
+            {:else}
+              <span class="drafts__thumb drafts__thumb--empty" aria-hidden="true"><Icon name="image" /></span>
+            {/if}
+            <span class="drafts__text">
+              <span class="drafts__title">
+                {(draft.fields as { workingTitle?: string }).workingTitle || t('home.drafts.untitled')}
+              </span>
+              <span class="drafts__updated">
+                {t('home.drafts.updated', { time: formatRelativeTime(draft.updatedAt, locale.code) })}
+              </span>
             </span>
-            <span class="drafts__updated">
-              {t('home.drafts.updated', { time: formatRelativeTime(draft.updatedAt, locale.code) })}
+            <span class="drafts__cta" aria-hidden="true">
+              {t('listings.action.continue')}
+              <Icon name="chevron-right" size="1rem" />
             </span>
           </a>
         </li>
@@ -346,7 +376,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--k-space-2);
-    margin: var(--k-space-4);
+    margin-block: var(--k-space-4);
     min-block-size: calc(var(--k-touch-min) * 1.4);
     border-radius: var(--k-radius-lg);
     background-color: var(--k-accent-primary-bg);
@@ -361,7 +391,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--k-space-2);
-    margin: 0 var(--k-space-4) var(--k-space-4);
+    margin: 0 0 var(--k-space-4);
     min-block-size: var(--k-touch-min);
     border: var(--k-hairline) solid var(--k-border-interactive);
     border-radius: var(--k-radius-md);
@@ -371,18 +401,24 @@
   }
 
   .home-links-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--k-space-3);
-    margin: 0 var(--k-space-4) var(--k-space-4);
+    margin: 0 0 var(--k-space-4);
   }
 
   .home-links-row__link {
-    flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--k-space-2);
-    min-block-size: var(--k-touch-min);
+    gap: var(--k-space-1);
+    min-block-size: calc(var(--k-touch-min) * 1.5);
+    padding: var(--k-space-2) var(--k-space-1);
+    text-align: center;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    hyphens: auto;
     border: var(--k-hairline) solid var(--k-border-interactive);
     border-radius: var(--k-radius-md);
     color: var(--k-text-primary);
@@ -391,13 +427,31 @@
     background: var(--k-surface-base);
   }
 
+  /* Phones: four columns squeeze "Notifications" into a mid-word break.
+     2x2 with icon beside label keeps every word whole. */
+  @media (max-width: 30rem) {
+    .home-links-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--k-space-2);
+    }
+
+    .home-links-row__link {
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: var(--k-space-2);
+      min-block-size: var(--k-touch-min);
+      padding: var(--k-space-2) var(--k-space-3);
+      text-align: start;
+    }
+  }
+
   .home-links-row__btn {
     cursor: pointer;
     font-family: inherit;
   }
 
   .sahayak-banner {
-    margin: var(--k-space-4) var(--k-space-4) 0;
+    margin: var(--k-space-4) 0 0;
     padding: var(--k-space-3) var(--k-space-4);
     background: var(--k-surface-raised);
     border: 1px solid var(--k-border-hairline);
@@ -464,13 +518,13 @@
   }
 
   .home-growth-section {
-    margin: 0 var(--k-space-4) var(--k-space-4);
+    margin: 0 0 var(--k-space-4);
   }
 
   .drafts,
   .attention,
   .lots {
-    margin: var(--k-space-4);
+    margin-block: var(--k-space-4);
     padding-block-start: var(--k-space-4);
     border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
@@ -485,24 +539,82 @@
   .drafts__list {
     display: flex;
     flex-direction: column;
+    gap: var(--k-space-2);
   }
 
-  .drafts__row {
-    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
-  }
-
+  /* Each draft is one big tappable card with an explicit "Continue" CTA,
+     so it's obvious the row resumes the listing. */
   .drafts__link {
     display: flex;
-    flex-direction: column;
-    gap: var(--k-space-1);
-    padding-block: var(--k-space-2);
+    align-items: center;
+    gap: var(--k-space-3);
+    min-block-size: calc(var(--k-touch-min) * 1.5);
+    padding: var(--k-space-2) var(--k-space-3) var(--k-space-2) var(--k-space-2);
+    border: var(--k-hairline) solid var(--k-border-interactive);
+    border-radius: 0.875rem;
+    background: var(--k-surface-raised);
     color: var(--k-text-primary);
     text-decoration: none;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .drafts__link:hover,
+  .drafts__link:focus-visible {
+    border-color: var(--k-accent-primary-bg);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.08);
+  }
+
+  .drafts__thumb {
+    flex-shrink: 0;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    border-radius: 0.625rem;
+    object-fit: cover;
+  }
+
+  .drafts__thumb--empty {
+    display: grid;
+    place-items: center;
+    background: var(--k-surface-sunken);
+    color: var(--k-text-secondary);
+  }
+
+  .drafts__text {
+    flex: 1;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .drafts__title {
+    font-weight: var(--k-weight-semibold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .drafts__updated {
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
+  }
+
+  .drafts__cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.8rem;
+    border-radius: var(--k-radius-pill);
+    background: var(--k-accent-primary-bg);
+    color: var(--k-text-on-accent);
+    font-size: var(--k-text-sm);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  :global([dir='rtl']) .drafts__cta :global(svg) {
+    transform: scaleX(-1);
   }
 
   .attention__empty,

@@ -26,6 +26,13 @@
 
   const t = $derived(locale.t);
 
+  /* ?next= from a sign-in-gated page (e.g. /bulk-order). Same-origin paths
+     only -- a leading // or backslash would make it an open redirect. */
+  function afterLogin(): string {
+    const next = $page.url.searchParams.get('next');
+    return next && /^\/(?![/\\])/.test(next) ? next : '/account';
+  }
+
   // Active persona tab: 'buyer' | 'artisan' | 'admin'
   let activePortal = $state<'buyer' | 'artisan' | 'admin'>('buyer');
   let authMode = $state<'signin' | 'register'>('signin');
@@ -113,7 +120,7 @@
         message: authMode === 'signin' ? t('login.toast.welcomeBack') : t('login.toast.registered'),
         variant: 'success',
       });
-      void goto('/account');
+      void goto(afterLogin());
     } catch (cause) {
       // VITE_USE_MOCKS=1 fakes the session locally when there is no backend
       // at all to hit -- see packages/api/src/mock-session.ts for why this
@@ -125,7 +132,7 @@
           message: authMode === 'signin' ? t('login.toast.welcomeBack') : t('login.toast.registered'),
           variant: 'success',
         });
-        void goto('/account');
+        void goto(afterLogin());
         return;
       }
       const message = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
@@ -158,7 +165,7 @@
 
     <!-- Portal Switcher Tabs -->
     <div class="portal-tabs" role="tablist" aria-label={t('login.portalSelectionAriaLabel')}>
-      <Tooltip text={tooltip('tooltip.selectPortal')}>
+      <Tooltip text={tooltip('tooltip.selectPortal')} fill>
         {#snippet trigger(tp)}
           <button
             type="button"
@@ -177,7 +184,7 @@
         {/snippet}
       </Tooltip>
 
-      <Tooltip text={tooltip('tooltip.selectPortal')}>
+      <Tooltip text={tooltip('tooltip.selectPortal')} fill>
         {#snippet trigger(tp)}
           <button
             type="button"
@@ -196,7 +203,7 @@
         {/snippet}
       </Tooltip>
 
-      <Tooltip text={tooltip('tooltip.selectPortal')}>
+      <Tooltip text={tooltip('tooltip.selectPortal')} fill>
         {#snippet trigger(tp)}
           <button
             type="button"
@@ -510,6 +517,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    width: 100%;
     padding: 0.6rem 0.25rem;
     background: transparent;
     border: 1px solid transparent;

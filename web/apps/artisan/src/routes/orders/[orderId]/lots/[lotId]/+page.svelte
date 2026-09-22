@@ -139,7 +139,7 @@
   <title>{t('lotProgress.heading')} — {t('app.name')}</title>
 </svelte:head>
 
-<main class="lot-progress-page">
+<div class="lot-progress-page">
   <h1>{t('lotProgress.heading')}</h1>
 
   {#if !network.online}
@@ -218,7 +218,7 @@
       <OrderTimeline {orderId} />
     </section>
   {/if}
-</main>
+</div>
 
 <Dialog bind:open={confirmingGiveUp} title={t('lotProgress.giveUpDialog.title')}>
   <p>{t('lotProgress.giveUpDialog.body')}</p>
@@ -237,7 +237,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--k-space-4);
-    padding: var(--k-space-4);
+    padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
   }
 

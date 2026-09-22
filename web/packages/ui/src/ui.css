@@ -319,6 +319,27 @@
   color: var(--k-text-secondary);
   text-align: center;
 }
+/* Inline variant: a touch-size mic that sits beside a search field. The
+   caption stays in the accessibility tree (it is the live status). */
+.k-voice--inline {
+  flex-direction: row;
+  gap: var(--k-space-2);
+  padding: 0;
+}
+.k-voice--inline .k-voice__control {
+  inline-size: var(--k-touch-min);
+  block-size: var(--k-touch-min);
+  flex-shrink: 0;
+}
+.k-voice--inline .k-voice__icon { inline-size: 1.25rem; block-size: 1.25rem; }
+.k-voice--inline .k-voice__caption {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 
 /* ============================================================= Audio playback */
 
@@ -736,13 +757,26 @@
   content: '';
   position: absolute;
   inset-inline-end: 50%;
-  inset-block-start: 1rem;
+  inset-block-start: calc(1rem - 1.5px);
   inline-size: 100%;
-  block-size: var(--k-hairline);
+  block-size: 3px;
+  border-radius: 3px;
   background: var(--k-border-hairline);
   z-index: 0;
+  transition: background-color 0.2s ease;
 }
-.k-stepper__step--done:not(:first-child)::before { background: var(--k-accent-success); }
+/* The segment leading into a done step, and into the current one, is travelled. */
+.k-stepper__step--done:not(:first-child)::before,
+.k-stepper__step--current:not(:first-child)::before { background: var(--k-accent-success); }
+.k-stepper__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--k-space-2);
+  min-inline-size: var(--k-touch-min);
+  color: inherit;
+  text-decoration: none;
+}
 .k-stepper__marker {
   position: relative;
   z-index: 1;
@@ -756,21 +790,49 @@
   place-items: center;
   font-weight: var(--k-weight-semibold);
   font-variant-numeric: var(--k-numeric-tabular);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .k-stepper__step--current .k-stepper__marker {
   border-color: var(--k-accent-primary-bg);
-  color: var(--k-accent-primary-bg);
+  background: var(--k-accent-primary-bg);
+  color: var(--k-text-on-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--k-accent-primary-bg) 18%, transparent);
 }
 .k-stepper__step--done .k-stepper__marker {
   border-color: var(--k-accent-success);
   background: var(--k-accent-success);
   color: var(--k-text-on-accent);
 }
+.k-stepper__link:hover .k-stepper__marker,
+.k-stepper__link:focus-visible .k-stepper__marker {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--k-accent-success) 22%, transparent);
+}
+.k-stepper__link:hover .k-stepper__label { color: var(--k-text-primary); text-decoration: underline; }
+.k-stepper__link:focus-visible { outline: none; }
+.k-stepper__link:focus-visible .k-stepper__marker { outline: var(--k-rule) solid var(--k-focus-ring, var(--k-accent-primary-bg)); outline-offset: 2px; }
 .k-stepper__label {
   font-size: var(--k-text-xs);
   color: var(--k-text-secondary);
   max-inline-size: 6rem;
 }
-.k-stepper__step--current .k-stepper__label { color: var(--k-text-primary); font-weight: var(--k-weight-medium); }
+.k-stepper__step--current .k-stepper__label { color: var(--k-accent-primary-text); font-weight: var(--k-weight-semibold); }
+/* Phones: eight labels can't share 375px -- keep only the current one
+   visible. The others stay in the accessibility tree (clipped, not
+   display:none), so screen readers still hear every step name. */
+@media (max-width: 40rem) {
+  .k-stepper__step:not(.k-stepper__step--current) .k-stepper__label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .k-stepper__step--current .k-stepper__label {
+    white-space: nowrap;
+    max-inline-size: none;
+  }
+}
 
 }

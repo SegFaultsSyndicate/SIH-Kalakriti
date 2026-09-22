@@ -28,11 +28,11 @@
   const userName = $derived(
     (session.claims?.name as string) || 
     (session.claims?.sub as string) || 
-    'Aarav Sharma'
+    'Jaash Upadhayay'
   );
   const userEmail = $derived(
     (session.claims?.email as string) || 
-    'aarav.sharma@example.gov.in'
+    'jaash.upadhayay@example.gov.in'
   );
 
   function toggleMenu(): void {
@@ -132,7 +132,7 @@
       >
         <div class="account-avatar">
           {#if isAuthenticated}
-            <span class="avatar-initials">AS</span>
+            <span class="avatar-initials">JU</span>
           {:else}
             <Icon name="user" size="1.1rem" />
           {/if}

@@ -291,7 +291,7 @@
   <header class="trends-header">
     <div class="header-top">
       <span class="kicker">{t('trends.kicker')}</span>
-      <SpeakButton label={t('trends.intro.speakLabel')} text={t('trends.intro.speakText')} />
+      <SpeakButton class="intro-speak" label={t('trends.intro.speakLabel')} text={t('trends.intro.speakText')} />
     </div>
 
     <div class="heading-row">
@@ -536,6 +536,17 @@
 </section>
 
 <style>
+  /* Unlayered on purpose: SpeakButton's own styles are unlayered and would beat a rule in @layer. */
+  /* One line, never a two-line pill squeezed beside the source label. */
+  .voice-row :global(.k-speak) {
+    white-space: nowrap;
+    font-size: var(--k-text-sm);
+  }
+
+  .header-top :global(.intro-speak) {
+    font-size: var(--k-text-sm);
+  }
+
   @layer components {
     .trends-view {
       max-width: 900px;
@@ -760,7 +771,8 @@
     .voice-row {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
     }
 
     .domain-text {

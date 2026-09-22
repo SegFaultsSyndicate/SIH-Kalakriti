@@ -6,9 +6,8 @@
   A numbered progress trail for the capture flow and the bulk-order wizard.
   `current` is 0-indexed. Completed steps show a check rather than their
   number -- meaning is never colour alone, so "done" has to look different,
-  not just green. Not interactive: this reports where the user is, it does
-  not navigate; a wizard that allows jumping back wires its own button
-  behind the step label.
+  not just green. Pass `stepHref` to let the user jump back: completed steps
+  (and only those -- never forward) become links.
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
@@ -20,13 +19,29 @@
     steps: string[];
     /** 0-indexed. */
     current: number;
+    /** Link target for a completed step; omit for a read-only trail. */
+    stepHref?: (index: number) => string;
     class?: string;
   }
 
-  let { label, steps, current, class: className }: Props = $props();
+  let { label, steps, current, stepHref, class: className }: Props = $props();
 
   const t = $derived(locale.t);
 </script>
+
+{#snippet body(step: string, index: number)}
+  <span class="k-stepper__marker" aria-hidden="true">
+    {#if index < current}
+      <Icon name="check" />
+    {:else}
+      {index + 1}
+    {/if}
+  </span>
+  <span class="k-stepper__label">{step}</span>
+  <span class="k-visually-hidden">
+    {t('ui.stepper.stepLabel', { current: index + 1, total: steps.length })}
+  </span>
+{/snippet}
 
 <ol class="k-stepper {className || ''}" aria-label={label}>
   {#each steps as step, index (index)}
@@ -36,17 +51,11 @@
       class:k-stepper__step--current={index === current}
       aria-current={index === current ? 'step' : undefined}
     >
-      <span class="k-stepper__marker" aria-hidden="true">
-        {#if index < current}
-          <Icon name="check" />
-        {:else}
-          {index + 1}
-        {/if}
-      </span>
-      <span class="k-stepper__label">{step}</span>
-      <span class="k-visually-hidden">
-        {t('ui.stepper.stepLabel', { current: index + 1, total: steps.length })}
-      </span>
+      {#if stepHref && index < current}
+        <a class="k-stepper__link" href={stepHref(index)}>{@render body(step, index)}</a>
+      {:else}
+        {@render body(step, index)}
+      {/if}
     </li>
   {/each}
 </ol>

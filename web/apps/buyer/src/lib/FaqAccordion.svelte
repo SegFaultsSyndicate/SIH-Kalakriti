@@ -63,7 +63,7 @@
   }
 </script>
 
-<div class="faq-container">
+<div class="faq-container" id="faq">
   <div class="faq-header">
     <span class="faq-kicker">{t('faq.kicker')}</span>
     <h2 class="faq-title">{t('faq.title')}</h2>

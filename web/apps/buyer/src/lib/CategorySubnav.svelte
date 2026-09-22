@@ -13,54 +13,122 @@
   - Svelte 5 runes ($state, $derived, $effect)
 -->
 <script lang="ts">
+  import { flushSync } from 'svelte';
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-import { Tooltip } from '@kalakriti/ui';
+  import { Tooltip } from '@kalakriti/ui';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
 
   const t = $derived(locale.t);
 
+  // Bar order. Indices 0 and 6-8 are the dropdown pills rendered by hand
+  // below; everything else renders from LEAD/TAIL. The More menu lists
+  // ALL.slice(hiddenFrom), so this order must match the markup.
+  const LEAD = [
+    { href: '/search?category=Weaving', key: 'subnav.weaving' },
+    { href: '/search?category=Block+printing', key: 'subnav.blockPrinting' },
+    { href: '/search?category=Pottery', key: 'subnav.pottery' },
+    { href: '/search?category=Woodwork', key: 'subnav.woodwork' },
+    { href: '/search?category=Embroidery', key: 'subnav.embroidery' },
+  ] as const;
+  const TAIL = [
+    { href: '/search?category=Jewellery', key: 'subnav.jewellery' },
+    { href: '/search?category=Bamboo+craft', key: 'subnav.bambooCane' },
+    { href: '/search?category=Stone+carving', key: 'subnav.stoneLeather' },
+    { href: '/catalog', key: 'subnav.odop' },
+    { href: '/bulk-order', key: 'subnav.institutionalRfqs' },
+  ] as const;
+  const ALL = [
+    { href: '/catalog', key: 'subnav.allCrafts' },
+    ...LEAD,
+    { href: '/search?category=Home+and+living', key: 'subnav.home' },
+    { href: '/search?category=Furniture', key: 'subnav.furniture' },
+    { href: '/search?category=Paintings', key: 'subnav.paintings' },
+    ...TAIL,
+  ] as const;
+  const TAIL_START = LEAD.length + 4;
+
   let activeMenu = $state<string | null>(null);
   let navContainer: HTMLElement | null = $state(null);
+  let barEl: HTMLElement | null = $state(null);
   let menuPos = $state<{ top: number; left: number } | null>(null);
   let allCraftsWrap: HTMLElement | null = $state(null);
   let homeWrap: HTMLElement | null = $state(null);
   let furnitureWrap: HTMLElement | null = $state(null);
   let paintingsWrap: HTMLElement | null = $state(null);
+  let moreWrap: HTMLElement | null = $state(null);
+
+  // Items at or after this index don't fit on one row and move into More.
+  let hiddenFrom = $state<number>(ALL.length);
+
+  function measureOverflow(): void {
+    if (!barEl) return;
+    flushSync(() => {
+      hiddenFrom = ALL.length;
+    });
+    // Below 861px the bar wraps instead (see the media query), so nothing hides.
+    if (window.innerWidth <= 860) return;
+    const limit = barEl.getBoundingClientRect().right;
+    const items = [...barEl.querySelectorAll<HTMLElement>('[data-idx]')];
+    if (items.at(-1)!.getBoundingClientRect().right <= limit) return;
+    const reserve = 6 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const firstOut = items.find((el) => el.getBoundingClientRect().right > limit - reserve);
+    hiddenFrom = firstOut ? Number(firstOut.dataset.idx) : ALL.length;
+  }
+
+  $effect(() => {
+    if (!barEl) return;
+    const ro = new ResizeObserver(measureOverflow);
+    ro.observe(barEl);
+    return () => ro.disconnect();
+  });
+
+  // Label widths change with the language; fonts may also land after first measure.
+  $effect(() => {
+    void locale.meta.tag;
+    requestAnimationFrame(measureOverflow);
+    void document.fonts?.ready.then(measureOverflow);
+  });
 
   // .subnav-container scrolls horizontally, which clips an absolutely
   // positioned dropdown to that scrollbox (the CSS overflow spec forces
   // overflow-y to clip too once overflow-x isn't visible) -- it renders
   // hidden behind later page content instead of floating above it. Fixed
   // positioning computed from the trigger's own rect escapes that clip.
-  function positionMenu(el: HTMLElement): void {
+  function positionMenu(el: HTMLElement, panelWidth = 900): void {
     if (window.innerWidth <= 768) {
       menuPos = null;
       return;
     }
     const r = el.getBoundingClientRect();
-    // Dropdowns run up to ~880px wide (all-crafts mega-menu) -- clamp so a
-    // trigger near the right edge doesn't push the panel off-screen.
-    const left = Math.min(r.left, window.innerWidth - 900);
+    // Clamp so a trigger near the right edge doesn't push the panel off-screen.
+    const left = Math.min(r.left, window.innerWidth - panelWidth);
     menuPos = { top: r.bottom + 6, left: Math.max(left, 8) };
   }
 
-  function handleMenuEnter(menu: string, el: HTMLElement): void {
+  // A mouse reaches the chevron by hovering its pill first, which already
+  // opened the menu -- so the click that follows must not toggle it shut.
+  let openedByHover = false;
+
+  function handleMenuEnter(menu: string, el: HTMLElement, panelWidth?: number): void {
     activeMenu = menu;
-    positionMenu(el);
+    openedByHover = true;
+    positionMenu(el, panelWidth);
   }
 
   function handleMenuLeave(): void {
     activeMenu = null;
   }
 
-  function toggleMenu(menu: string, el: HTMLElement): void {
-    if (activeMenu === menu) {
+  function toggleMenu(menu: string, el: HTMLElement, panelWidth?: number): void {
+    const keepOpen = openedByHover;
+    openedByHover = false;
+    if (activeMenu === menu && !keepOpen) {
       activeMenu = null;
       return;
     }
     activeMenu = menu;
-    positionMenu(el);
+    positionMenu(el, panelWidth);
   }
 
   function closeMenu(): void {
@@ -98,11 +166,13 @@ import { Tooltip } from '@kalakriti/ui';
   bind:this={navContainer}
   onmouseleave={handleMenuLeave}
 >
-  <div class="subnav-container">
+  <div class="subnav-container" bind:this={barEl}>
     <!-- 0. All Crafts Mega-Menu featuring all 12 Artisan Crafts -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="menu-item-wrap"
+      data-idx="0"
+      class:is-overflow={hiddenFrom <= 0}
       bind:this={allCraftsWrap}
       onmouseenter={() => allCraftsWrap && handleMenuEnter('all-crafts', allCraftsWrap)}
     >
@@ -168,42 +238,26 @@ import { Tooltip } from '@kalakriti/ui';
       {/if}
     </div>
 
-    <span class="subnav-divider">|</span>
+    <span class="subnav-divider" class:is-overflow={hiddenFrom <= 1}>|</span>
 
-    <!-- 1. Weaving & Handlooms -->
-    <a href="/search?category=Weaving" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.weaving')}</span>
-    </a>
-
-    <!-- 2. Block Printing -->
-    <a href="/search?category=Block+printing" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.blockPrinting')}</span>
-    </a>
-
-    <!-- 3. Pottery -->
-    <a href="/search?category=Pottery" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.pottery')}</span>
-    </a>
-
-    <!-- 4. Metalwork -->
-    <a href="/search?category=Metalwork" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.metalwork')}</span>
-    </a>
-
-    <!-- 5. Woodwork -->
-    <a href="/search?category=Woodwork" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.woodwork')}</span>
-    </a>
-
-    <!-- 6. Embroidery -->
-    <a href="/search?category=Embroidery" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.embroidery')}</span>
-    </a>
+    {#each LEAD as item, i (item.key)}
+      <a
+        href={item.href}
+        class="subnav-item"
+        data-idx={i + 1}
+        class:is-overflow={hiddenFrom <= i + 1}
+        onclick={closeMenu}
+      >
+        <span>{t(item.key)}</span>
+      </a>
+    {/each}
 
     <!-- 1. Home & Living (Image 1 reference) -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="menu-item-wrap"
+      data-idx={LEAD.length + 1}
+      class:is-overflow={hiddenFrom <= LEAD.length + 1}
       bind:this={homeWrap}
       onmouseenter={() => homeWrap && handleMenuEnter('home', homeWrap)}
     >
@@ -246,6 +300,7 @@ import { Tooltip } from '@kalakriti/ui';
                 <li><a href="/search?q=candle" onclick={closeMenu}>{t('subnav.home.decor.candles')}</a></li>
                 <li><a href="/search?q=clock" onclick={closeMenu}>{t('subnav.home.decor.clocks')}</a></li>
                 <li><a href="/search?q=metalware" onclick={closeMenu}>{t('subnav.home.decor.metalware')}</a></li>
+                <li><a href="/search?category=Metalwork" onclick={closeMenu}>{t('subnav.metalwork')}</a></li>
                 <li><a href="/search?q=mirror" onclick={closeMenu}>{t('subnav.home.decor.mirrors')}</a></li>
                 <li><a href="/search?q=papier+mache" onclick={closeMenu}>{t('subnav.home.decor.papierMache')}</a></li>
                 <li><a href="/search?q=stoneware" onclick={closeMenu}>{t('subnav.home.decor.stoneware')}</a></li>
@@ -318,6 +373,8 @@ import { Tooltip } from '@kalakriti/ui';
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="menu-item-wrap"
+      data-idx={LEAD.length + 2}
+      class:is-overflow={hiddenFrom <= LEAD.length + 2}
       bind:this={furnitureWrap}
       onmouseenter={() => furnitureWrap && handleMenuEnter('furniture', furnitureWrap)}
     >
@@ -389,6 +446,8 @@ import { Tooltip } from '@kalakriti/ui';
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="menu-item-wrap"
+      data-idx={LEAD.length + 3}
+      class:is-overflow={hiddenFrom <= LEAD.length + 3}
       bind:this={paintingsWrap}
       onmouseenter={() => paintingsWrap && handleMenuEnter('paintings', paintingsWrap)}
     >
@@ -454,36 +513,52 @@ import { Tooltip } from '@kalakriti/ui';
       {/if}
     </div>
 
-    <!-- 7. Jewellery -->
-    <a href="/search?category=Jewellery" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.jewellery')}</span>
-    </a>
+    {#each TAIL as item, i (item.key)}
+      <a
+        href={item.href}
+        class="subnav-item"
+        data-idx={TAIL_START + i}
+        class:is-overflow={hiddenFrom <= TAIL_START + i}
+        onclick={closeMenu}
+      >
+        <span>{t(item.key)}</span>
+      </a>
+    {/each}
 
-    <!-- 8. Bamboo & Basketry -->
-    <a href="/search?category=Bamboo+craft" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.bambooCane')}</span>
-    </a>
+    {#if hiddenFrom < ALL.length}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="menu-item-wrap"
+        bind:this={moreWrap}
+        onmouseenter={() => moreWrap && handleMenuEnter('more', moreWrap, 256)}
+      >
+        <button
+          type="button"
+          class="subnav-item subnav-more-btn"
+          class:is-active={activeMenu === 'more'}
+          onclick={(e) => { e.stopPropagation(); if (moreWrap) toggleMenu('more', moreWrap, 256); }}
+          aria-expanded={activeMenu === 'more'}
+          aria-haspopup="true"
+        >
+          <span>{t('subnav.more')}</span>
+          <Icon name="chevron-down" size="0.7rem" />
+        </button>
 
-    <!-- 9. Stone Carving & Leather -->
-    <a href="/search?category=Stone+carving" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.stoneLeather')}</span>
-    </a>
-
-    <!-- 10. GI Tagged Direct Link (Image 3 reference) -->
-    <a href="/gi-tagged" class="subnav-item gi-tagged-link" onclick={closeMenu}>
-      <span class="gi-tricolor-dot"></span>
-      <span>{t('subnav.giTaggedProducts')}</span>
-    </a>
-
-    <!-- 11. ODOP Corridors -->
-    <a href="/catalog" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.odop')}</span>
-    </a>
-
-    <!-- 12. Bulk Institutional Orders -->
-    <a href="/bulk-order" class="subnav-item" onclick={closeMenu}>
-      <span>{t('subnav.institutionalRfqs')}</span>
-    </a>
+        {#if activeMenu === 'more'}
+          <div
+            class="subnav-dropdown more-dropdown"
+            role="menu"
+            style={menuPos ? `position: fixed; top: ${menuPos.top}px; left: ${menuPos.left}px;` : ''}
+          >
+            <ul class="col-links">
+              {#each ALL.slice(hiddenFrom) as item (item.key)}
+                <li><a href={item.href} onclick={closeMenu}>{t(item.key)}</a></li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 </nav>
 
@@ -499,24 +574,27 @@ import { Tooltip } from '@kalakriti/ui';
     inline-size: min(100% - (2 * var(--k-gutter, 1rem)), var(--k-container-buyer, 74rem));
     margin-inline: auto;
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 0.25rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-block: 0.35rem;
+    gap: 0;
+    justify-content: space-between;
+    padding-block: 1rem;
   }
 
-  .subnav-container::-webkit-scrollbar {
-    display: none;
+  /* Can't fit one row on a phone without clipping items off-screen; wrap there instead. */
+  @media (max-width: 860px) {
+    .subnav-container {
+      flex-wrap: wrap;
+    }
   }
 
   .subnav-item {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
+    gap: 0.25rem;
+    padding: 0.6rem 0.35rem;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--k-text-secondary);
     text-decoration: none;
@@ -550,8 +628,8 @@ import { Tooltip } from '@kalakriti/ui';
   .subnav-pill-link {
     display: inline-flex;
     align-items: center;
-    padding: 0.35rem 0.3rem 0.35rem 0.65rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 0.15rem 0.6rem 0.35rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--k-text-secondary);
     text-decoration: none;
@@ -568,7 +646,7 @@ import { Tooltip } from '@kalakriti/ui';
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.35rem 0.45rem 0.35rem 0.15rem;
+    padding: 0.6rem 0.3rem 0.6rem 0.1rem;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -593,18 +671,22 @@ import { Tooltip } from '@kalakriti/ui';
     margin-inline: 0.15rem;
   }
 
-  .gi-tagged-link {
-    color: var(--k-accent-primary-text);
-    font-weight: 700;
+  .is-overflow {
+    display: none;
   }
 
-  .gi-tricolor-dot {
-    inline-size: 0.55rem;
-    block-size: 0.55rem;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #ff9933 33%, var(--k-surface-base) 33%, var(--k-surface-base) 66%, #138808 66%);
-    border: 1px solid var(--k-border-hairline);
-    flex: none;
+  .subnav-more-btn {
+    margin-inline-start: auto;
+  }
+
+  .subnav-more-btn.is-active {
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-raised);
+  }
+
+  .more-dropdown {
+    inline-size: 14rem;
+    padding: 1rem;
   }
 
   /* Dropdown Positioning & Layout */
