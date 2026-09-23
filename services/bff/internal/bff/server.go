@@ -18,6 +18,7 @@ import (
 	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/handler"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/middleware"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/mosje"
 )
 
 // Config holds all dependencies the BFF needs.
@@ -59,6 +60,11 @@ type Config struct {
 	TrendSvc   handler.TrendService
 	BadgeSvc   handler.BadgeService
 	SchemeSvc  handler.SchemeService
+
+	// Mosje serves the MoSJE tier-4 routes (finance linkage, income and
+	// impact, assisted mode, literacy) and resolves X-On-Behalf-Of. Nil
+	// leaves them unmounted (unit tests that build a partial server).
+	Mosje *mosje.Handler
 
 	// WebhookMgr backs buyer/seller-facing subscribe/list/unsubscribe
 	// endpoints; delivery itself runs out-of-process (cmd/webhook-worker).
@@ -155,6 +161,14 @@ func (s *Server) mountRoutes() {
 	// API routes under /api/v1.
 	api := r.Group("/api/v1")
 
+	// Assisted mode: a field agent's X-On-Behalf-Of request becomes a request
+	// by that artisan, for allow-listed routes only (see mosje.OnBehalf). It
+	// runs after Auth/OptionalAuth on every route that can carry it.
+	onBehalf := func(c *gin.Context) { c.Next() }
+	if cfg.Mosje != nil {
+		onBehalf = mosje.OnBehalf(cfg.Issuer, cfg.Mosje)
+	}
+
 	// Rate limiting on all API routes.
 	api.Use(httpx.Wrap(middleware.RateLimit(cfg.Redis, middleware.RateLimitConfig{
 		PerIPLimit:        cfg.RateLimitPerIP,
@@ -185,11 +199,11 @@ func (s *Server) mountRoutes() {
 	// listing they had just created 404'd every time (row correctly present
 	// and correctly owned in Postgres), and GET /listings?artisan_id=<self>
 	// came back empty for the same reason.
-	api.GET("/listings", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.ListListings))
+	api.GET("/listings", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), onBehalf, httpx.WrapHandler(apiH.ListListings))
 	api.GET("/listings/summaries", httpx.WrapHandler(apiH.BatchGetListingSummaries))
-	api.GET("/listings/:id", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListing))
+	api.GET("/listings/:id", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), onBehalf, httpx.WrapHandler(apiH.GetListing))
 	api.GET("/listings/:id/summary", httpx.WrapHandler(apiH.GetListingSummary))
-	api.GET("/listings/:id/attributes", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), httpx.WrapHandler(apiH.GetListingAttributes))
+	api.GET("/listings/:id/attributes", httpx.Wrap(middleware.OptionalAuth(cfg.Issuer)), onBehalf, httpx.WrapHandler(apiH.GetListingAttributes))
 
 	// Public craft ontology, artisan storefront and process feed reads.
 	api.GET("/crafts", httpx.WrapHandler(apiH.ListCrafts))
@@ -211,6 +225,7 @@ func (s *Server) mountRoutes() {
 	// Protected routes group (JWT required).
 	authed := api.Group("")
 	authed.Use(httpx.Wrap(middleware.Auth(cfg.Issuer)))
+	authed.Use(onBehalf)
 
 	// B2B companies, boutiques, leads, partnerships, and market trends.
 	authed.GET("/companies/me", httpx.WrapHandler(apiH.GetMyCompany))
@@ -306,6 +321,11 @@ func (s *Server) mountRoutes() {
 
 	// Craft ontology administration (MINISTRY only, enforced in handler).
 	authed.POST("/crafts/refresh-index", httpx.WrapHandler(apiH.RefreshCraftIndex))
+
+	// MoSJE tier 4: finance linkage, income/impact, assisted mode, literacy.
+	if cfg.Mosje != nil {
+		cfg.Mosje.Mount(api, authed, func(h http.HandlerFunc) http.HandlerFunc { return withIdempotency(h, cfg.IdempStore) })
+	}
 
 	// OpenAPI spec, embedded at build time so it serves regardless of the
 	// process's working directory.

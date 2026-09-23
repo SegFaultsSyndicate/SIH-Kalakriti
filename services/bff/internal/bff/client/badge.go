@@ -22,9 +22,11 @@ func NewBadges(conn grpc.ClientConnInterface) *Badges {
 
 // ListBadgeCatalog lists the active badge catalog.
 func (b *Badges) ListBadgeCatalog(ctx context.Context) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	resp, err := b.badges.ListBadgeCatalog(ctx, &badgesv1.ListBadgeCatalogRequest{})
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	out := make([]map[string]any, len(resp.Badges))
 	for i, badge := range resp.Badges {
@@ -35,9 +37,11 @@ func (b *Badges) ListBadgeCatalog(ctx context.Context) ([]map[string]any, error)
 
 // ListArtisanBadges lists one artisan's active grants.
 func (b *Badges) ListArtisanBadges(ctx context.Context, artisanID string) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	resp, err := b.badges.ListArtisanBadges(ctx, &badgesv1.ListArtisanBadgesRequest{ArtisanId: artisanID})
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	out := make([]map[string]any, len(resp.ArtisanBadges))
 	for i, ab := range resp.ArtisanBadges {
@@ -52,14 +56,16 @@ func (b *Badges) ListArtisanBadges(ctx context.Context, artisanID string) ([]map
 
 // GetBadgeProgress returns the caller's own progress entries.
 func (b *Badges) GetBadgeProgress(ctx context.Context, artisanID string) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	resp, err := b.badges.GetBadgeProgress(ctx, &badgesv1.GetBadgeProgressRequest{ArtisanId: artisanID})
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	out := make([]map[string]any, len(resp.Entries))
 	for i, e := range resp.Entries {
 		out[i] = map[string]any{
-			"metric": e.Metric.String(), "value": e.Value, "updated_at": e.GetUpdatedAt().AsTime(),
+			"metric": trimEnumPrefix(e.Metric.String(), "BADGE_METRIC_"), "value": e.Value, "updated_at": e.GetUpdatedAt().AsTime(),
 		}
 	}
 	return out, nil
@@ -67,6 +73,8 @@ func (b *Badges) GetBadgeProgress(ctx context.Context, artisanID string) ([]map[
 
 // GrantBadge confers a CONFERRED badge on an artisan.
 func (b *Badges) GrantBadge(ctx context.Context, artisanID string, fields map[string]any) (map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	badgeID, _ := fields["badge_id"].(string)
 	if badgeID == "" {
 		return nil, domain.InvalidInput("badge_id: is required")
@@ -77,7 +85,7 @@ func (b *Badges) GrantBadge(ctx context.Context, artisanID string, fields map[st
 	}
 	resp, err := b.badges.GrantBadge(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	return map[string]any{
 		"badge":      badgeToMap(resp.ArtisanBadge.Badge),
@@ -88,23 +96,25 @@ func (b *Badges) GrantBadge(ctx context.Context, artisanID string, fields map[st
 
 // RevokeBadge revokes a badge grant.
 func (b *Badges) RevokeBadge(ctx context.Context, artisanID, badgeID string, fields map[string]any) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	reason, _ := fields["reason"].(string)
 	if reason == "" {
 		return domain.InvalidInput("reason: is required")
 	}
 	_, err := b.badges.RevokeBadge(ctx, &badgesv1.RevokeBadgeRequest{ArtisanId: artisanID, BadgeId: badgeID, Reason: reason})
-	return err
+	return grpcErr(err)
 }
 
 func badgeToMap(b *badgesv1.Badge) map[string]any {
 	out := map[string]any{
-		"id": b.Id, "code": b.Code, "kind": b.Kind.String(), "icon_name": b.IconName, "sort_order": b.SortOrder,
+		"id": b.Id, "code": b.Code, "kind": trimEnumPrefix(b.Kind.String(), "BADGE_KIND_"), "icon_name": b.IconName, "sort_order": b.SortOrder,
 	}
 	if b.Tier != badgesv1.BadgeTier_BADGE_TIER_UNSPECIFIED {
-		out["tier"] = b.Tier.String()
+		out["tier"] = trimEnumPrefix(b.Tier.String(), "BADGE_TIER_")
 	}
 	if b.Metric != badgesv1.BadgeMetric_BADGE_METRIC_UNSPECIFIED {
-		out["metric"] = b.Metric.String()
+		out["metric"] = trimEnumPrefix(b.Metric.String(), "BADGE_METRIC_")
 	}
 	if b.Threshold != nil {
 		out["threshold"] = *b.Threshold

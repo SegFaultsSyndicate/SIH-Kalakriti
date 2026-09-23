@@ -1,0 +1,152 @@
+// proto/finance/v1/finance.proto
+
+syntax = "proto3";
+
+package finance.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/finance/v1;financev1";
+
+// FinanceService links an artisan's MoSJE finance-corporation loan or scheme
+// beneficiary record to their shop and shows how platform sales cover the
+// EMI. The full loan reference is hashed on arrival and never stored,
+// logged or returned -- only its last four characters are.
+//
+// String "enums" (validated by the service):
+//   corporation: NSFDC | NBCFDC | NSKFDC | NDFDC | PM_DAKSH | PM_AJAY | OTHER
+//   status:      SELF_REPORTED | VERIFIED | REJECTED
+service FinanceService {
+  // Artisan self (or an agent acting for them). consent_given must be true.
+  rpc LinkFinance(LinkFinanceRequest) returns (LinkFinanceResponse);
+  rpc ListMyFinanceLinks(ListMyFinanceLinksRequest) returns (ListMyFinanceLinksResponse);
+  rpc UpdateFinanceLink(UpdateFinanceLinkRequest) returns (UpdateFinanceLinkResponse);
+  // Consent withdrawal: a hard delete. The artisan's own session only.
+  rpc DeleteFinanceLink(DeleteFinanceLinkRequest) returns (DeleteFinanceLinkResponse);
+  // CLUSTER_OFFICER / MINISTRY, or a FIELD_AGENT linked to the artisan.
+  rpc ReviewFinanceLink(ReviewFinanceLinkRequest) returns (ReviewFinanceLinkResponse);
+  rpc ListFinanceLinksForReview(ListFinanceLinksForReviewRequest) returns (ListFinanceLinksForReviewResponse);
+  rpc GetRepaymentCoverage(GetRepaymentCoverageRequest) returns (GetRepaymentCoverageResponse);
+}
+
+message FinanceLink {
+  string id = 1;
+  string corporation = 2;
+  optional string channelizing_agency = 3;
+  // Only the last 4 characters of the reference; the UI shows XXXX1234.
+  string reference_last4 = 4;
+  optional int64 sanctioned_paise = 5;
+  optional int64 emi_paise = 6;
+  optional int32 emi_day_of_month = 7;
+  optional string repayment_start = 8; // YYYY-MM-DD
+  string status = 9;
+  optional google.protobuf.Timestamp verified_at = 10;
+  optional string reject_reason = 11;
+  google.protobuf.Timestamp consent_at = 12;
+  string consent_version = 13;
+  google.protobuf.Timestamp created_at = 14;
+}
+
+message LinkFinanceRequest {
+  string corporation = 1;
+  optional string channelizing_agency = 2;
+  // The full loan / beneficiary reference. Hashed server-side immediately.
+  string reference = 3;
+  optional int64 sanctioned_paise = 4;
+  optional int64 emi_paise = 5;
+  optional int32 emi_day_of_month = 6;
+  optional string repayment_start = 7;
+  bool consent_given = 8;
+  string consent_version = 9;
+}
+
+message ListMyFinanceLinksRequest {}
+message ListMyFinanceLinksResponse {
+  repeated FinanceLink links = 1;
+}
+
+message UpdateFinanceLinkRequest {
+  string id = 1;
+  optional string channelizing_agency = 2;
+  optional int64 sanctioned_paise = 3;
+  optional int64 emi_paise = 4;
+  optional int32 emi_day_of_month = 5;
+  optional string repayment_start = 6;
+}
+
+message DeleteFinanceLinkRequest {
+  string id = 1;
+}
+message DeleteFinanceLinkResponse {
+  bool deleted = 1;
+}
+
+message ReviewFinanceLinkRequest {
+  string id = 1;
+  // true = VERIFIED, false = REJECTED (reason required).
+  bool verified = 2;
+  optional string reason = 3;
+}
+
+message ListFinanceLinksForReviewRequest {
+  optional string status = 1;
+  optional string state_code = 2;
+  optional string district = 3;
+}
+
+message FinanceLinkForReview {
+  string id = 1;
+  string artisan_id = 2;
+  string artisan_name = 3;
+  string state_code = 4;
+  optional string district = 5;
+  string corporation = 6;
+  optional string channelizing_agency = 7;
+  string reference_last4 = 8;
+  optional int64 sanctioned_paise = 9;
+  optional int64 emi_paise = 10;
+  optional int32 emi_day_of_month = 11;
+  string status = 12;
+  google.protobuf.Timestamp created_at = 13;
+}
+
+message ListFinanceLinksForReviewResponse {
+  repeated FinanceLinkForReview links = 1;
+}
+
+message GetRepaymentCoverageRequest {
+  // YYYY-MM; empty = the current month.
+  string month = 1;
+}
+
+message RepaymentCoverage {
+  string month = 1; // YYYY-MM
+  // Sum of EMIs across the artisan's non-rejected links with an EMI set.
+  int64 emi_paise = 2;
+  // Settled platform payouts in the month.
+  int64 earned_platform_paise = 3;
+  // Offline sales the artisan logged in the month.
+  int64 earned_offline_paise = 4;
+  // Platform payouts not yet settled: "on the way", never counted as earned.
+  int64 pending_paise = 5;
+  // (platform + offline) / emi; 0 when there is no EMI.
+  double coverage_ratio = 6;
+  // Days until the next EMI date; -1 when no link has an EMI day.
+  int32 days_to_emi = 7;
+  // COVERED | ALMOST | NOT_YET | NO_EMI
+  string status = 8;
+  bool any_verified = 9;
+}
+
+message LinkFinanceResponse {
+  FinanceLink link = 1;
+}
+message UpdateFinanceLinkResponse {
+  FinanceLink link = 1;
+}
+message ReviewFinanceLinkResponse {
+  FinanceLink link = 1;
+}
+message GetRepaymentCoverageResponse {
+  RepaymentCoverage coverage = 1;
+}

@@ -71,3 +71,11 @@ func grpcErr(err error) error {
 		return err
 	}
 }
+
+// Outgoing and Err expose withTimeout and grpcErr to handlers that call a
+// generated gRPC client directly (internal/bff/mosje), which cannot import
+// this package's unexported helpers.
+func Outgoing(ctx context.Context) (context.Context, context.CancelFunc) { return withTimeout(ctx) }
+
+// Err is grpcErr for callers outside this package.
+func Err(err error) error { return grpcErr(err) }

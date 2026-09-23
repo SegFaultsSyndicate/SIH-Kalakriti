@@ -62,7 +62,9 @@ export type OutboxKind =
   | 'listing.approve'
   | 'media.upload'
   | 'order.respond'
-  | 'profile.update';
+  | 'profile.update'
+  | 'income.sale'
+  | 'income.baseline';
 
 export interface OutboxEntry {
   id: string;
@@ -97,6 +99,12 @@ export interface OutboxEntry {
    * delivered; a row still present, in any status, means not yet).
    */
   dependsOn: string[];
+  /**
+   * Assisted mode: the artisan a field agent queued this for, frozen at
+   * enqueue so switching artisans before the phone reconnects can never
+   * replay it for someone else. Absent = the signed-in user themself.
+   */
+  onBehalfOf?: string;
 }
 
 export interface DraftRecord {

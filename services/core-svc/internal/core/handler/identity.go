@@ -116,27 +116,9 @@ func (h *Identity) RefreshToken(ctx context.Context, req *identityv1.RefreshToke
 
 // RegisterArtisan creates an artisan profile for a verified phone number.
 func (h *Identity) RegisterArtisan(ctx context.Context, req *identityv1.RegisterArtisanRequest) (*identityv1.RegisterArtisanResponse, error) {
-	craftIDs, err := parseUUIDs("craft_ids", req.GetCraftIds())
+	in, err := registerInputFromProto(req)
 	if err != nil {
 		return nil, pkgdomain.GRPCError(err)
-	}
-	clusterID, err := parseOptionalUUID("cluster_id", req.ClusterId)
-	if err != nil {
-		return nil, pkgdomain.GRPCError(err)
-	}
-
-	in := domain.RegisterArtisanInput{
-		DisplayName:       req.GetDisplayName(),
-		PhoneE164:         req.GetPhoneE164(),
-		CraftIDs:          craftIDs,
-		Languages:         languagesFromProto(req.GetLanguages()),
-		Region:            regionFromProto(req.GetRegion()),
-		ClusterID:         clusterID,
-		PehchanID:         req.PehchanId,
-		PMVishwakarmaID:   req.PmVishwakarmaId,
-		YearsOfExperience: req.YearsOfExperience,
-		Bio:               req.Bio,
-		SocialCategory:    req.SocialCategory,
 	}
 
 	artisan, tokens, err := h.svc.RegisterArtisan(ctx, in, req.GetIdempotencyKey())
@@ -426,4 +408,30 @@ func (h *Identity) ListSelfHelpGroupMembers(ctx context.Context, req *identityv1
 		return nil, pkgdomain.GRPCError(err)
 	}
 	return &identityv1.ListSelfHelpGroupMembersResponse{Members: shgMembersToProto(members)}, nil
+}
+
+// registerInputFromProto is shared by self-registration and assisted
+// onboarding (assisted.v1.AssistedService/LinkArtisan).
+func registerInputFromProto(req *identityv1.RegisterArtisanRequest) (domain.RegisterArtisanInput, error) {
+	craftIDs, err := parseUUIDs("craft_ids", req.GetCraftIds())
+	if err != nil {
+		return domain.RegisterArtisanInput{}, err
+	}
+	clusterID, err := parseOptionalUUID("cluster_id", req.ClusterId)
+	if err != nil {
+		return domain.RegisterArtisanInput{}, err
+	}
+	return domain.RegisterArtisanInput{
+		DisplayName:       req.GetDisplayName(),
+		PhoneE164:         req.GetPhoneE164(),
+		CraftIDs:          craftIDs,
+		Languages:         languagesFromProto(req.GetLanguages()),
+		Region:            regionFromProto(req.GetRegion()),
+		ClusterID:         clusterID,
+		PehchanID:         req.PehchanId,
+		PMVishwakarmaID:   req.PmVishwakarmaId,
+		YearsOfExperience: req.YearsOfExperience,
+		Bio:               req.Bio,
+		SocialCategory:    req.SocialCategory,
+	}, nil
 }

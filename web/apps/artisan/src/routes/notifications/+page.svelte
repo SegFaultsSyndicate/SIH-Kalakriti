@@ -62,7 +62,22 @@
     if (payload.lot_id && payload.order_id) return `/orders/${payload.order_id}/lots/${payload.lot_id}`;
     if (payload.order_id) return `/orders/${payload.order_id}`;
     if (payload.listing_id) return `/listings/${payload.listing_id}`;
+    if (payload.link_id) return '/finance';
     return undefined;
+  }
+
+  // Server-composed notifications (e.g. F12's EMI reminder) carry an i18n
+  // key and params so they read in the artisan's language; title/body are
+  // the English fallback for other channels.
+  const LOCALIZED: Record<string, { title: MessageKey; body: MessageKey }> = {
+    'finance.reminder.body': { title: 'finance.reminder.title', body: 'finance.reminder.body' },
+  };
+
+  function text(item: FeedItem): { title: string; body: string } {
+    const payload = (item.payload ?? {}) as { i18n_key?: string; params?: Record<string, string | number> };
+    const keys = payload.i18n_key ? LOCALIZED[payload.i18n_key] : undefined;
+    if (!keys) return { title: item.title ?? '', body: item.body ?? '' };
+    return { title: t(keys.title), body: t(keys.body, payload.params ?? {}) };
   }
 
   async function onOpen(item: FeedItem): Promise<void> {
@@ -103,6 +118,7 @@
           <ul role="list">
             {#each rows as item (item.id)}
               {@const href = deepLink(item)}
+              {@const shown = text(item)}
               <li>
                 {#snippet row()}
                   <Card variant="hairline" element="div" class="notifications-page__item">
@@ -110,8 +126,8 @@
                       <span class="notifications-page__dot" aria-hidden="true"></span>
                     {/if}
                     <div class="notifications-page__body">
-                      <p class="notifications-page__title">{item.title}</p>
-                      <p class="notifications-page__text">{item.body}</p>
+                      <p class="notifications-page__title">{shown.title}</p>
+                      <p class="notifications-page__text">{shown.body}</p>
                       {#if item.created_at}
                         <p class="notifications-page__time">
                           {formatDate(item.created_at, locale.code, { dateStyle: 'medium', timeStyle: 'short' })}

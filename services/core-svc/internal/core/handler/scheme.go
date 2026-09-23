@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	schemesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
@@ -24,7 +25,7 @@ func NewSchemes(svc *service.Schemes) *Schemes { return &Schemes{svc: svc} }
 func (h *Schemes) ListSchemes(ctx context.Context, req *schemesv1.ListSchemesRequest) (*schemesv1.ListSchemesResponse, error) {
 	schemes, err := h.svc.ListSchemes(ctx)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	out := make([]*schemesv1.GovernmentScheme, len(schemes))
 	for i, s := range schemes {
@@ -36,7 +37,7 @@ func (h *Schemes) ListSchemes(ctx context.Context, req *schemesv1.ListSchemesReq
 func (h *Schemes) MatchSchemes(ctx context.Context, req *schemesv1.MatchSchemesRequest) (*schemesv1.MatchSchemesResponse, error) {
 	matches, err := h.svc.MatchSchemes(ctx)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	out := make([]*schemesv1.SchemeMatch, len(matches))
 	for i, m := range matches {
@@ -56,9 +57,9 @@ func (h *Schemes) MatchSchemes(ctx context.Context, req *schemesv1.MatchSchemesR
 func (h *Schemes) UpsertScheme(ctx context.Context, req *schemesv1.UpsertSchemeRequest) (*schemesv1.UpsertSchemeResponse, error) {
 	var id uuid.UUID
 	if req.Id != nil && *req.Id != "" {
-		parsed, err := uuid.Parse(*req.Id)
+		parsed, err := parseUUID("id", *req.Id)
 		if err != nil {
-			return nil, err
+			return nil, pkgdomain.GRPCError(err)
 		}
 		id = parsed
 	}
@@ -79,19 +80,19 @@ func (h *Schemes) UpsertScheme(ctx context.Context, req *schemesv1.UpsertSchemeR
 		SortOrder: req.SortOrder,
 	}, criteria, manualChecks)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	return &schemesv1.UpsertSchemeResponse{Scheme: toProtoScheme(scheme)}, nil
 }
 
 func (h *Schemes) DeleteScheme(ctx context.Context, req *schemesv1.DeleteSchemeRequest) (*schemesv1.DeleteSchemeResponse, error) {
-	id, err := uuid.Parse(req.GetId())
+	id, err := parseUUID("id", req.GetId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	deleted, err := h.svc.DeleteScheme(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	return &schemesv1.DeleteSchemeResponse{Deleted: deleted}, nil
 }

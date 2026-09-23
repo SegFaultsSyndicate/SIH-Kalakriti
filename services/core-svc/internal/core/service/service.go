@@ -54,6 +54,10 @@ type Store interface {
 
 	GetSHG(ctx context.Context, id uuid.UUID) (domain.SelfHelpGroup, error)
 	ListSHGMembers(ctx context.Context, shgID uuid.UUID) ([]domain.SHGMember, error)
+
+	// Staff login: a phone matching an active staff_account logs in as staff.
+	GetActiveStaffByPhone(ctx context.Context, phone string) (domain.StaffAccount, bool, error)
+	GetStaffAccount(ctx context.Context, id uuid.UUID) (domain.StaffAccount, error)
 }
 
 // TokenIssuer is the slice of pkg/auth.Issuer the service needs to mint tokens.

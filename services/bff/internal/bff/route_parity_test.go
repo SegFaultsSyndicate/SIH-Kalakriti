@@ -19,6 +19,7 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	assets "github.com/ZoroNewbie00/kalakriti/services/bff"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/mosje"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -57,6 +58,7 @@ func TestOpenAPISpecHasEveryAPIRoute(t *testing.T) {
 		WebDist: t.TempDir(),
 		Issuer:  issuer,
 		Redis:   rdb,
+		Mosje:   mosje.New(nil, nil), // mounts the tier-4 routes so they are checked too
 	})
 	if err != nil {
 		t.Fatalf("NewServer: %v", err)

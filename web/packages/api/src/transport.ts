@@ -63,7 +63,7 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
  * Node's fetch has no document base URL and rejects a bare relative path, so
  * tests need an explicit fallback origin -- MSW matches on path regardless.
  */
-function resolveUrl(path: string): string {
+export function resolveUrl(path: string): string {
   const base = typeof location === 'undefined' ? 'http://localhost' : location.origin;
   return new URL(`${API_BASE}${path}`, base).toString();
 }

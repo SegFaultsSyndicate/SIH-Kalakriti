@@ -52,8 +52,13 @@ func (r *Repo) InTx(ctx context.Context, fn func(tx *Tx) error) error {
 	})
 }
 
+// RefreshMaterializedViews refreshes every insight view and stamps the time,
+// which the impact dashboard shows as "data as of".
 func (r *Repo) RefreshMaterializedViews(ctx context.Context) error {
-	return r.q.RefreshMaterializedViews(ctx)
+	if err := r.q.RefreshMaterializedViews(ctx); err != nil {
+		return err
+	}
+	return r.q.RecordInsightRefresh(ctx)
 }
 
 // ShortCodeExists checks if an income statement short code is already taken.
@@ -63,7 +68,7 @@ func (r *Repo) ShortCodeExists(ctx context.Context, code string) (bool, error) {
 
 func (r *Repo) GetArtisansByCategory(ctx context.Context, stateCode, district *string) ([]domain.ArtisanCategoryRow, error) {
 	rows, err := r.q.GetArtisansByCategory(ctx, db.GetArtisansByCategoryParams{
-		Column1: derefString(stateCode), Column2: derefString(district),
+		StateCode: stateCode, District: district,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("artisans by category: %w", err)
@@ -80,7 +85,7 @@ func (r *Repo) GetArtisansByCategory(ctx context.Context, stateCode, district *s
 
 func (r *Repo) GetListingsByCraftMonth(ctx context.Context, from, to *time.Time, craftID *uuid.UUID) ([]domain.ListingCraftMonthRow, error) {
 	rows, err := r.q.GetListingsByCraftMonth(ctx, db.GetListingsByCraftMonthParams{
-		Column1: derefTime(from), Column2: derefTime(to), Column3: derefUUID(craftID),
+		FromDate: from, ToDate: to, CraftID: craftID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("listings by craft month: %w", err)
@@ -97,7 +102,7 @@ func (r *Repo) GetListingsByCraftMonth(ctx context.Context, from, to *time.Time,
 
 func (r *Repo) GetEarningsByDistrict(ctx context.Context, stateCode, district *string, minBucket int32) ([]domain.EarningsDistrictRow, error) {
 	rows, err := r.q.GetEarningsByDistrict(ctx, db.GetEarningsByDistrictParams{
-		Column1: derefString(stateCode), Column2: derefString(district), ArtisanCount: int64(minBucket),
+		StateCode: stateCode, District: district, MinBucket: int64(minBucket),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("earnings by district: %w", err)
@@ -108,24 +113,6 @@ func (r *Repo) GetEarningsByDistrict(ctx context.Context, stateCode, district *s
 			StateCode: row.StateCode, District: derefString(row.District),
 			TotalGMVPaise: row.TotalGmvPaise, TotalNetPaise: row.TotalNetPaise,
 			ArtisanCount: int32(row.ArtisanCount), AvgEarnings: int64(row.AvgEarningsPaise),
-		})
-	}
-	return out, nil
-}
-
-func (r *Repo) GetIncomeComparison(ctx context.Context, stateCode, district *string, minBucket int32) ([]domain.IncomeComparisonRow, error) {
-	rows, err := r.q.GetIncomeComparison(ctx, db.GetIncomeComparisonParams{
-		Column1: derefString(stateCode), Column2: derefString(district), ArtisanCount: int64(minBucket),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("income comparison: %w", err)
-	}
-	out := make([]domain.IncomeComparisonRow, 0, len(rows))
-	for _, row := range rows {
-		out = append(out, domain.IncomeComparisonRow{
-			StateCode: row.StateCode, District: derefString(row.District),
-			MedianBeforePaise: int64(row.MedianBeforePaise), MedianAfterPaise: int64(row.MedianAfterPaise),
-			ArtisanCount: int32(row.ArtisanCount),
 		})
 	}
 	return out, nil
@@ -213,20 +200,6 @@ func derefString[T ~string](s *T) string {
 		return ""
 	}
 	return string(*s)
-}
-
-func derefTime(t *time.Time) time.Time {
-	if t == nil {
-		return time.Time{}
-	}
-	return *t
-}
-
-func derefUUID(u *uuid.UUID) uuid.UUID {
-	if u == nil {
-		return uuid.Nil
-	}
-	return *u
 }
 
 // derefSocialCategory unwraps GetArtisansByCategory's nullable enum column

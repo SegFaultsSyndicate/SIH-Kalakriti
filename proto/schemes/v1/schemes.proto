@@ -4,8 +4,6 @@ syntax = "proto3";
 
 package schemes.v1;
 
-import "google/protobuf/timestamp.proto";
-
 option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1;schemesv1";
 
 // SchemeService surfaces government scheme reference data and matches the

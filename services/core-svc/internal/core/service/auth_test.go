@@ -7,8 +7,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 func TestRequestOtpValidatesPhone(t *testing.T) {
@@ -273,5 +277,70 @@ func TestRefreshTokenRejectsAnUnknownRole(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "SUPERUSER") {
 		t.Errorf("error should name the bad role, got %q", err)
+	}
+}
+
+func TestVerifyOtpActiveStaffPhoneMintsTheStaffRoleWithoutDevRole(t *testing.T) {
+	store := newFakeStore()
+	staffID := uuid.New()
+	state, district := "IN-UP", "Varanasi"
+	store.staff[staffID] = domain.StaffAccount{
+		ID: staffID, PhoneE164: testPhone, DisplayName: "Ramesh", Role: string(auth.RoleFieldAgent),
+		StateCode: &state, District: &district, Active: true,
+	}
+	tokens := newFakeTokens()
+	// Dev mode off: this must work in a real deployment, with no dev_role.
+	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456"})
+
+	result, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", "")
+	if err != nil {
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+	if !result.Registered || result.ArtisanID != "" {
+		t.Errorf("staff login result = %+v, want registered with no artisan id", result)
+	}
+	sub := tokens.issued[len(tokens.issued)-1]
+	if sub.Role != auth.RoleFieldAgent || sub.ID != staffID.String() {
+		t.Errorf("issued subject = %+v, want FIELD_AGENT %s", sub, staffID)
+	}
+	if sub.ScopeState != state || sub.ScopeDistrict != district {
+		t.Errorf("scope = %q/%q, want %q/%q", sub.ScopeState, sub.ScopeDistrict, state, district)
+	}
+	if sub.PhoneE164 != "" {
+		t.Error("a staff token must not carry a phone: RegisterArtisan binds to it")
+	}
+}
+
+func TestVerifyOtpInactiveStaffFallsThroughToTheArtisanFlow(t *testing.T) {
+	store := newFakeStore()
+	staffID := uuid.New()
+	store.staff[staffID] = domain.StaffAccount{ID: staffID, PhoneE164: testPhone, Role: string(auth.RoleMinistry), Active: false}
+	tokens := newFakeTokens()
+	svc := newTestIdentity(store, tokens, &fakeOTP{acceptCode: "123456"})
+
+	if _, err := svc.VerifyOtp(context.Background(), "challenge-1", testPhone, "123456", ""); err != nil {
+		t.Fatalf("VerifyOtp: %v", err)
+	}
+	if got := tokens.issued[len(tokens.issued)-1].Role; got != auth.RoleArtisan {
+		t.Errorf("a deactivated staff phone logged in as %s, want ARTISAN", got)
+	}
+}
+
+func TestRefreshTokenRejectsADeactivatedStaffAccount(t *testing.T) {
+	store := newFakeStore()
+	staffID := uuid.New()
+	store.staff[staffID] = domain.StaffAccount{ID: staffID, Role: string(auth.RoleClusterOfficer), Active: false}
+	tokens := newFakeTokens()
+	tokens.verify["staff-refresh"] = &auth.Claims{Role: string(auth.RoleClusterOfficer), Kind: string(auth.KindRefresh)}
+	tokens.verify["staff-refresh"].Subject = staffID.String()
+	svc := newTestIdentity(store, tokens, &fakeOTP{})
+
+	if _, err := svc.RefreshToken(context.Background(), "staff-refresh"); !errors.Is(err, pkgdomain.ErrForbidden) {
+		t.Fatalf("want ErrForbidden for a deactivated staffer, got %v", err)
+	}
+
+	store.staff[staffID] = domain.StaffAccount{ID: staffID, Role: string(auth.RoleClusterOfficer), Active: true}
+	if _, err := svc.RefreshToken(context.Background(), "staff-refresh"); err != nil {
+		t.Fatalf("an active staffer should refresh: %v", err)
 	}
 }

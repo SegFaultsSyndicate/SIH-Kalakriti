@@ -35,7 +35,6 @@ type Store interface {
 	GetArtisansByCategory(ctx context.Context, stateCode, district *string) ([]domain.ArtisanCategoryRow, error)
 	GetListingsByCraftMonth(ctx context.Context, from, to *time.Time, craftID *uuid.UUID) ([]domain.ListingCraftMonthRow, error)
 	GetEarningsByDistrict(ctx context.Context, stateCode, district *string, minBucket int32) ([]domain.EarningsDistrictRow, error)
-	GetIncomeComparison(ctx context.Context, stateCode, district *string, minBucket int32) ([]domain.IncomeComparisonRow, error)
 	GetDyingCrafts(ctx context.Context, limit int32) ([]domain.DyingCraftRow, error)
 	GetArtisanEarningsByPeriod(ctx context.Context, artisanID uuid.UUID, start, end time.Time) (*domain.IncomeStatement, error)
 	GetArtisanEarningsMonthly(ctx context.Context, artisanID uuid.UUID, start, end time.Time) ([]domain.MonthlyEarnings, error)
@@ -48,37 +47,45 @@ type Tx interface {
 }
 
 type Service struct {
-	store          Store
-	signer         *crypto.Signer
-	qr             *qrcode.Generator
-	codeGen        *shortcode.Generator
-	s3             *storage.Client
-	verifyBaseURL  string
-	minBucketSize  int32
-	presignExpiry  time.Duration
+	store         Store
+	signer        *crypto.Signer
+	qr            *qrcode.Generator
+	codeGen       *shortcode.Generator
+	certCodes     *shortcode.Generator
+	impact        ImpactStore
+	s3            *storage.Client
+	verifyBaseURL string
+	minBucketSize int32
+	presignExpiry time.Duration
 }
 
 type Config struct {
-	Store          Store
-	Signer         *crypto.Signer
-	QRGenerator    *qrcode.Generator
-	CodeGenerator  *shortcode.Generator
-	S3Client       *storage.Client
-	VerifyBaseURL  string
-	MinBucketSize  int32
-	PresignExpiry  time.Duration
+	Store         Store
+	Signer        *crypto.Signer
+	QRGenerator   *qrcode.Generator
+	CodeGenerator *shortcode.Generator
+	// CertCodeGenerator mints literacy certificate short codes (checked
+	// against literacy_certificate, not income_statement).
+	CertCodeGenerator *shortcode.Generator
+	ImpactStore       ImpactStore
+	S3Client          *storage.Client
+	VerifyBaseURL     string
+	MinBucketSize     int32
+	PresignExpiry     time.Duration
 }
 
 func New(cfg Config) *Service {
 	return &Service{
-		store:          cfg.Store,
-		signer:         cfg.Signer,
-		qr:             cfg.QRGenerator,
-		codeGen:        cfg.CodeGenerator,
-		s3:             cfg.S3Client,
-		verifyBaseURL:  cfg.VerifyBaseURL,
-		minBucketSize:  cfg.MinBucketSize,
-		presignExpiry:  cfg.PresignExpiry,
+		store:         cfg.Store,
+		signer:        cfg.Signer,
+		qr:            cfg.QRGenerator,
+		codeGen:       cfg.CodeGenerator,
+		certCodes:     cfg.CertCodeGenerator,
+		impact:        cfg.ImpactStore,
+		s3:            cfg.S3Client,
+		verifyBaseURL: cfg.VerifyBaseURL,
+		minBucketSize: cfg.MinBucketSize,
+		presignExpiry: cfg.PresignExpiry,
 	}
 }
 
@@ -98,8 +105,27 @@ func (s *Service) GetEarningsByDistrict(ctx context.Context, stateCode, district
 	return s.store.GetEarningsByDistrict(ctx, stateCode, district, s.minBucketSize)
 }
 
+// GetIncomeComparison is median self-reported baseline vs median current
+// monthly income per district, derived from the same per-artisan facts as
+// the impact dashboard (the old SQL view summed platform income only and
+// had no baseline to compare against). Districts under the minimum bucket
+// are omitted, as before.
 func (s *Service) GetIncomeComparison(ctx context.Context, stateCode, district *string) ([]domain.IncomeComparisonRow, error) {
-	return s.store.GetIncomeComparison(ctx, stateCode, district, s.minBucketSize)
+	artisans, err := s.impact.ListImpactArtisans(ctx, domain.ImpactFilter{StateCode: stateCode, District: district})
+	if err != nil {
+		return nil, err
+	}
+	var out []domain.IncomeComparisonRow
+	for _, g := range groupImpact(artisans, GroupDistrict, time.Now()) {
+		if g.Suppressed || g.WithBaselineCount < int64(s.minBucketSize) {
+			continue
+		}
+		out = append(out, domain.IncomeComparisonRow{
+			StateCode: g.StateCode, District: g.Group, ArtisanCount: int32(g.ArtisanCount),
+			MedianBeforePaise: g.MedianBaselinePaise, MedianAfterPaise: g.MedianCurrentPaise,
+		})
+	}
+	return out, nil
 }
 
 func (s *Service) GetDyingCrafts(ctx context.Context, limit int32) ([]domain.DyingCraftRow, error) {

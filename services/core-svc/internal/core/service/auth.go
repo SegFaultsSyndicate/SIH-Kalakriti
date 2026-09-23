@@ -6,8 +6,12 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
+
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
+
+	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
 )
 
 // phoneE164Pattern mirrors the artisan_phone_e164_check constraint, so a login
@@ -51,6 +55,22 @@ func (s *Identity) VerifyOtp(ctx context.Context, challengeID, phone, code, devR
 
 	if err := s.otp.Verify(ctx, challengeID, phone, code); err != nil {
 		return LoginResult{}, err
+	}
+
+	// Staff first: a ministry-issued staff account always logs in as its own
+	// role, so staff never depend on the dev_role hack below.
+	staff, isStaff, err := s.store.GetActiveStaffByPhone(ctx, phone)
+	if err != nil {
+		return LoginResult{}, fmt.Errorf("looking up staff for a verified phone: %w", err)
+	}
+	if isStaff {
+		tokens, err := s.tokens.Issue(staffSubject(staff))
+		if err != nil {
+			return LoginResult{}, fmt.Errorf("issuing staff tokens after otp verification: %w", err)
+		}
+		s.log.InfoContext(ctx, "staff otp verified", "role", staff.Role, "staff_id", staff.ID)
+		// Registered: true -- staff never go through RegisterArtisan.
+		return LoginResult{Tokens: tokens, Registered: true}, nil
 	}
 
 	// devRole requests a token for a role other than ARTISAN. BUYER,
@@ -131,6 +151,24 @@ func (s *Identity) RefreshToken(ctx context.Context, refreshToken string) (auth.
 		return auth.TokenPair{}, fmt.Errorf("%s: %w", err, pkgdomain.ErrForbidden)
 	}
 
+	// A staff refresh re-reads the account, so deactivating a staffer (or
+	// changing their scope) takes effect at the next refresh rather than when
+	// a 7-day refresh token finally expires. A dev_role token's subject is a
+	// phone, not a staff id, and is left alone -- it only exists in dev.
+	if role != auth.RoleArtisan && role != auth.RoleBuyer {
+		if staffID, perr := uuid.Parse(claims.Subject); perr == nil {
+			staff, err := s.store.GetStaffAccount(ctx, staffID)
+			if err != nil || !staff.Active {
+				return auth.TokenPair{}, fmt.Errorf("staff account is not active: %w", pkgdomain.ErrForbidden)
+			}
+			tokens, err := s.tokens.Issue(staffSubject(staff))
+			if err != nil {
+				return auth.TokenPair{}, fmt.Errorf("issuing refreshed staff tokens: %w", err)
+			}
+			return tokens, nil
+		}
+	}
+
 	tokens, err := s.tokens.Issue(auth.Subject{
 		ID:        claims.Subject,
 		Role:      role,
@@ -141,4 +179,20 @@ func (s *Identity) RefreshToken(ctx context.Context, refreshToken string) (auth.
 		return auth.TokenPair{}, fmt.Errorf("issuing refreshed tokens: %w", err)
 	}
 	return tokens, nil
+}
+
+// staffSubject builds the token subject for a staff account: sub is the
+// staff id (never an artisan id), and the account's region rides along as
+// scope claims so the bff can narrow an officer's dashboards without a lookup.
+func staffSubject(staff domain.StaffAccount) auth.Subject {
+	// No PhoneE164: RegisterArtisan binds a new profile to the token's phone,
+	// and a staff token must never be able to register itself as an artisan.
+	sub := auth.Subject{ID: staff.ID.String(), Role: auth.Role(staff.Role)}
+	if staff.StateCode != nil {
+		sub.ScopeState = *staff.StateCode
+	}
+	if staff.District != nil {
+		sub.ScopeDistrict = *staff.District
+	}
+	return sub
 }

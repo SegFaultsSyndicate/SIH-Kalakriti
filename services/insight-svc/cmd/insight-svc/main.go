@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
+	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
 	"github.com/ZoroNewbie00/kalakriti/pkg/config"
 	"github.com/ZoroNewbie00/kalakriti/pkg/crypto"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
@@ -71,21 +72,44 @@ func run() error {
 		return fmt.Errorf("configuring signer: %w", err)
 	}
 
+	// insight-svc verifies the same access tokens core-svc issues: the bff
+	// forwards the caller's bearer token, and every handler authorises on it.
+	// Before this interceptor existed no principal ever reached a handler, so
+	// every MINISTRY-only RPC answered PermissionDenied.
+	verifier, err := auth.NewIssuer(auth.Config{
+		Secret: cfg.auth.JWTSecret, Issuer: cfg.auth.Issuer,
+		AccessTTL: cfg.auth.AccessTTL, RefreshTTL: cfg.auth.RefreshTTL,
+	})
+	if err != nil {
+		return fmt.Errorf("configuring token verifier: %w", err)
+	}
+	public := auth.NewPublicMethods(
+		"/insight.v1.InsightService/VerifyIncomeStatement",
+		"/insight.v1.InsightService/VerifyLiteracyCertificate",
+		"/grpc.health.v1.Health/Check",
+		"/grpc.health.v1.Health/Watch",
+	)
+
 	repository := repo.New(pool)
 	store := wiring.NewStore(repository)
 	svc := service.New(service.Config{
-		Store:         store,
-		Signer:        signer,
-		QRGenerator:   qrcode.NewGenerator(cfg.baseURL),
-		CodeGenerator: shortcode.NewGenerator(repository.ShortCodeExists),
-		S3Client:      objects,
-		VerifyBaseURL: cfg.baseURL,
-		MinBucketSize: cfg.minBucketSize,
-		PresignExpiry: 24 * time.Hour,
+		Store:             store,
+		Signer:            signer,
+		QRGenerator:       qrcode.NewGenerator(cfg.baseURL),
+		CodeGenerator:     shortcode.NewGenerator(repository.ShortCodeExists),
+		CertCodeGenerator: shortcode.NewGenerator(repository.LiteracyCertificateShortCodeExists),
+		ImpactStore:       repository,
+		S3Client:          objects,
+		VerifyBaseURL:     cfg.baseURL,
+		MinBucketSize:     cfg.minBucketSize,
+		PresignExpiry:     24 * time.Hour,
 	})
 	h := handler.New(svc, cfg.baseURL)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(verifier, public)),
+		grpc.ChainStreamInterceptor(auth.StreamServerInterceptor(verifier, public)),
+	)
 	insightv1.RegisterInsightServiceServer(grpcServer, h)
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)
@@ -136,6 +160,7 @@ type appConfig struct {
 	server        config.Server
 	postgres      config.Postgres
 	s3            config.S3
+	auth          config.Auth
 	signingKey    string
 	keyID         string
 	baseURL       string
@@ -153,6 +178,9 @@ func loadConfig() (appConfig, error) {
 		return cfg, err
 	}
 	if cfg.s3, err = config.Load[config.S3](); err != nil {
+		return cfg, err
+	}
+	if cfg.auth, err = config.Load[config.Auth](); err != nil {
 		return cfg, err
 	}
 	cfg.signingKey = os.Getenv("SIGNING_PRIVATE_KEY")

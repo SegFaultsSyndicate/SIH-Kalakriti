@@ -46,4 +46,17 @@ describe('resolveRedirect', () => {
     expect(resolveRedirect(FULL, '/')).toBeNull();
     expect(resolveRedirect(FULL, '/work')).toBeNull();
   });
+
+  it('keeps a field agent on /agent unless they are helping an artisan', () => {
+    const AGENT: GuardState = { ...SESSION, agent: true };
+    expect(resolveRedirect(AGENT, '/')).toBe('/agent');
+    expect(resolveRedirect(AGENT, '/register/name')).toBe('/agent');
+    expect(resolveRedirect(AGENT, '/agent')).toBeNull();
+    expect(resolveRedirect(AGENT, '/agent/add')).toBeNull();
+    const ACTING: GuardState = { ...AGENT, acting: true };
+    expect(resolveRedirect(ACTING, '/')).toBeNull();
+    expect(resolveRedirect(ACTING, '/listing/new')).toBeNull();
+    expect(resolveRedirect(ACTING, '/register/income')).toBe('/agent');
+    expect(resolveRedirect(ACTING, '/welcome')).toBe('/agent');
+  });
 });

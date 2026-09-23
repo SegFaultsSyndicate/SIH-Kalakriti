@@ -64,6 +64,8 @@ enum Role {
   ROLE_CLUSTER_OFFICER = 3;
   // Read-only oversight across every cluster.
   ROLE_MINISTRY = 4;
+  // A CSC operator or field helper acting for artisans who consented.
+  ROLE_FIELD_AGENT = 5;
 }
 
 // ClusterMemberRole is an artisan's standing inside a cluster.

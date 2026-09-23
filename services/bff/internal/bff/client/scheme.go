@@ -19,9 +19,11 @@ func NewSchemes(conn grpc.ClientConnInterface) *Schemes {
 }
 
 func (s *Schemes) ListSchemes(ctx context.Context) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	resp, err := s.schemes.ListSchemes(ctx, &schemesv1.ListSchemesRequest{})
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	out := make([]map[string]any, len(resp.Schemes))
 	for i, scheme := range resp.Schemes {
@@ -31,9 +33,11 @@ func (s *Schemes) ListSchemes(ctx context.Context) ([]map[string]any, error) {
 }
 
 func (s *Schemes) MatchSchemes(ctx context.Context) ([]map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	resp, err := s.schemes.MatchSchemes(ctx, &schemesv1.MatchSchemesRequest{})
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	out := make([]map[string]any, len(resp.Matches))
 	for i, m := range resp.Matches {
@@ -62,6 +66,8 @@ func (s *Schemes) MatchSchemes(ctx context.Context) ([]map[string]any, error) {
 }
 
 func (s *Schemes) UpsertScheme(ctx context.Context, fields map[string]any) (map[string]any, error) {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	code, _ := fields["code"].(string)
 	if code == "" {
 		return nil, domain.InvalidInput("code: is required")
@@ -144,14 +150,16 @@ func (s *Schemes) UpsertScheme(ctx context.Context, fields map[string]any) (map[
 
 	resp, err := s.schemes.UpsertScheme(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, grpcErr(err)
 	}
 	return schemeToMap(resp.Scheme), nil
 }
 
 func (s *Schemes) DeleteScheme(ctx context.Context, id string) error {
+	ctx, cancel := withTimeout(ctx)
+	defer cancel()
 	_, err := s.schemes.DeleteScheme(ctx, &schemesv1.DeleteSchemeRequest{Id: id})
-	return err
+	return grpcErr(err)
 }
 
 func toProtoCriterionType(t string) schemesv1.SchemeCriterionType {

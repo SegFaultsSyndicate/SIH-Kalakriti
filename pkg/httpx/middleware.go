@@ -356,7 +356,7 @@ func CORS(cfg Config) func(http.Handler) http.Handler {
 		// separately-hosted frontend) for every idempotency-protected
 		// mutation, even though the header the server reads is allowed.
 		// See WIRING_AUDIT_PLAN.md F-12.
-		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key", "X-Idempotency-Key"}
+		headers = []string{"Authorization", "Content-Type", "X-Trace-Id", "Idempotency-Key", "X-Idempotency-Key", "X-On-Behalf-Of"}
 	}
 	allowAll := false
 	allowed := make(map[string]struct{}, len(cfg.AllowedOrigins))

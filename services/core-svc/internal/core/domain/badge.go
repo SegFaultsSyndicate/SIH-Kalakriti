@@ -38,6 +38,7 @@ const (
 	MetricProvenanceSealed  BadgeMetric = "PROVENANCE_SEALED"
 	MetricLotsAccepted      BadgeMetric = "LOTS_ACCEPTED"
 	MetricLotsCompleted     BadgeMetric = "LOTS_COMPLETED"
+	MetricLessonsCompleted  BadgeMetric = "LESSONS_COMPLETED"
 )
 
 // Badge is one catalog entry: either a conferred recognition or one tier of

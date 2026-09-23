@@ -44,10 +44,6 @@ func (s Store) GetEarningsByDistrict(ctx context.Context, stateCode, district *s
 	return s.r.GetEarningsByDistrict(ctx, stateCode, district, minBucket)
 }
 
-func (s Store) GetIncomeComparison(ctx context.Context, stateCode, district *string, minBucket int32) ([]domain.IncomeComparisonRow, error) {
-	return s.r.GetIncomeComparison(ctx, stateCode, district, minBucket)
-}
-
 func (s Store) GetDyingCrafts(ctx context.Context, limit int32) ([]domain.DyingCraftRow, error) {
 	return s.r.GetDyingCrafts(ctx, limit)
 }

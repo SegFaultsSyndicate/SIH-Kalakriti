@@ -6,7 +6,7 @@
       {#snippet actions()}...{/snippet}
     </RegisterStep>
 
-  Chrome shared by all five /register/* screens: the Stepper, the spoken
+  Chrome shared by every /register/* screen: the Stepper, the spoken
   prompt (offered, not auto-played), and a working back button. `actions` is
   a snippet rather than a fixed Next button because whether the primary
   action is enabled, what it is labelled ("Next" vs "Skip" vs "Finish"), and
@@ -38,11 +38,12 @@
     t('register.district.heading'),
     t('register.pehchan.heading'),
     t('registration.socialCategory.label'),
+    t('income.baseline.step'),
     t('register.cluster.heading'),
   ]);
 
   // Route segment per step, same order as stepLabels.
-  const STEP_ROUTES = ['name', 'craft', 'district', 'pehchan', 'social-category', 'cluster'];
+  const STEP_ROUTES = ['name', 'craft', 'district', 'pehchan', 'social-category', 'income', 'cluster'];
   const stepHref = (i: number): string => `/register/${STEP_ROUTES[i]}`;
 </script>
 

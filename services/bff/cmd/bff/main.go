@@ -22,6 +22,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/webhook"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/client"
+	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/mosje"
 	"github.com/ZoroNewbie00/kalakriti/services/bff/internal/bff/repo"
 )
 
@@ -148,6 +149,7 @@ func run() error {
 		FollowSvc:  client.NewFollow(channelConn),
 		StmtSvc:    insightClient,
 		InsightSvc: insightClient,
+		Mosje:      mosje.New(coreConn, insightConn),
 		CatalogSvc: client.NewCatalog(coreConn),
 		B2BSvc:     client.NewB2B(coreConn),
 		TrendSvc:   client.NewTrends(coreConn),
