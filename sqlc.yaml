@@ -20,6 +20,7 @@ sql:
       - "migrations/queries/trends.sql"
       - "migrations/queries/badges.sql"
       - "migrations/queries/schemes.sql"
+      - "migrations/queries/assisted.sql"
     gen:
       go:
         package: "db"

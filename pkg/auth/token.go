@@ -39,6 +39,12 @@ type Claims struct {
 	// PhoneE164 is the verified phone a login was proven against. Present on
 	// tokens minted before a profile exists, so RegisterArtisan can bind to it.
 	PhoneE164 string `json:"phone,omitempty"`
+	// ScopeState/ScopeDistrict narrow a staff token to one region.
+	ScopeState    string `json:"scope_state,omitempty"`
+	ScopeDistrict string `json:"scope_district,omitempty"`
+	// Actor is the acting staff account id on an assisted-mode token (the
+	// RFC 8693 "act" idea, flattened to the subject string).
+	Actor string `json:"act,omitempty"`
 }
 
 // Config configures token issue and verification.
@@ -101,6 +107,11 @@ type Subject struct {
 	Language string
 	// PhoneE164 is the verified phone number the login was proven against.
 	PhoneE164 string
+	// ScopeState/ScopeDistrict narrow a staff token to one region.
+	ScopeState    string
+	ScopeDistrict string
+	// Actor is the staff account acting for an artisan (assisted mode).
+	Actor string
 }
 
 // Issue mints an access/refresh pair for sub.
@@ -137,10 +148,13 @@ func (i *Issuer) sign(sub Subject, kind TokenKind, now time.Time, ttl time.Durat
 			ExpiresAt: jwt.NewNumericDate(exp),
 			ID:        ids.New().String(),
 		},
-		Role:      sub.Role.String(),
-		Language:  sub.Language,
-		Kind:      string(kind),
-		PhoneE164: sub.PhoneE164,
+		Role:          sub.Role.String(),
+		Language:      sub.Language,
+		Kind:          string(kind),
+		PhoneE164:     sub.PhoneE164,
+		ScopeState:    sub.ScopeState,
+		ScopeDistrict: sub.ScopeDistrict,
+		Actor:         sub.Actor,
 	}
 	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(i.secret)
 	if err != nil {
@@ -191,10 +205,13 @@ func (c *Claims) Principal() (Principal, error) {
 		return Principal{}, fmt.Errorf("%s: %w", err, domain.ErrUnauthenticated)
 	}
 	return Principal{
-		Subject:   c.Subject,
-		Role:      role,
-		Language:  c.Language,
-		TokenID:   c.ID,
-		PhoneE164: c.PhoneE164,
+		Subject:       c.Subject,
+		Role:          role,
+		Language:      c.Language,
+		TokenID:       c.ID,
+		PhoneE164:     c.PhoneE164,
+		ScopeState:    c.ScopeState,
+		ScopeDistrict: c.ScopeDistrict,
+		Actor:         c.Actor,
 	}, nil
 }

@@ -40,6 +40,7 @@ type fakeStore struct {
 	shgs       map[uuid.UUID]domain.SelfHelpGroup
 	shgMem     map[uuid.UUID][]domain.SHGMember
 	outbox     []outboxRow
+	staff      map[uuid.UUID]domain.StaffAccount
 
 	// failInTxAfterCallback simulates a COMMIT that fails, to prove the service
 	// surfaces the error and reports nothing as created.
@@ -57,7 +58,29 @@ func newFakeStore() *fakeStore {
 		clusterMem: map[uuid.UUID]map[uuid.UUID]domain.ClusterMember{},
 		shgs:       map[uuid.UUID]domain.SelfHelpGroup{},
 		shgMem:     map[uuid.UUID][]domain.SHGMember{},
+		staff:      map[uuid.UUID]domain.StaffAccount{},
 	}
+}
+
+func (s *fakeStore) GetActiveStaffByPhone(_ context.Context, phone string) (domain.StaffAccount, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, st := range s.staff {
+		if st.PhoneE164 == phone && st.Active {
+			return st, true, nil
+		}
+	}
+	return domain.StaffAccount{}, false, nil
+}
+
+func (s *fakeStore) GetStaffAccount(_ context.Context, id uuid.UUID) (domain.StaffAccount, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	st, ok := s.staff[id]
+	if !ok {
+		return domain.StaffAccount{}, fmt.Errorf("staff account not found: %w", pkgdomain.ErrNotFound)
+	}
+	return st, nil
 }
 
 // fakeTx buffers every write and applies them to the store only on commit, so a

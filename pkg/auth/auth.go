@@ -24,6 +24,10 @@ const (
 	RoleClusterOfficer Role = "CLUSTER_OFFICER"
 	// RoleMinistry is read-only oversight across every cluster.
 	RoleMinistry Role = "MINISTRY"
+	// RoleFieldAgent is a CSC operator or other field helper who onboards and
+	// lists for artisans on their behalf, only through an assisted_link the
+	// artisan consented to. Never touches an artisan's money.
+	RoleFieldAgent Role = "FIELD_AGENT"
 )
 
 // allRoles is the closed set a token may carry; anything else is rejected at parse.
@@ -32,6 +36,7 @@ var allRoles = map[Role]struct{}{
 	RoleBuyer:          {},
 	RoleClusterOfficer: {},
 	RoleMinistry:       {},
+	RoleFieldAgent:     {},
 }
 
 // ParseRole converts a wire string to a Role, rejecting anything unrecognised so
@@ -68,6 +73,14 @@ type Principal struct {
 	// the only identity a pre-registration token carries, and is what binds a
 	// registration to a number the caller actually holds.
 	PhoneE164 string
+	// ScopeState and ScopeDistrict narrow a staff principal (FIELD_AGENT,
+	// CLUSTER_OFFICER) to one state/district; empty means unscoped.
+	ScopeState    string
+	ScopeDistrict string
+	// Actor is the staff account id when this principal is an artisan being
+	// acted for (assisted mode); empty for an artisan's own session. Every
+	// write made under a non-empty Actor is audit-logged.
+	Actor string
 }
 
 // HasRole reports whether the principal holds any of the given roles.
