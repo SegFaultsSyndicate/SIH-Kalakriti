@@ -95,6 +95,12 @@ const ICON_KEYWORDS: readonly (readonly [string, IconName])[] = [
   ['stone', 'stone'],
   ['marble', 'stone'],
   ['bamboo', 'bamboo'],
+  ['bandhani', 'weaving'],
+  ['tie-dye', 'weaving'],
+  ['tie and dye', 'weaving'],
+  ['toy', 'woodwork'],
+  ['channapatna', 'woodwork'],
+  ['lacquer', 'woodwork'],
 ];
 
 function iconFor(slug: string, displayName: string): IconName {
