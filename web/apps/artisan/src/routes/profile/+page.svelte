@@ -48,6 +48,8 @@
   import ImageCropModal from '$lib/ImageCropModal.svelte';
   import BusinessCardModal from '$lib/BusinessCardModal.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
+  import HelpersCard from '$lib/HelpersCard.svelte';
+  import { acting } from '$lib/acting.svelte';
 
   const t = $derived(locale.t);
 
@@ -60,7 +62,8 @@
   let showStallModal = $state(false);  
   let fileInput = $state<HTMLInputElement | null>(null);
   let cameraInput = $state<HTMLInputElement | null>(null);
-  let followerCount = $state<number>(48);
+  // Only ever the server's real count; hidden until it arrives (was a hardcoded 48).
+  let followerCount = $state<number | null>(null);
 
   // Badges the artisan applied to themselves on /badges (device-local).
   let selfBadgeIds = $state<string[]>([]);
@@ -160,9 +163,9 @@
       if (!artisanId || artisanId.startsWith('local:')) return;
       try {
         const res = await getFollowerCount(artisanId);
-        if (typeof res?.count === 'number' && res.count > 0) followerCount = res.count;
+        if (typeof res?.count === 'number') followerCount = res.count;
       } catch {
-        /* Keep initial recognition figure */
+        /* Offline or failed: the count simply stays hidden */
       }
     })();
   });
@@ -525,10 +528,12 @@
           </span>
         </div>
 
-        <div class="profile-hero__followers">
-          <Icon name="users" size="1.1rem" />
-          <span>{t('profile.followers', { count: String(followerCount) })}</span>
-        </div>
+        {#if followerCount !== null}
+          <div class="profile-hero__followers">
+            <Icon name="users" size="1.1rem" />
+            <span>{t('profile.followers', { count: String(followerCount) })}</span>
+          </div>
+        {/if}
 
         {#if selfBadges.length > 0}
           <ul class="profile-self-badges" role="list">
@@ -547,6 +552,14 @@
       <a class="profile-action-btn" href="/earnings">
         <Icon name="income-statement" size="1rem" />
         <span>{t('home.earnings')}</span>
+      </a>
+      <a class="profile-action-btn" href="/finance">
+        <Icon name="dollar-sign" size="1rem" />
+        <span>{t('finance.title')}</span>
+      </a>
+      <a class="profile-action-btn" href="/learn">
+        <Icon name="badge" size="1rem" />
+        <span>{t('learn.title')}</span>
       </a>
       <a class="profile-action-btn" href="/schemes">
         <Icon name="verified-artisan" size="1rem" />
@@ -825,6 +838,10 @@
       </div>
     </div>
   </section>
+
+  {#if !acting.current}
+    <HelpersCard />
+  {/if}
 
   <!-- Session & Logout -->
   <section class="profile-session-strip">

@@ -43,6 +43,8 @@ export interface EnqueueInput {
   mediaIds?: string[];
   /** Outbox entry ids that must be delivered before this one can send. */
   dependsOn?: string[];
+  /** Artisan a field agent is acting for; see OutboxEntry.onBehalfOf. */
+  onBehalfOf?: string;
 }
 
 /**
@@ -64,6 +66,7 @@ export async function enqueue(input: EnqueueInput): Promise<OutboxEntry> {
     updatedAt: now,
     idempotencyKey: crypto.randomUUID(),
     dependsOn: input.dependsOn ?? [],
+    onBehalfOf: input.onBehalfOf,
   };
   await db.outbox.add(entry);
   return entry;

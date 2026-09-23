@@ -50,6 +50,7 @@
   import { getArtisanId, setArtisanId, watchArtisanId } from '$lib/registration';
   import { resolveRedirect, type GuardState } from '$lib/route-guard';
   import { syncEngine } from '$lib/sync';
+  import { acting } from '$lib/acting.svelte';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -124,7 +125,11 @@
   // /register/name. This reacts to session.claims directly (not just at
   // boot) so it also covers logging in fresh within the same app session,
   // not only a reload with a token already in storage.
+  // A FIELD_AGENT token (F14) also has a `sub` -- the staff account's id, not
+  // an artisan's -- so it must never be mistaken for a registered artisan.
+  const isAgent = $derived(session.claims?.role === 'FIELD_AGENT');
   const tokenArtisanId = $derived.by(() => {
+    if (isAgent) return undefined;
     const sub = session.claims?.sub;
     return typeof sub === 'string' && sub !== '' ? sub : undefined;
   });
@@ -151,6 +156,8 @@
       hasExplicitLocale: hasExplicitLocale(),
       authenticated: session.status === 'authenticated',
       registered: effectiveArtisanId !== undefined,
+      agent: isAgent,
+      acting: acting.current !== null,
     };
     const redirect = resolveRedirect(state, page.url.pathname);
     return redirect !== null && redirect !== page.url.pathname ? redirect : null;
@@ -160,9 +167,22 @@
     if (pendingRedirect !== null) void goto(pendingRedirect);
   });
 
+  // Anyone but a signed-in agent (an artisan logging in on the agent's
+  // phone, or the agent's session ending) must not inherit the helping state.
+  $effect(() => {
+    if (booted && !isAgent && acting.current) acting.stop();
+  });
+
+  function stopActing(): void {
+    acting.stop();
+    void goto('/agent');
+  }
+
   const showChrome = $derived(booted && page.url.pathname !== '/language');
   const showBottomNav = $derived(
-    showChrome && session.status === 'authenticated' && effectiveArtisanId !== undefined,
+    showChrome &&
+      session.status === 'authenticated' &&
+      (isAgent ? acting.current !== null : effectiveArtisanId !== undefined),
   );
 </script>
 
@@ -201,6 +221,13 @@
     </header>
   {/if}
 
+  {#if isAgent && acting.current}
+    <div class="acting-banner" role="status">
+      <span>{t('assisted.banner', { name: acting.current.name })}</span>
+      <button type="button" class="acting-banner__stop" onclick={stopActing}>{t('assisted.stop')}</button>
+    </div>
+  {/if}
+
   <main class="shell__main" id="main-content" tabindex="-1" class:has-bottom-nav={showBottomNav}>
     {#if booted && pendingRedirect === null}
       <ErrorBoundary
@@ -233,6 +260,33 @@
 {/if}
 
 <style>
+  /* Persistent while an agent acts: every write below it lands on someone else's shop. */
+  .acting-banner {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--k-z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--k-space-3);
+    padding: var(--k-space-2) var(--k-space-4);
+    background-color: var(--k-accent-warning-bg);
+    color: var(--k-accent-warning-text);
+    font-size: var(--k-text-sm);
+    font-weight: 600;
+  }
+
+  .acting-banner__stop {
+    min-block-size: var(--k-touch-min);
+    padding-inline: var(--k-space-3);
+    border: var(--k-hairline) solid currentColor;
+    border-radius: var(--k-radius-pill);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
   .shell {
     display: flex;
     flex-direction: column;

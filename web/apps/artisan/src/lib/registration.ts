@@ -25,6 +25,8 @@ export interface RegistrationDraft {
   pehchanId?: string;
   clusterName?: string;
   socialCategory?: string;
+  /** F13 income baseline: income_bracket enum value (pkg/impact's Bracket*). */
+  incomeBracket?: string;
 }
 
 export async function getDraft(): Promise<RegistrationDraft> {
@@ -138,6 +140,19 @@ export async function submitRegistration(
     rollback: () => {
       void setArtisanId(undefined);
     },
-    enqueue: () => enqueue({ kind: 'profile.update', payload: body }),
+    enqueue: async () => {
+      const profile = await enqueue({ kind: 'profile.update', payload: body });
+      // The baseline needs the artisan-scoped token registration returns, so
+      // it waits on the profile entry rather than racing it.
+      if (draft.incomeBracket) {
+        await enqueue({
+          kind: 'income.baseline',
+          payload: { monthly_bracket: draft.incomeBracket },
+          dependsOn: [profile.id],
+        });
+      }
+      return profile;
+    },
   });
 }
+

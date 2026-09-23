@@ -22,6 +22,7 @@
   import { getArtisanId, getDraft as getRegistrationDraft } from '$lib/registration';
   import { cachedOrders, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
   import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
+  import CoverageStrip from '$lib/CoverageStrip.svelte';
   import DigitalLiteracyTutorial from '$lib/DigitalLiteracyTutorial.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
   import { launchDemoListing } from '$lib/demo-listing';
@@ -224,6 +225,14 @@
     <Icon name="link" />
     <span>{t('nav.trends')}</span>
   </a>
+  <a class="home-links-row__link" href="/finance">
+    <Icon name="dollar-sign" />
+    <span>{t('finance.title')}</span>
+  </a>
+  <a class="home-links-row__link" href="/learn">
+    <Icon name="badge" />
+    <span>{t('learn.title')}</span>
+  </a>
 </div>
 
 <!-- B2B Enterprise & Boutique Partners Strip -->
@@ -243,6 +252,7 @@
 
 <!-- Economic Growth & Income Uplift Section -->
 <div class="home-growth-section">
+  <CoverageStrip />
   <IncomeGrowthChart compact />
 </div>
 
@@ -402,7 +412,7 @@
 
   .home-links-row {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--k-space-3);
     margin: 0 0 var(--k-space-4);
   }
@@ -518,6 +528,9 @@
   }
 
   .home-growth-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
     margin: 0 0 var(--k-space-4);
   }
 

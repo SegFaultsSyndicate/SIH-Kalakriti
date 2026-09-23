@@ -10,7 +10,11 @@
 // send time, once dependsOn guarantees the earlier step has landed.
 
 import { liveQuery } from 'dexie';
-import { db, enqueue, type DraftRecord, type MediaRecord } from '@kalakriti/offline';
+import { db, enqueue as enqueueRaw, type DraftRecord, type MediaRecord } from '@kalakriti/offline';
+import { getActingFor } from '@kalakriti/api';
+
+/** Every listing intent freezes the artisan an agent is acting for (F14). */
+const enqueue = (input: Parameters<typeof enqueueRaw>[0]) => enqueueRaw({ ...input, onBehalfOf: getActingFor() });
 
 export type ListingWizardStep =
   | 'capture'

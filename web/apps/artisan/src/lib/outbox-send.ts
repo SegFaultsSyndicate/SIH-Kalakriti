@@ -17,6 +17,10 @@ import {
   generateUploadUrl,
   confirmUpload,
   respondToLot,
+  logOfflineSale,
+  setIncomeBaseline,
+  type SetIncomeBaselineBody,
+  type LogOfflineSaleBody,
   ApiError,
   messageKeyFor,
   setAccessToken,
@@ -44,11 +48,24 @@ export async function sendOutboxEntry(entry: OutboxEntry): Promise<SendResult> {
       return sendListingApprove(entry);
     case 'order.respond':
       return sendOrderRespond(entry);
+    case 'income.sale':
+      return sendIncomeSale(entry);
+    case 'income.baseline':
+      return sendIncomeBaseline(entry);
     default:
       // Retryable rather than blocked: a future batch's kind should wait for
       // that batch's real sender, not be permanently parked by this one.
       return { ok: false, retryable: true, error: 'not yet implemented' };
   }
+}
+
+/**
+ * Per-entry call options. onBehalfOf is the target frozen at enqueue (F14);
+ * null, not undefined, so an artisan's own entry never picks up whatever
+ * artisan an agent happens to be helping when it drains.
+ */
+function opts(entry: OutboxEntry) {
+  return { idempotencyKey: entry.idempotencyKey, onBehalfOf: entry.onBehalfOf ?? null };
 }
 
 function fromApiError(cause: unknown): SendResult {
@@ -66,7 +83,7 @@ async function remoteListingId(draftId: string): Promise<string | undefined> {
 async function sendProfileUpdate(entry: OutboxEntry): Promise<SendResult> {
   const body = entry.payload as RegisterBody;
   try {
-    const response = await registerArtisan(body, { idempotencyKey: entry.idempotencyKey });
+    const response = await registerArtisan(body, opts(entry));
     if (response.artisan_id) await setArtisanId(response.artisan_id);
     // The token held until now was minted at OTP-verify time, before this
     // profile existed -- it has no subject and can never authenticate
@@ -121,7 +138,7 @@ async function sendMediaUpload(entry: OutboxEntry): Promise<SendResult> {
   try {
     const { media_id, upload_url } = await generateUploadUrl(
       { content_type: media.mimeType, size_bytes: media.byteSize },
-      { idempotencyKey: entry.idempotencyKey },
+      opts(entry),
     );
     if (!media_id || !upload_url) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
 
@@ -132,7 +149,7 @@ async function sendMediaUpload(entry: OutboxEntry): Promise<SendResult> {
     });
     if (!put.ok) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
 
-    await confirmUpload(media_id);
+    await confirmUpload(media_id, { onBehalfOf: entry.onBehalfOf ?? null });
     await db.media.update(localMediaId, { remoteId: media_id, uploaded: true });
     return { ok: true };
   } catch (cause) {
@@ -167,7 +184,7 @@ async function sendListingCreate(entry: OutboxEntry): Promise<SendResult> {
       { ...body, media: remoteMediaIds as string[], voice_note_media_id: voiceRemoteId } as Parameters<
         typeof createListing
       >[0],
-      { idempotencyKey: entry.idempotencyKey },
+      opts(entry),
     );
     if (response.listing_id) await db.drafts.update(draftId, { remoteId: response.listing_id, updatedAt: Date.now() });
     return { ok: true };
@@ -203,7 +220,7 @@ async function sendListingMediaAttach(entry: OutboxEntry): Promise<SendResult> {
     await attachListingMedia(
       listingId,
       { items: remoteItems as Parameters<typeof attachListingMedia>[1]['items'] },
-      { idempotencyKey: entry.idempotencyKey },
+      opts(entry),
     );
     return { ok: true };
   } catch (cause) {
@@ -216,9 +233,7 @@ async function sendListingUpdate(entry: OutboxEntry): Promise<SendResult> {
   const listingId = await remoteListingId(draftId);
   if (!listingId) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
   try {
-    await updateListing(listingId, body as Parameters<typeof updateListing>[1], {
-      idempotencyKey: entry.idempotencyKey,
-    });
+    await updateListing(listingId, body as Parameters<typeof updateListing>[1], opts(entry));
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);
@@ -230,7 +245,7 @@ async function sendListingSubmit(entry: OutboxEntry): Promise<SendResult> {
   const listingId = await remoteListingId(draftId);
   if (!listingId) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
   try {
-    await submitListing(listingId, { idempotencyKey: entry.idempotencyKey });
+    await submitListing(listingId, opts(entry));
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);
@@ -245,7 +260,7 @@ interface OrderRespondPayload {
 async function sendOrderRespond(entry: OutboxEntry): Promise<SendResult> {
   const { lotId, body } = entry.payload as OrderRespondPayload;
   try {
-    await respondToLot(lotId, body as Parameters<typeof respondToLot>[1], { idempotencyKey: entry.idempotencyKey });
+    await respondToLot(lotId, body as Parameters<typeof respondToLot>[1], opts(entry));
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);
@@ -257,7 +272,27 @@ async function sendListingApprove(entry: OutboxEntry): Promise<SendResult> {
   const listingId = await remoteListingId(draftId);
   if (!listingId) return { ok: false, retryable: true, error: locale.t('api.error.unknown') };
   try {
-    await approveListing(listingId, undefined, { idempotencyKey: entry.idempotencyKey });
+    await approveListing(listingId, undefined, opts(entry));
+    return { ok: true };
+  } catch (cause) {
+    return fromApiError(cause);
+  }
+}
+
+/** F13: a sale logged offline; the body carries its own client_id so a replay is a no-op server-side too. */
+async function sendIncomeSale(entry: OutboxEntry): Promise<SendResult> {
+  try {
+    await logOfflineSale(entry.payload as LogOfflineSaleBody, opts(entry));
+    return { ok: true };
+  } catch (cause) {
+    return fromApiError(cause);
+  }
+}
+
+/** F13: the before-Kalakriti income from the register step; a PUT, so a replay just rewrites it. */
+async function sendIncomeBaseline(entry: OutboxEntry): Promise<SendResult> {
+  try {
+    await setIncomeBaseline(entry.payload as SetIncomeBaselineBody, opts(entry));
     return { ok: true };
   } catch (cause) {
     return fromApiError(cause);

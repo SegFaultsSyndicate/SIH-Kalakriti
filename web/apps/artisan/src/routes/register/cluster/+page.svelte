@@ -38,10 +38,10 @@
 </svelte:head>
 
 <RegisterStep
-  index={5}
+  index={6}
   heading={t('register.cluster.heading')}
   speakText={`${t('register.cluster.heading')}. ${t('register.cluster.body')}`}
-  backHref="/register/social-category"
+  backHref="/register/income"
 >
   {#snippet children()}
     <p class="hint">{t('register.cluster.body')}</p>

@@ -6,7 +6,7 @@
 // test environment) ships its own fetch implementation that they don't see,
 // which made every mocked request fall through to a real (failing) network
 // call. No DOM is needed here, so node is both correct and faster.
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { db, enqueue, type OutboxEntry } from '@kalakriti/offline';
@@ -15,7 +15,10 @@ import { getArtisanId } from './registration';
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  vi.unstubAllEnvs();
+});
 afterAll(() => server.close());
 
 beforeEach(async () => {
@@ -179,6 +182,9 @@ describe('sendProfileUpdate', () => {
     // authenticated request (follower-count, artisans/me, listing
     // creation) then carried an id no backend row could ever match. See
     // WIRING_AUDIT_PLAN.md F-4.
+    // Independent of whatever VITE_USE_MOCKS a dev's own .env.local sets --
+    // this test asserts the real-backend path regardless of local machine state.
+    vi.stubEnv('VITE_USE_MOCKS', '0');
     server.use(http.post('*/api/v1/artisans', () => new HttpResponse(null, { status: 500 })));
 
     const update = await entry({ kind: 'profile.update', payload: { display_name: 'Test' } });
