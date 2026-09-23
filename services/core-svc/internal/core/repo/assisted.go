@@ -82,6 +82,14 @@ func (r *Repo) UpsertAssistedLink(ctx context.Context, l domain.AssistedLink) (d
 	}, nil
 }
 
+func (r *Repo) AttachVoiceConsent(ctx context.Context, agentID, artisanID, mediaID uuid.UUID) (bool, error) {
+	n, err := r.q.AttachVoiceConsent(ctx, db.AttachVoiceConsentParams{AgentID: agentID, ArtisanID: artisanID, MediaID: mediaID.String()})
+	if err != nil {
+		return false, translate(err, "assisted link")
+	}
+	return n > 0, nil
+}
+
 func (r *Repo) HasActiveAssistedLink(ctx context.Context, agentID, artisanID uuid.UUID) (bool, error) {
 	ok, err := r.q.HasActiveAssistedLink(ctx, db.HasActiveAssistedLinkParams{AgentID: agentID, ArtisanID: artisanID})
 	if err != nil {
@@ -183,8 +191,8 @@ func (r *Repo) ListAgentProductivity(ctx context.Context, stateCode, district *s
 
 // GetListingHelper returns the agent who created a listing on the artisan's
 // behalf, or ok=false when the artisan listed it themself.
-func (r *Repo) GetListingHelper(ctx context.Context, listingID uuid.UUID) (name string, cscID *string, ok bool, err error) {
-	row, err := r.q.GetListingHelper(ctx, listingID)
+func (r *Repo) GetListingHelper(ctx context.Context, listingID, artisanID uuid.UUID) (name string, cscID *string, ok bool, err error) {
+	row, err := r.q.GetListingHelper(ctx, db.GetListingHelperParams{ListingID: listingID, ArtisanID: &artisanID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", nil, false, nil
 	}

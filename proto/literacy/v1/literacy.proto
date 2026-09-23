@@ -1,0 +1,46 @@
+// proto/literacy/v1/literacy.proto
+
+syntax = "proto3";
+
+package literacy.v1;
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/literacy/v1;literacyv1";
+
+// LiteracyService tracks the caller's progress through the 8-lesson digital
+// literacy track. Lesson content is static and i18n-keyed in the app; only
+// progress is stored. Certificates are issued by insight-svc.
+service LiteracyService {
+  rpc ListLessons(ListLessonsRequest) returns (ListLessonsResponse);
+  rpc RecordLessonProgress(RecordLessonProgressRequest) returns (RecordLessonProgressResponse);
+}
+
+message Lesson {
+  // PHOTO | STORY | PRICE | ORDERS | PAYMENTS | SAFETY | WHATSAPP | LOAN
+  string code = 1;
+  int32 order = 2;
+  bool has_practice = 3;
+  bool practice_done = 4;
+  bool quiz_passed = 5;
+  bool completed = 6;
+}
+
+message ListLessonsRequest {}
+
+message ListLessonsResponse {
+  repeated Lesson lessons = 1;
+  int32 completed_count = 2;
+  bool certificate_issued = 3;
+}
+
+message RecordLessonProgressRequest {
+  string lesson_code = 1;
+  bool practice_done = 2;
+  bool quiz_passed = 3;
+  // Evidence for lessons whose practice the server can check: PHOTO needs a
+  // confirmed image that passes the quality gate; STORY a confirmed audio.
+  optional string practice_media_id = 4;
+}
+
+message RecordLessonProgressResponse {
+  Lesson lesson = 1;
+}

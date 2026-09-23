@@ -32,11 +32,15 @@ import (
 	pkgkafka "github.com/ZoroNewbie00/kalakriti/pkg/kafka"
 	"github.com/ZoroNewbie00/kalakriti/pkg/logger"
 	"github.com/ZoroNewbie00/kalakriti/pkg/outbox"
-	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	assistedv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/assisted/v1"
 	b2bv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/b2b/v1"
-	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
-	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
 	badgesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
+	financev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/finance/v1"
+	identityv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/identity/v1"
+	impactv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/impact/v1"
+	literacyv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/literacy/v1"
+	pricingv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/pricing/v1"
 	schemesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/schemes/v1"
 	trendsv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/trends/v1"
 	pkgpostgres "github.com/ZoroNewbie00/kalakriti/pkg/postgres"
@@ -194,12 +198,13 @@ func run() error {
 		},
 		log)
 
+	inferrer := inference.New(mlConn, cfg.s3.Bucket)
 	pipelineSvc := service.NewPipeline(
 		wiring.NewPipelineStore(repository),
 		catalogSvc,
 		mediaSvc,
 		registry,
-		inference.New(mlConn, cfg.s3.Bucket),
+		inferrer,
 		cfg.pipeline.BuyerLanguages,
 		log)
 
@@ -232,12 +237,19 @@ func run() error {
 	schemesSvc := service.NewSchemes(repository, log)
 	schemesHandler := handler.NewSchemes(schemesSvc)
 
+	// MoSJE tier 4: finance linkage, income/impact, assisted mode, literacy.
+	financeSvc := service.NewFinance(repository, cfg.financeRefSalt, log)
+	incomeSvc := service.NewIncome(repository, log)
+	assistedSvc := service.NewAssisted(repository, otpSvc, identitySvc, log)
+	literacySvc := service.NewLiteracy(repository, inferrer, badgesSvc, log)
+
 	// --- gRPC server ---------------------------------------------------------
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			recoveryInterceptor(log),
 			auth.UnaryServerInterceptor(issuer, handler.PublicMethods()),
+			handler.AuditInterceptor(repository, log),
 		),
 		grpc.ChainStreamInterceptor(
 			auth.StreamServerInterceptor(issuer, handler.PublicMethods()),
@@ -253,6 +265,11 @@ func run() error {
 	trendsv1.RegisterTrendServiceServer(grpcServer, trendsHandler)
 	badgesv1.RegisterBadgeServiceServer(grpcServer, badgesHandler)
 	schemesv1.RegisterSchemeServiceServer(grpcServer, schemesHandler)
+	financev1.RegisterFinanceServiceServer(grpcServer, handler.NewFinance(financeSvc))
+	impactv1.RegisterIncomeServiceServer(grpcServer, handler.NewIncome(incomeSvc))
+	assistedv1.RegisterStaffServiceServer(grpcServer, handler.NewStaff(assistedSvc))
+	assistedv1.RegisterAssistedServiceServer(grpcServer, handler.NewAssisted(assistedSvc))
+	literacyv1.RegisterLiteracyServiceServer(grpcServer, handler.NewLiteracy(literacySvc))
 
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(grpcServer, healthSrv)
@@ -434,6 +451,14 @@ func run() error {
 		registry.Watch(bgCtx)
 	}()
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Info("emi reminder loop started")
+		service.RunEMIReminders(bgCtx, repository, time.Hour, log)
+		log.Info("emi reminder loop stopped")
+	}()
+
 	lis, err := net.Listen("tcp", cfg.grpcAddr)
 	if err != nil {
 		return fmt.Errorf("listening on %s: %w", cfg.grpcAddr, err)
@@ -525,6 +550,9 @@ type appConfig struct {
 	// signs with; provenanceKeyID names it in the signature (see scripts/keygen.go).
 	provenanceSigningKey string
 	provenanceKeyID      string
+	// financeRefSalt keys the HMAC over loan references (FINANCE_REF_SALT).
+	// It must stay stable: changing it breaks duplicate detection.
+	financeRefSalt []byte
 	// baseURL is the public origin embedded in a sealed record's QR/verify URL.
 	baseURL string
 }
@@ -570,6 +598,16 @@ func loadConfig() (appConfig, error) {
 	cfg.provenanceSigningKey = os.Getenv("PROVENANCE_PRIVATE_KEY")
 	cfg.provenanceKeyID = envOr("PROVENANCE_KEY_ID", "dev-key-1")
 	cfg.baseURL = envOr("BASE_URL", "http://localhost:8000")
+	cfg.financeRefSalt = []byte(os.Getenv("FINANCE_REF_SALT"))
+	if len(cfg.financeRefSalt) == 0 {
+		if cfg.server.Env == "production" {
+			return cfg, errors.New("FINANCE_REF_SALT must be set in production")
+		}
+		// A fixed dev salt (not a random one) so duplicate detection survives restarts.
+		cfg.financeRefSalt = []byte("kalakriti-dev-finance-ref-salt")
+	} else if len(cfg.financeRefSalt) < 32 {
+		return cfg, errors.New("FINANCE_REF_SALT must be at least 32 bytes")
+	}
 
 	// A development OTP bypass in production would make every account
 	// trivially takeable, so it is refused rather than warned about.

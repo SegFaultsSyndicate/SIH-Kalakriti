@@ -156,6 +156,8 @@ func toProtoMetric(m domain.BadgeMetric) badgesv1.BadgeMetric {
 		return badgesv1.BadgeMetric_BADGE_METRIC_LOTS_ACCEPTED
 	case domain.MetricLotsCompleted:
 		return badgesv1.BadgeMetric_BADGE_METRIC_LOTS_COMPLETED
+	case domain.MetricLessonsCompleted:
+		return badgesv1.BadgeMetric_BADGE_METRIC_LESSONS_COMPLETED
 	default:
 		return badgesv1.BadgeMetric_BADGE_METRIC_UNSPECIFIED
 	}

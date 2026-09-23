@@ -55,6 +55,12 @@ spec:
               key: minio-use-ssl
         - name: S3_BUCKET
           value: "kalakriti"
+        # Verifies the access tokens bff forwards; must match core-svc's.
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: jwt-secret
         - name: OTLP_ENDPOINT
           valueFrom:
             configMapKeyRef:

@@ -41,6 +41,11 @@ ON CONFLICT (agent_id, artisan_id) DO UPDATE SET
     revoked_at     = NULL
 RETURNING *;
 
+-- name: AttachVoiceConsent :execrows
+UPDATE assisted_link SET consent_ref = @media_id
+WHERE agent_id = @agent_id AND artisan_id = @artisan_id
+  AND consent_method = 'VOICE_RECORDING' AND revoked_at IS NULL;
+
 -- name: HasActiveAssistedLink :one
 SELECT EXISTS (
     SELECT 1 FROM assisted_link l
@@ -100,12 +105,13 @@ VALUES (@actor_id, 'user', @action, @resource_type, @resource_id, @subject_id, @
 
 -- name: ListAgentProductivity :many
 -- One row per agent: artisans onboarded (active links), listings created on
--- behalf (CreateListing audit rows), and their most recent on-behalf write.
+-- behalf (distinct listings in UpsertListing audit rows), and their most
+-- recent on-behalf write.
 SELECT
     s.id, s.display_name, s.role, s.state_code, s.district, s.csc_id, s.active,
     (SELECT count(*) FROM assisted_link l WHERE l.agent_id = s.id AND l.revoked_at IS NULL)::bigint AS artisans_onboarded,
-    (SELECT count(*) FROM audit_log al WHERE al.actor_id = s.id
-        AND al.action = '/catalog.v1.CatalogService/CreateListing')::bigint AS listings_created,
+    (SELECT count(DISTINCT al.resource_id) FROM audit_log al WHERE al.actor_id = s.id
+        AND al.action = '/catalog.v1.CatalogService/UpsertListing')::bigint AS listings_created,
     COALESCE(act.last_active_at, 'epoch'::timestamptz)::timestamptz AS last_active_at
 FROM staff_account s
 LEFT JOIN LATERAL (
@@ -118,10 +124,11 @@ WHERE s.role IN ('FIELD_AGENT', 'CLUSTER_OFFICER')
 ORDER BY listings_created DESC, s.display_name;
 
 -- name: GetListingHelper :one
--- Who, if anyone, created this listing on the artisan's behalf.
+-- Which agent, if any, first wrote this listing on the artisan's behalf.
 SELECT s.id, s.display_name, s.csc_id
 FROM audit_log al
 JOIN staff_account s ON s.id = al.actor_id
-WHERE al.resource_id = @listing_id AND al.action = '/catalog.v1.CatalogService/CreateListing'
+WHERE al.resource_id = @listing_id AND al.subject_id = @artisan_id
+  AND al.action = '/catalog.v1.CatalogService/UpsertListing'
 ORDER BY al.timestamp
 LIMIT 1;

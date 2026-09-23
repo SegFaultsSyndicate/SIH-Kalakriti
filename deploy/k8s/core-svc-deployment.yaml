@@ -47,6 +47,12 @@ spec:
             secretKeyRef:
               name: kalakriti-secrets
               key: jwt-secret
+        # HMAC key for loan references; never rotate once real links exist.
+        - name: FINANCE_REF_SALT
+          valueFrom:
+            secretKeyRef:
+              name: kalakriti-secrets
+              key: finance-ref-salt
         - name: S3_ENDPOINT
           valueFrom:
             configMapKeyRef:

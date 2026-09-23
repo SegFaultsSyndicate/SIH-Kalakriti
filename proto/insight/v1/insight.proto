@@ -24,6 +24,168 @@ service InsightService {
 
   // Public verification (no auth required).
   rpc VerifyIncomeStatement(VerifyIncomeStatementRequest) returns (VerifyIncomeStatementResponse);
+
+  // F13 ministry impact dashboard (MINISTRY / scoped CLUSTER_OFFICER, enforced
+  // at the bff). Every aggregate over fewer than 5 artisans is suppressed
+  // HERE, in the service -- never left to the UI.
+  rpc GetImpactSummary(GetImpactSummaryRequest) returns (GetImpactSummaryResponse);
+  rpc GetImpactByGroup(GetImpactByGroupRequest) returns (GetImpactByGroupResponse);
+  rpc GetSalesMix(GetSalesMixRequest) returns (GetSalesMixResponse);
+  // F12: beneficiaries per finance corporation and how far sales cover EMIs.
+  rpc GetFinanceCoverage(GetFinanceCoverageRequest) returns (GetFinanceCoverageResponse);
+  // F15: literacy completion funnel by district.
+  rpc GetLiteracyFunnel(GetLiteracyFunnelRequest) returns (GetLiteracyFunnelResponse);
+
+  // F15 certificates (artisan self, enforced at the bff; verify is public).
+  rpc IssueLiteracyCertificate(IssueLiteracyCertificateRequest) returns (IssueLiteracyCertificateResponse);
+  rpc GetLiteracyCertificate(GetLiteracyCertificateRequest) returns (GetLiteracyCertificateResponse);
+  rpc VerifyLiteracyCertificate(VerifyLiteracyCertificateRequest) returns (VerifyLiteracyCertificateResponse);
+}
+
+// ImpactFilter narrows every impact aggregate. Empty fields are unset.
+message ImpactFilter {
+  string state_code = 1;
+  string district = 2;
+  // GENERAL | OBC | SC | ST | EWS | PREFER_NOT_TO_SAY
+  string social_category = 3;
+  // NSFDC | NBCFDC | NSKFDC | NDFDC | PM_DAKSH | PM_AJAY | OTHER
+  string corporation = 4;
+  // YYYY-MM bounds for the monthly sales mix.
+  string from_month = 5;
+  string to_month = 6;
+}
+
+message GetImpactSummaryRequest {
+  ImpactFilter filter = 1;
+}
+
+message GetImpactSummaryResponse {
+  // True when the whole filtered cohort has fewer than 5 artisans: every
+  // figure below is then withheld (zero) and must render as "<5".
+  bool suppressed = 1;
+  int64 beneficiaries = 2;
+  int64 active_sellers_90d = 3;
+  // Artisans eligible for an uplift figure (baseline, >= 90 days, sales).
+  int64 uplift_sample = 4;
+  // Unset when uplift_sample < 5.
+  optional double median_uplift_pct = 5;
+  // Platform share of all 90-day income; unset with no income.
+  optional double digital_share_pct = 6;
+  int64 certificates_issued = 7;
+  int64 finance_linked = 8;
+  int64 finance_verified = 9;
+  google.protobuf.Timestamp refreshed_at = 10;
+}
+
+message GetImpactByGroupRequest {
+  // district | social_category | corporation
+  string group_by = 1;
+  ImpactFilter filter = 2;
+}
+
+message ImpactGroupRow {
+  string group = 1;
+  // Present on district rows.
+  string state_code = 2;
+  bool suppressed = 3;
+  int64 artisan_count = 4;
+  int64 active_sellers_90d = 5;
+  int64 with_baseline_count = 6;
+  int64 median_baseline_monthly_paise = 7;
+  int64 median_current_monthly_paise = 8;
+  optional double median_uplift_pct = 9;
+  int64 platform_income_paise_90d = 10;
+  int64 offline_income_paise_90d = 11;
+  int64 fair_income_paise_90d = 12;
+}
+
+message GetImpactByGroupResponse {
+  repeated ImpactGroupRow rows = 1;
+}
+
+message GetSalesMixRequest {
+  ImpactFilter filter = 1;
+}
+
+message SalesMixMonth {
+  string month = 1; // YYYY-MM
+  bool suppressed = 2;
+  int64 platform_paise = 3;
+  int64 fair_paise = 4;
+  int64 other_offline_paise = 5;
+}
+
+message GetSalesMixResponse {
+  repeated SalesMixMonth months = 1;
+}
+
+message GetFinanceCoverageRequest {
+  ImpactFilter filter = 1;
+}
+
+message FinanceCoverageRow {
+  string corporation = 1;
+  bool suppressed = 2;
+  int64 beneficiaries = 3;
+  int64 verified = 4;
+  int64 self_reported = 5;
+  int64 active_sellers_90d = 6;
+  // Median of this month's (earned / EMI) over beneficiaries with an EMI.
+  optional double median_coverage_ratio = 7;
+}
+
+message GetFinanceCoverageResponse {
+  repeated FinanceCoverageRow rows = 1;
+}
+
+message GetLiteracyFunnelRequest {
+  ImpactFilter filter = 1;
+}
+
+message LiteracyFunnelRow {
+  string state_code = 1;
+  string district = 2;
+  bool suppressed = 3;
+  int64 artisans = 4;
+  int64 started = 5;
+  int64 half_way = 6; // >= 4 lessons
+  int64 certified = 7;
+}
+
+message GetLiteracyFunnelResponse {
+  repeated LiteracyFunnelRow rows = 1;
+}
+
+message IssueLiteracyCertificateRequest {
+  string artisan_id = 1;
+}
+
+message LiteracyCertificate {
+  string id = 1;
+  string short_code = 2;
+  google.protobuf.Timestamp issued_at = 3;
+  string download_url = 4;
+  string verification_url = 5;
+}
+
+message GetLiteracyCertificateRequest {
+  string artisan_id = 1;
+}
+message GetLiteracyCertificateResponse {
+  optional LiteracyCertificate certificate = 1;
+}
+
+message VerifyLiteracyCertificateRequest {
+  string short_code = 1;
+}
+
+message VerifyLiteracyCertificateResponse {
+  bool valid = 1;
+  string artisan_name = 2;
+  string craft_name = 3;
+  string district = 4;
+  string state_code = 5;
+  google.protobuf.Timestamp issued_at = 6;
 }
 
 message GetArtisansByCategoryRequest {
@@ -169,4 +331,8 @@ message VerifyIncomeStatementResponse {
   common.v1.Money net_amount = 8;
   common.v1.Money fee_amount = 9;
   google.protobuf.Timestamp issued_at = 10;
+}
+
+message IssueLiteracyCertificateResponse {
+  LiteracyCertificate certificate = 1;
 }

@@ -168,3 +168,10 @@ func (b *Badges) recomputeAndLog(ctx context.Context, artisanID uuid.UUID, metri
 	}
 	return granted, nil
 }
+
+// TrackLessonsCompleted recomputes LESSONS_COMPLETED (the digital_ready
+// badge). The literacy service already holds the fresh count it just wrote,
+// so it passes it in rather than this re-reading it.
+func (b *Badges) TrackLessonsCompleted(ctx context.Context, artisanID uuid.UUID, count int64) ([]domain.Badge, error) {
+	return b.recomputeAndLog(ctx, artisanID, domain.MetricLessonsCompleted, count)
+}

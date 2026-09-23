@@ -1,0 +1,253 @@
+// proto/assisted/v1/assisted.proto
+
+syntax = "proto3";
+
+package assisted.v1;
+
+import "google/protobuf/timestamp.proto";
+import "identity/v1/identity.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/assisted/v1;assistedv1";
+
+// StaffService manages ministry-issued staff accounts. A phone on an active
+// staff account logs in (ordinary OTP) as that account's role.
+//
+// role: FIELD_AGENT | CLUSTER_OFFICER | MINISTRY
+service StaffService {
+  // MINISTRY only.
+  rpc CreateStaff(CreateStaffRequest) returns (CreateStaffResponse);
+  rpc ListStaff(ListStaffRequest) returns (ListStaffResponse);
+  rpc SetStaffActive(SetStaffActiveRequest) returns (SetStaffActiveResponse);
+  // Any staff caller: their own account.
+  rpc GetMyStaffAccount(GetMyStaffAccountRequest) returns (GetMyStaffAccountResponse);
+  // MINISTRY, or CLUSTER_OFFICER (clamped to their own scope).
+  rpc ListAgentProductivity(ListAgentProductivityRequest) returns (ListAgentProductivityResponse);
+}
+
+// AssistedService is assisted mode: a field agent onboards and lists for
+// artisans who consented, by OTP read out from their own phone or, with no
+// signal, a recorded voice consent (flagged for officer review).
+service AssistedService {
+  // FIELD_AGENT / CLUSTER_OFFICER: sends an OTP to the ARTISAN's phone.
+  rpc StartArtisanConsent(StartArtisanConsentRequest) returns (StartArtisanConsentResponse);
+  // Records consent and links the artisan to the calling agent, registering
+  // the artisan first when the phone has no profile yet.
+  rpc LinkArtisan(LinkArtisanRequest) returns (LinkArtisanResponse);
+  // VOICE_RECORDING links: attach the recorded consent once uploaded. The
+  // recording can only be uploaded after the link exists (media belongs to
+  // an artisan), so a voice link starts flagged for review with no recording.
+  rpc AttachVoiceConsent(AttachVoiceConsentRequest) returns (AttachVoiceConsentResponse);
+  rpc ListMyArtisans(ListMyArtisansRequest) returns (ListMyArtisansResponse);
+  // Checks the calling agent may act for artisan_id right now. The bff calls
+  // this before honouring an X-On-Behalf-Of header.
+  rpc ResolveOnBehalf(ResolveOnBehalfRequest) returns (ResolveOnBehalfResponse);
+  // ARTISAN self: who may act for me, and withdrawing that consent.
+  rpc ListMyHelpers(ListMyHelpersRequest) returns (ListMyHelpersResponse);
+  rpc RevokeHelper(RevokeHelperRequest) returns (RevokeHelperResponse);
+  // CLUSTER_OFFICER / MINISTRY: voice-consent links awaiting review.
+  rpc ListLinksForReview(ListLinksForReviewRequest) returns (ListLinksForReviewResponse);
+  rpc MarkLinkReviewed(MarkLinkReviewedRequest) returns (MarkLinkReviewedResponse);
+  // ARTISAN self: who, if anyone, created this listing on my behalf.
+  rpc GetListingHelper(GetListingHelperRequest) returns (GetListingHelperResponse);
+}
+
+message StaffAccount {
+  string id = 1;
+  // Masked except to MINISTRY.
+  string phone_e164 = 2;
+  string display_name = 3;
+  string role = 4;
+  optional string state_code = 5;
+  optional string district = 6;
+  optional string cluster_id = 7;
+  optional string csc_id = 8;
+  bool active = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message CreateStaffRequest {
+  string phone_e164 = 1;
+  string display_name = 2;
+  string role = 3;
+  optional string state_code = 4;
+  optional string district = 5;
+  optional string cluster_id = 6;
+  optional string csc_id = 7;
+}
+
+message ListStaffRequest {
+  optional string state_code = 1;
+}
+message ListStaffResponse {
+  repeated StaffAccount staff = 1;
+}
+
+message SetStaffActiveRequest {
+  string id = 1;
+  bool active = 2;
+}
+
+message GetMyStaffAccountRequest {}
+
+message ListAgentProductivityRequest {
+  optional string state_code = 1;
+  optional string district = 2;
+}
+
+message AgentProductivity {
+  string agent_id = 1;
+  string display_name = 2;
+  string role = 3;
+  optional string state_code = 4;
+  optional string district = 5;
+  optional string csc_id = 6;
+  bool active = 7;
+  int64 artisans_onboarded = 8;
+  int64 listings_created = 9;
+  optional google.protobuf.Timestamp last_active_at = 10;
+}
+
+message ListAgentProductivityResponse {
+  repeated AgentProductivity agents = 1;
+}
+
+message StartArtisanConsentRequest {
+  string phone_e164 = 1;
+  // Language the OTP message is sent in, e.g. "HINDI"; optional.
+  string language = 2;
+}
+
+message StartArtisanConsentResponse {
+  string challenge_id = 1;
+  google.protobuf.Timestamp expires_at = 2;
+  bool dev_mode = 3;
+}
+
+message LinkArtisanRequest {
+  string phone_e164 = 1;
+  // ARTISAN_OTP | VOICE_RECORDING
+  string consent_method = 2;
+  // ARTISAN_OTP: the challenge from StartArtisanConsent and the code the
+  // artisan read out.
+  string challenge_id = 3;
+  string otp = 4;
+  // Reserved: a voice recording is attached afterwards (AttachVoiceConsent).
+  string voice_media_id = 5;
+  // Required when the phone has no artisan profile yet; ignored otherwise.
+  // phone_e164 inside it is overwritten with phone_e164 above.
+  optional identity.v1.RegisterArtisanRequest registration = 6;
+}
+
+message LinkArtisanResponse {
+  string artisan_id = 1;
+  string link_id = 2;
+  // True when this call created the artisan's profile.
+  bool registered_now = 3;
+  bool needs_review = 4;
+}
+
+message AttachVoiceConsentRequest {
+  string artisan_id = 1;
+  string media_id = 2;
+}
+message AttachVoiceConsentResponse {
+  bool attached = 1;
+}
+
+message ListMyArtisansRequest {}
+
+message AgentArtisan {
+  string artisan_id = 1;
+  string display_name = 2;
+  optional string village = 3;
+  optional string district = 4;
+  string state_code = 5;
+  optional string photo_media_id = 6;
+  string consent_method = 7;
+  bool needs_review = 8;
+  google.protobuf.Timestamp linked_at = 9;
+  optional google.protobuf.Timestamp last_activity_at = 10;
+  int64 draft_count = 11;
+}
+
+message ListMyArtisansResponse {
+  repeated AgentArtisan artisans = 1;
+}
+
+message ResolveOnBehalfRequest {
+  string artisan_id = 1;
+}
+message ResolveOnBehalfResponse {
+  bool allowed = 1;
+  string display_name = 2;
+}
+
+message ListMyHelpersRequest {}
+
+message Helper {
+  string link_id = 1;
+  string agent_id = 2;
+  string display_name = 3;
+  string role = 4;
+  optional string csc_id = 5;
+  string consent_method = 6;
+  google.protobuf.Timestamp linked_at = 7;
+}
+
+message ListMyHelpersResponse {
+  repeated Helper helpers = 1;
+}
+
+message RevokeHelperRequest {
+  string link_id = 1;
+}
+message RevokeHelperResponse {
+  bool revoked = 1;
+}
+
+message ListLinksForReviewRequest {
+  optional string state_code = 1;
+  optional string district = 2;
+}
+
+message LinkForReview {
+  string link_id = 1;
+  string agent_id = 2;
+  string agent_name = 3;
+  string artisan_id = 4;
+  string artisan_name = 5;
+  optional string district = 6;
+  string state_code = 7;
+  string voice_media_id = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+
+message ListLinksForReviewResponse {
+  repeated LinkForReview links = 1;
+}
+
+message MarkLinkReviewedRequest {
+  string link_id = 1;
+}
+message MarkLinkReviewedResponse {
+  bool reviewed = 1;
+}
+
+message GetListingHelperRequest {
+  string listing_id = 1;
+}
+message GetListingHelperResponse {
+  bool assisted = 1;
+  string display_name = 2;
+  optional string csc_id = 3;
+}
+
+message CreateStaffResponse {
+  StaffAccount staff = 1;
+}
+message SetStaffActiveResponse {
+  StaffAccount staff = 1;
+}
+message GetMyStaffAccountResponse {
+  StaffAccount staff = 1;
+}

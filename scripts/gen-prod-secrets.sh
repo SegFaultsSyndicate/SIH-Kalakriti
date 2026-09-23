@@ -27,6 +27,9 @@ uuid_cluster_id() { python3 -c "import uuid, base64; print(base64.urlsafe_b64enc
 
 POSTGRES_PASSWORD="$(rand_hex 24)"
 JWT_SECRET="$(rand_b64 48)"          # >=32 bytes raw, base64 gives comfortable margin
+# Keys the HMAC over loan references (F12). Must never change once set:
+# rotating it breaks duplicate-link detection for every stored reference.
+FINANCE_REF_SALT="$(rand_b64 48)"
 S3_ACCESS_KEY="$(rand_hex 12)"
 S3_SECRET_KEY="$(rand_hex 24)"
 KAFKA_CLUSTER_ID="$(uuid_cluster_id)"
@@ -42,6 +45,7 @@ set_var() {
 set_var POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
 set_var POSTGRES_DSN "postgres://kalakriti:${POSTGRES_PASSWORD}@postgres:5432/kalakriti?sslmode=disable"
 set_var JWT_SECRET "$JWT_SECRET"
+set_var FINANCE_REF_SALT "$FINANCE_REF_SALT"
 set_var S3_ACCESS_KEY "$S3_ACCESS_KEY"
 set_var S3_SECRET_KEY "$S3_SECRET_KEY"
 set_var AUTH_DEV_OTP_ENABLED "false"
@@ -56,7 +60,7 @@ set_var APP_ENV "production"
 
 chmod 600 "$ENV_FILE"
 
-echo "Wrote $ENV_FILE with random POSTGRES_PASSWORD, JWT_SECRET, S3_ACCESS_KEY/SECRET_KEY, KAFKA_CLUSTER_ID."
+echo "Wrote $ENV_FILE with random POSTGRES_PASSWORD, JWT_SECRET, FINANCE_REF_SALT, S3_ACCESS_KEY/SECRET_KEY, KAFKA_CLUSTER_ID."
 echo "Still needs manual edits before deploying:"
 echo "  - BASE_URL              (your public bff URL, e.g. https://api.example.com)"
 echo "  - CORS_ALLOWED_ORIGINS  (your Vercel frontend origin, if deployed separately)"

@@ -1,0 +1,116 @@
+// proto/impact/v1/impact.proto
+
+syntax = "proto3";
+
+package impact.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ZoroNewbie00/kalakriti/pkg/pb/impact/v1;impactv1";
+
+// IncomeService is the artisan side of impact measurement: a self-reported
+// income baseline, offline sales the artisan logs (fairs, local markets),
+// and their own income summary. Every RPC acts on the CALLER only.
+//
+// String "enums" (validated by the service):
+//   bracket: LT_3K | B3K_6K | B6K_10K | B10K_15K | GT_15K | PREFER_NOT_TO_SAY
+//   channel: FAIR | LOCAL_MARKET | DIRECT | OTHER
+service IncomeService {
+  rpc SetIncomeBaseline(SetIncomeBaselineRequest) returns (SetIncomeBaselineResponse);
+  rpc GetIncomeBaseline(GetIncomeBaselineRequest) returns (GetIncomeBaselineResponse);
+  rpc LogOfflineSale(LogOfflineSaleRequest) returns (LogOfflineSaleResponse);
+  rpc ListOfflineSales(ListOfflineSalesRequest) returns (ListOfflineSalesResponse);
+  rpc DeleteOfflineSale(DeleteOfflineSaleRequest) returns (DeleteOfflineSaleResponse);
+  rpc GetMyIncomeSummary(GetMyIncomeSummaryRequest) returns (GetMyIncomeSummaryResponse);
+}
+
+message IncomeBaseline {
+  string monthly_bracket = 1;
+  optional int64 monthly_paise = 2;
+  optional int32 fairs_per_year = 3;
+  optional string fair_income_bracket = 4;
+  google.protobuf.Timestamp captured_at = 5;
+  string source = 6; // SELF | AGENT
+}
+
+message SetIncomeBaselineRequest {
+  string monthly_bracket = 1;
+  optional int64 monthly_paise = 2;
+  optional int32 fairs_per_year = 3;
+  optional string fair_income_bracket = 4;
+}
+
+message GetIncomeBaselineRequest {}
+message GetIncomeBaselineResponse {
+  optional IncomeBaseline baseline = 1;
+}
+
+message OfflineSale {
+  string id = 1;
+  string channel = 2;
+  optional string event_name = 3;
+  int64 amount_paise = 4;
+  string sold_on = 5; // YYYY-MM-DD
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message LogOfflineSaleRequest {
+  // Client-generated id, so an offline outbox retry is a no-op, not a duplicate.
+  string id = 1;
+  string channel = 2;
+  optional string event_name = 3;
+  int64 amount_paise = 4;
+  string sold_on = 5; // YYYY-MM-DD; not in the future
+}
+
+message ListOfflineSalesRequest {
+  int32 limit = 1;
+}
+message ListOfflineSalesResponse {
+  repeated OfflineSale sales = 1;
+}
+
+message DeleteOfflineSaleRequest {
+  string id = 1;
+}
+message DeleteOfflineSaleResponse {
+  bool deleted = 1;
+}
+
+message GetMyIncomeSummaryRequest {}
+
+message MonthIncome {
+  string month = 1; // YYYY-MM
+  int64 platform_paise = 2;
+  int64 offline_paise = 3;
+}
+
+message IncomeSummary {
+  optional IncomeBaseline baseline = 1;
+  // Resolved baseline (exact figure, else bracket midpoint); 0 when none.
+  int64 baseline_monthly_paise = 2;
+  // The last three calendar months including the current one, oldest first.
+  repeated MonthIncome months = 3;
+  int64 platform_paise_90d = 4;
+  int64 offline_paise_90d = 5;
+  int64 fair_paise_90d = 6;
+  // Platform payouts not yet settled ("on the way").
+  int64 platform_pending_paise = 7;
+  int64 current_monthly_paise = 8;
+  // Set only when insufficient_data is empty.
+  optional double uplift_pct = 9;
+  // NO_BASELINE | TOO_NEW | NO_SALES, or empty.
+  string insufficient_data = 10;
+  // Share of 90-day income that came through the platform; unset with no income.
+  optional double digital_share_pct = 11;
+}
+
+message SetIncomeBaselineResponse {
+  IncomeBaseline baseline = 1;
+}
+message LogOfflineSaleResponse {
+  OfflineSale sale = 1;
+}
+message GetMyIncomeSummaryResponse {
+  IncomeSummary summary = 1;
+}
