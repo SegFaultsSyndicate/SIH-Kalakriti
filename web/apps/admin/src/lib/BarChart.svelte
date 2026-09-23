@@ -33,9 +33,11 @@
     /** Labels for the two series when secondaryRows is provided. */
     legend?: [string, string];
     formatValue?: (v: number) => string;
+    /** Table header for the row-label column; defaults to "District". */
+    labelHeader?: string;
   }
 
-  let { caption, rows, secondaryRows, legend, formatValue = (v) => String(v) }: Props = $props();
+  let { caption, rows, secondaryRows, legend, formatValue = (v) => String(v), labelHeader }: Props = $props();
 
   const t = $derived(locale.t);
   const grouped = $derived(!!secondaryRows && secondaryRows.length > 0);
@@ -104,7 +106,7 @@
             <caption class="sr-only">{caption}</caption>
             <thead>
               <tr>
-                <th scope="col">{t('insights.district')}</th>
+                <th scope="col">{labelHeader ?? t('insights.district')}</th>
                 <th scope="col">{grouped && legend ? legend[0] : caption}</th>
                 {#if grouped && legend}
                   <th scope="col">{legend[1]}</th>

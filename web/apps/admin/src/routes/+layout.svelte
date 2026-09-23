@@ -22,7 +22,7 @@
     setSessionRefreshHandler,
     createLoginRedirectHandler,
   } from '@kalakriti/api';
-  import { NAV_ITEMS } from '$lib/nav';
+  import { NAV_ITEMS, visibleTo } from '$lib/nav';
   import CommandPalette from '$lib/CommandPalette.svelte';
   import Breadcrumb from '$lib/Breadcrumb.svelte';
   import { ErrorBoundary } from '@kalakriti/observability';
@@ -36,7 +36,7 @@
 
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
-  const visibleItems = $derived(NAV_ITEMS.filter((item) => !item.role || item.role === role));
+  const visibleItems = $derived(NAV_ITEMS.filter((item) => visibleTo(item, role)));
   const currentPath = $derived($page.url.pathname);
 
   let paletteOpen = $state(false);
