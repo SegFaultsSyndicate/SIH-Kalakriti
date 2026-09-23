@@ -10,6 +10,7 @@ import { ApiError, request, type RequestOptions } from './transport';
 import { getAccessToken } from './auth';
 import { DEFAULT_TIMEOUT_MS, getUnauthorizedHandler } from './config';
 import { uuid7 } from './uuid7';
+import { onBehalfHeader } from './acting';
 import { getRefreshToken, refreshSession } from './session-refresh';
 
 const IDEMPOTENT_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
@@ -20,6 +21,13 @@ export interface CallOptions extends RequestOptions {
   /** Base backoff in ms, doubled and jittered per attempt. Default 300. */
   backoffMs?: number;
   refreshToken?: string;
+  /**
+   * Assisted mode: the artisan this call is made for, frozen by the caller
+   * (an outbox entry). null = explicitly nobody; undefined = the live
+   * acting state (see acting.ts). Ignored on routes the bff does not
+   * honour X-On-Behalf-Of on.
+   */
+  onBehalfOf?: string | null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -38,7 +46,7 @@ function jittered(baseMs: number, attempt: number): number {
  * injected unauthorized handler if the request remains unauthorized.
  */
 export async function call(path: string, options: CallOptions = {}): Promise<unknown> {
-  const { retries = 2, backoffMs = 300, idempotencyKey, timeoutMs, refreshToken, ...rest } = options;
+  const { retries = 2, backoffMs = 300, idempotencyKey, timeoutMs, refreshToken, onBehalfOf, ...rest } = options;
   const method = (rest.method ?? 'GET').toUpperCase();
   const key = idempotencyKey ?? (IDEMPOTENT_METHODS.has(method) ? uuid7() : undefined);
 
@@ -51,6 +59,7 @@ export async function call(path: string, options: CallOptions = {}): Promise<unk
         timeoutMs: timeoutMs ?? DEFAULT_TIMEOUT_MS,
         headers: {
           ...(token === undefined ? {} : { Authorization: `Bearer ${token}` }),
+          ...onBehalfHeader(method, path, onBehalfOf),
           ...rest.headers,
         },
       });

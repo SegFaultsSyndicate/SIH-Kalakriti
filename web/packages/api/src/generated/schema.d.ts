@@ -4092,6 +4092,1727 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/finance/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the caller's linked finance-corporation loans */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListMyFinanceLinksResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Link a finance-corporation loan (DPDP consent required; only the last 4 characters of the reference are kept) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        corporation: "NSFDC" | "NBCFDC" | "NSKFDC" | "NDFDC" | "PM_DAKSH" | "PM_AJAY" | "OTHER";
+                        channelizing_agency?: string;
+                        reference: string;
+                        sanctioned_paise?: number;
+                        emi_paise?: number;
+                        emi_day_of_month?: number;
+                        repayment_start?: string;
+                        consent_given: boolean;
+                        consent_version: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LinkFinanceResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/finance/links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw consent: permanently delete a finance link (artisan's own session only) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteFinanceLinkResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Edit loan terms (resets verification) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        channelizing_agency?: string;
+                        sanctioned_paise?: number;
+                        emi_paise?: number;
+                        emi_day_of_month?: number;
+                        repayment_start?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UpdateFinanceLinkResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/finance/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How far this month's income covers the caller's EMIs */
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetRepaymentCoverageResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/finance/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finance links awaiting review (MINISTRY, scoped CLUSTER_OFFICER) */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    state_code?: string;
+                    district?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListFinanceLinksForReviewResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/finance/links/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify or reject a finance link */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        verified: boolean;
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReviewFinanceLinkResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/income/baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's registration-time income baseline */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetIncomeBaselineResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Set the caller's income baseline */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        monthly_bracket: "LT_3K" | "B3K_6K" | "B6K_10K" | "B10K_15K" | "GT_15K" | "PREFER_NOT_TO_SAY";
+                        monthly_paise?: number;
+                        fairs_per_year?: number;
+                        /** @enum {string} */
+                        fair_income_bracket?: "LT_3K" | "B3K_6K" | "B6K_10K" | "B10K_15K" | "GT_15K" | "PREFER_NOT_TO_SAY";
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SetIncomeBaselineResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/income/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's logged offline sales */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListOfflineSalesResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Log an offline sale (client-generated id; safe to retry) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "FAIR" | "LOCAL_MARKET" | "DIRECT" | "OTHER";
+                        event_name?: string;
+                        amount_paise: number;
+                        sold_on: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LogOfflineSaleResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/income/sales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a mistaken offline sale */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeleteOfflineSaleResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/income/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's income picture: last 3 months, 90-day totals, uplift over baseline */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetMyIncomeSummaryResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Impact KPIs for a cohort (MINISTRY, scoped CLUSTER_OFFICER; cohorts under 5 suppressed) */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetImpactSummaryResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/by-group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Impact by district, social category or corporation (groups under 5 suppressed) */
+        get: {
+            parameters: {
+                query?: {
+                    group_by?: "district" | "social_category" | "corporation";
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetImpactByGroupResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/sales-mix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Monthly platform vs fair vs other offline sales */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetSalesMixResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/finance-coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Finance-corporation beneficiaries on the platform */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetFinanceCoverageResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/literacy-funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Digital literacy progress by district */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetLiteracyFunnelResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's staff account */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetMyStaffAccountResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff accounts (MINISTRY) */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListStaffResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Create a staff account (MINISTRY) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone_e164: string;
+                        display_name: string;
+                        /** @enum {string} */
+                        role: "FIELD_AGENT" | "CLUSTER_OFFICER" | "MINISTRY";
+                        state_code?: string;
+                        district?: string;
+                        cluster_id?: string;
+                        csc_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateStaffResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/staff/{id}/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate or deactivate a staff account (MINISTRY) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        active: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SetStaffActiveResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/staff/productivity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Field agent productivity (MINISTRY, scoped CLUSTER_OFFICER) */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListAgentProductivityResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/consent/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a consent OTP to an artisan's phone (field staff) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone_e164: string;
+                        language?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StartArtisanConsentResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link (and if new, register) an artisan with their consent (field staff) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        phone_e164: string;
+                        /** @enum {string} */
+                        consent_method: "ARTISAN_OTP" | "VOICE_RECORDING";
+                        challenge_id?: string;
+                        otp?: string;
+                        voice_media_id?: string;
+                        /** @description Same fields as POST /artisans (languages as short names, e.g. "HINDI"); phone_e164 and idempotency_key are ignored. */
+                        registration?: {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LinkArtisanResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/voice-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Attach a recorded voice consent to a link (field staff) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        artisan_id: string;
+                        media_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AttachVoiceConsentResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/artisans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Artisans the calling agent helps */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListMyArtisansResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Voice-consent links awaiting officer review */
+        get: {
+            parameters: {
+                query?: {
+                    state_code?: string;
+                    district?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListLinksForReviewResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assisted/review/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a voice-consent link reviewed */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MarkLinkReviewedResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/helpers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People helping the caller (artisan) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListMyHelpersResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/helpers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a helper's access immediately (artisan's own session only) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevokeHelperResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listings/{id}/helper": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which agent, if any, created this listing for the caller */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetListingHelperResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The digital literacy track and the caller's progress */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListLessonsResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/lessons/{code}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record practice / quiz progress on a lesson */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        practice_done?: boolean;
+                        quiz_passed?: boolean;
+                        practice_media_id?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecordLessonProgressResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/certificate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's digital literacy certificate, if issued */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetLiteracyCertificateResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /** Issue the caller's certificate once all 8 lessons are complete */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IssueLiteracyCertificateResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/verify/certificate/{short_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verify a printed digital literacy certificate (public) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    short_code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLiteracyCertificateResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/impact/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Impact by group as CSV (groups under 5 show "<5" and no numbers) */
+        get: {
+            parameters: {
+                query?: {
+                    group_by?: string;
+                    state_code?: string;
+                    district?: string;
+                    social_category?: string;
+                    corporation?: string;
+                    from_month?: string;
+                    to_month?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description Not allowed for this role */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4634,7 +6355,7 @@ export interface components {
             tier?: "BRONZE" | "SILVER" | "GOLD";
             icon_name: string;
             /** @enum {string} */
-            metric?: "LISTINGS_PUBLISHED" | "PROVENANCE_SEALED" | "LOTS_ACCEPTED" | "LOTS_COMPLETED";
+            metric?: "LISTINGS_PUBLISHED" | "PROVENANCE_SEALED" | "LOTS_ACCEPTED" | "LOTS_COMPLETED" | "LESSONS_COMPLETED";
             threshold?: number;
             sort_order: number;
         };
@@ -4705,9 +6426,363 @@ export interface components {
             criteria?: components["schemas"]["SchemeCriterion"][];
             manual_checks?: components["schemas"]["SchemeManualCheck"][];
         };
+        AttachVoiceConsentResponse: {
+            attached: boolean;
+        };
+        CreateStaffResponse: {
+            staff?: components["schemas"]["StaffAccount"];
+        };
+        DeleteFinanceLinkResponse: {
+            deleted: boolean;
+        };
+        DeleteOfflineSaleResponse: {
+            deleted: boolean;
+        };
+        GetFinanceCoverageResponse: {
+            rows: components["schemas"]["FinanceCoverageRow"][];
+        };
+        FinanceCoverageRow: {
+            corporation: string;
+            suppressed: boolean;
+            beneficiaries: number;
+            verified: number;
+            self_reported: number;
+            active_sellers_90d: number;
+            median_coverage_ratio?: number;
+        };
+        GetImpactByGroupResponse: {
+            rows: components["schemas"]["ImpactGroupRow"][];
+        };
+        GetImpactSummaryResponse: {
+            suppressed: boolean;
+            beneficiaries: number;
+            active_sellers_90d: number;
+            uplift_sample: number;
+            median_uplift_pct?: number;
+            digital_share_pct?: number;
+            certificates_issued: number;
+            finance_linked: number;
+            finance_verified: number;
+            /** Format: date-time */
+            refreshed_at: string;
+        };
+        GetIncomeBaselineResponse: {
+            baseline?: components["schemas"]["IncomeBaseline"];
+        };
+        GetListingHelperResponse: {
+            assisted: boolean;
+            display_name: string;
+            csc_id?: string;
+        };
+        GetLiteracyCertificateResponse: {
+            certificate?: components["schemas"]["LiteracyCertificate"];
+        };
+        GetLiteracyFunnelResponse: {
+            rows: components["schemas"]["LiteracyFunnelRow"][];
+        };
+        GetMyIncomeSummaryResponse: {
+            summary?: components["schemas"]["IncomeSummary"];
+        };
+        GetMyStaffAccountResponse: {
+            staff?: components["schemas"]["StaffAccount"];
+        };
+        GetRepaymentCoverageResponse: {
+            coverage?: components["schemas"]["RepaymentCoverage"];
+        };
+        GetSalesMixResponse: {
+            months: components["schemas"]["SalesMixMonth"][];
+        };
+        ImpactGroupRow: {
+            group: string;
+            state_code: string;
+            suppressed: boolean;
+            artisan_count: number;
+            active_sellers_90d: number;
+            with_baseline_count: number;
+            median_baseline_monthly_paise: number;
+            median_current_monthly_paise: number;
+            median_uplift_pct?: number;
+            platform_income_paise_90d: number;
+            offline_income_paise_90d: number;
+            fair_income_paise_90d: number;
+        };
+        IncomeBaseline: {
+            /** @enum {string} */
+            monthly_bracket: "LT_3K" | "B3K_6K" | "B6K_10K" | "B10K_15K" | "GT_15K" | "PREFER_NOT_TO_SAY";
+            monthly_paise?: number;
+            fairs_per_year?: number;
+            /** @enum {string} */
+            fair_income_bracket?: "LT_3K" | "B3K_6K" | "B6K_10K" | "B10K_15K" | "GT_15K" | "PREFER_NOT_TO_SAY";
+            /** Format: date-time */
+            captured_at: string;
+            /** @enum {string} */
+            source: "SELF" | "AGENT";
+        };
+        IncomeSummary: {
+            baseline?: components["schemas"]["IncomeBaseline"];
+            baseline_monthly_paise: number;
+            months: components["schemas"]["MonthIncome"][];
+            platform_paise_90d: number;
+            offline_paise_90d: number;
+            fair_paise_90d: number;
+            platform_pending_paise: number;
+            current_monthly_paise: number;
+            uplift_pct?: number;
+            /** @enum {string} */
+            insufficient_data: "" | "NO_BASELINE" | "TOO_NEW" | "NO_SALES";
+            digital_share_pct?: number;
+        };
+        IssueLiteracyCertificateResponse: {
+            certificate?: components["schemas"]["LiteracyCertificate"];
+        };
+        LinkArtisanResponse: {
+            artisan_id: string;
+            link_id: string;
+            registered_now: boolean;
+            needs_review: boolean;
+        };
+        LinkFinanceResponse: {
+            link?: components["schemas"]["FinanceLink"];
+        };
+        FinanceLink: {
+            id: string;
+            /** @enum {string} */
+            corporation: "NSFDC" | "NBCFDC" | "NSKFDC" | "NDFDC" | "PM_DAKSH" | "PM_AJAY" | "OTHER";
+            channelizing_agency?: string;
+            reference_last4: string;
+            sanctioned_paise?: number;
+            emi_paise?: number;
+            emi_day_of_month?: number;
+            repayment_start?: string;
+            /** @enum {string} */
+            status: "SELF_REPORTED" | "VERIFIED" | "REJECTED";
+            /** Format: date-time */
+            verified_at?: string;
+            reject_reason?: string;
+            /** Format: date-time */
+            consent_at: string;
+            consent_version: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ListAgentProductivityResponse: {
+            agents: components["schemas"]["AgentProductivity"][];
+        };
+        AgentProductivity: {
+            agent_id: string;
+            display_name: string;
+            role: string;
+            state_code?: string;
+            district?: string;
+            csc_id?: string;
+            active: boolean;
+            artisans_onboarded: number;
+            listings_created: number;
+            /** Format: date-time */
+            last_active_at?: string;
+        };
+        ListFinanceLinksForReviewResponse: {
+            links: components["schemas"]["FinanceLinkForReview"][];
+        };
+        FinanceLinkForReview: {
+            id: string;
+            artisan_id: string;
+            artisan_name: string;
+            state_code: string;
+            district?: string;
+            /** @enum {string} */
+            corporation: "NSFDC" | "NBCFDC" | "NSKFDC" | "NDFDC" | "PM_DAKSH" | "PM_AJAY" | "OTHER";
+            channelizing_agency?: string;
+            reference_last4: string;
+            sanctioned_paise?: number;
+            emi_paise?: number;
+            emi_day_of_month?: number;
+            /** @enum {string} */
+            status: "SELF_REPORTED" | "VERIFIED" | "REJECTED";
+            /** Format: date-time */
+            created_at: string;
+        };
+        ListLessonsResponse: {
+            lessons: components["schemas"]["Lesson"][];
+            completed_count: number;
+            certificate_issued: boolean;
+        };
+        Lesson: {
+            /** @enum {string} */
+            code: "PHOTO" | "STORY" | "PRICE" | "ORDERS" | "PAYMENTS" | "SAFETY" | "WHATSAPP" | "LOAN";
+            order: number;
+            has_practice: boolean;
+            practice_done: boolean;
+            quiz_passed: boolean;
+            completed: boolean;
+        };
+        ListLinksForReviewResponse: {
+            links: components["schemas"]["LinkForReview"][];
+        };
+        LinkForReview: {
+            link_id: string;
+            agent_id: string;
+            agent_name: string;
+            artisan_id: string;
+            artisan_name: string;
+            district?: string;
+            state_code: string;
+            voice_media_id: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ListMyArtisansResponse: {
+            artisans: components["schemas"]["AgentArtisan"][];
+        };
+        AgentArtisan: {
+            artisan_id: string;
+            display_name: string;
+            village?: string;
+            district?: string;
+            state_code: string;
+            photo_media_id?: string;
+            /** @enum {string} */
+            consent_method: "ARTISAN_OTP" | "VOICE_RECORDING";
+            needs_review: boolean;
+            /** Format: date-time */
+            linked_at: string;
+            /** Format: date-time */
+            last_activity_at?: string;
+            draft_count: number;
+        };
+        ListMyFinanceLinksResponse: {
+            links: components["schemas"]["FinanceLink"][];
+        };
+        ListMyHelpersResponse: {
+            helpers: components["schemas"]["Helper"][];
+        };
+        Helper: {
+            link_id: string;
+            agent_id: string;
+            display_name: string;
+            role: string;
+            csc_id?: string;
+            /** @enum {string} */
+            consent_method: "ARTISAN_OTP" | "VOICE_RECORDING";
+            /** Format: date-time */
+            linked_at: string;
+        };
+        ListOfflineSalesResponse: {
+            sales: components["schemas"]["OfflineSale"][];
+        };
+        ListStaffResponse: {
+            staff: components["schemas"]["StaffAccount"][];
+        };
+        LiteracyCertificate: {
+            id: string;
+            short_code: string;
+            /** Format: date-time */
+            issued_at: string;
+            download_url: string;
+            verification_url: string;
+        };
+        LiteracyFunnelRow: {
+            state_code: string;
+            district: string;
+            suppressed: boolean;
+            artisans: number;
+            started: number;
+            half_way: number;
+            certified: number;
+        };
+        LogOfflineSaleResponse: {
+            sale?: components["schemas"]["OfflineSale"];
+        };
+        MarkLinkReviewedResponse: {
+            reviewed: boolean;
+        };
+        MonthIncome: {
+            month: string;
+            platform_paise: number;
+            offline_paise: number;
+        };
+        OfflineSale: {
+            id: string;
+            /** @enum {string} */
+            channel: "FAIR" | "LOCAL_MARKET" | "DIRECT" | "OTHER";
+            event_name?: string;
+            amount_paise: number;
+            sold_on: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        RecordLessonProgressResponse: {
+            lesson?: components["schemas"]["Lesson"];
+        };
+        RepaymentCoverage: {
+            month: string;
+            emi_paise: number;
+            earned_platform_paise: number;
+            earned_offline_paise: number;
+            pending_paise: number;
+            coverage_ratio: number;
+            days_to_emi: number;
+            /** @enum {string} */
+            status: "COVERED" | "ALMOST" | "NOT_YET" | "NO_EMI";
+            any_verified: boolean;
+        };
+        ReviewFinanceLinkResponse: {
+            link?: components["schemas"]["FinanceLink"];
+        };
+        RevokeHelperResponse: {
+            revoked: boolean;
+        };
+        SalesMixMonth: {
+            month: string;
+            suppressed: boolean;
+            platform_paise: number;
+            fair_paise: number;
+            other_offline_paise: number;
+        };
+        SetIncomeBaselineResponse: {
+            baseline?: components["schemas"]["IncomeBaseline"];
+        };
+        SetStaffActiveResponse: {
+            staff?: components["schemas"]["StaffAccount"];
+        };
+        StaffAccount: {
+            id: string;
+            phone_e164: string;
+            display_name: string;
+            /** @enum {string} */
+            role: "FIELD_AGENT" | "CLUSTER_OFFICER" | "MINISTRY";
+            state_code?: string;
+            district?: string;
+            cluster_id?: string;
+            csc_id?: string;
+            active: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
+        StartArtisanConsentResponse: {
+            challenge_id: string;
+            /** Format: date-time */
+            expires_at: string;
+            dev_mode: boolean;
+        };
+        UpdateFinanceLinkResponse: {
+            link?: components["schemas"]["FinanceLink"];
+        };
+        VerifyLiteracyCertificateResponse: {
+            valid: boolean;
+            artisan_name: string;
+            craft_name: string;
+            district: string;
+            state_code: string;
+            /** Format: date-time */
+            issued_at: string;
+        };
     };
     responses: never;
-    parameters: never;
+    parameters: {
+        /** @description Assisted mode: a FIELD_AGENT or CLUSTER_OFFICER acting for a linked artisan (artisan id). Honoured only on allow-listed routes (services/bff/internal/bff/mosje/onbehalf.go); every other route answers 403 when it is present. */
+        OnBehalfOf: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;

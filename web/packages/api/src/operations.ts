@@ -14,7 +14,8 @@
 // call()/retry.ts. See apps/artisan/src/lib/outbox-send.ts.
 
 import { call, type CallOptions } from './retry';
-import { API_BASE } from './transport';
+import { API_BASE, ApiError, resolveUrl } from './transport';
+import { getAccessToken } from './auth';
 import type { paths, components } from './generated/schema';
 
 type Json<T> = T extends { content: { 'application/json': infer J } } ? J : never;
@@ -899,4 +900,264 @@ export function deleteWebhookSubscription(id: string, options?: CallOptions): Pr
     ...options,
     method: 'DELETE',
   }) as Promise<{ status?: string }>;
+}
+
+// --- MoSJE tier 4 (F12-F15) ------------------------------------------------
+//
+// Response shapes are the proto messages bff renders generically: snake_case,
+// int64 as numbers, unset optional fields absent. The admin and impact
+// routes enforce MINISTRY / scoped CLUSTER_OFFICER server-side.
+
+type Get<P extends keyof paths> = paths[P] extends { get: { responses: { 200: infer R } } } ? Json<R> : never;
+type Q<P extends keyof paths> = paths[P] extends { get: { parameters: { query?: infer Qp } } } ? Qp : never;
+type ImpactQuery = NonNullable<Q<'/impact/summary'>>;
+
+function qs(query: object | undefined): string {
+  return toQueryString(
+    query === undefined
+      ? undefined
+      : Object.fromEntries(
+          Object.entries(query).map(([k, v]) => [k, v === undefined || v === '' ? undefined : String(v)]),
+        ),
+  );
+}
+
+// F12 finance corporation linkage
+export type FinanceLink = components['schemas']['FinanceLink'];
+export type FinanceLinkForReview = components['schemas']['FinanceLinkForReview'];
+export type RepaymentCoverage = components['schemas']['RepaymentCoverage'];
+export type LinkFinanceBody = Json<paths['/finance/links']['post']['requestBody']>;
+export type UpdateFinanceLinkBody = Json<paths['/finance/links/{id}']['patch']['requestBody']>;
+
+export function listFinanceLinks(options?: CallOptions): Promise<Get<'/finance/links'>> {
+  return call('/finance/links', { ...options, method: 'GET' }) as Promise<Get<'/finance/links'>>;
+}
+export function linkFinance(body: LinkFinanceBody, options?: CallOptions) {
+  return call('/finance/links', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/finance/links']['post']['responses'][200]>
+  >;
+}
+export function updateFinanceLink(id: string, body: UpdateFinanceLinkBody, options?: CallOptions) {
+  return call(`/finance/links/${encodeURIComponent(id)}`, { ...options, method: 'PATCH', body }) as Promise<
+    Json<paths['/finance/links/{id}']['patch']['responses'][200]>
+  >;
+}
+export function deleteFinanceLink(id: string, options?: CallOptions) {
+  return call(`/finance/links/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<
+    Json<paths['/finance/links/{id}']['delete']['responses'][200]>
+  >;
+}
+export function getRepaymentCoverage(month?: string, options?: CallOptions): Promise<Get<'/finance/coverage'>> {
+  return call(`/finance/coverage${qs({ month })}`, { ...options, method: 'GET' }) as Promise<Get<'/finance/coverage'>>;
+}
+export function listFinanceLinksForReview(
+  query?: Q<'/admin/finance/links'>,
+  options?: CallOptions,
+): Promise<Get<'/admin/finance/links'>> {
+  return call(`/admin/finance/links${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/admin/finance/links'>>;
+}
+export function reviewFinanceLink(
+  id: string,
+  body: Json<paths['/admin/finance/links/{id}/review']['post']['requestBody']>,
+  options?: CallOptions,
+) {
+  return call(`/admin/finance/links/${encodeURIComponent(id)}/review`, { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/admin/finance/links/{id}/review']['post']['responses'][200]>
+  >;
+}
+
+// F13 income (artisan)
+export type IncomeBaseline = components['schemas']['IncomeBaseline'];
+export type IncomeSummary = components['schemas']['IncomeSummary'];
+export type OfflineSale = components['schemas']['OfflineSale'];
+export type SetIncomeBaselineBody = Json<paths['/income/baseline']['put']['requestBody']>;
+export type LogOfflineSaleBody = Json<paths['/income/sales']['post']['requestBody']>;
+
+export function getIncomeBaseline(options?: CallOptions): Promise<Get<'/income/baseline'>> {
+  return call('/income/baseline', { ...options, method: 'GET' }) as Promise<Get<'/income/baseline'>>;
+}
+export function setIncomeBaseline(body: SetIncomeBaselineBody, options?: CallOptions) {
+  return call('/income/baseline', { ...options, method: 'PUT', body }) as Promise<
+    Json<paths['/income/baseline']['put']['responses'][200]>
+  >;
+}
+export function listOfflineSales(limit?: number, options?: CallOptions): Promise<Get<'/income/sales'>> {
+  return call(`/income/sales${qs({ limit })}`, { ...options, method: 'GET' }) as Promise<Get<'/income/sales'>>;
+}
+export function logOfflineSale(body: LogOfflineSaleBody, options?: CallOptions) {
+  return call('/income/sales', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/income/sales']['post']['responses'][200]>
+  >;
+}
+export function deleteOfflineSale(id: string, options?: CallOptions) {
+  return call(`/income/sales/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<
+    Json<paths['/income/sales/{id}']['delete']['responses'][200]>
+  >;
+}
+export function getIncomeSummary(options?: CallOptions): Promise<Get<'/income/summary'>> {
+  return call('/income/summary', { ...options, method: 'GET' }) as Promise<Get<'/income/summary'>>;
+}
+
+// F13 impact dashboard
+export type ImpactFilterQuery = ImpactQuery;
+export type ImpactGroupRow = components['schemas']['ImpactGroupRow'];
+export type SalesMixMonth = components['schemas']['SalesMixMonth'];
+export type FinanceCoverageRow = components['schemas']['FinanceCoverageRow'];
+export type LiteracyFunnelRow = components['schemas']['LiteracyFunnelRow'];
+export type ImpactGroupBy = NonNullable<NonNullable<Q<'/impact/by-group'>>['group_by']>;
+
+export function getImpactSummary(query?: ImpactQuery, options?: CallOptions): Promise<Get<'/impact/summary'>> {
+  return call(`/impact/summary${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/impact/summary'>>;
+}
+export function getImpactByGroup(
+  query: Q<'/impact/by-group'>,
+  options?: CallOptions,
+): Promise<Get<'/impact/by-group'>> {
+  return call(`/impact/by-group${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/impact/by-group'>>;
+}
+export function getSalesMix(query?: ImpactQuery, options?: CallOptions): Promise<Get<'/impact/sales-mix'>> {
+  return call(`/impact/sales-mix${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/impact/sales-mix'>>;
+}
+export function getFinanceCoverage(
+  query?: ImpactQuery,
+  options?: CallOptions,
+): Promise<Get<'/impact/finance-coverage'>> {
+  return call(`/impact/finance-coverage${qs(query)}`, { ...options, method: 'GET' }) as Promise<
+    Get<'/impact/finance-coverage'>
+  >;
+}
+export function getLiteracyFunnel(
+  query?: ImpactQuery,
+  options?: CallOptions,
+): Promise<Get<'/impact/literacy-funnel'>> {
+  return call(`/impact/literacy-funnel${qs(query)}`, { ...options, method: 'GET' }) as Promise<
+    Get<'/impact/literacy-funnel'>
+  >;
+}
+
+/**
+ * The by-group CSV. Fetched rather than linked: the route needs the bearer
+ * token, which a plain anchor href would not send.
+ */
+export async function exportImpactCsv(query: Q<'/impact/export.csv'>): Promise<Blob> {
+  const token = getAccessToken();
+  const response = await fetch(resolveUrl(`/impact/export.csv${qs(query)}`), {
+    headers: token === undefined ? {} : { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new ApiError(response.status, await response.json().catch(() => null));
+  return response.blob();
+}
+
+// F14 staff accounts and assisted mode
+export type StaffAccount = components['schemas']['StaffAccount'];
+export type AgentProductivity = components['schemas']['AgentProductivity'];
+export type AgentArtisan = components['schemas']['AgentArtisan'];
+export type Helper = components['schemas']['Helper'];
+export type LinkForReview = components['schemas']['LinkForReview'];
+export type CreateStaffBody = Json<paths['/admin/staff']['post']['requestBody']>;
+export type LinkArtisanBody = Json<paths['/assisted/link']['post']['requestBody']>;
+
+export function getMyStaffAccount(options?: CallOptions): Promise<Get<'/staff/me'>> {
+  return call('/staff/me', { ...options, method: 'GET' }) as Promise<Get<'/staff/me'>>;
+}
+export function listStaff(query?: Q<'/admin/staff'>, options?: CallOptions): Promise<Get<'/admin/staff'>> {
+  return call(`/admin/staff${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/admin/staff'>>;
+}
+export function createStaff(body: CreateStaffBody, options?: CallOptions) {
+  return call('/admin/staff', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/admin/staff']['post']['responses'][200]>
+  >;
+}
+export function setStaffActive(id: string, active: boolean, options?: CallOptions) {
+  return call(`/admin/staff/${encodeURIComponent(id)}/active`, {
+    ...options,
+    method: 'POST',
+    body: { active },
+  }) as Promise<Json<paths['/admin/staff/{id}/active']['post']['responses'][200]>>;
+}
+export function listAgentProductivity(
+  query?: Q<'/admin/staff/productivity'>,
+  options?: CallOptions,
+): Promise<Get<'/admin/staff/productivity'>> {
+  return call(`/admin/staff/productivity${qs(query)}`, { ...options, method: 'GET' }) as Promise<
+    Get<'/admin/staff/productivity'>
+  >;
+}
+export function startArtisanConsent(
+  body: Json<paths['/assisted/consent/start']['post']['requestBody']>,
+  options?: CallOptions,
+) {
+  return call('/assisted/consent/start', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/assisted/consent/start']['post']['responses'][200]>
+  >;
+}
+export function linkArtisan(body: LinkArtisanBody, options?: CallOptions) {
+  return call('/assisted/link', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/assisted/link']['post']['responses'][200]>
+  >;
+}
+export function attachVoiceConsent(
+  body: Json<paths['/assisted/voice-consent']['post']['requestBody']>,
+  options?: CallOptions,
+) {
+  return call('/assisted/voice-consent', { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/assisted/voice-consent']['post']['responses'][200]>
+  >;
+}
+export function listMyArtisans(options?: CallOptions): Promise<Get<'/assisted/artisans'>> {
+  return call('/assisted/artisans', { ...options, method: 'GET' }) as Promise<Get<'/assisted/artisans'>>;
+}
+export function listLinksForReview(
+  query?: Q<'/assisted/review'>,
+  options?: CallOptions,
+): Promise<Get<'/assisted/review'>> {
+  return call(`/assisted/review${qs(query)}`, { ...options, method: 'GET' }) as Promise<Get<'/assisted/review'>>;
+}
+export function markLinkReviewed(id: string, options?: CallOptions) {
+  return call(`/assisted/review/${encodeURIComponent(id)}`, { ...options, method: 'POST' }) as Promise<
+    Json<paths['/assisted/review/{id}']['post']['responses'][200]>
+  >;
+}
+export function listHelpers(options?: CallOptions): Promise<Get<'/helpers'>> {
+  return call('/helpers', { ...options, method: 'GET' }) as Promise<Get<'/helpers'>>;
+}
+export function revokeHelper(id: string, options?: CallOptions) {
+  return call(`/helpers/${encodeURIComponent(id)}`, { ...options, method: 'DELETE' }) as Promise<
+    Json<paths['/helpers/{id}']['delete']['responses'][200]>
+  >;
+}
+export function getListingHelper(listingId: string, options?: CallOptions): Promise<Get<'/listings/{id}/helper'>> {
+  return call(`/listings/${encodeURIComponent(listingId)}/helper`, { ...options, method: 'GET' }) as Promise<
+    Get<'/listings/{id}/helper'>
+  >;
+}
+
+// F15 digital literacy
+export type Lesson = components['schemas']['Lesson'];
+export type LiteracyCertificate = components['schemas']['LiteracyCertificate'];
+export type LessonProgressBody = Json<paths['/learn/lessons/{code}/progress']['post']['requestBody']>;
+
+export function listLessons(options?: CallOptions): Promise<Get<'/learn/lessons'>> {
+  return call('/learn/lessons', { ...options, method: 'GET' }) as Promise<Get<'/learn/lessons'>>;
+}
+export function recordLessonProgress(code: string, body: LessonProgressBody, options?: CallOptions) {
+  return call(`/learn/lessons/${encodeURIComponent(code)}/progress`, { ...options, method: 'POST', body }) as Promise<
+    Json<paths['/learn/lessons/{code}/progress']['post']['responses'][200]>
+  >;
+}
+export function getLiteracyCertificate(options?: CallOptions): Promise<Get<'/learn/certificate'>> {
+  return call('/learn/certificate', { ...options, method: 'GET' }) as Promise<Get<'/learn/certificate'>>;
+}
+export function issueLiteracyCertificate(options?: CallOptions) {
+  return call('/learn/certificate', { ...options, method: 'POST' }) as Promise<
+    Json<paths['/learn/certificate']['post']['responses'][200]>
+  >;
+}
+export function verifyLiteracyCertificate(
+  shortCode: string,
+  options?: CallOptions,
+): Promise<Get<'/verify/certificate/{short_code}'>> {
+  return call(`/verify/certificate/${encodeURIComponent(shortCode)}`, { ...options, method: 'GET' }) as Promise<
+    Get<'/verify/certificate/{short_code}'>
+  >;
 }
