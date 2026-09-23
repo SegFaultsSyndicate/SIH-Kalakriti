@@ -4490,6 +4490,1836 @@
           }
         }
       }
+    },
+    "/finance/links": {
+      "get": {
+        "summary": "List the caller's linked finance-corporation loans",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyFinanceLinksResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "post": {
+        "summary": "Link a finance-corporation loan (DPDP consent required; only the last 4 characters of the reference are kept)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "corporation": {
+                    "type": "string",
+                    "enum": [
+                      "NSFDC",
+                      "NBCFDC",
+                      "NSKFDC",
+                      "NDFDC",
+                      "PM_DAKSH",
+                      "PM_AJAY",
+                      "OTHER"
+                    ]
+                  },
+                  "channelizing_agency": {
+                    "type": "string"
+                  },
+                  "reference": {
+                    "type": "string"
+                  },
+                  "sanctioned_paise": {
+                    "type": "integer"
+                  },
+                  "emi_paise": {
+                    "type": "integer"
+                  },
+                  "emi_day_of_month": {
+                    "type": "integer"
+                  },
+                  "repayment_start": {
+                    "type": "string"
+                  },
+                  "consent_given": {
+                    "type": "boolean"
+                  },
+                  "consent_version": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "corporation",
+                  "reference",
+                  "consent_given",
+                  "consent_version"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkFinanceResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/finance/links/{id}": {
+      "patch": {
+        "summary": "Edit loan terms (resets verification)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "channelizing_agency": {
+                    "type": "string"
+                  },
+                  "sanctioned_paise": {
+                    "type": "integer"
+                  },
+                  "emi_paise": {
+                    "type": "integer"
+                  },
+                  "emi_day_of_month": {
+                    "type": "integer"
+                  },
+                  "repayment_start": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateFinanceLinkResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Withdraw consent: permanently delete a finance link (artisan's own session only)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteFinanceLinkResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/finance/coverage": {
+      "get": {
+        "summary": "How far this month's income covers the caller's EMIs",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRepaymentCoverageResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/admin/finance/links": {
+      "get": {
+        "summary": "Finance links awaiting review (MINISTRY, scoped CLUSTER_OFFICER)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFinanceLinksForReviewResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/admin/finance/links/{id}/review": {
+      "post": {
+        "summary": "Verify or reject a finance link",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verified": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "verified"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewFinanceLinkResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/income/baseline": {
+      "get": {
+        "summary": "The caller's registration-time income baseline",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetIncomeBaselineResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "put": {
+        "summary": "Set the caller's income baseline",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "monthly_bracket": {
+                    "type": "string",
+                    "enum": [
+                      "LT_3K",
+                      "B3K_6K",
+                      "B6K_10K",
+                      "B10K_15K",
+                      "GT_15K",
+                      "PREFER_NOT_TO_SAY"
+                    ]
+                  },
+                  "monthly_paise": {
+                    "type": "integer"
+                  },
+                  "fairs_per_year": {
+                    "type": "integer"
+                  },
+                  "fair_income_bracket": {
+                    "type": "string",
+                    "enum": [
+                      "LT_3K",
+                      "B3K_6K",
+                      "B6K_10K",
+                      "B10K_15K",
+                      "GT_15K",
+                      "PREFER_NOT_TO_SAY"
+                    ]
+                  }
+                },
+                "required": [
+                  "monthly_bracket"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetIncomeBaselineResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/income/sales": {
+      "get": {
+        "summary": "The caller's logged offline sales",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOfflineSalesResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "post": {
+        "summary": "Log an offline sale (client-generated id; safe to retry)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "FAIR",
+                      "LOCAL_MARKET",
+                      "DIRECT",
+                      "OTHER"
+                    ]
+                  },
+                  "event_name": {
+                    "type": "string"
+                  },
+                  "amount_paise": {
+                    "type": "integer"
+                  },
+                  "sold_on": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "channel",
+                  "amount_paise",
+                  "sold_on"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogOfflineSaleResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/income/sales/{id}": {
+      "delete": {
+        "summary": "Delete a mistaken offline sale",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteOfflineSaleResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/income/summary": {
+      "get": {
+        "summary": "The caller's income picture: last 3 months, 90-day totals, uplift over baseline",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMyIncomeSummaryResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/impact/summary": {
+      "get": {
+        "summary": "Impact KPIs for a cohort (MINISTRY, scoped CLUSTER_OFFICER; cohorts under 5 suppressed)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetImpactSummaryResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/impact/by-group": {
+      "get": {
+        "summary": "Impact by district, social category or corporation (groups under 5 suppressed)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "district",
+                "social_category",
+                "corporation"
+              ]
+            }
+          },
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetImpactByGroupResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/impact/sales-mix": {
+      "get": {
+        "summary": "Monthly platform vs fair vs other offline sales",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSalesMixResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/impact/finance-coverage": {
+      "get": {
+        "summary": "Finance-corporation beneficiaries on the platform",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetFinanceCoverageResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/impact/literacy-funnel": {
+      "get": {
+        "summary": "Digital literacy progress by district",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLiteracyFunnelResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/staff/me": {
+      "get": {
+        "summary": "The caller's staff account",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMyStaffAccountResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/admin/staff": {
+      "get": {
+        "summary": "Staff accounts (MINISTRY)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStaffResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a staff account (MINISTRY)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone_e164": {
+                    "type": "string"
+                  },
+                  "display_name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "FIELD_AGENT",
+                      "CLUSTER_OFFICER",
+                      "MINISTRY"
+                    ]
+                  },
+                  "state_code": {
+                    "type": "string"
+                  },
+                  "district": {
+                    "type": "string"
+                  },
+                  "cluster_id": {
+                    "type": "string"
+                  },
+                  "csc_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "phone_e164",
+                  "display_name",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateStaffResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/admin/staff/{id}/active": {
+      "post": {
+        "summary": "Activate or deactivate a staff account (MINISTRY)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "active"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetStaffActiveResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/admin/staff/productivity": {
+      "get": {
+        "summary": "Field agent productivity (MINISTRY, scoped CLUSTER_OFFICER)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAgentProductivityResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/consent/start": {
+      "post": {
+        "summary": "Send a consent OTP to an artisan's phone (field staff)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone_e164": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "phone_e164"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartArtisanConsentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/link": {
+      "post": {
+        "summary": "Link (and if new, register) an artisan with their consent (field staff)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone_e164": {
+                    "type": "string"
+                  },
+                  "consent_method": {
+                    "type": "string",
+                    "enum": [
+                      "ARTISAN_OTP",
+                      "VOICE_RECORDING"
+                    ]
+                  },
+                  "challenge_id": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  },
+                  "voice_media_id": {
+                    "type": "string"
+                  },
+                  "registration": {
+                    "type": "object",
+                    "description": "Same fields as POST /artisans (languages as short names, e.g. \"HINDI\"); phone_e164 and idempotency_key are ignored.",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "phone_e164",
+                  "consent_method"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkArtisanResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/voice-consent": {
+      "post": {
+        "summary": "Attach a recorded voice consent to a link (field staff)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "artisan_id": {
+                    "type": "string"
+                  },
+                  "media_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "artisan_id",
+                  "media_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachVoiceConsentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/artisans": {
+      "get": {
+        "summary": "Artisans the calling agent helps",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyArtisansResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/review": {
+      "get": {
+        "summary": "Voice-consent links awaiting officer review",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLinksForReviewResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/assisted/review/{id}": {
+      "post": {
+        "summary": "Mark a voice-consent link reviewed",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkLinkReviewedResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/helpers": {
+      "get": {
+        "summary": "People helping the caller (artisan)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMyHelpersResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/helpers/{id}": {
+      "delete": {
+        "summary": "Remove a helper's access immediately (artisan's own session only)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeHelperResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/listings/{id}/helper": {
+      "get": {
+        "summary": "Which agent, if any, created this listing for the caller",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetListingHelperResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/learn/lessons": {
+      "get": {
+        "summary": "The digital literacy track and the caller's progress",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLessonsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/learn/lessons/{code}/progress": {
+      "post": {
+        "summary": "Record practice / quiz progress on a lesson",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "practice_done": {
+                    "type": "boolean"
+                  },
+                  "quiz_passed": {
+                    "type": "boolean"
+                  },
+                  "practice_media_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordLessonProgressResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/learn/certificate": {
+      "get": {
+        "summary": "The caller's digital literacy certificate, if issued",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLiteracyCertificateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      },
+      "post": {
+        "summary": "Issue the caller's certificate once all 8 lessons are complete",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueLiteracyCertificateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
+    "/verify/certificate/{short_code}": {
+      "get": {
+        "summary": "Verify a printed digital literacy certificate (public)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "parameters": [
+          {
+            "name": "short_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyLiteracyCertificateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/impact/export.csv": {
+      "get": {
+        "summary": "Impact by group as CSV (groups under 5 show \"<5\" and no numbers)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "social_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "corporation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6210,7 +8040,8 @@
               "LISTINGS_PUBLISHED",
               "PROVENANCE_SEALED",
               "LOTS_ACCEPTED",
-              "LOTS_COMPLETED"
+              "LOTS_COMPLETED",
+              "LESSONS_COMPLETED"
             ]
           },
           "threshold": {
@@ -6482,6 +8313,1368 @@
             }
           }
         }
+      },
+      "AttachVoiceConsentResponse": {
+        "type": "object",
+        "properties": {
+          "attached": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "attached"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "CreateStaffResponse": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "$ref": "#/components/schemas/StaffAccount"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "DeleteFinanceLinkResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "DeleteOfflineSaleResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetFinanceCoverageResponse": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceCoverageRow"
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "FinanceCoverageRow": {
+        "type": "object",
+        "properties": {
+          "corporation": {
+            "type": "string"
+          },
+          "suppressed": {
+            "type": "boolean"
+          },
+          "beneficiaries": {
+            "type": "integer"
+          },
+          "verified": {
+            "type": "integer"
+          },
+          "self_reported": {
+            "type": "integer"
+          },
+          "active_sellers_90d": {
+            "type": "integer"
+          },
+          "median_coverage_ratio": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "corporation",
+          "suppressed",
+          "beneficiaries",
+          "verified",
+          "self_reported",
+          "active_sellers_90d"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetImpactByGroupResponse": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImpactGroupRow"
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetImpactSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "suppressed": {
+            "type": "boolean"
+          },
+          "beneficiaries": {
+            "type": "integer"
+          },
+          "active_sellers_90d": {
+            "type": "integer"
+          },
+          "uplift_sample": {
+            "type": "integer"
+          },
+          "median_uplift_pct": {
+            "type": "number"
+          },
+          "digital_share_pct": {
+            "type": "number"
+          },
+          "certificates_issued": {
+            "type": "integer"
+          },
+          "finance_linked": {
+            "type": "integer"
+          },
+          "finance_verified": {
+            "type": "integer"
+          },
+          "refreshed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "suppressed",
+          "beneficiaries",
+          "active_sellers_90d",
+          "uplift_sample",
+          "certificates_issued",
+          "finance_linked",
+          "finance_verified",
+          "refreshed_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetIncomeBaselineResponse": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/IncomeBaseline"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "GetListingHelperResponse": {
+        "type": "object",
+        "properties": {
+          "assisted": {
+            "type": "boolean"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "csc_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "assisted",
+          "display_name"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetLiteracyCertificateResponse": {
+        "type": "object",
+        "properties": {
+          "certificate": {
+            "$ref": "#/components/schemas/LiteracyCertificate"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "GetLiteracyFunnelResponse": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiteracyFunnelRow"
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetMyIncomeSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/IncomeSummary"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "GetMyStaffAccountResponse": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "$ref": "#/components/schemas/StaffAccount"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "GetRepaymentCoverageResponse": {
+        "type": "object",
+        "properties": {
+          "coverage": {
+            "$ref": "#/components/schemas/RepaymentCoverage"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "GetSalesMixResponse": {
+        "type": "object",
+        "properties": {
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesMixMonth"
+            }
+          }
+        },
+        "required": [
+          "months"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ImpactGroupRow": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "suppressed": {
+            "type": "boolean"
+          },
+          "artisan_count": {
+            "type": "integer"
+          },
+          "active_sellers_90d": {
+            "type": "integer"
+          },
+          "with_baseline_count": {
+            "type": "integer"
+          },
+          "median_baseline_monthly_paise": {
+            "type": "integer"
+          },
+          "median_current_monthly_paise": {
+            "type": "integer"
+          },
+          "median_uplift_pct": {
+            "type": "number"
+          },
+          "platform_income_paise_90d": {
+            "type": "integer"
+          },
+          "offline_income_paise_90d": {
+            "type": "integer"
+          },
+          "fair_income_paise_90d": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group",
+          "state_code",
+          "suppressed",
+          "artisan_count",
+          "active_sellers_90d",
+          "with_baseline_count",
+          "median_baseline_monthly_paise",
+          "median_current_monthly_paise",
+          "platform_income_paise_90d",
+          "offline_income_paise_90d",
+          "fair_income_paise_90d"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "IncomeBaseline": {
+        "type": "object",
+        "properties": {
+          "monthly_bracket": {
+            "type": "string",
+            "enum": [
+              "LT_3K",
+              "B3K_6K",
+              "B6K_10K",
+              "B10K_15K",
+              "GT_15K",
+              "PREFER_NOT_TO_SAY"
+            ]
+          },
+          "monthly_paise": {
+            "type": "integer"
+          },
+          "fairs_per_year": {
+            "type": "integer"
+          },
+          "fair_income_bracket": {
+            "type": "string",
+            "enum": [
+              "LT_3K",
+              "B3K_6K",
+              "B6K_10K",
+              "B10K_15K",
+              "GT_15K",
+              "PREFER_NOT_TO_SAY"
+            ]
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "SELF",
+              "AGENT"
+            ]
+          }
+        },
+        "required": [
+          "monthly_bracket",
+          "captured_at",
+          "source"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "IncomeSummary": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/IncomeBaseline"
+          },
+          "baseline_monthly_paise": {
+            "type": "integer"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthIncome"
+            }
+          },
+          "platform_paise_90d": {
+            "type": "integer"
+          },
+          "offline_paise_90d": {
+            "type": "integer"
+          },
+          "fair_paise_90d": {
+            "type": "integer"
+          },
+          "platform_pending_paise": {
+            "type": "integer"
+          },
+          "current_monthly_paise": {
+            "type": "integer"
+          },
+          "uplift_pct": {
+            "type": "number"
+          },
+          "insufficient_data": {
+            "type": "string",
+            "enum": [
+              "",
+              "NO_BASELINE",
+              "TOO_NEW",
+              "NO_SALES"
+            ]
+          },
+          "digital_share_pct": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "baseline_monthly_paise",
+          "months",
+          "platform_paise_90d",
+          "offline_paise_90d",
+          "fair_paise_90d",
+          "platform_pending_paise",
+          "current_monthly_paise",
+          "insufficient_data"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "IssueLiteracyCertificateResponse": {
+        "type": "object",
+        "properties": {
+          "certificate": {
+            "$ref": "#/components/schemas/LiteracyCertificate"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "LinkArtisanResponse": {
+        "type": "object",
+        "properties": {
+          "artisan_id": {
+            "type": "string"
+          },
+          "link_id": {
+            "type": "string"
+          },
+          "registered_now": {
+            "type": "boolean"
+          },
+          "needs_review": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "artisan_id",
+          "link_id",
+          "registered_now",
+          "needs_review"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "LinkFinanceResponse": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "$ref": "#/components/schemas/FinanceLink"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "FinanceLink": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "corporation": {
+            "type": "string",
+            "enum": [
+              "NSFDC",
+              "NBCFDC",
+              "NSKFDC",
+              "NDFDC",
+              "PM_DAKSH",
+              "PM_AJAY",
+              "OTHER"
+            ]
+          },
+          "channelizing_agency": {
+            "type": "string"
+          },
+          "reference_last4": {
+            "type": "string"
+          },
+          "sanctioned_paise": {
+            "type": "integer"
+          },
+          "emi_paise": {
+            "type": "integer"
+          },
+          "emi_day_of_month": {
+            "type": "integer"
+          },
+          "repayment_start": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SELF_REPORTED",
+              "VERIFIED",
+              "REJECTED"
+            ]
+          },
+          "verified_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reject_reason": {
+            "type": "string"
+          },
+          "consent_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "consent_version": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "corporation",
+          "reference_last4",
+          "status",
+          "consent_at",
+          "consent_version",
+          "created_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListAgentProductivityResponse": {
+        "type": "object",
+        "properties": {
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentProductivity"
+            }
+          }
+        },
+        "required": [
+          "agents"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "AgentProductivity": {
+        "type": "object",
+        "properties": {
+          "agent_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "csc_id": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "artisans_onboarded": {
+            "type": "integer"
+          },
+          "listings_created": {
+            "type": "integer"
+          },
+          "last_active_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "agent_id",
+          "display_name",
+          "role",
+          "active",
+          "artisans_onboarded",
+          "listings_created"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListFinanceLinksForReviewResponse": {
+        "type": "object",
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceLinkForReview"
+            }
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "FinanceLinkForReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "artisan_name": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "corporation": {
+            "type": "string",
+            "enum": [
+              "NSFDC",
+              "NBCFDC",
+              "NSKFDC",
+              "NDFDC",
+              "PM_DAKSH",
+              "PM_AJAY",
+              "OTHER"
+            ]
+          },
+          "channelizing_agency": {
+            "type": "string"
+          },
+          "reference_last4": {
+            "type": "string"
+          },
+          "sanctioned_paise": {
+            "type": "integer"
+          },
+          "emi_paise": {
+            "type": "integer"
+          },
+          "emi_day_of_month": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SELF_REPORTED",
+              "VERIFIED",
+              "REJECTED"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "artisan_id",
+          "artisan_name",
+          "state_code",
+          "corporation",
+          "reference_last4",
+          "status",
+          "created_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListLessonsResponse": {
+        "type": "object",
+        "properties": {
+          "lessons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Lesson"
+            }
+          },
+          "completed_count": {
+            "type": "integer"
+          },
+          "certificate_issued": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "lessons",
+          "completed_count",
+          "certificate_issued"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "Lesson": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "STORY",
+              "PRICE",
+              "ORDERS",
+              "PAYMENTS",
+              "SAFETY",
+              "WHATSAPP",
+              "LOAN"
+            ]
+          },
+          "order": {
+            "type": "integer"
+          },
+          "has_practice": {
+            "type": "boolean"
+          },
+          "practice_done": {
+            "type": "boolean"
+          },
+          "quiz_passed": {
+            "type": "boolean"
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "order",
+          "has_practice",
+          "practice_done",
+          "quiz_passed",
+          "completed"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListLinksForReviewResponse": {
+        "type": "object",
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkForReview"
+            }
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "LinkForReview": {
+        "type": "object",
+        "properties": {
+          "link_id": {
+            "type": "string"
+          },
+          "agent_id": {
+            "type": "string"
+          },
+          "agent_name": {
+            "type": "string"
+          },
+          "artisan_id": {
+            "type": "string"
+          },
+          "artisan_name": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "voice_media_id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "link_id",
+          "agent_id",
+          "agent_name",
+          "artisan_id",
+          "artisan_name",
+          "state_code",
+          "voice_media_id",
+          "created_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListMyArtisansResponse": {
+        "type": "object",
+        "properties": {
+          "artisans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentArtisan"
+            }
+          }
+        },
+        "required": [
+          "artisans"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "AgentArtisan": {
+        "type": "object",
+        "properties": {
+          "artisan_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "village": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "photo_media_id": {
+            "type": "string"
+          },
+          "consent_method": {
+            "type": "string",
+            "enum": [
+              "ARTISAN_OTP",
+              "VOICE_RECORDING"
+            ]
+          },
+          "needs_review": {
+            "type": "boolean"
+          },
+          "linked_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_activity_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "draft_count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "artisan_id",
+          "display_name",
+          "state_code",
+          "consent_method",
+          "needs_review",
+          "linked_at",
+          "draft_count"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListMyFinanceLinksResponse": {
+        "type": "object",
+        "properties": {
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceLink"
+            }
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListMyHelpersResponse": {
+        "type": "object",
+        "properties": {
+          "helpers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Helper"
+            }
+          }
+        },
+        "required": [
+          "helpers"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "Helper": {
+        "type": "object",
+        "properties": {
+          "link_id": {
+            "type": "string"
+          },
+          "agent_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "csc_id": {
+            "type": "string"
+          },
+          "consent_method": {
+            "type": "string",
+            "enum": [
+              "ARTISAN_OTP",
+              "VOICE_RECORDING"
+            ]
+          },
+          "linked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "link_id",
+          "agent_id",
+          "display_name",
+          "role",
+          "consent_method",
+          "linked_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListOfflineSalesResponse": {
+        "type": "object",
+        "properties": {
+          "sales": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfflineSale"
+            }
+          }
+        },
+        "required": [
+          "sales"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ListStaffResponse": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffAccount"
+            }
+          }
+        },
+        "required": [
+          "staff"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "LiteracyCertificate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "short_code": {
+            "type": "string"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "download_url": {
+            "type": "string"
+          },
+          "verification_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "short_code",
+          "issued_at",
+          "download_url",
+          "verification_url"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "LiteracyFunnelRow": {
+        "type": "object",
+        "properties": {
+          "state_code": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "suppressed": {
+            "type": "boolean"
+          },
+          "artisans": {
+            "type": "integer"
+          },
+          "started": {
+            "type": "integer"
+          },
+          "half_way": {
+            "type": "integer"
+          },
+          "certified": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state_code",
+          "district",
+          "suppressed",
+          "artisans",
+          "started",
+          "half_way",
+          "certified"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "LogOfflineSaleResponse": {
+        "type": "object",
+        "properties": {
+          "sale": {
+            "$ref": "#/components/schemas/OfflineSale"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "MarkLinkReviewedResponse": {
+        "type": "object",
+        "properties": {
+          "reviewed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reviewed"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "MonthIncome": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "platform_paise": {
+            "type": "integer"
+          },
+          "offline_paise": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "platform_paise",
+          "offline_paise"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "OfflineSale": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "FAIR",
+              "LOCAL_MARKET",
+              "DIRECT",
+              "OTHER"
+            ]
+          },
+          "event_name": {
+            "type": "string"
+          },
+          "amount_paise": {
+            "type": "integer"
+          },
+          "sold_on": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "amount_paise",
+          "sold_on",
+          "created_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "RecordLessonProgressResponse": {
+        "type": "object",
+        "properties": {
+          "lesson": {
+            "$ref": "#/components/schemas/Lesson"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "RepaymentCoverage": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "emi_paise": {
+            "type": "integer"
+          },
+          "earned_platform_paise": {
+            "type": "integer"
+          },
+          "earned_offline_paise": {
+            "type": "integer"
+          },
+          "pending_paise": {
+            "type": "integer"
+          },
+          "coverage_ratio": {
+            "type": "number"
+          },
+          "days_to_emi": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COVERED",
+              "ALMOST",
+              "NOT_YET",
+              "NO_EMI"
+            ]
+          },
+          "any_verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "month",
+          "emi_paise",
+          "earned_platform_paise",
+          "earned_offline_paise",
+          "pending_paise",
+          "coverage_ratio",
+          "days_to_emi",
+          "status",
+          "any_verified"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "ReviewFinanceLinkResponse": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "$ref": "#/components/schemas/FinanceLink"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "RevokeHelperResponse": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revoked"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "SalesMixMonth": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "suppressed": {
+            "type": "boolean"
+          },
+          "platform_paise": {
+            "type": "integer"
+          },
+          "fair_paise": {
+            "type": "integer"
+          },
+          "other_offline_paise": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "suppressed",
+          "platform_paise",
+          "fair_paise",
+          "other_offline_paise"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "SetIncomeBaselineResponse": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/IncomeBaseline"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "SetStaffActiveResponse": {
+        "type": "object",
+        "properties": {
+          "staff": {
+            "$ref": "#/components/schemas/StaffAccount"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "StaffAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "phone_e164": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "FIELD_AGENT",
+              "CLUSTER_OFFICER",
+              "MINISTRY"
+            ]
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "cluster_id": {
+            "type": "string"
+          },
+          "csc_id": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "phone_e164",
+          "display_name",
+          "role",
+          "active",
+          "created_at"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "StartArtisanConsentResponse": {
+        "type": "object",
+        "properties": {
+          "challenge_id": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dev_mode": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "expires_at",
+          "dev_mode"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "UpdateFinanceLinkResponse": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "$ref": "#/components/schemas/FinanceLink"
+          }
+        },
+        "x-kalakriti-generated": true
+      },
+      "VerifyLiteracyCertificateResponse": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "artisan_name": {
+            "type": "string"
+          },
+          "craft_name": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "state_code": {
+            "type": "string"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "valid",
+          "artisan_name",
+          "craft_name",
+          "district",
+          "state_code",
+          "issued_at"
+        ],
+        "x-kalakriti-generated": true
+      }
+    },
+    "parameters": {
+      "OnBehalfOf": {
+        "name": "X-On-Behalf-Of",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Assisted mode: a FIELD_AGENT or CLUSTER_OFFICER acting for a linked artisan (artisan id). Honoured only on allow-listed routes (services/bff/internal/bff/mosje/onbehalf.go); every other route answers 403 when it is present."
       }
     }
   }

@@ -5,10 +5,10 @@ package handler
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/auth"
+	pkgdomain "github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	badgesv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/badges/v1"
 
 	"github.com/ZoroNewbie00/kalakriti/services/core-svc/internal/core/domain"
@@ -29,7 +29,7 @@ func NewBadges(svc *service.Badges) *Badges {
 func (h *Badges) ListBadgeCatalog(ctx context.Context, req *badgesv1.ListBadgeCatalogRequest) (*badgesv1.ListBadgeCatalogResponse, error) {
 	catalog, err := h.svc.ListBadgeCatalog(ctx)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	out := make([]*badgesv1.Badge, len(catalog))
 	for i, b := range catalog {
@@ -39,13 +39,13 @@ func (h *Badges) ListBadgeCatalog(ctx context.Context, req *badgesv1.ListBadgeCa
 }
 
 func (h *Badges) ListArtisanBadges(ctx context.Context, req *badgesv1.ListArtisanBadgesRequest) (*badgesv1.ListArtisanBadgesResponse, error) {
-	artisanID, err := uuid.Parse(req.GetArtisanId())
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	grants, err := h.svc.ListArtisanBadges(ctx, artisanID)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	out := make([]*badgesv1.ArtisanBadge, len(grants))
 	for i, g := range grants {
@@ -57,13 +57,13 @@ func (h *Badges) ListArtisanBadges(ctx context.Context, req *badgesv1.ListArtisa
 }
 
 func (h *Badges) GetBadgeProgress(ctx context.Context, req *badgesv1.GetBadgeProgressRequest) (*badgesv1.GetBadgeProgressResponse, error) {
-	artisanID, err := uuid.Parse(req.GetArtisanId())
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	entries, err := h.svc.GetBadgeProgress(ctx, artisanID)
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	out := make([]*badgesv1.BadgeProgressEntry, len(entries))
 	for i, e := range entries {
@@ -75,19 +75,19 @@ func (h *Badges) GetBadgeProgress(ctx context.Context, req *badgesv1.GetBadgePro
 }
 
 func (h *Badges) GrantBadge(ctx context.Context, req *badgesv1.GrantBadgeRequest) (*badgesv1.GrantBadgeResponse, error) {
-	artisanID, err := uuid.Parse(req.GetArtisanId())
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
-	badgeID, err := uuid.Parse(req.GetBadgeId())
+	badgeID, err := parseUUID("badge_id", req.GetBadgeId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	grant, err := h.svc.GrantBadge(ctx, domain.GrantBadgeInput{
 		ArtisanID: artisanID, BadgeID: badgeID, GrantedBy: principalSubjectOrEmpty(ctx), Evidence: req.EvidenceJson,
 	})
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	return &badgesv1.GrantBadgeResponse{ArtisanBadge: &badgesv1.ArtisanBadge{
 		Badge: toProtoBadge(grant.Badge), GrantedAt: timestamppb.New(grant.GrantedAt), GrantedBy: grant.GrantedBy,
@@ -95,19 +95,19 @@ func (h *Badges) GrantBadge(ctx context.Context, req *badgesv1.GrantBadgeRequest
 }
 
 func (h *Badges) RevokeBadge(ctx context.Context, req *badgesv1.RevokeBadgeRequest) (*badgesv1.RevokeBadgeResponse, error) {
-	artisanID, err := uuid.Parse(req.GetArtisanId())
+	artisanID, err := parseUUID("artisan_id", req.GetArtisanId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
-	badgeID, err := uuid.Parse(req.GetBadgeId())
+	badgeID, err := parseUUID("badge_id", req.GetBadgeId())
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	revoked, err := h.svc.RevokeBadge(ctx, domain.RevokeBadgeInput{
 		ArtisanID: artisanID, BadgeID: badgeID, RevokedBy: principalSubjectOrEmpty(ctx), Reason: req.GetReason(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, pkgdomain.GRPCError(err)
 	}
 	return &badgesv1.RevokeBadgeResponse{Revoked: revoked}, nil
 }
