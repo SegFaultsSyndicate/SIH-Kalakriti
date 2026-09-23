@@ -4,10 +4,20 @@
   Six-box code entry, auto-submitting the moment the sixth digit lands.
   Verifying needs the same live round trip requesting a code does, so the
   same "explain, do not pretend to queue" treatment as /login applies here --
-  see its header comment. On success this just navigates to `/`; the root
-  layout's guard sends a freshly-authenticated, not-yet-registered artisan on
-  to /register/name and a returning one straight home, so this screen does
-  not need to know which.
+  see its header comment.
+
+  On success this used to always navigate to `/` and let the root layout's
+  guard redirect a not-yet-registered artisan on to /register/name from
+  there. That two-hop hand-off made SvelteKit's client router resolve the
+  Home route (`/`) as part of the first navigation -- fetching and compiling
+  its whole module graph (IncomeGrowthChart, DigitalLiteracyTutorial,
+  StallCardModal, demo-listing, ornament pieces...) purely to be told to
+  leave again a tick later. In dev that first-time compile is slow enough to
+  be a visible stall/flash between submitting the code and landing on
+  registration. Deciding the destination here instead -- same signal
+  +layout.svelte's guard uses -- makes this a single hop that never touches
+  Home's code at all when the artisan isn't registered yet. The guard stays
+  in place as the safety net for direct navigation, back button, etc.
 -->
 <script lang="ts">
   import { goto } from '$app/navigation';
@@ -16,11 +26,14 @@
     requestOtp,
     completeOtpVerification,
     establishMockSession,
+    session,
     ApiError,
     messageKeyFor,
   } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
+  import { getArtisanId } from '$lib/registration';
+  import { REGISTER_FIRST_STEP, HOME_PATH } from '$lib/route-guard';
   import { toE164 } from '$lib/phone';
 
   const RESEND_SECONDS = 30;
@@ -58,7 +71,10 @@
     try {
       const ok = await completeOtpVerification({ phone: toE164(phone), otp });
       if (ok) {
-        await goto('/');
+        const sub = session.claims?.sub;
+        const tokenRegistered = typeof sub === 'string' && sub !== '';
+        const registered = tokenRegistered || (await getArtisanId()) !== undefined;
+        await goto(registered ? HOME_PATH : REGISTER_FIRST_STEP);
       } else {
         error = t('verify.invalid');
         code = '';

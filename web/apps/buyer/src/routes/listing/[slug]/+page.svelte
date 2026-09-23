@@ -33,6 +33,7 @@
   import ProductDetailSections from '$lib/ProductDetailSections.svelte';
   import { wishlist } from '$lib/wishlist.svelte';
   import { demoListingById, demoSocial, productDetails, relatedListings } from '$lib/demo-catalog';
+  import { ARTISAN_CRAFT_CATEGORIES } from '$lib/craft-categories';
 
   type ListingSummary = components['schemas']['ListingSummary'];
 
@@ -121,9 +122,105 @@
     return [listing.image_url, ...new Set(extra)].slice(0, 5).map((url) => ({ kind: 'IMAGE' as const, url }));
   });
   const activeMedia = $derived(media[activeMediaIndex]);
+
+  // Product zoom modal + carousel: click-to-expand full-screen overlay with
+  // hover-to-zoom on the stage image and prev/next paging through `media`,
+  // plus swipe gestures on touch devices. See the CSS block near
+  // .listing__stage-trigger for the hover-scale mechanics.
+  let zoomOpen = $state(false);
+  let lensStyle = $state('');
+  let zoomDialogEl: HTMLDialogElement | undefined = $state();
+  let zoomPreviouslyFocused: HTMLElement | null = null;
+  let zoomPreviousOverflow = '';
+
+  function openZoom(): void {
+    if (!activeMedia?.url) return;
+    zoomOpen = true;
+  }
+
+  function closeZoom(): void {
+    zoomOpen = false;
+  }
+
+  function showNext(): void {
+    if (media.length === 0) return;
+    activeMediaIndex = (activeMediaIndex + 1) % media.length;
+  }
+
+  function showPrev(): void {
+    if (media.length === 0) return;
+    activeMediaIndex = (activeMediaIndex - 1 + media.length) % media.length;
+  }
+
+  function onStageMouseMove(event: MouseEvent): void {
+    if (activeMedia?.kind === 'VIDEO') return;
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    lensStyle = `--zx: ${x}%; --zy: ${y}%;`;
+  }
+
+  function onStageMouseLeave(): void {
+    lensStyle = '';
+  }
+
+  let touchStartX = 0;
+  function onGalleryTouchStart(event: TouchEvent): void {
+    touchStartX = event.touches[0]?.clientX ?? 0;
+  }
+
+  function onGalleryTouchEnd(event: TouchEvent): void {
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX;
+    const delta = endX - touchStartX;
+    if (Math.abs(delta) > 40) {
+      if (delta < 0) showNext();
+      else showPrev();
+    }
+  }
+
+  function onGalleryKeydown(event: KeyboardEvent): void {
+    if (!zoomOpen) return;
+    if (event.key === 'ArrowRight') showNext();
+    else if (event.key === 'ArrowLeft') showPrev();
+  }
+
+  function onZoomDialogClose(): void {
+    zoomOpen = false;
+    document.documentElement.style.overflow = zoomPreviousOverflow;
+    zoomPreviouslyFocused?.focus();
+  }
+
+  function onZoomBackdropClick(event: MouseEvent): void {
+    if (event.target === zoomDialogEl) closeZoom();
+  }
+
+  $effect(() => {
+    if (!zoomDialogEl) return;
+    if (zoomOpen && !zoomDialogEl.open) {
+      zoomPreviouslyFocused = document.activeElement as HTMLElement | null;
+      zoomPreviousOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = 'hidden';
+      zoomDialogEl.showModal();
+    } else if (!zoomOpen && zoomDialogEl.open) {
+      zoomDialogEl.close();
+    }
+  });
   const madeToOrder = $derived(listing?.type === 'MADE_TO_ORDER');
   const terms = $derived(listing?.made_to_order_terms);
   const provenance = $derived(listing?.provenance);
+  // Matches the listing's craft against the 12 national craft categories to
+  // surface a one-line "did you know" fact -- undefined (no box shown) if
+  // the listing's craft name doesn't resolve to one of them.
+  const craftFunFact = $derived.by(() => {
+    const name = listing?.craft_name?.trim().toLowerCase();
+    if (!name) return undefined;
+    const match = ARTISAN_CRAFT_CATEGORIES.find(
+      (c) => name === c.name.toLowerCase() || name.includes(c.id) || c.name.toLowerCase().includes(name),
+    );
+    return match ? t(match.funFactKey) : undefined;
+  });
+
   const craftTerm = $derived<DntTerm | undefined>(
     listing?.craft_name
       ? {
@@ -247,6 +344,8 @@
   {/if}
 </svelte:head>
 
+<svelte:window onkeydown={onGalleryKeydown} />
+
 {#if loading}
   <Skeleton shape="card" height="28rem" />
 {:else if !listing}
@@ -259,13 +358,45 @@
 
     <div class="listing">
       <div class="listing__gallery">
-        <div class="listing__stage">
+        <div
+          class="listing__stage"
+          onmousemove={onStageMouseMove}
+          onmouseleave={onStageMouseLeave}
+          ontouchstart={onGalleryTouchStart}
+          ontouchend={onGalleryTouchEnd}
+        >
           {#if activeMedia?.kind === 'VIDEO'}
             <video src={activeMedia.url} controls playsinline class="listing__stage-media">
               <track kind="captions" />
             </video>
           {:else if activeMedia?.url}
-            <img src={activeMedia.url} alt={title ? `${title} — Authentic craft photo` : 'Craft piece view'} class="listing__stage-media" />
+            <button type="button" class="listing__stage-trigger" onclick={openZoom} aria-label={t('pdp.gallery.zoom')}>
+              <img
+                src={activeMedia.url}
+                alt={title ? `${title} — Authentic craft photo` : 'Craft piece view'}
+                class="listing__stage-media"
+                style={lensStyle}
+              />
+              <span class="listing__zoom-hint"><Icon name="search" size="0.85rem" />{t('pdp.gallery.zoom')}</span>
+            </button>
+          {/if}
+
+          {#if media.length > 1}
+            <Tooltip text={tooltip('tooltip.selectImage')}>
+              {#snippet trigger(tp)}
+                <button type="button" class="listing__stage-nav listing__stage-nav--prev" onclick={showPrev} aria-label={t('pdp.gallery.prev')} {...tp}>
+                  <Icon name="chevron-left" />
+                </button>
+              {/snippet}
+            </Tooltip>
+            <Tooltip text={tooltip('tooltip.selectImage')}>
+              {#snippet trigger(tp)}
+                <button type="button" class="listing__stage-nav listing__stage-nav--next" onclick={showNext} aria-label={t('pdp.gallery.next')} {...tp}>
+                  <Icon name="chevron-right" />
+                </button>
+              {/snippet}
+            </Tooltip>
+            <span class="listing__stage-counter">{t('pdp.gallery.counter', { current: String(activeMediaIndex + 1), total: String(media.length) })}</span>
           {/if}
         </div>
       {#if media.length > 1}
@@ -382,6 +513,17 @@
         {#if !madeToOrder}<li><Icon name="verified-artisan" /><span>{t('pdp.trust.returns')}</span></li>{/if}
         {#if listing.gi_certified}<li><Icon name="gi-tagged" /><span>{t('pdp.trust.gi')}</span></li>{/if}
       </ul>
+
+      <div class="pdp-sustainability">
+        <ul class="pdp-sustainability__badges" aria-label={t('pdp.sustainability.heading')}>
+          <li><Icon name="handmade-certified" size="1rem" /><span>{t('pdp.sustainability.natural')}</span></li>
+          <li><Icon name="verified-artisan" size="1rem" /><span>{t('pdp.sustainability.artisanMade')}</span></li>
+          <li><Icon name="shg" size="1rem" /><span>{t('pdp.sustainability.lowWaste')}</span></li>
+        </ul>
+        {#if craftFunFact}
+          <p class="pdp-trivia"><Icon name="info" size="0.95rem" /><strong>{t('pdp.trivia.heading')}</strong> {craftFunFact}</p>
+        {/if}
+      </div>
 
       {#if details}
         <section class="pdp-about" aria-labelledby="about-heading">
@@ -521,6 +663,43 @@
       {/snippet}
     </Tooltip>
   </aside>
+
+  <!-- Product zoom modal: full-screen overlay + carousel paging -->
+  <dialog
+    bind:this={zoomDialogEl}
+    class="listing__zoom-dialog"
+    aria-label={title || t('pdp.gallery.zoom')}
+    onclose={onZoomDialogClose}
+    onclick={onZoomBackdropClick}
+    ontouchstart={onGalleryTouchStart}
+    ontouchend={onGalleryTouchEnd}
+  >
+    {#if activeMedia}
+      <button type="button" class="listing__zoom-close" onclick={closeZoom} aria-label={t('ui.dialog.close')}>
+        <Icon name="close" size="1.4rem" />
+      </button>
+      {#if media.length > 1}
+        <button type="button" class="listing__zoom-nav listing__zoom-nav--prev" onclick={showPrev} aria-label={t('pdp.gallery.prev')}>
+          <Icon name="chevron-left" size="1.6rem" />
+        </button>
+        <button type="button" class="listing__zoom-nav listing__zoom-nav--next" onclick={showNext} aria-label={t('pdp.gallery.next')}>
+          <Icon name="chevron-right" size="1.6rem" />
+        </button>
+      {/if}
+      <div class="listing__zoom-stage">
+        {#if activeMedia.kind === 'VIDEO'}
+          <video src={activeMedia.url} controls playsinline class="listing__zoom-media">
+            <track kind="captions" />
+          </video>
+        {:else if activeMedia.url}
+          <img src={activeMedia.url} alt={title ? `${title} — Authentic craft photo` : 'Craft piece view'} class="listing__zoom-media" />
+        {/if}
+      </div>
+      {#if media.length > 1}
+        <p class="listing__zoom-counter">{t('pdp.gallery.counter', { current: String(activeMediaIndex + 1), total: String(media.length) })}</p>
+      {/if}
+    {/if}
+  </dialog>
 </div>
 {/if}
 
@@ -532,9 +711,22 @@
   }
 
   .listing__stage {
+    position: relative;
     aspect-ratio: 4/5;
     background-color: var(--k-surface-sunken);
     border-radius: var(--k-radius-lg);
+    overflow: hidden;
+  }
+
+  .listing__stage-trigger {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
     overflow: hidden;
   }
 
@@ -542,6 +734,220 @@
     inline-size: 100%;
     block-size: 100%;
     object-fit: cover;
+    transition: transform 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .listing__stage-trigger:hover .listing__stage-media,
+    .listing__stage-trigger:focus-visible .listing__stage-media {
+      transform: scale(1.8);
+      transform-origin: var(--zx, 50%) var(--zy, 50%);
+    }
+  }
+
+  .listing__zoom-hint {
+    position: absolute;
+    inset-block-end: 0.6rem;
+    inset-inline-end: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--k-radius-pill);
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: var(--k-text-xs);
+    pointer-events: none;
+  }
+
+  .listing__stage-nav {
+    position: absolute;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: var(--k-radius-pill);
+    border: none;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--k-text-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .listing__stage-nav--prev {
+    inset-inline-start: 0.6rem;
+  }
+
+  .listing__stage-nav--next {
+    inset-inline-end: 0.6rem;
+  }
+
+  .listing__stage-counter {
+    position: absolute;
+    inset-block-start: 0.6rem;
+    inset-inline-end: 0.6rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--k-radius-pill);
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: var(--k-text-xs);
+  }
+
+  /* Full-screen zoom modal */
+  .listing__zoom-dialog {
+    position: fixed;
+    inset: 0;
+    inline-size: 100vw;
+    block-size: 100vh;
+    max-inline-size: 100vw;
+    max-block-size: 100vh;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .listing__zoom-dialog::backdrop {
+    background: rgba(10, 8, 6, 0.86);
+  }
+
+  .listing__zoom-dialog[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .listing__zoom-stage {
+    max-inline-size: min(92vw, 60rem);
+    max-block-size: 88vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .listing__zoom-media {
+    max-inline-size: 100%;
+    max-block-size: 88vh;
+    object-fit: contain;
+    border-radius: var(--k-radius-md);
+  }
+
+  .listing__zoom-close {
+    position: fixed;
+    inset-block-start: 1rem;
+    inset-inline-end: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--k-radius-pill);
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--k-text-primary);
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  .listing__zoom-nav {
+    position: fixed;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: var(--k-radius-pill);
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--k-text-primary);
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  .listing__zoom-nav--prev {
+    inset-inline-start: 1rem;
+  }
+
+  .listing__zoom-nav--next {
+    inset-inline-end: 1rem;
+  }
+
+  .listing__zoom-counter {
+    position: fixed;
+    inset-block-end: 1.25rem;
+    inset-inline: 0;
+    text-align: center;
+    color: #fff;
+    font-size: var(--k-text-sm);
+    margin: 0;
+  }
+
+  @media (max-width: 30rem) {
+    .listing__zoom-nav {
+      inline-size: 2.5rem;
+      block-size: 2.5rem;
+    }
+  }
+
+  /* Sustainability badges + craft trivia */
+  .pdp-sustainability {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+    margin-block-end: var(--k-space-4);
+  }
+
+  .pdp-sustainability__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--k-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pdp-sustainability__badges li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--k-space-1);
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--k-radius-pill);
+    background-color: var(--k-khadi-100, var(--k-surface-sunken));
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
+  }
+
+  .pdp-sustainability__badges :global(svg) {
+    color: var(--k-neem-600, var(--k-accent-success-muted));
+  }
+
+  .pdp-trivia {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--k-space-2);
+    margin: 0;
+    padding: var(--k-space-3);
+    border-radius: var(--k-radius-md);
+    background-color: var(--k-surface-sunken);
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    line-height: 1.5;
+  }
+
+  .pdp-trivia :global(svg) {
+    flex: none;
+    margin-block-start: 0.15rem;
+    color: var(--k-accent-primary-text);
+  }
+
+  .pdp-trivia strong {
+    color: var(--k-text-primary);
   }
 
   .listing__thumbs {

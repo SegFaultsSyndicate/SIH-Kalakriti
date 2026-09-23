@@ -8,6 +8,7 @@
 <script lang="ts">
   import '../app.css';
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import { locale } from '@kalakriti/i18n';
   import { SkipLink, RouteAnnouncer, AccessibilityControl, LanguageSelector, a11y } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
@@ -20,12 +21,15 @@
     setUnauthorizedHandler,
     createLoginRedirectHandler,
     setAcceptLanguage,
+    suggest,
   } from '@kalakriti/api';
   import { goto } from '$app/navigation';
   import BuyerFooter from '$lib/BuyerFooter.svelte';
   import AccountMenu from '$lib/AccountMenu.svelte';
   import CategorySubnav from '$lib/CategorySubnav.svelte';
   import { currency } from '$lib/currency.svelte';
+  import { fuzzySuggest } from '$lib/fuzzy-search';
+  import { ARTISAN_CRAFT_CATEGORIES } from '$lib/craft-categories';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -79,6 +83,64 @@
 
   function onKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape') mobileNavOpen = false;
+  }
+
+  // Top-bar nav links stay highlighted while their route is active, same
+  // "you are here" affordance as the pills in CategorySubnav below.
+  function isCurrentRoute(href: string): boolean {
+    return page.url.pathname === href || page.url.pathname.startsWith(href + '/');
+  }
+
+  // Predictive/typo-tolerant suggestions for the always-visible header
+  // search box -- the box a buyer sees on every page, not just /search's own
+  // bar. Same pattern as search/+page.svelte's suggestion effect: instant
+  // local fuzzy matches first, then the real suggest() index once it lands.
+  const HEADER_SEARCH_TERMS = ARTISAN_CRAFT_CATEGORIES.map((c) => c.name);
+  let headerQuery = $state('');
+  let headerSuggestions = $state<string[]>([]);
+  let showHeaderSuggestions = $state(false);
+  let headerSuggestTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function onHeaderSearchInput(): void {
+    clearTimeout(headerSuggestTimer);
+    const trimmed = headerQuery.trim();
+    if (trimmed.length < 2) {
+      headerSuggestions = [];
+      showHeaderSuggestions = false;
+      return;
+    }
+    const localMatches = fuzzySuggest(trimmed, HEADER_SEARCH_TERMS, 6);
+    headerSuggestions = localMatches;
+    showHeaderSuggestions = localMatches.length > 0;
+    headerSuggestTimer = setTimeout(async () => {
+      try {
+        const res = await suggest(trimmed);
+        const apiSuggestions = res.suggestions ?? [];
+        const next = apiSuggestions.length > 0 ? apiSuggestions : fuzzySuggest(trimmed, HEADER_SEARCH_TERMS, 6);
+        headerSuggestions = next;
+        showHeaderSuggestions = next.length > 0;
+      } catch {
+        const fallback = fuzzySuggest(trimmed, HEADER_SEARCH_TERMS, 6);
+        headerSuggestions = fallback;
+        showHeaderSuggestions = fallback.length > 0;
+      }
+    }, 200);
+  }
+
+  function submitHeaderSearch(event: SubmitEvent): void {
+    event.preventDefault();
+    showHeaderSuggestions = false;
+    void goto(`/search?q=${encodeURIComponent(headerQuery)}`);
+  }
+
+  function selectHeaderSuggestion(item: string): void {
+    headerQuery = item;
+    showHeaderSuggestions = false;
+    void goto(`/search?q=${encodeURIComponent(item)}`);
+  }
+
+  function closeHeaderSuggestions(): void {
+    showHeaderSuggestions = false;
   }
 
   $effect(() => {
@@ -187,18 +249,45 @@
     </a>
 
     <nav class="shell__nav" aria-label={t('nav.shell.mainAriaLabel')}>
-      <a class="shell__nav-link" href="/catalog">{t('nav.shell.craftDirectory')}</a>
-      <a class="shell__nav-link" href="/gi-tagged">{t('nav.shell.giHeritage')}</a>
-      <a class="shell__nav-link" href="/fairs">{t('nav.shell.exhibitions')}</a>
-      <a class="shell__nav-link" href="/company/register">{t('nav.shell.enterprise')}</a>
-      <a class="shell__nav-link" href="/case-studies">{t('nav.shell.impactStudies')}</a>
+      <a class="shell__nav-link" class:is-current={isCurrentRoute('/catalog')} aria-current={isCurrentRoute('/catalog') ? 'page' : undefined} href="/catalog">{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__nav-link" class:is-current={isCurrentRoute('/gi-tagged')} aria-current={isCurrentRoute('/gi-tagged') ? 'page' : undefined} href="/gi-tagged">{t('nav.shell.giHeritage')}</a>
+      <a class="shell__nav-link" class:is-current={isCurrentRoute('/fairs')} aria-current={isCurrentRoute('/fairs') ? 'page' : undefined} href="/fairs">{t('nav.shell.exhibitions')}</a>
+      <a class="shell__nav-link" class:is-current={isCurrentRoute('/company/register')} aria-current={isCurrentRoute('/company/register') ? 'page' : undefined} href="/company/register">{t('nav.shell.enterprise')}</a>
+      <a class="shell__nav-link" class:is-current={isCurrentRoute('/case-studies')} aria-current={isCurrentRoute('/case-studies') ? 'page' : undefined} href="/case-studies">{t('nav.shell.impactStudies')}</a>
     </nav>
 
     <div class="shell__actions">
-      <form class="shell__search-inline" action="/search" role="search">
-        <Icon name="search" size="1rem" class="shell__search-icon" />
-        <input type="search" name="q" placeholder={t('search.placeholder')} aria-label={t('nav.search')} />
-      </form>
+      <div class="shell__search-wrap">
+        <form class="shell__search-inline" action="/search" role="search" onsubmit={submitHeaderSearch}>
+          <Icon name="search" size="1rem" class="shell__search-icon" />
+          <input
+            type="search"
+            name="q"
+            placeholder={t('search.placeholder')}
+            aria-label={t('nav.search')}
+            bind:value={headerQuery}
+            oninput={onHeaderSearchInput}
+            onfocus={() => { if (headerSuggestions.length > 0) showHeaderSuggestions = true; }}
+            onblur={closeHeaderSuggestions}
+            role="combobox"
+            aria-expanded={showHeaderSuggestions}
+            aria-controls="shell-search-suggestions"
+            autocomplete="off"
+          />
+        </form>
+        {#if showHeaderSuggestions && headerSuggestions.length > 0}
+          <ul class="shell__search-suggestions" id="shell-search-suggestions" role="listbox">
+            {#each headerSuggestions as item (item)}
+              <li>
+                <button type="button" class="shell__search-suggestion" onmousedown={() => selectHeaderSuggestion(item)}>
+                  <Icon name="search" size="0.85rem" />
+                  <span>{item}</span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
       <a class="shell__search-toggle" href="/search" aria-label={t('nav.search')} title={tt('tooltip.search')}>
         <Icon name="search" size="1.1rem" />
       </a>
@@ -215,9 +304,9 @@
 
   {#if mobileNavOpen}
     <nav class="shell__mobile-nav" id="shell-mobile-nav" aria-label={t('nav.shell.mainMobileAriaLabel')}>
-      <a class="shell__mobile-link" href="/catalog" onclick={closeMobileNav}>{t('nav.shell.craftDirectory')}</a>
-      <a class="shell__mobile-link" href="/gi-tagged" onclick={closeMobileNav}>{t('nav.shell.giHeritage')}</a>
-      <a class="shell__mobile-link" href="/case-studies" onclick={closeMobileNav}>{t('nav.shell.impactStudies')}</a>
+      <a class="shell__mobile-link" class:is-current={isCurrentRoute('/catalog')} aria-current={isCurrentRoute('/catalog') ? 'page' : undefined} href="/catalog" onclick={closeMobileNav}>{t('nav.shell.craftDirectory')}</a>
+      <a class="shell__mobile-link" class:is-current={isCurrentRoute('/gi-tagged')} aria-current={isCurrentRoute('/gi-tagged') ? 'page' : undefined} href="/gi-tagged" onclick={closeMobileNav}>{t('nav.shell.giHeritage')}</a>
+      <a class="shell__mobile-link" class:is-current={isCurrentRoute('/case-studies')} aria-current={isCurrentRoute('/case-studies') ? 'page' : undefined} href="/case-studies" onclick={closeMobileNav}>{t('nav.shell.impactStudies')}</a>
     </nav>
   {/if}
 
@@ -316,6 +405,12 @@
       color: var(--k-terracotta);
       background-color: var(--k-surface-sunken);
     }
+
+    .shell__mobile-link.is-current {
+      color: var(--k-terracotta);
+      background-color: var(--k-surface-sunken);
+      box-shadow: inset 2px 0 0 var(--k-terracotta);
+    }
   }
 
   .shell__nav {
@@ -346,5 +441,11 @@
   .shell__nav-link:hover {
     color: var(--k-text-secondary);
     background-color: rgba(244, 240, 234, 0.9);
+  }
+
+  .shell__nav-link.is-current {
+    color: var(--k-terracotta-700, var(--k-accent-primary-text));
+    background-color: rgba(244, 240, 234, 0.9);
+    box-shadow: inset 0 -2px 0 var(--k-terracotta-700, var(--k-accent-primary-text));
   }
 </style>

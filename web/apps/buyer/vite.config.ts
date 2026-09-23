@@ -5,6 +5,7 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { searchForWorkspaceRoot } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { BACKGROUND_COLOR, THEME_COLOR } from '@kalakriti/tokens/brand';
+import { respondUnavailableOnProxyError } from '../../scripts/vite/proxy-error.js';
 import { sizeReport } from '../../scripts/vite/size-report.js';
 import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.js';
 
@@ -150,10 +151,19 @@ export default defineConfig({
     fs: {
       allow: [searchForWorkspaceRoot(process.cwd())],
     },
+    // See the artisan app's vite.config.ts for why this is here: the dev
+    // server runs inside WSL2 against the project on the Windows filesystem,
+    // and chokidar's default inotify watching never sees writes DrvFs makes
+    // from the Windows side, so HMR silently stops working after an edit.
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        configure: respondUnavailableOnProxyError,
       },
       // routes/verify/[code]/+page.svelte fetches /v/{code}/verify.json
       // directly (not through the typed API client, since it's a public,
@@ -165,6 +175,7 @@ export default defineConfig({
       '^/v/': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        configure: respondUnavailableOnProxyError,
       },
     },
   },

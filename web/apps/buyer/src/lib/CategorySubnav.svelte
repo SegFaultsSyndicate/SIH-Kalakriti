@@ -14,12 +14,30 @@
 -->
 <script lang="ts">
   import { flushSync } from 'svelte';
+  import { page } from '$app/state';
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Tooltip } from '@kalakriti/ui';
   import { ARTISAN_CRAFT_CATEGORIES } from './craft-categories';
 
   const t = $derived(locale.t);
+
+  // A pill "stays highlighted" while its own href matches the current URL,
+  // so a buyer can always tell which section they're in -- not just on
+  // hover. Query params must match exactly (not just the pathname), so
+  // e.g. /search?category=Pottery only lights up the Pottery pill, not
+  // every /search link.
+  function isActive(href: string): boolean {
+    const qIdx = href.indexOf('?');
+    const path = qIdx === -1 ? href : href.slice(0, qIdx);
+    if (page.url.pathname !== path) return false;
+    if (qIdx === -1) return true;
+    const params = new URLSearchParams(href.slice(qIdx + 1));
+    for (const [key, value] of params) {
+      if (page.url.searchParams.get(key) !== value) return false;
+    }
+    return true;
+  }
 
   // Bar order. Indices 0 and 6-8 are the dropdown pills rendered by hand
   // below; everything else renders from LEAD/TAIL. The More menu lists
@@ -176,8 +194,11 @@
       bind:this={allCraftsWrap}
       onmouseenter={() => allCraftsWrap && handleMenuEnter('all-crafts', allCraftsWrap)}
     >
-      <div class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}">
-        <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu}>
+      <div
+        class="subnav-split-pill {activeMenu === 'all-crafts' ? 'is-active' : ''}"
+        class:is-current={isActive('/catalog')}
+      >
+        <a href="/catalog" class="subnav-pill-link all-btn" onclick={closeMenu} aria-current={isActive('/catalog') ? 'page' : undefined}>
           <Icon name="cluster" size="0.85rem" />
           <span>{t('subnav.allCrafts')}</span>
         </a>
@@ -246,6 +267,8 @@
         class="subnav-item"
         data-idx={i + 1}
         class:is-overflow={hiddenFrom <= i + 1}
+        class:is-current={isActive(item.href)}
+        aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
         <span>{t(item.key)}</span>
@@ -261,11 +284,15 @@
       bind:this={homeWrap}
       onmouseenter={() => homeWrap && handleMenuEnter('home', homeWrap)}
     >
-      <div class="subnav-split-pill {activeMenu === 'home' ? 'is-active' : ''}">
+      <div
+        class="subnav-split-pill {activeMenu === 'home' ? 'is-active' : ''}"
+        class:is-current={isActive('/search?category=Home+and+living')}
+      >
         <a
           href="/search?category=Home+and+living"
           class="subnav-pill-link"
           onclick={closeMenu}
+          aria-current={isActive('/search?category=Home+and+living') ? 'page' : undefined}
         >
           <span>{t('subnav.home')}</span>
         </a>
@@ -378,11 +405,15 @@
       bind:this={furnitureWrap}
       onmouseenter={() => furnitureWrap && handleMenuEnter('furniture', furnitureWrap)}
     >
-      <div class="subnav-split-pill {activeMenu === 'furniture' ? 'is-active' : ''}">
+      <div
+        class="subnav-split-pill {activeMenu === 'furniture' ? 'is-active' : ''}"
+        class:is-current={isActive('/search?category=Furniture')}
+      >
         <a
           href="/search?category=Furniture"
           class="subnav-pill-link"
           onclick={closeMenu}
+          aria-current={isActive('/search?category=Furniture') ? 'page' : undefined}
         >
           <span>{t('subnav.furniture')}</span>
         </a>
@@ -451,11 +482,15 @@
       bind:this={paintingsWrap}
       onmouseenter={() => paintingsWrap && handleMenuEnter('paintings', paintingsWrap)}
     >
-      <div class="subnav-split-pill {activeMenu === 'paintings' ? 'is-active' : ''}">
+      <div
+        class="subnav-split-pill {activeMenu === 'paintings' ? 'is-active' : ''}"
+        class:is-current={isActive('/search?category=Paintings')}
+      >
         <a
           href="/search?category=Paintings"
           class="subnav-pill-link"
           onclick={closeMenu}
+          aria-current={isActive('/search?category=Paintings') ? 'page' : undefined}
         >
           <span>{t('subnav.paintings')}</span>
         </a>
@@ -519,6 +554,8 @@
         class="subnav-item"
         data-idx={TAIL_START + i}
         class:is-overflow={hiddenFrom <= TAIL_START + i}
+        class:is-current={isActive(item.href)}
+        aria-current={isActive(item.href) ? 'page' : undefined}
         onclick={closeMenu}
       >
         <span>{t(item.key)}</span>
@@ -526,6 +563,7 @@
     {/each}
 
     {#if hiddenFrom < ALL.length}
+      {@const moreHasActive = ALL.slice(hiddenFrom).some((item) => isActive(item.href))}
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="menu-item-wrap"
@@ -536,6 +574,7 @@
           type="button"
           class="subnav-item subnav-more-btn"
           class:is-active={activeMenu === 'more'}
+          class:is-current={moreHasActive}
           onclick={(e) => { e.stopPropagation(); if (moreWrap) toggleMenu('more', moreWrap, 256); }}
           aria-expanded={activeMenu === 'more'}
           aria-haspopup="true"
@@ -552,7 +591,16 @@
           >
             <ul class="col-links">
               {#each ALL.slice(hiddenFrom) as item (item.key)}
-                <li><a href={item.href} onclick={closeMenu}>{t(item.key)}</a></li>
+                <li>
+                  <a
+                    href={item.href}
+                    class:is-current={isActive(item.href)}
+                    aria-current={isActive(item.href) ? 'page' : undefined}
+                    onclick={closeMenu}
+                  >
+                    {t(item.key)}
+                  </a>
+                </li>
               {/each}
             </ul>
           </div>
@@ -611,6 +659,15 @@
     background-color: var(--k-surface-raised);
   }
 
+  /* Persistent "you are here" state -- distinct from hover/open so a pill
+     stays visibly marked even after the pointer moves away. */
+  .subnav-item.is-current {
+    color: var(--k-accent-danger-muted);
+    background-color: var(--k-surface-raised);
+    font-weight: 700;
+    box-shadow: inset 0 -2px 0 var(--k-accent-danger-muted);
+  }
+
   /* Split pill navigation: Left side navigates, Right side toggles */
   .subnav-split-pill {
     display: inline-flex;
@@ -621,8 +678,13 @@
   }
 
   .subnav-split-pill:hover,
-  .subnav-split-pill.is-active {
+  .subnav-split-pill.is-active,
+  .subnav-split-pill.is-current {
     background-color: var(--k-surface-raised);
+  }
+
+  .subnav-split-pill.is-current {
+    box-shadow: inset 0 -2px 0 var(--k-accent-danger-muted);
   }
 
   .subnav-pill-link {
@@ -638,7 +700,8 @@
   }
 
   .subnav-split-pill:hover .subnav-pill-link,
-  .subnav-split-pill.is-active .subnav-pill-link {
+  .subnav-split-pill.is-active .subnav-pill-link,
+  .subnav-split-pill.is-current .subnav-pill-link {
     color: var(--k-accent-danger-muted);
   }
 
@@ -656,13 +719,18 @@
   }
 
   .subnav-split-pill:hover .subnav-chevron-btn,
-  .subnav-split-pill.is-active .subnav-chevron-btn {
+  .subnav-split-pill.is-active .subnav-chevron-btn,
+  .subnav-split-pill.is-current .subnav-chevron-btn {
     color: var(--k-accent-danger-muted);
   }
 
   .all-btn {
     color: var(--k-text-primary);
     font-weight: 700;
+  }
+
+  .subnav-split-pill.is-current .all-btn {
+    color: var(--k-accent-danger-muted);
   }
 
   .subnav-divider {
@@ -679,7 +747,8 @@
     margin-inline-start: auto;
   }
 
-  .subnav-more-btn.is-active {
+  .subnav-more-btn.is-active,
+  .subnav-more-btn.is-current {
     color: var(--k-accent-danger-muted);
     background-color: var(--k-surface-raised);
   }
@@ -940,6 +1009,12 @@
 
   .col-links li a:hover {
     color: var(--k-accent-danger-muted);
+    text-decoration: underline;
+  }
+
+  .col-links li a.is-current {
+    color: var(--k-accent-danger-muted);
+    font-weight: 700;
     text-decoration: underline;
   }
 

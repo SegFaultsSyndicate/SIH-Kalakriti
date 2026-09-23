@@ -5,6 +5,7 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { searchForWorkspaceRoot } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { BACKGROUND_COLOR, THEME_COLOR } from '@kalakriti/tokens/brand';
+import { respondUnavailableOnProxyError } from '../../scripts/vite/proxy-error.js';
 import { sizeReport } from '../../scripts/vite/size-report.js';
 import { WORKSPACE_PACKAGES, vendorChunks } from '../../scripts/vite/workspace.js';
 
@@ -255,10 +256,24 @@ export default defineConfig({
     fs: {
       allow: [searchForWorkspaceRoot(process.cwd())],
     },
+    // The dev server runs inside WSL2 against the project on the Windows
+    // filesystem (/mnt/c/...) -- chokidar's default inotify-based watching
+    // does not see writes DrvFs makes from the Windows side, so an edit made
+    // from a Windows editor/tool never triggers HMR and the server keeps
+    // serving stale compiled output indefinitely (confirmed: curling a route
+    // after an edit showed the pre-edit code). Polling reads file mtimes
+    // instead of relying on inotify events, so it works across the DrvFs
+    // boundary. Native Linux checkouts pay a small, harmless CPU cost for
+    // this; there is no reliable way to detect "am I on DrvFs" to gate it.
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        configure: respondUnavailableOnProxyError,
       },
     },
   },

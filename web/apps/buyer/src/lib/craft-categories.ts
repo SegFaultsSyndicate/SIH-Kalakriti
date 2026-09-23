@@ -22,6 +22,7 @@ export interface CraftCategory {
   icon: IconName;
   subtitleKey: MessageKey;
   taglineKey: MessageKey;
+  funFactKey: MessageKey;
   query: string;
   sampleImage: string;
   regions: string[];
@@ -37,6 +38,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'weaving',
     subtitleKey: 'craft.weaving.subtitle',
     taglineKey: 'craft.weaving.tagline',
+    funFactKey: 'craft.weaving.funFact',
     query: 'weaving',
     sampleImage: '/craft-images/weaving_and_looms/category_cover.jpg',
     regions: ['Varanasi (UP)', 'Chanderi (MP)', 'Kanchipuram (TN)', 'Patan (Gujarat)'],
@@ -50,6 +52,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'block-printing',
     subtitleKey: 'craft.block-printing.subtitle',
     taglineKey: 'craft.block-printing.tagline',
+    funFactKey: 'craft.block-printing.funFact',
     query: 'block printing',
     sampleImage: '/craft-images/block_printing/category_cover.jpg',
     regions: ['Kutch (Gujarat)', 'Bagru (Rajasthan)', 'Machilipatnam (AP)'],
@@ -63,6 +66,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'pottery',
     subtitleKey: 'craft.pottery.subtitle',
     taglineKey: 'craft.pottery.tagline',
+    funFactKey: 'craft.pottery.funFact',
     query: 'pottery',
     sampleImage: '/craft-images/pottery/category_cover.jpg',
     regions: ['Khurja (UP)', 'Nizamabad (UP)', 'Jaipur (Rajasthan)', 'Bankura (WB)'],
@@ -76,6 +80,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'metalwork',
     subtitleKey: 'craft.metalwork.subtitle',
     taglineKey: 'craft.metalwork.tagline',
+    funFactKey: 'craft.metalwork.funFact',
     query: 'metalwork',
     sampleImage: '/craft-images/metalwork/category_cover.jpg',
     regions: ['Bastar (Chhattisgarh)', 'Moradabad (UP)', 'Bidar (Karnataka)', 'Thanjavur (TN)'],
@@ -89,6 +94,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'woodwork',
     subtitleKey: 'craft.woodwork.subtitle',
     taglineKey: 'craft.woodwork.tagline',
+    funFactKey: 'craft.woodwork.funFact',
     query: 'woodwork',
     sampleImage: '/craft-images/woodwork/category_cover.jpg',
     regions: ['Saharanpur (UP)', 'Srinagar (J&K)', 'Channapatna (Karnataka)', 'Jodhpur (RJ)'],
@@ -102,6 +108,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'embroidery',
     subtitleKey: 'craft.embroidery.subtitle',
     taglineKey: 'craft.embroidery.tagline',
+    funFactKey: 'craft.embroidery.funFact',
     query: 'embroidery',
     sampleImage: '/craft-images/embroidery/category_cover.jpg',
     regions: ['Lucknow (UP)', 'Shantiniketan (WB)', 'Kashmir', 'Kutch (Gujarat)'],
@@ -115,6 +122,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'painting',
     subtitleKey: 'craft.painting.subtitle',
     taglineKey: 'craft.painting.tagline',
+    funFactKey: 'craft.painting.funFact',
     query: 'painting',
     sampleImage: '/craft-images/paintings/category_cover.jpg',
     regions: ['Madhubani (Bihar)', 'Raghurajpur (Odisha)', 'Nathdwara (RJ)', 'Warli (MH)'],
@@ -128,6 +136,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'basketry',
     subtitleKey: 'craft.basketry.subtitle',
     taglineKey: 'craft.basketry.tagline',
+    funFactKey: 'craft.basketry.funFact',
     query: 'basketry',
     sampleImage: '/craft-images/basketry/category_cover.jpg',
     regions: ['Mayurbhanj (Odisha)', 'Madhubani (Bihar)', 'Prayagraj (UP)'],
@@ -141,6 +150,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'jewellery',
     subtitleKey: 'craft.jewellery.subtitle',
     taglineKey: 'craft.jewellery.tagline',
+    funFactKey: 'craft.jewellery.funFact',
     query: 'jewellery',
     sampleImage: '/craft-images/jewellery/category_cover.jpg',
     regions: ['Cuttack (Odisha)', 'Karimnagar (Telangana)', 'Jaipur (Rajasthan)'],
@@ -154,6 +164,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'leather',
     subtitleKey: 'craft.leather.subtitle',
     taglineKey: 'craft.leather.tagline',
+    funFactKey: 'craft.leather.funFact',
     query: 'leatherwork',
     sampleImage: '/craft-images/leatherwork/category_cover.jpg',
     regions: ['Shantiniketan (WB)', 'Kolhapur (MH)', 'Indore (MP)'],
@@ -167,6 +178,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'stone',
     subtitleKey: 'craft.stone.subtitle',
     taglineKey: 'craft.stone.tagline',
+    funFactKey: 'craft.stone.funFact',
     query: 'stone carving',
     sampleImage: '/craft-images/stone_carving/category_cover.jpg',
     regions: ['Agra (UP)', 'Puri (Odisha)', 'Varanasi (UP)', 'Mamallapuram (TN)'],
@@ -180,6 +192,7 @@ export const ARTISAN_CRAFT_CATEGORIES: readonly CraftCategory[] = [
     icon: 'bamboo',
     subtitleKey: 'craft.bamboo.subtitle',
     taglineKey: 'craft.bamboo.tagline',
+    funFactKey: 'craft.bamboo.funFact',
     query: 'bamboo craft',
     sampleImage: '/craft-images/bamboo_craft/category_cover.jpg',
     regions: ['Assam', 'Tripura', 'Nagaland', 'Kerala'],

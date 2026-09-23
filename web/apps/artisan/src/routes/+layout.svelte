@@ -45,6 +45,7 @@
   import { env } from '$env/dynamic/public';
   import PwaUpdatePrompt from '$lib/PwaUpdatePrompt.svelte';
   import InstallPrompt from '$lib/InstallPrompt.svelte';
+  import TipOfTheDayModal from '$lib/TipOfTheDayModal.svelte';
   import BottomNav from '$lib/BottomNav.svelte';
   import { getArtisanId, setArtisanId, watchArtisanId } from '$lib/registration';
   import { resolveRedirect, type GuardState } from '$lib/route-guard';
@@ -137,17 +138,26 @@
     }
   });
 
-  $effect(() => {
-    if (!booted) return;
+  // Computed during render rather than inside the $effect below, so the
+  // template can hold `children()` back for a route the guard is about to
+  // leave. Deciding this only inside the effect (which runs AFTER render)
+  // used to let the outgoing route mount for one frame first -- e.g. landing
+  // on '/' straight after /verify briefly painted the full Home dashboard
+  // (and mounted its modals/charts) before bouncing to /register/name a tick
+  // later. Gating on this instead of just `booted` skips that frame entirely.
+  const pendingRedirect = $derived.by((): string | null => {
+    if (!booted) return null;
     const state: GuardState = {
       hasExplicitLocale: hasExplicitLocale(),
       authenticated: session.status === 'authenticated',
       registered: effectiveArtisanId !== undefined,
     };
     const redirect = resolveRedirect(state, page.url.pathname);
-    if (redirect !== null && redirect !== page.url.pathname) {
-      void goto(redirect);
-    }
+    return redirect !== null && redirect !== page.url.pathname ? redirect : null;
+  });
+
+  $effect(() => {
+    if (pendingRedirect !== null) void goto(pendingRedirect);
   });
 
   const showChrome = $derived(booted && page.url.pathname !== '/language');
@@ -192,7 +202,7 @@
   {/if}
 
   <main class="shell__main" id="main-content" tabindex="-1" class:has-bottom-nav={showBottomNav}>
-    {#if booted}
+    {#if booted && pendingRedirect === null}
       <ErrorBoundary
         source="artisan-shell"
         dsn={env.PUBLIC_SENTRY_DSN}
@@ -214,6 +224,7 @@
 
 <PwaUpdatePrompt />
 <InstallPrompt />
+<TipOfTheDayModal active={showBottomNav} />
 <ToastRegion />
 {#if showChrome}
   <div class="read-screen-slot" class:has-bottom-nav={showBottomNav}>

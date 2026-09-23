@@ -129,6 +129,12 @@ body::-webkit-scrollbar {
     margin-inline-start: auto;
   }
 
+  .shell__search-wrap {
+    position: relative;
+    flex-shrink: 1;
+    min-inline-size: 0;
+  }
+
   .shell__search-inline {
     display: flex;
     align-items: center;
@@ -143,8 +149,69 @@ body::-webkit-scrollbar {
     font-size: var(--k-text-sm);
   }
 
+  .shell__search-suggestions {
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
+    min-inline-size: 100%;
+    inline-size: max-content;
+    max-inline-size: 18rem;
+    z-index: 95;
+    margin: 0;
+    margin-block-start: -1px;
+    padding: var(--k-space-1);
+    list-style: none;
+    background: var(--k-surface-elevated, var(--k-surface-base));
+    border: var(--k-hairline) solid var(--k-border-accent);
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+    border-end-start-radius: var(--k-radius-sm);
+    border-end-end-radius: var(--k-radius-sm);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.14);
+  }
+
+  .shell__search-suggestion {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-2);
+    inline-size: 100%;
+    padding: var(--k-space-2) var(--k-space-3);
+    border: none;
+    background: none;
+    border-radius: var(--k-radius-sm);
+    text-align: start;
+    font-size: var(--k-text-sm);
+    color: var(--k-text-primary);
+    cursor: pointer;
+  }
+
+  .shell__search-suggestion span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .shell__search-suggestion :global(svg) {
+    flex: none;
+    color: var(--k-text-secondary);
+  }
+
+  .shell__search-suggestion:hover,
+  .shell__search-suggestion:focus-visible {
+    background-color: var(--k-surface-sunken);
+    color: var(--k-text-accent, var(--k-text-primary));
+  }
+
   .shell__search-inline:focus-within {
     border-color: var(--k-border-accent);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .shell__search-wrap:has(.shell__search-suggestions) .shell__search-inline {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
   }
 
   .shell__search-inline .shell__search-icon {
@@ -225,7 +292,7 @@ body::-webkit-scrollbar {
       gap: var(--k-space-1);
     }
 
-    .shell__search-inline {
+    .shell__search-wrap {
       display: none;
     }
 

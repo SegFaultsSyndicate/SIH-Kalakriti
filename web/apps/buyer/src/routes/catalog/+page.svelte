@@ -6,16 +6,54 @@
   and traditional techniques across India.
 -->
 <script lang="ts">
+  import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Breadcrumbs, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
+  import { fuzzyIncludes } from '$lib/fuzzy-search';
 
   const t = $derived(locale.t);
 
   const breadcrumbs = $derived([{ label: t('catalog.breadcrumbLabel') }]);
 
-  let searchQuery = $state('');
-  let selectedBelt = $state('all');
+  const VALID_BELTS = new Set(['all', 'north', 'west', 'south', 'east', 'central']);
+
+  // Filter state round-trips through the URL (like /search already does),
+  // so it survives navigating into a cluster and back, a reload, or sharing
+  // the link -- not just local component state that resets on remount.
+  let searchQuery = $state(page.url.searchParams.get('q') ?? '');
+  let selectedBelt = $state(
+    VALID_BELTS.has(page.url.searchParams.get('belt') ?? '') ? page.url.searchParams.get('belt')! : 'all',
+  );
+
+  function syncUrl(): void {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedBelt !== 'all') params.set('belt', selectedBelt);
+    const qs = params.toString();
+    void goto(qs ? `/catalog?${qs}` : '/catalog', { keepFocus: true, noScroll: true, replaceState: true });
+  }
+
+  function selectBelt(belt: string): void {
+    selectedBelt = belt;
+    syncUrl();
+  }
+
+  let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+  function onSearchInput(): void {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(syncUrl, 300);
+  }
+
+  // Depends only on page.url (never reads searchQuery/selectedBelt itself),
+  // so it only fires on real navigation (back/forward, a shared link) --
+  // not on every keystroke syncUrl() will eventually push to the URL.
+  $effect(() => {
+    const urlBelt = page.url.searchParams.get('belt') ?? 'all';
+    searchQuery = page.url.searchParams.get('q') ?? '';
+    selectedBelt = VALID_BELTS.has(urlBelt) ? urlBelt : 'all';
+  });
 
   const FALLBACK_CRAFTS = [
     {
@@ -120,13 +158,17 @@
     },
   ];
 
+  // fuzzyIncludes tolerates partial input and simple typos ("potery",
+  // "wodwork") instead of the plain .includes() this used to be, which
+  // matched nothing once a query was misspelled.
   const filteredCrafts = $derived(
     FALLBACK_CRAFTS.filter((c) => {
       const matchesSearch =
         searchQuery === '' ||
-        c.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.regions.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        c.gi_registration_no.toLowerCase().includes(searchQuery.toLowerCase());
+        fuzzyIncludes(c.display_name, searchQuery) ||
+        c.regions.some((r) => fuzzyIncludes(r, searchQuery)) ||
+        fuzzyIncludes(c.gi_registration_no, searchQuery) ||
+        c.techniques.some((tech) => fuzzyIncludes(tech, searchQuery));
       const matchesBelt = selectedBelt === 'all' || c.belt === selectedBelt;
       return matchesSearch && matchesBelt;
     })
@@ -155,6 +197,7 @@
             type="search"
             placeholder={t('catalog.searchPlaceholder')}
             bind:value={searchQuery}
+            oninput={onSearchInput}
             class="catalog-search"
             aria-label={t('catalog.searchAriaLabel')}
           />
@@ -167,7 +210,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'all'}
-              onclick={() => (selectedBelt = 'all')}
+              onclick={() => selectBelt('all')}
               {...tp}
             >
               {t('catalog.belt.all', { count: String(FALLBACK_CRAFTS.length) })}
@@ -180,7 +223,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'north'}
-              onclick={() => (selectedBelt = 'north')}
+              onclick={() => selectBelt('north')}
               {...tp}
             >
               {t('catalog.belt.north')}
@@ -193,7 +236,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'west'}
-              onclick={() => (selectedBelt = 'west')}
+              onclick={() => selectBelt('west')}
               {...tp}
             >
               {t('catalog.belt.west')}
@@ -206,7 +249,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'south'}
-              onclick={() => (selectedBelt = 'south')}
+              onclick={() => selectBelt('south')}
               {...tp}
             >
               {t('catalog.belt.south')}
@@ -219,7 +262,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'east'}
-              onclick={() => (selectedBelt = 'east')}
+              onclick={() => selectBelt('east')}
               {...tp}
             >
               {t('catalog.belt.east')}
@@ -232,7 +275,7 @@
               type="button"
               class="belt-chip"
               class:active={selectedBelt === 'central'}
-              onclick={() => (selectedBelt = 'central')}
+              onclick={() => selectBelt('central')}
               {...tp}
             >
               {t('catalog.belt.central')}

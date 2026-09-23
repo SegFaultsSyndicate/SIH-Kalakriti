@@ -83,6 +83,17 @@
     onclose();
   }
 
+  // The backdrop and header close button used to call `onclose` directly,
+  // which only hid the modal for this page visit -- it never wrote
+  // literacy.tutorial_completed, so the tutorial popped up again on every
+  // return to Home unless the artisan clicked all the way through to the
+  // last step. Any dismissal now counts as "seen" (first-login-only),
+  // matching handleFinish.
+  async function handleDismiss(): Promise<void> {
+    await setPref('literacy.tutorial_completed', true);
+    onclose();
+  }
+
   function handleNext(): void {
     if (currentStep < STEPS.length - 1) {
       currentStep += 1;
@@ -99,7 +110,7 @@
 </script>
 
 {#if open}
-  <div class="tutorial-backdrop" onclick={onclose} role="presentation">
+  <div class="tutorial-backdrop" onclick={handleDismiss} role="presentation">
     <div
       class="tutorial-dialog"
       onclick={(e) => e.stopPropagation()}
@@ -115,7 +126,7 @@
         </div>
         <Tooltip text={tooltip('tooltip.close')}>
           {#snippet trigger(props)}
-            <button type="button" class="close-btn" onclick={onclose} aria-label={t('ui.dialog.close')} {...props}>
+            <button type="button" class="close-btn" onclick={handleDismiss} aria-label={t('ui.dialog.close')} {...props}>
               <Icon name="close" />
             </button>
           {/snippet}
