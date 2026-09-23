@@ -81,6 +81,7 @@ it, not the other way around, so re-check that file if the two disagree.
 | GET | `/artisans/:id/storefront` | Artisan public profile |
 | GET | `/artisans/:id/follower-count` | Follower count |
 | GET | `/feed/process` | Vertical process-provenance clip feed |
+| GET | `/verify/certificate/:short_code` | Public Digital Ready certificate check (MoSJE tier 4) |
 
 ### Server-rendered / SEO (public, HTML or JSON)
 | Method | Path | Purpose |
@@ -177,9 +178,49 @@ resolves through the same provenance-style verification path
 | POST | `/crafts/refresh-index` |
 
 ### Webhooks
-| Method | Path |
-|---|---|
-| POST | `/payments/webhook` | HMAC-SHA256 verified, public endpoint |
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/payments/webhook` | Inbound payment callback, HMAC-SHA256 verified, public |
+| POST / GET | `/webhooks/subscriptions` | Create / list your outbound webhook subscriptions |
+| DELETE | `/webhooks/subscriptions/:id` | Remove one (filters on the caller's own subscriber id) |
+
+Outbound delivery (HMAC signing, retry-with-backoff) is `pkg/webhook.Manager` /
+`cmd/webhook-worker`; these three routes are its only REST surface.
+
+### MoSJE tier 4 (`services/bff/internal/bff/mosje/`)
+Finance-corporation loan linkage, self-reported income, the ministry impact
+dashboard, staff accounts, assisted ("helping") mode and digital-literacy
+lessons/certificates. Every route below is under `/api/v1` and requires a
+bearer token except the one marked public; see the route map's comments in
+`mosje/routes.go` for exactly who (artisan / FIELD_AGENT / CLUSTER_OFFICER /
+MINISTRY) may call each one — that file is the source of truth, not this list.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET / POST | `/finance/links` | List own / link a loan (consent_given must be true) |
+| PATCH / DELETE | `/finance/links/:id` | Update / remove (delete = consent withdrawal) |
+| GET | `/finance/coverage` | Whether this month's sales cover the EMI |
+| GET | `/admin/finance/links` | Review queue (officer/ministry) |
+| POST | `/admin/finance/links/:id/review` | Mark verified or rejected |
+| GET / PUT | `/income/baseline` | Self-reported pre-Kalakriti monthly income |
+| GET / POST | `/income/sales` | Offline (fair/market/direct) sale log |
+| DELETE | `/income/sales/:id` | Remove one logged sale |
+| GET | `/income/summary` | Own income card (now vs. before, insufficient-data reason) |
+| GET | `/impact/summary` \| `/by-group` \| `/sales-mix` \| `/finance-coverage` \| `/literacy-funnel` | Ministry dashboard (MINISTRY / scoped CLUSTER_OFFICER); groups of fewer than 5 artisans are suppressed, never shown as 0 |
+| GET | `/impact/export.csv` | CSV export of the current filtered view |
+| GET | `/staff/me` | Own staff account |
+| GET / POST | `/admin/staff` | List / create staff accounts (MINISTRY) |
+| POST | `/admin/staff/:id/active` | Activate / deactivate |
+| GET | `/admin/staff/productivity` | Field-agent onboarding/listing counts |
+| POST | `/assisted/consent/start` \| `/link` \| `/voice-consent` | Agent-assisted onboarding: OTP or recorded-voice consent |
+| GET | `/assisted/artisans` | Artisans a FIELD_AGENT currently helps |
+| GET | `/assisted/review` \| POST `/assisted/review/:id` | Voice-consent review queue |
+| GET | `/media/:id/url` | Time-limited download URL (e.g. to listen to a voice consent); owner or officer/ministry only |
+| GET | `/helpers` \| DELETE `/helpers/:id` | An artisan's own list of helpers / revoke one |
+| GET | `/listings/:id/helper` | Which agent (if any) last touched this listing |
+| GET | `/learn/lessons` | The 8 digital-skills lessons |
+| POST | `/learn/lessons/:code/progress` | Record practice/quiz progress |
+| GET / POST | `/learn/certificate` | Fetch / issue the Digital Ready certificate |
 
 ---
 

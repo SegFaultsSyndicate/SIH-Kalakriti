@@ -467,7 +467,7 @@ both; canonical is the bare `Idempotency-Key`.)
 ## Internationalization (i18n) verification and ratchet convention
 
 Kalakriti supports 20 Eighth Schedule scheduled Indian languages plus English (21 locales total).
-The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 2,363 keys).
+The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 3,342 keys).
 
 ### Audit Command
 Run the audit script to verify catalogue completeness, script correctness, and placeholder consistency:
@@ -478,12 +478,23 @@ npm run audit
 node scripts/audit.mjs --locale <code_or_tag>
 ```
 
-### Ratchet Ceiling & Baseline Convention
+### Ratchet Ceiling & Baseline Convention — the baseline is NOT 0, don't trust an old claim that it is
 - `web/packages/i18n/i18n-baseline.json` defines the ratchet ceiling for allowed issues per locale.
-- Currently, **all 21 locales have reached 0 issues (100% coverage)**.
+- **The baseline is not 0 for any locale and hasn't been since the MegaMenuNav batch (2026-09-23,
+  ~132 keys merged with an English fallback in all 21 locales — real translations for that batch
+  are still outstanding).** Most locales currently sit at 264 issues (the MegaMenuNav floor); a few
+  (doi 334, mai 469, mr 329, ne 352, kok 298, sa 269) carry additional older debt. If you see a
+  doc or comment claiming "0 issues / 100% coverage", it's stale — re-run `npm run audit` and trust
+  the live `i18n-baseline.json`, not prose.
 - CI and vitest (`catalogue-audit.test.ts`) enforce that a locale's issues must never exceed its baseline count.
-- If you add new keys to `en.ts`, all non-English catalogues must have their translations populated to keep the baseline at 0. Never raise a baseline number to mask missing translations.
+- If you add new keys to `en.ts`, every locale is "missing" them until its own translation batch
+  lands — raise that locale's baseline number by the new key count in the same commit that adds the
+  keys (with an inline `_comment` note saying why, dated), then lower it back down as real
+  translations land. Never raise a number for any other reason, and never round when lowering one.
 - All non-English catalogues are typed as `export const <code>: Messages = { ... }`, making missing keys a compile-time type error permanently.
+- brx (Bodo), ks (Kashmiri) and sd (Sindhi) got real, machine-assisted translations for the 254
+  MoSJE tier-4 keys that needed them (2026-09-24) — these three should still get a native-speaker
+  review pass before being treated as publish-quality, but they're no longer English fallback.
 
 ## Outbound webhook subscribe route added (pkg/webhook.Manager was unused)
 
@@ -641,4 +652,87 @@ its gRPC/HTTP ports backwards (8082 labeled `"grpc"`, real gRPC port is
 service never listens on (`/healthz`/`/readyz` are served on the HTTP port,
 8082) — fixed to match `services/search-svc/cmd/search-svc/main.go`'s actual
 `envOr` defaults.
+
+## MoSJE tier 4 (finance linkage, impact dashboard, assisted mode, literacy)
+
+A large batch (commits `cf6dd71`…`bf85c7f`) added F12–F15: finance-corporation
+loan linkage, self-reported income vs. platform income, a ministry impact
+dashboard, field-agent "assisted mode" (an agent acting for an artisan who
+can't use the app themselves), and an 8-lesson digital-literacy track with a
+verifiable certificate. A few things worth knowing before touching any of it:
+
+- **The `mosje` package pattern.** All of it lives behind one bff subpackage,
+  `services/bff/internal/bff/mosje/` (`routes.go` mounts every tier-4 REST
+  route, `mosje.go` holds the handler struct, `onbehalf.go` is the assisted-
+  mode allow-list — see below). It's kept separate from `handler/api.go`
+  rather than merged in, so the whole feature area's routes, auth notes and
+  allow-list sit in one place instead of interleaved with pre-existing
+  routes. If you add a new tier-4 route, it goes in this package, not
+  `api.go`.
+- **The on-behalf allow-list is duplicated in two places and both must agree.**
+  `mosje/onbehalf.go`'s `onBehalfAllowed` map is the real enforcement (the
+  bff refuses any `X-On-Behalf-Of` call not on the list); `web/packages/api/
+  src/acting.ts`'s `onBehalfAllowed` is the frontend's mirror, used only to
+  decide whether to attach the header at all / show assisted-mode UI for a
+  given call. Nothing checks the two stay in sync — if you add a route an
+  agent should be able to call for an artisan, add it to both, or the
+  frontend will either try a call the backend 403s, or silently not offer an
+  action the backend would actually allow.
+- **`services/bff/openapi.json` doesn't auto-track proto/route changes for
+  this package.** Re-run `python3 scripts/gen_openapi_tier4.py` (see its own
+  docstring) after changing a tier-4 proto or adding/changing a route in
+  `mosje/routes.go`, then `pnpm --filter @kalakriti/api api:gen` to
+  regenerate `schema.d.ts`. Same class of gap as the phone-change routes
+  section above — nothing catches a route missing from the spec until
+  someone hand-rolls a `fetch()` for it and gets the shape wrong.
+- **`FINANCE_REF_SALT`** keys the HMAC over loan/beneficiary reference numbers
+  (`services/core-svc/cmd/core-svc/main.go`, passed into
+  `service.NewFinance`). Only `reference_last4` and `reference_hash` (the
+  HMAC) are ever stored — the plaintext reference an artisan or agent submits
+  to `POST /finance/links` is hashed immediately server-side and never
+  logged, stored or returned. Must be ≥32 bytes in production (same shape as
+  `JWT_SECRET`); `docker-compose.yml` defaults it to empty (`main.go` falls
+  back to a dev value outside `APP_ENV=production`).
+- **insight-svc gained a gRPC auth interceptor it didn't have before.** Before
+  this batch, insight-svc ran `grpc.NewServer()` with no auth chain at all —
+  same implicit-trust posture search-svc and collab-svc still have (see the
+  "core-svc was rejecting every anonymous public-read RPC" section above).
+  Adding the public `GET /verify/certificate/:short_code` route required a
+  real interceptor so every *other* insight-svc RPC stays behind a token:
+  `services/insight-svc/cmd/insight-svc/main.go` now builds an
+  `auth.NewPublicMethods(...)` allow-list (currently just
+  `insight.v1.InsightService/VerifyLiteracyCertificate`) and wires
+  `auth.UnaryServerInterceptor`/`StreamServerInterceptor` with it. If you add
+  another public insight-svc RPC, it needs adding to that list the same way
+  core-svc's `PublicMethods()` works.
+- **`BASE_URL` on insight-svc must be the public web origin, not the bff's own
+  port.** It's printed into QR codes for income-statement `/v/` links and the
+  new literacy-certificate `/verify/certificate/` links, both of which are
+  pages nginx (the `web` service) serves — the bff alone doesn't serve either.
+  `docker-compose.yml` sets insight-svc's `BASE_URL` to
+  `${BASE_URL:-http://localhost}` (nginx origin), while bff's own `BASE_URL`
+  (a different env var scope, same name) stays `http://localhost:8000`. Don't
+  "fix" these to match each other — they're deliberately different origins
+  for different purposes; the inline comment in `docker-compose.yml` explains
+  it at the point of use.
+- **Migration ordering:** `037_finance_link.sql`, `038_impact.sql`,
+  `039_assisted.sql`, `040_literacy.sql`, `041_digital_ready_badge.sql` are
+  correctly numbered and goose orders strictly by filename, so a fresh
+  `make migrate-up` applies them in order with no issue. The one situation to
+  watch for: `039_assisted.sql` was committed to git *before* `037`/`038` in
+  an earlier pass of this batch (since fixed) — a database that somehow
+  already applied a version-039-shaped migration under a different number
+  during that window could refuse to re-apply 037/038 cleanly. Not a risk on
+  a fresh clone; only relevant if you're migrating a long-lived dev database
+  that tracked this repo through that window.
+- **`cmd/seed-demo` now seeds MoSJE data too** (artisans with income
+  baselines, offline sales and finance links across two impact-dashboard
+  cohorts, so `/impact` doesn't just read "<5" everywhere) — see its own
+  doc comment. Needs `POSTGRES_DSN` set (in addition to the existing
+  `BFF_BASE_URL`/`JWT_SECRET`) to backdate registration past the 90-day
+  `TOO_NEW` threshold and to bootstrap MINISTRY/FIELD_AGENT staff accounts
+  through `services/core-svc/cmd/create-staff`; without it, the MoSJE
+  artisans/sales/links still get created through the API, just with
+  `registered_at` too recent for uplift to compute and no staff accounts to
+  view them with.
 
