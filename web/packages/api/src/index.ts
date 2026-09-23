@@ -197,6 +197,7 @@ export {
   listMyArtisans,
   listLinksForReview,
   markLinkReviewed,
+  getMediaUrl,
   listHelpers,
   revokeHelper,
   getListingHelper,

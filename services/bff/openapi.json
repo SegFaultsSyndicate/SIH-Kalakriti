@@ -5978,6 +5978,42 @@
         }
       }
     },
+    "/media/{id}/url": {
+      "get": {
+        "summary": "A time-limited download URL for a media file (e.g. a voice consent under review)",
+        "x-kalakriti-generated": "scripts/gen_openapi_tier4.py",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMediaURLResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed for this role, or outside the caller's scope"
+          }
+        }
+      }
+    },
     "/helpers": {
       "get": {
         "summary": "People helping the caller (artisan)",
@@ -8520,6 +8556,23 @@
         },
         "required": [
           "rows"
+        ],
+        "x-kalakriti-generated": true
+      },
+      "GetMediaURLResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "url",
+          "expires_at"
         ],
         "x-kalakriti-generated": true
       },

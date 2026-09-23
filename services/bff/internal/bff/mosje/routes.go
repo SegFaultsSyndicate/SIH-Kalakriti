@@ -8,6 +8,7 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	assistedv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/assisted/v1"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
 	financev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/finance/v1"
 	impactv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/impact/v1"
 	insightv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1"
@@ -111,6 +112,13 @@ func (h *Handler) Mount(public, authed *gin.RouterGroup, idem func(http.HandlerF
 	})))
 	authed.POST("/assisted/review/:id", mut(unary(h.Assisted.MarkLinkReviewed, func(r *http.Request, req *assistedv1.MarkLinkReviewedRequest) error {
 		req.LinkId = param(r, "id")
+		return nil
+	})))
+	// A time-limited download link, so an officer can listen to a recorded
+	// voice consent before marking it reviewed. core-svc's GetMediaURL only
+	// serves a not-yet-servable file to its owner or to officers/ministry.
+	authed.GET("/media/:id/url", w(unary(h.Media.GetMediaURL, func(r *http.Request, req *catalogv1.GetMediaURLRequest) error {
+		req.MediaId = param(r, "id")
 		return nil
 	})))
 	authed.GET("/helpers", w(unary(h.Assisted.ListMyHelpers, nil)))

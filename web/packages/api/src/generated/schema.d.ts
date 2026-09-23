@@ -5425,6 +5425,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/media/{id}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A time-limited download URL for a media file (e.g. a voice consent under review) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetMediaURLResponse"];
+                    };
+                };
+                /** @description Not allowed for this role, or outside the caller's scope */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/helpers": {
         parameters: {
             query?: never;
@@ -6479,6 +6524,11 @@ export interface components {
         };
         GetLiteracyFunnelResponse: {
             rows: components["schemas"]["LiteracyFunnelRow"][];
+        };
+        GetMediaURLResponse: {
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
         };
         GetMyIncomeSummaryResponse: {
             summary?: components["schemas"]["IncomeSummary"];

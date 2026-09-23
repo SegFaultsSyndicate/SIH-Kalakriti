@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = ROOT / "services/bff/openapi.json"
 PROTOS = ["finance/v1/finance.proto", "impact/v1/impact.proto", "assisted/v1/assisted.proto",
-          "literacy/v1/literacy.proto", "insight/v1/insight.proto"]
+          "literacy/v1/literacy.proto", "insight/v1/insight.proto", "catalog/v1/media.proto"]
 
 SCALARS = {"string": {"type": "string"}, "bool": {"type": "boolean"}, "double": {"type": "number"},
            "float": {"type": "number"}, "int32": {"type": "integer"}, "int64": {"type": "integer"},
@@ -93,6 +93,7 @@ ROUTES = [
     ("get", "/assisted/artisans", "ListMyArtisansRequest", "ListMyArtisansResponse", "Artisans the calling agent helps", [], [], False),
     ("get", "/assisted/review", "ListLinksForReviewRequest", "ListLinksForReviewResponse", "Voice-consent links awaiting officer review", [], ["state_code", "district"], False),
     ("post", "/assisted/review/{id}", "MarkLinkReviewedRequest", "MarkLinkReviewedResponse", "Mark a voice-consent link reviewed", ["id"], [], False),
+    ("get", "/media/{id}/url", "GetMediaURLRequest", "GetMediaURLResponse", "A time-limited download URL for a media file (e.g. a voice consent under review)", ["id"], [], False),
     ("get", "/helpers", "ListMyHelpersRequest", "ListMyHelpersResponse", "People helping the caller (artisan)", [], [], False),
     ("delete", "/helpers/{id}", "RevokeHelperRequest", "RevokeHelperResponse", "Remove a helper's access immediately (artisan's own session only)", ["id"], [], False),
     ("get", "/listings/{id}/helper", "GetListingHelperRequest", "GetListingHelperResponse", "Which agent, if any, created this listing for the caller", ["id"], [], False),
@@ -102,7 +103,7 @@ ROUTES = [
     ("post", "/learn/certificate", "IssueLiteracyCertificateRequest", "IssueLiteracyCertificateResponse", "Issue the caller's certificate once all 8 lessons are complete", [], [], False),
     ("get", "/verify/certificate/{short_code}", "VerifyLiteracyCertificateRequest", "VerifyLiteracyCertificateResponse", "Verify a printed digital literacy certificate (public)", ["short_code"], [], True),
 ]
-PATH_FIELD = {"id": ["id", "link_id", "listing_id"], "code": ["lesson_code"], "short_code": ["short_code"]}
+PATH_FIELD = {"id": ["id", "link_id", "listing_id", "media_id"], "code": ["lesson_code"], "short_code": ["short_code"]}
 
 
 def parse_messages():

@@ -1118,6 +1118,10 @@ export function markLinkReviewed(id: string, options?: CallOptions) {
     Json<paths['/assisted/review/{id}']['post']['responses'][200]>
   >;
 }
+/** A time-limited download URL, e.g. for an officer to hear a voice consent. */
+export function getMediaUrl(mediaId: string, options?: CallOptions): Promise<Get<'/media/{id}/url'>> {
+  return call(`/media/${encodeURIComponent(mediaId)}/url`, { ...options, method: 'GET' }) as Promise<Get<'/media/{id}/url'>>;
+}
 export function listHelpers(options?: CallOptions): Promise<Get<'/helpers'>> {
   return call('/helpers', { ...options, method: 'GET' }) as Promise<Get<'/helpers'>>;
 }

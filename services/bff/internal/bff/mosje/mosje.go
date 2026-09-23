@@ -30,6 +30,7 @@ import (
 	"github.com/ZoroNewbie00/kalakriti/pkg/domain"
 	"github.com/ZoroNewbie00/kalakriti/pkg/httpx"
 	assistedv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/assisted/v1"
+	catalogv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/catalog/v1"
 	financev1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/finance/v1"
 	impactv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/impact/v1"
 	insightv1 "github.com/ZoroNewbie00/kalakriti/pkg/pb/insight/v1"
@@ -45,6 +46,7 @@ type Handler struct {
 	Assisted assistedv1.AssistedServiceClient
 	Literacy literacyv1.LiteracyServiceClient
 	Insight  insightv1.InsightServiceClient
+	Media    catalogv1.MediaServiceClient
 }
 
 // New builds the handler over core-svc and insight-svc connections.
@@ -56,6 +58,7 @@ func New(core, insight grpc.ClientConnInterface) *Handler {
 		Assisted: assistedv1.NewAssistedServiceClient(core),
 		Literacy: literacyv1.NewLiteracyServiceClient(core),
 		Insight:  insightv1.NewInsightServiceClient(insight),
+		Media:    catalogv1.NewMediaServiceClient(core),
 	}
 }
 

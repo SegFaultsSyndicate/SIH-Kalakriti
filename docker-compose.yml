@@ -254,7 +254,11 @@ services:
       S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
       # Verifies the access tokens bff forwards; must match core-svc's.
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
-      BASE_URL: ${BASE_URL:-http://localhost:8000}
+      # Printed into QR codes (statements' /v/ links, literacy certificates'
+      # /verify/certificate/ links), so it must be the public web origin that
+      # nginx (the `web` service, :80) serves: /v/ proxies to the bff and
+      # /verify/* is the buyer app. The bff alone (:8000) serves neither page.
+      BASE_URL: ${BASE_URL:-http://localhost}
       OTLP_ENDPOINT: jaeger:4317
     ports:
       # insight-svc's only listener (main.go default GRPC_ADDR :8085) — the
