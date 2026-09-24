@@ -264,6 +264,28 @@ func (c *client) putJSON(path, token string, body any) (map[string]any, error) {
 	return c.doJSON(http.MethodPut, path, token, body)
 }
 
+func (c *client) findExistingFinanceLink(token, corporation, referenceLast4 string, originalErr error) (map[string]any, error) {
+	links, err := c.getJSON("/api/v1/finance/links", token)
+	if err != nil {
+		return nil, fmt.Errorf("existing finance-link lookup failed: %v; original create failed: %w", err, originalErr)
+	}
+	items, ok := links["links"].([]any)
+	if !ok {
+		return nil, fmt.Errorf("existing finance-link response had no links array; original create failed: %w", originalErr)
+	}
+	for _, item := range items {
+		link, ok := item.(map[string]any)
+		if ok && link["corporation"] == corporation && link["reference_last4"] == referenceLast4 {
+			return map[string]any{"link": link}, nil
+		}
+	}
+	return nil, fmt.Errorf("no matching existing finance link; original create failed: %w", originalErr)
+}
+
+func (c *client) getJSON(path, token string) (map[string]any, error) {
+	return c.doJSON(http.MethodGet, path, token, nil)
+}
+
 func (c *client) doJSON(method, path, token string, body any) (map[string]any, error) {
 	var reader io.Reader
 	if body != nil {
@@ -436,7 +458,10 @@ func seedMosjeTier4(c *client, crafts []map[string]any, officerToken string) ([]
 				"consent_version":  financeConsentVersion,
 			})
 			if err != nil {
-				return nil, fmt.Errorf("linking finance for %s: %w", artisanID, err)
+				financeResp, err = c.findExistingFinanceLink(artisanToken, g.corporation, fmt.Sprintf("%04d", (10000000+i)%10000), err)
+				if err != nil {
+					return nil, fmt.Errorf("linking finance for %s: %w", artisanID, err)
+				}
 			}
 
 			// Verify roughly half of each group's links, so financeAdmin's
