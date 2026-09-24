@@ -736,3 +736,139 @@ verifiable certificate. A few things worth knowing before touching any of it:
   `registered_at` too recent for uplift to compute and no staff accounts to
   view them with.
 
+## `make demo-up`/`make up` never rebuilt images — stale binaries masqueraded as live bugs
+
+The single highest-value thing in this file: `demo-up` ran `$(COMPOSE) up -d`
+with **no `--build`**, so Docker reused whatever service images happened to
+exist locally. Images built before a fix keep running the old code forever,
+and nothing says so — `docker compose ps` happily reports every container
+"Up". Seen for real: images dated 17:16 were still serving while the fixes
+for them had landed in commits at 17:42 and 23:16 the *same day*.
+
+Symptom, which looks exactly like three separate live bugs: `make demo-up`
+dies at `seed-demo` with
+`POST /api/v1/artisans -> 500: {"error":"internal_error","message":"internal error"}`,
+core-svc logs nothing at all, and the bff's access log claims `"status":200`
+for the very request the client received as a 500. All three are the same
+stale image — it predated the pgx `language_code[]` registration fix, the
+idempotency double-write fix, *and* the masked-500 logging fix, so the error
+was real, unlogged, and doubled on the wire all at once.
+
+Tells that you are chasing a stale image rather than a code bug:
+- `docker images --format '{{.Repository}} {{.CreatedAt}}' | grep kalakriti`
+  shows a timestamp older than `git log -1 --format=%ad -- <the file you are
+  reading>`. Check this **first**, before reading any handler.
+- A masked 500 with no `unmapped error rendered as 500` line anywhere in the
+  service's logs. `pkg/domain.WriteHTTPError` always logs that before masking,
+  so its absence means the running binary does not contain that code.
+- `Content-Length` exactly 2x a single JSON body (the pre-fix idempotency
+  middleware forwarded live *and* replayed), or every access-log line saying
+  `"status":200` regardless of the real status (pre-`AccessLogGin`).
+
+Fixed by putting `--build` on `demo-up`'s compose invocation. It is a cache
+no-op when nothing changed, so it costs nothing to keep and removes an entire
+category of phantom debugging. `make up` deliberately still has no `--build`:
+it only starts infra containers (postgres/redis/kafka/minio/jaeger/prometheus),
+none of which are built from this repo. If you ever run `docker compose up -d`
+by hand instead of through the Makefile, pass `--build` yourself.
+
+## `cmd/seed-demo` could not succeed even against a correct stack
+
+Three independent bugs, all of which had to be fixed before `make demo-up`
+completed once:
+
+- **It burned two OTP logins per artisan.** After `POST /artisans` it threw
+  away the artisan-scoped token pair that endpoint returns and ran a *second*
+  full OTP login for the same phone, on the stale belief that only a re-verify
+  could produce a token carrying the new artisan id. `RegisterArtisan` has
+  returned exactly that pair for this reason all along (see its handler, and
+  `auth-flow.ts`'s `completeOtpVerification`). At 2 OTP requests per artisan
+  against `/auth/otp/request`'s limiter, the default 3 artisans needed 6
+  requests against a 5-per-10-minutes-per-IP budget — so `make demo-up` failed
+  on the third artisan **every time, from a completely clean stack**. Now one
+  login per artisan.
+- **It read the wrong response keys.** `listingResp["id"]` and
+  `orderResp["id"]`; the bff returns `listing_id` and `order_id`
+  (`httpx.JSON(w, 201, map[string]string{"listing_id": ...})` in
+  `handler/api.go`). The listing one was a hard `panic: interface conversion:
+  interface {} is nil, not string`. Both now read the real keys and fail with
+  a message naming the actual response instead of panicking.
+- **The OTP limit made it un-re-runnable** even after the above. Fixed by
+  making the limit configurable — `bff.Config.OTPRateLimit`/
+  `OTPRateLimitWindow`, read from `OTP_RATE_LIMIT`/`OTP_RATE_LIMIT_WINDOW` in
+  `cmd/bff/main.go`, defaulting to the previous hardcoded 5/10m when unset —
+  and raising it to 100 for the local stack in `docker-compose.yml` only. The
+  limit caps real SMS spend and phone enumeration; this stack's OTP sender is
+  the logging stub (`AUTH_DEV_OTP_ENABLED=true`), so neither risk exists here.
+  **A real deploy leaves both vars unset and gets 5/10m back** — do not put
+  these in a production env file.
+
+Verified end to end: two consecutive `make demo-up` runs, back to back with no
+waiting, both reaching `done: 3 artisans, 3 published listings, 3 bulk orders`
+and `✓ Demo environment ready!`, with `GET /api/v1/listings` returning real
+PUBLISHED listings and zero 4xx/5xx in any service log. This also closes the
+"no seed data for artisans/listings/orders" gap noted in the `make demo-up`
+section above — `/api/v1/listings` no longer returns `{"listings":[]}`.
+
+## Vite dev origins must be in `CORS_ALLOWED_ORIGINS` too, or login 403s
+
+The NGINX origins (`http://localhost`, `:8081`, `:8082`) were already in
+`docker-compose.yml`'s `CORS_ALLOWED_ORIGINS` default after that bug was found
+once — but the `pnpm dev:*` origins were not, so the same failure came back the
+moment anyone developed against the Vite dev server instead of the NGINX build.
+
+Symptom: the artisan login screen at `http://localhost:5173/login` shows
+"Something went wrong" and devtools shows
+`POST /api/v1/auth/otp/request 403 (Forbidden)`. The bff logs
+`csrf validation failure: untrusted origin origin=http://localhost:5173`.
+
+Why it happens even though Vite's `/api` proxy is server-side: the browser hop
+(browser → Vite) really is same-origin, but the proxy **forwards the browser's
+original `Origin: http://localhost:5173` header** to the bff. `pkg/httpx`'s
+`CSRFProtection` trusts only `cfg.AllowedOrigins` plus `SelfOrigin`
+(`BASE_URL`'s origin, `:8000`), so it sees an untrusted origin and 403s. Note
+`CSRFProtection` skips GET/HEAD/OPTIONS, so only mutating requests fail —
+which is why the page itself and `GET /crafts` load fine and only the OTP POST
+breaks, making it look like an auth bug rather than a CSRF one.
+
+Fixed by adding `http://localhost:5173`/`:5174`/`:5175` (dev) and
+`:4173`/`:4174`/`:4175` (preview) to the compose default. Those are the
+`server.port`/`preview.port` values in
+`web/apps/{artisan,buyer,admin}/vite.config.ts` — **keep the two in sync** if a
+vite port ever changes. Setting `CORS_ALLOWED_ORIGINS` explicitly (as a real
+deploy does) replaces the whole default list, so no localhost origin reaches
+production.
+
+Related: `AUTH_DEV_OTP_ENABLED=true` makes `000000` valid for **any** phone
+number, so there is no "default demo phone" to special-case — any number logs
+in with `000000` on the local stack. A number that has no artisan profile yet
+simply lands in the registration flow after verifying.
+
+## `demo-up` raced its own services on a fresh volume (fixed)
+
+`demo-up`'s only wait was a `sleep 15` placed **before** `migrate-up`, which
+guarded nothing: on a fresh volume (i.e. every `make demo-reset`, or a first
+run) every service that opens a Postgres pool crash-loops from the moment
+`up -d` starts them, because the schema does not exist yet —
+`connecting to postgres: pinging postgres: registering pgvector types: vector
+type not found in the database`. Docker's restart backoff grows to tens of
+seconds, so by the time migrations finish the bff is still mid-backoff and
+`seed-demo` dies with
+`GET /crafts ...: dial tcp 127.0.0.1:8000: connect: connection refused`.
+The sleep could never help: it elapses before the thing the services are
+crash-looping on is fixed.
+
+Fixed by adding, after `migrate-up`/`seed` and before `seed-demo`, an explicit
+`$(COMPOSE) restart` of the six Go services (resets the backoff immediately
+rather than waiting it out) followed by a poll of `$(BFF_BASE_URL)/healthz`
+until it answers, with a 60s cap that fails loudly instead of falling through
+into a seeder that cannot connect. If you add another step to `demo-up` that
+talks to a service over the network, put it after that readiness gate.
+
+Two unrelated things that look alarming in the logs right after a full Docker
+Desktop restart and are **not** bugs: services log the `vector type not found`
+error while Postgres is still coming up, and core-svc's outbox relay logs
+`Unknown Topic Or Partition ... order.bulk.requested` if it publishes before
+Kafka finishes creating topics. Both self-resolve on retry within a minute —
+confirm by checking the timestamps are from the restart window and that
+`kafka-topics --list` now shows the topic, rather than chasing either one.

@@ -146,15 +146,37 @@ clean: ## Remove build output
 
 # --- demo --------------------------------------------------------------------
 
+# --build below is not optional: `up -d` alone reuses whatever service images
+# happen to exist locally, so a stale image silently keeps running code from
+# before the last `git pull`/edit. That is exactly how the whole "artisan
+# registration 500s" class of failure came back -- the running images predated
+# the pgx language_code[] fix, the idempotency double-write fix and the
+# masked-500 logging fix, all of which were already in the source tree.
+# Rebuilding is a no-op when nothing changed (layer cache), so the only cost of
+# keeping this here is the cost of being correct.
 demo-up: proto sqlc ## Start full demo: infra + all services + migrate + seed
 	@echo "Starting demo environment..."
-	$(COMPOSE) up -d
+	$(COMPOSE) up -d --build
 	@echo "Waiting for services..."
 	sleep 15
 	@echo "Running migrations..."
 	$(MAKE) migrate-up POSTGRES_DSN="$(POSTGRES_DSN)"
 	@echo "Seeding craft ontology..."
 	$(MAKE) seed POSTGRES_DSN="$(POSTGRES_DSN)"
+# Every service that opens a Postgres pool refuses to start until the
+# schema exists ("registering pgvector types: vector type not found in
+# the database"), so on a fresh volume they have all been crash-looping
+# since the `up -d` above -- and Docker's restart backoff grows to tens
+# of seconds, well past the point migrations finish. Restarting here
+# resets that backoff instead of waiting it out; without it `seed-demo`
+# below raced a still-down bff and died with "dial tcp 127.0.0.1:8000:
+# connect: connection refused". The `sleep 15` further up cannot cover
+# this: it runs BEFORE migrations, i.e. before the thing the services
+# are crash-looping on is even fixed.
+	@echo "Restarting services now that the schema exists..."
+	$(COMPOSE) restart core-svc search-svc collab-svc channel-svc insight-svc bff
+	@echo "Waiting for the BFF to accept requests..."
+	@t=60; until curl -sf $(BFF_BASE_URL)/healthz >/dev/null 2>&1; do t=$$((t-1)); if [ $$t -le 0 ]; then echo "  BFF never became ready; check '$(COMPOSE) logs bff'"; exit 1; fi; sleep 1; done; echo "  BFF ready"
 	@echo "Seeding demo artisans/listings/orders through the real API..."
 	$(MAKE) seed-demo
 	@echo ""

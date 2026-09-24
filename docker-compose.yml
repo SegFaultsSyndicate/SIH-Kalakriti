@@ -298,6 +298,15 @@ services:
       POSTGRES_DSN: postgres://kalakriti:${POSTGRES_PASSWORD:-kalakriti}@postgres:5432/kalakriti?sslmode=disable
       REDIS_ADDR: redis:6379
       BASE_URL: ${BASE_URL:-http://localhost:8000}
+      # POST /auth/otp/request defaults to 5 per 10 minutes per IP, which caps
+      # real SMS spend and phone enumeration. Neither exists on this stack --
+      # the OTP sender is a logging stub (see AUTH_DEV_OTP_ENABLED on core-svc
+      # above) -- and every seeded artisan costs one OTP request from the same
+      # host IP, so the default made `make demo-up` un-re-runnable for ten
+      # minutes after each run. Raised here only; a real deploy leaves it unset
+      # and gets the 5/10m default back.
+      OTP_RATE_LIMIT: ${OTP_RATE_LIMIT:-100}
+      OTP_RATE_LIMIT_WINDOW: ${OTP_RATE_LIMIT_WINDOW:-10m}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       OTLP_ENDPOINT: jaeger:4317
       # NOT actually same-origin: the browser sees three distinct origins
@@ -309,9 +318,21 @@ services:
       # DELETE) from any of the three real frontend apps with "forbidden:
       # cross-site request forgery protection" -- confirmed live: OTP
       # request from the artisan PWA at :8081 403'd until these were added.
+      # The `pnpm dev:*` and `pnpm preview` origins need the same treatment
+      # for the same reason. Vite's /api proxy is server-side, so the browser
+      # hop is same-origin -- but the proxy forwards the browser's original
+      # `Origin: http://localhost:5173` header to this bff, which sees an
+      # origin it does not trust and 403s. Symptom: the login screen's OTP
+      # request fails with "Something went wrong" and devtools shows
+      # `POST /api/v1/auth/otp/request 403`. Ports are the `server.port` /
+      # `preview.port` in web/apps/{artisan,buyer,admin}/vite.config.ts
+      # (dev 5173/5174/5175, preview 4173/4174/4175) -- keep them in sync if
+      # a vite config's port ever changes.
       # Also set to your Vercel frontend's origin(s) if the frontend is
-      # deployed separately and calls this bff cross-origin.
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:8081,http://localhost:8082}
+      # deployed separately and calls this bff cross-origin. Setting
+      # CORS_ALLOWED_ORIGINS explicitly (as a real deploy does) replaces this
+      # whole list, so none of these localhost origins reach production.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:8081,http://localhost:8082,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:4173,http://localhost:4174,http://localhost:4175}
     ports:
       - "8000:8000"
       - "9095:9095"
@@ -349,7 +370,7 @@ services:
     environment:
       ML_SVC_GRPC_PORT: "50055"
       ML_SVC_METRICS_PORT: "9095"
-      ML_SVC_MOCK_MODE: "true"
+      ML_SVC_MOCK_MODE: "false"
       ML_SVC_OBJECT_STORAGE_ENDPOINT: "minio:9000"
       ML_SVC_OBJECT_STORAGE_ACCESS_KEY: "${S3_ACCESS_KEY:-minioadmin}"
       ML_SVC_OBJECT_STORAGE_SECRET_KEY: "${S3_SECRET_KEY:-minioadmin}"
