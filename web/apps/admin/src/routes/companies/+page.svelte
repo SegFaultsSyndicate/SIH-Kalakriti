@@ -399,10 +399,39 @@
   </header>
 
   {#if loading && companies.length === 0}
-    <div class="loading-state" aria-busy="true">
-      <Skeleton shape="text" />
-      <Skeleton shape="media" />
-      <Skeleton shape="text" />
+    <div class="company-list" aria-busy="true" aria-hidden="true">
+      {#each Array(2) as _, i (i)}
+        <article class="company-card">
+          <div class="card-header">
+            <div class="title-group">
+              <Skeleton shape="text" width="12rem" height="1.25rem" />
+              <div class="badge-row">
+                <Skeleton width="4rem" height="1.25rem" radius="var(--k-radius-pill)" />
+                <Skeleton width="5rem" height="1.25rem" radius="var(--k-radius-pill)" />
+                <Skeleton width="4.5rem" height="1.25rem" radius="var(--k-radius-pill)" />
+              </div>
+            </div>
+          </div>
+          <div class="details-grid">
+            {#each Array(4) as __, j (j)}
+              <div class="detail-cell">
+                <Skeleton shape="text" width="5rem" height="0.75rem" />
+                <Skeleton shape="text" width="8rem" height="0.9rem" />
+              </div>
+            {/each}
+          </div>
+          <div class="audit-strip">
+            <div class="audit-left">
+              <Skeleton width="1.5rem" height="1.5rem" radius="var(--k-radius-sm)" />
+              <div class="doc-meta">
+                <Skeleton shape="text" width="8rem" height="0.85rem" />
+                <Skeleton shape="text" width="12rem" height="0.75rem" />
+              </div>
+            </div>
+            <Skeleton width="7rem" height="2rem" radius="var(--k-radius-md)" />
+          </div>
+        </article>
+      {/each}
     </div>
   {:else if filteredCompanies.length === 0}
     <div class="empty-state">

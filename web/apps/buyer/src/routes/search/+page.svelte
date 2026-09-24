@@ -23,10 +23,11 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { locale, tooltip } from '@kalakriti/i18n';
-  import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Skeleton, Switch, Tooltip } from '@kalakriti/ui';
+  import { Input, Button, Chip, Dialog, VoiceInput, EmptyState, Switch, Tooltip } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { search, searchVoice, batchGetListingSummaries, type components } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
+  import ListingCardSkeleton from '$lib/ListingCardSkeleton.svelte';
   import { stubListingsForQuery } from '$lib/stub-listings';
 
   type SearchHit = components['schemas']['SearchHit'];
@@ -221,7 +222,7 @@
 
 {#if loading && hits.length === 0}
   <div class="results-grid">
-    {#each Array(6) as _, i (i)}<Skeleton shape="card" height="16rem" />{/each}
+    {#each Array(6) as _, i (i)}<ListingCardSkeleton />{/each}
   </div>
 {:else if hits.length === 0 && fallbackResults.length > 0}
   <div class="results-grid">

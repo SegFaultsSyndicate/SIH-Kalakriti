@@ -24,7 +24,7 @@
   import { goto } from '$app/navigation';
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Button, Dialog, Label, Money, NumberStepper, Textarea, showToast } from '@kalakriti/ui';
-  import { Card, Skeleton } from '@kalakriti/patterns';
+  import { Card, Skeleton, SkeletonRow } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
   import StateBadge from '$lib/StateBadge.svelte';
   import OrderTimeline from '$lib/OrderTimeline.svelte';
@@ -147,7 +147,12 @@
   {/if}
 
   {#if loading && !lot}
-    <Skeleton shape="card" height="10rem" />
+    <div class="lot-progress-page__skeleton" aria-hidden="true">
+      <SkeletonRow lines={[{ width: '25%', height: '0.9rem' }, { width: '20%', height: '0.85rem' }]} trailing trailingWidth="4rem" />
+      <Skeleton shape="text" width="45%" height="1.25rem" />
+      <Skeleton height="2.5rem" radius="var(--k-radius-md)" />
+      <Skeleton height="5rem" radius="var(--k-radius-md)" />
+    </div>
   {:else if !lot}
     <p role="alert">{t('lotOffer.notFound')}</p>
   {:else}
@@ -239,6 +244,12 @@
     gap: var(--k-space-4);
     padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
+  }
+
+  .lot-progress-page__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
   }
 
   .lot-progress-page__offline-note {

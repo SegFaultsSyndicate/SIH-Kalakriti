@@ -10,7 +10,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton, Money } from '@kalakriti/ui';
+  import { EmptyState, SkeletonRow, Money } from '@kalakriti/ui';
   import { getOrder, type components } from '@kalakriti/api';
   import { listRememberedOrders } from '$lib/order-store';
 
@@ -44,7 +44,11 @@
 <h1>{t('buyer.orders.heading')}</h1>
 
 {#if loading}
-  <Skeleton shape="card" height="6rem" />
+  <div class="orders-list__skeletons">
+    {#each Array(3) as _, i (i)}
+      <SkeletonRow lines={[{ width: '30%', height: '0.9rem' }, { width: '20%', height: '0.8rem' }, { width: '35%', height: '0.9rem' }]} />
+    {/each}
+  </div>
 {:else if orders.length === 0}
   <EmptyState illustration="empty-error" heading={t('buyer.orders.empty')} />
   <p class="orders-list__hint">{t('orders.empty.hint')}</p>
@@ -69,6 +73,12 @@
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
     margin-block-end: var(--k-space-4);
+  }
+
+  .orders-list__skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
   }
 
   .orders-list {

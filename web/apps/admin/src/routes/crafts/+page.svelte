@@ -13,7 +13,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { Button, Input, FieldGroup, Skeleton, showToast } from '@kalakriti/ui';
+  import { Button, Input, FieldGroup, SkeletonRow, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { session, listCrafts, refreshCraftIndex, ApiError, messageKeyFor } from '@kalakriti/api';
 
@@ -207,9 +207,9 @@
 {#if loadError}<p role="alert" class="crafts-error">{loadError}</p>{/if}
 {#if loading}
   <div class="crafts-skeletons">
-    <Skeleton shape="card" height="5rem" />
-    <Skeleton shape="card" height="5rem" />
-    <Skeleton shape="card" height="5rem" />
+    {#each Array(4) as _, i (i)}
+      <SkeletonRow lines={[{ width: '35%', height: '1rem' }, { width: '20%', height: '0.8rem' }]} />
+    {/each}
   </div>
 {/if}
 
@@ -269,7 +269,8 @@
     color: var(--k-accent-danger);
   }
 
-  .crafts-list {
+  .crafts-list,
+  .crafts-skeletons {
     list-style: none;
     margin: var(--k-space-4) 0 0;
     padding: 0;

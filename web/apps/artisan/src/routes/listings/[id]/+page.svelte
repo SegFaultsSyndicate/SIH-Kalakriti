@@ -182,7 +182,15 @@
   </a>
 
   {#if loading}
-    <Skeleton shape="card" height="8rem" />
+    <div class="listing-detail__skeleton" aria-hidden="true">
+      <div class="listing-detail__skeleton-header">
+        <Skeleton width="5rem" height="1.5rem" radius="var(--k-radius-pill)" />
+        <Skeleton width="4rem" height="1.25rem" />
+        <Skeleton width="6rem" height="2rem" radius="var(--k-radius-md)" />
+      </div>
+      <Skeleton height="6rem" radius="var(--k-radius-md)" />
+      <Skeleton height="6rem" radius="var(--k-radius-md)" />
+    </div>
   {:else if loadError}
     <p class="listing-detail__error" role="alert">{loadError}</p>
   {:else if listing}
@@ -350,6 +358,19 @@
 
   .listing-detail__error {
     color: var(--k-accent-danger);
+  }
+
+  .listing-detail__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .listing-detail__skeleton-header {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-3);
+    flex-wrap: wrap;
   }
 
   .listing-detail__header {

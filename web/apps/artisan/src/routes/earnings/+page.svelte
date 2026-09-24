@@ -25,7 +25,7 @@
 <script lang="ts">
   import { locale, formatDate, tooltip } from '@kalakriti/i18n';
   import { Button, Input, Label, Money, showToast } from '@kalakriti/ui';
-  import { Card, Skeleton } from '@kalakriti/patterns';
+  import { Card, SkeletonRow } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
   import { generateStatement, listIncomeStatements, type components } from '@kalakriti/api';
   import { cachedOrders, network, type BulkOrder } from '$lib/orders';
@@ -165,7 +165,13 @@
   <section class="earnings-page__history">
     <h2>{t('earnings.history.heading')}</h2>
     {#if loading}
-      <Skeleton shape="card" height="4rem" />
+      <div class="earnings-page__skeletons">
+        {#each Array(3) as _, i (i)}
+          <SkeletonRow
+            lines={[{ width: '45%', height: '0.9rem' }, { width: '30%', height: '0.75rem' }, { width: '60%', height: '0.85rem' }]}
+          />
+        {/each}
+      </div>
     {:else if statements.length === 0}
       <p class="earnings-page__empty">{t('earnings.history.empty')}</p>
     {:else}
@@ -310,6 +316,7 @@
     font-size: var(--k-text-sm);
   }
 
+  .earnings-page__skeletons,
   .earnings-page__rows {
     display: flex;
     flex-direction: column;

@@ -362,9 +362,28 @@
 
   <!-- Trends Cards Grid -->
   {#if loading}
-    <div class="loading-grid">
-      <Skeleton shape="card" />
-      <Skeleton shape="card" />
+    <div class="trends-grid" aria-hidden="true">
+      {#each Array(2) as _, i (i)}
+        <article class="trend-card">
+          <div class="card-meta-top">
+            <Skeleton width="4.5rem" height="1.25rem" radius="var(--k-radius-pill)" />
+          </div>
+          <Skeleton shape="text" width="85%" height="1.25rem" />
+          <div class="curator-strip">
+            <Skeleton width="2rem" height="2rem" radius="50%" />
+            <div class="curator-info">
+              <Skeleton shape="text" width="6rem" height="0.75rem" />
+              <Skeleton shape="text" width="8rem" height="0.85rem" />
+            </div>
+          </div>
+          <Skeleton shape="text" width="100%" height="0.85rem" />
+          <Skeleton shape="text" width="70%" height="0.85rem" />
+          <div class="card-actions">
+            <Skeleton width="9rem" height="2.25rem" radius="var(--k-radius-md)" />
+            <Skeleton width="9rem" height="2.25rem" radius="var(--k-radius-md)" />
+          </div>
+        </article>
+      {/each}
     </div>
   {:else if filteredTrends.length === 0}
     <div class="empty-box">

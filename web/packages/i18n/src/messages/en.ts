@@ -2086,6 +2086,58 @@ export const en = {
   'stub.listing.63.title': 'Zari Brocades and Kadwa Weaves of Varanasi',
   'stub.listing.64.title': 'Banarasi Brocade Weaving — Kadwa Detail',
   'stub.listing.65.title': 'Hand-Chiseled Sheesham Wood Floral Jali Openwork Incense Box',
+  // dataset batch — pottery (66–70)
+  'stub.listing.66.title': 'Blue Floral Terracotta Jar',
+  'stub.listing.67.title': 'Terracotta Fish-Shaped Serving Plate',
+  'stub.listing.68.title': 'Handmade Terracotta Pitcher & Cups Set',
+  'stub.listing.69.title': 'Terracotta Tulip Bowl with Handles',
+  'stub.listing.70.title': 'Green-Glaze Handmade Terracotta Bowls Set',
+  // dataset batch — woodwork (71)
+  'stub.listing.71.title': 'Hand-Carved Wooden Fish Sculpture',
+  // dataset batch — chanderi (72–75)
+  'stub.listing.72.title': 'Chanderi Silk-Cotton Saree — Amber Orange',
+  'stub.listing.73.title': 'Chanderi Silk-Cotton Saree — Ivory with Red Border',
+  'stub.listing.74.title': 'Chanderi Silk-Cotton Saree — Blush Peach',
+  'stub.listing.75.title': 'Chanderi Silk-Cotton Saree — Aqua with Gold Zari',
+  // dataset batch — kalamkari (76–77)
+  'stub.listing.76.title': 'Kalamkari Cotton Kurta — Multicolour Paisley',
+  'stub.listing.77.title': 'Kalamkari Cotton Kurta — Dark Mythological Print',
+  // dataset batch — paithani (78)
+  'stub.listing.78.title': 'Paithani Silk Saree — Blue & Green Dual Tone',
+  // dataset batch — patan patola (79)
+  'stub.listing.79.title': 'Patan Patola Double-Ikat Silk Saree — Magenta',
+  // dataset batch — tussar silk (80–82)
+  'stub.listing.80.title': 'Tussar Silk Saree — Beige with Embroidered Pallu',
+  'stub.listing.81.title': 'Tussar Silk Saree — Rose Pink Floral Motif',
+  'stub.listing.82.title': 'Tussar Silk Saree — Navy Blue with Floral Border',
+  // dataset batch — zari work sari (83)
+  'stub.listing.83.title': 'Zari Work Sari — Golden Beige',
+  // dataset batch — sanganeri (84–85)
+  'stub.listing.84.title': 'Sanganeri Block-Print Kurta — Ivory Floral',
+  'stub.listing.85.title': 'Sanganeri Block-Print Kurta — Dusty Rose',
+  // Part 2 special sarees (86–90)
+  'stub.listing.86.title': 'Beige Zari Work Saree',
+  'stub.listing.87.title': 'Purple Tussar Silk Saree',
+  'stub.listing.88.title': 'Blue MP Tussar Saree',
+  'stub.listing.89.title': 'Orange Zari-Border Silk Saree',
+  'stub.listing.90.title': 'White Saree with Maroon Border',
+  // new artisan name keys (dataset batch)
+  'stub.artisanName.terracottaJarBlue': 'Suresh Kumar Prajapati',
+  'stub.artisanName.handCarvedWoodenFish': 'Mohan Lal Suthar',
+  'stub.artisanName.chanderiWeaving': 'Rajesh Kumar Koshthi',
+  'stub.artisanName.kalamkari': 'Venkataraman Munsad',
+  'stub.artisanName.paithaniWeaving': 'Shankar Mahadeo Salve',
+  'stub.artisanName.tussarSilkWeaving': 'Prabha Devi Jha',
+  'stub.artisanName.zariWork': 'Ashok Kumar Gupta',
+  'stub.artisanName.sanganeriBlockPrinting': 'Ramawatar Chippa',
+  // new craft name keys (dataset batch)
+  'stub.craftName.chanderiWeaving': 'Chanderi Saree Weaving',
+  'stub.craftName.kalamkari': 'Kalamkari',
+  'stub.craftName.paithaniWeaving': 'Paithani Silk Weaving',
+  'stub.craftName.tussarSilkWeaving': 'Tussar Silk Weaving',
+  'stub.craftName.zariWork': 'Zari Work',
+  'stub.craftName.sanganeriBlockPrinting': 'Sanganeri Block Printing',
+
   'craft.weaving.nativeName': 'Weaving',
   'craft.weaving.subtitle': 'Handlooms, Brocades & Sarees',
   'craft.weaving.tagline': 'Pit-loom and jacquard traditions woven with pure silk, khadi, and fine cotton threads.',

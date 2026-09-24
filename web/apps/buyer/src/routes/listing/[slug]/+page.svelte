@@ -347,7 +347,27 @@
 <svelte:window onkeydown={onGalleryKeydown} />
 
 {#if loading}
-  <Skeleton shape="card" height="28rem" />
+  <div class="listing" aria-hidden="true">
+    <div class="listing__gallery">
+      <div class="listing__stage">
+        <Skeleton width="100%" height="100%" radius="0" />
+      </div>
+      <div class="listing__thumbs">
+        {#each Array(4) as _, i (i)}
+          <div class="listing__thumb"><Skeleton width="100%" height="100%" radius="0" /></div>
+        {/each}
+      </div>
+    </div>
+    <div class="listing__info listing__info--skeleton">
+      <Skeleton shape="text" width="35%" height="0.9rem" />
+      <Skeleton shape="text" width="80%" height="1.75rem" />
+      <Skeleton shape="text" width="30%" height="1.5rem" />
+      <Skeleton shape="text" width="100%" height="0.9rem" />
+      <Skeleton shape="text" width="90%" height="0.9rem" />
+      <Skeleton shape="text" width="60%" height="0.9rem" />
+      <Skeleton width="100%" height="3rem" radius="var(--k-radius-md)" />
+    </div>
+  </div>
 {:else if !listing}
   <EmptyState illustration="empty-error" heading={t('listing.notFound')} />
 {:else}
@@ -708,6 +728,12 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--k-space-6);
+  }
+
+  .listing__info--skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
   }
 
   .listing__stage {

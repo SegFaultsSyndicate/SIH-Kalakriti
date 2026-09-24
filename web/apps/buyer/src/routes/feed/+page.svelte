@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton } from '@kalakriti/ui';
+  import { EmptyState, SkeletonDetail } from '@kalakriti/ui';
   import { getProcessFeed, type components } from '@kalakriti/api';
   import { shouldConserveData } from '@kalakriti/offline';
 
@@ -67,7 +67,7 @@
 {/if}
 
 {#if loading}
-  <Skeleton shape="card" height="24rem" />
+  <SkeletonDetail mediaHeight="24rem" lines={0} actions={false} />
 {:else if clips.length === 0}
   <EmptyState illustration="empty-error" heading={t('feed.empty')} />
 {:else}

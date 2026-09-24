@@ -19,7 +19,7 @@
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { EmptyState, Money, Card, Skeleton } from '@kalakriti/ui';
+  import { EmptyState, Money, Card, SkeletonRow } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import StateBadge from '$lib/StateBadge.svelte';
   import { getArtisanId } from '$lib/registration';
@@ -90,8 +90,11 @@
 
   {#if loading && rows.length === 0}
     <div class="orders-page__skeletons">
-      <Skeleton shape="card" height="4rem" />
-      <Skeleton shape="card" height="4rem" />
+      {#each Array(3) as _, i (i)}
+        <SkeletonRow
+          lines={[{ width: '40%', height: '0.9rem' }, { width: '55%', height: '0.85rem' }, { width: '30%', height: '1rem' }]}
+        />
+      {/each}
     </div>
   {:else if rows.length === 0}
     <EmptyState illustration="empty-no-orders" heading={t('orders.empty')} body={t('orders.emptyBody')} />

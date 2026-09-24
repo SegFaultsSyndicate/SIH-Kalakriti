@@ -412,8 +412,30 @@
   </section>
 
   {#if loadingCluster}
-    <section class="clusters-section">
-      <Skeleton shape="card" height="12rem" />
+    <section class="clusters-section" aria-hidden="true">
+      <Skeleton shape="text" width="16rem" height="1.25rem" />
+      <div class="clusters-table-scroll">
+        <table class="clusters-table">
+          <thead>
+            <tr>
+              <th scope="col">{t('clusters.member')}</th>
+              <th scope="col">{t('clusters.role')}</th>
+              <th scope="col">{t('clusters.joined')}</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each Array(3) as _, i (i)}
+              <tr>
+                <td><Skeleton shape="text" width="7rem" height="0.85rem" /></td>
+                <td><Skeleton shape="text" width="4rem" height="0.85rem" /></td>
+                <td><Skeleton shape="text" width="5rem" height="0.85rem" /></td>
+                <td><Skeleton width="4rem" height="1.75rem" radius="var(--k-radius-md)" /></td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
     </section>
   {:else if cluster}
     <section class="clusters-section" aria-labelledby="cluster-roster-heading">

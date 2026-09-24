@@ -260,7 +260,13 @@
     <p class="income__note">{t('state.error.body')}</p>
     <Button size="md" variant="ghost" onclick={load}>{t('state.error.retry')}</Button>
   {:else if summary === null}
-    <Skeleton shape="card" />
+    <div class="income__skeleton" aria-hidden="true">
+      <Skeleton shape="text" width="10rem" height="2.5rem" />
+      <div class="income__pair">
+        <Skeleton shape="text" width="70%" height="0.85rem" />
+        <Skeleton shape="text" width="70%" height="0.85rem" />
+      </div>
+    </div>
   {:else}
     {#if summary.insufficient_data}
       <p class="income__note">{t(REASONS[summary.insufficient_data] ?? 'income.card.noSales')}</p>
@@ -784,6 +790,12 @@
     font-size: 2.25rem;
     font-weight: 800;
     line-height: 1;
+  }
+
+  .income__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
   }
 
   .income__pair,

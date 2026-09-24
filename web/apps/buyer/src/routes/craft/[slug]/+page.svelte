@@ -10,7 +10,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { locale } from '@kalakriti/i18n';
-  import { EmptyState, Skeleton } from '@kalakriti/ui';
+  import { EmptyState, SkeletonDetail } from '@kalakriti/ui';
   import { ProcessSequence } from '@kalakriti/illustrations';
   import { Icon } from '@kalakriti/icons';
   import { getCraft, type components } from '@kalakriti/api';
@@ -43,7 +43,7 @@
 </svelte:head>
 
 {#if loading}
-  <Skeleton shape="card" height="20rem" />
+  <SkeletonDetail mediaShape="circle" mediaHeight="4rem" lines={3} actions={false} />
 {:else if !craft}
   <EmptyState illustration="empty-error" heading={t('craft.notFound')} />
 {:else}

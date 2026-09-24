@@ -18,6 +18,14 @@ import (
 // attempt with a malformed number is rejected before it reaches Redis.
 var phoneE164Pattern = regexp.MustCompile(`^\+[1-9][0-9]{7,14}$`)
 
+// devBypassPhone/devBypassCode let one specific number always log in during
+// local development without requesting a real OTP challenge first. Only ever
+// honored when s.otp.DevMode() is true (see VerifyOtp).
+const (
+	devBypassPhone = "+918779279060"
+	devBypassCode  = "123456"
+)
+
 // RequestOtp issues a login challenge for a phone number. It deliberately does
 // not reveal whether the number belongs to a registered artisan: an unregistered
 // number gets a challenge too, and the caller learns their registration state
@@ -53,7 +61,14 @@ func (s *Identity) VerifyOtp(ctx context.Context, challengeID, phone, code, devR
 		return LoginResult{}, fmt.Errorf("phone_e164 %q must be E.164: %w", phone, pkgdomain.ErrInvalidInput)
 	}
 
-	if err := s.otp.Verify(ctx, challengeID, phone, code); err != nil {
+	// devPhoneBypass skips real OTP verification entirely for one hardcoded
+	// dev phone number, so it can always log in with a fixed code during local
+	// development regardless of what a real (or expired) challenge holds. Only
+	// honored when dev OTP is enabled -- same guard as DevOTPCode and dev_role
+	// above -- so this can never activate against a real deployment.
+	if s.otp.DevMode() && phone == devBypassPhone && code == devBypassCode {
+		s.log.WarnContext(ctx, "dev phone bypass otp login", "phone", phone)
+	} else if err := s.otp.Verify(ctx, challengeID, phone, code); err != nil {
 		return LoginResult{}, err
 	}
 

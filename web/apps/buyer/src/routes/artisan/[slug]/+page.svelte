@@ -27,6 +27,7 @@
   } from '@kalakriti/api';
   import { session } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
+  import ListingCardSkeleton from '$lib/ListingCardSkeleton.svelte';
   import { demoStorefront } from '$lib/demo-catalog';
 
   type ArtisanStorefront = components['schemas']['ArtisanStorefront'];
@@ -128,7 +129,19 @@
 </svelte:head>
 
 {#if loading}
-  <Skeleton shape="card" height="20rem" />
+  <div class="storefront-skeleton" aria-hidden="true">
+    <header class="storefront-header">
+      <Skeleton width="128px" height="128px" radius="50%" />
+      <div class="storefront-skeleton__lines">
+        <Skeleton shape="text" width="12rem" height="1.5rem" />
+        <Skeleton shape="text" width="8rem" height="1rem" />
+        <Skeleton shape="text" width="10rem" height="0.9rem" />
+      </div>
+    </header>
+    <div class="storefront-catalog">
+      {#each Array(4) as _, i (i)}<ListingCardSkeleton />{/each}
+    </div>
+  </div>
 {:else if !artisan}
   <EmptyState illustration="empty-error" heading={t('artisan.notFound')} />
 {:else}
@@ -291,6 +304,12 @@
   .storefront-header__bio {
     margin-block-start: var(--k-space-3);
     max-inline-size: 60ch;
+  }
+
+  .storefront-skeleton__lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
   }
 
   .storefront-catalog {

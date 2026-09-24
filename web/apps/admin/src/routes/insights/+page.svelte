@@ -351,9 +351,29 @@
   {/if}
 
   {#if loading}
-    <div style="margin-block: var(--k-space-4); display: flex; flex-direction: column; gap: var(--k-space-3);">
-      <Skeleton shape="card" height="14rem" />
-      <Skeleton shape="card" height="14rem" />
+    <div class="insights-skeleton" aria-hidden="true">
+      <div class="insights-kpi-strip">
+        {#each Array(4) as _, i (i)}
+          <div class="insights-kpi">
+            <Skeleton shape="text" width="4rem" height="1.5rem" />
+            <Skeleton shape="text" width="6rem" height="0.75rem" />
+          </div>
+        {/each}
+      </div>
+      <ul class="dying-craft-list">
+        {#each Array(3) as _, i (i)}
+          <li class="dying-craft-item">
+            <div class="dying-craft-item__header">
+              <Skeleton shape="text" width="8rem" height="1rem" />
+              <Skeleton width="4rem" height="1.25rem" radius="var(--k-radius-pill)" />
+            </div>
+            <div class="dying-craft-item__stats">
+              <Skeleton shape="text" width="6rem" height="0.85rem" />
+              <Skeleton shape="text" width="8rem" height="0.85rem" />
+            </div>
+          </li>
+        {/each}
+      </ul>
     </div>
   {/if}
 
@@ -525,6 +545,13 @@
   }
 
   /* ── KPI hero strip ── */
+
+  .insights-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-4);
+    margin-block: var(--k-space-4);
+  }
 
   .insights-kpi-strip {
     display: grid;

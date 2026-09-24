@@ -110,7 +110,7 @@ export const RAW_FALLBACK_GI_LISTINGS: RawFallbackListing[] = [
     artisan_state_code: 'GJ',
     type: 'MADE_TO_ORDER',
     price: { amount_paise: 12000000, currency_code: 'INR' },
-    image_url: '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg',
+    image_url: '/craft-images/weaving_and_looms/zari-work-saree-beige.jpeg',
     titleKey: 'home.fallbackListing.gi3.title',
     descriptionKey: 'home.fallbackListing.gi3.description',
   },

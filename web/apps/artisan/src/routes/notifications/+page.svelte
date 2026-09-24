@@ -15,7 +15,7 @@
 <script lang="ts">
   import { locale, formatDate } from '@kalakriti/i18n';
   import { EmptyState } from '@kalakriti/ui';
-  import { Card, Skeleton } from '@kalakriti/patterns';
+  import { Card, SkeletonRow } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
   import { getFeed, markFeedItemRead, type components } from '@kalakriti/api';
   import type { MessageKey } from '@kalakriti/i18n';
@@ -106,7 +106,13 @@
   <h1>{t('notifications.heading')}</h1>
 
   {#if loading && items.length === 0}
-    <Skeleton shape="card" height="4rem" />
+    <div class="notifications-page__skeletons">
+      {#each Array(4) as _, i (i)}
+        <SkeletonRow
+          lines={[{ width: '45%', height: '0.95rem' }, { width: '75%', height: '0.8rem' }, { width: '25%', height: '0.7rem' }]}
+        />
+      {/each}
+    </div>
   {:else if items.length === 0}
     <EmptyState illustration="empty-no-notifications" heading={t('notifications.empty')} />
   {:else}
@@ -164,6 +170,12 @@
     gap: var(--k-space-4);
     padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
+  }
+
+  .notifications-page__skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
   }
 
   .notifications-page__group ul {

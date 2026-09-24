@@ -142,7 +142,14 @@
   {/if}
 
   {#if loading && !lot}
-    <Skeleton shape="card" height="10rem" />
+    <Card variant="hairline" element="div" class="lot-offer-page__summary" aria-hidden="true">
+      {#each Array(3) as _, i (i)}
+        <div class="lot-offer-page__summary-row">
+          <Skeleton shape="text" width="8rem" height="0.9rem" />
+          <Skeleton shape="text" width="4rem" height="1rem" />
+        </div>
+      {/each}
+    </Card>
   {:else if !lot}
     <p role="alert">{t('lotOffer.notFound')}</p>
   {:else if lot.state !== 'OFFERED'}

@@ -11,7 +11,7 @@
 // this batch only added the `media` card variant and the `shape` skeleton
 // presets those files were missing. One definition, not two that could
 // drift apart.
-export { Card, Skeleton } from '@kalakriti/patterns';
+export { Card, Skeleton, SkeletonRow, SkeletonDetail } from '@kalakriti/patterns';
 
 export { default as SkipLink } from './SkipLink.svelte';
 export { default as VisuallyHidden } from './VisuallyHidden.svelte';

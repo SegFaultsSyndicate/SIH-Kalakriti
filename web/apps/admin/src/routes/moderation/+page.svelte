@@ -195,10 +195,32 @@
 
   {#if loadError}<p role="alert" class="moderation-error">{loadError}</p>{/if}
   {#if loading}
-    <div style="margin-block: var(--k-space-4); display: flex; flex-direction: column; gap: var(--k-space-3);">
-      <Skeleton shape="card" height="10rem" />
-      <Skeleton shape="card" height="10rem" />
-    </div>
+    <ul class="moderation-list" aria-hidden="true">
+      {#each Array(2) as _, i (i)}
+        <li class="moderation-item moderation-item--skeleton">
+          <div class="moderation-item__head">
+            <Skeleton shape="text" width="55%" height="1.25rem" />
+            <Skeleton shape="text" width="4.5rem" height="1rem" />
+          </div>
+          <Skeleton shape="text" width="35%" height="0.9rem" />
+          <div class="moderation-item__evidence">
+            <Skeleton shape="text" width="9rem" height="0.85rem" />
+            <div class="moderation-evidence-grid">
+              <Skeleton shape="text" height="2.4rem" />
+              <Skeleton shape="text" height="2.4rem" />
+              <Skeleton shape="text" height="2.4rem" />
+              <div class="moderation-evidence-grid__wide">
+                <Skeleton shape="text" width="100%" height="2.4rem" />
+              </div>
+            </div>
+          </div>
+          <div class="moderation-item__actions">
+            <Skeleton width="70%" height="4.5rem" radius="var(--k-radius-md)" />
+            <Skeleton width="8rem" height="2.5rem" radius="var(--k-radius-md)" />
+          </div>
+        </li>
+      {/each}
+    </ul>
   {/if}
 
   <ul class="moderation-list">

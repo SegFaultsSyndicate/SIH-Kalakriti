@@ -11,7 +11,7 @@
   import { page } from '$app/state';
   import { locale } from '@kalakriti/i18n';
   import { Money } from '@kalakriti/ui';
-  import { Card, Skeleton } from '@kalakriti/patterns';
+  import { Card, SkeletonRow } from '@kalakriti/patterns';
   import { Icon } from '@kalakriti/icons';
   import StateBadge from '$lib/StateBadge.svelte';
   import OrderTimeline from '$lib/OrderTimeline.svelte';
@@ -57,7 +57,11 @@
   <h1>{t('orderDetail.heading')}</h1>
 
   {#if loading && !order}
-    <Skeleton shape="card" height="8rem" />
+    <div class="order-detail-page__skeleton">
+      {#each Array(2) as _, i (i)}
+        <SkeletonRow lines={[{ width: '30%', height: '0.9rem' }, { width: '25%', height: '0.85rem' }]} trailing trailingWidth="1.5rem" />
+      {/each}
+    </div>
   {:else if !order}
     <p role="alert">{t('lotOffer.notFound')}</p>
   {:else}
@@ -96,6 +100,12 @@
     gap: var(--k-space-4);
     padding-block: var(--k-space-4);
     padding-block-end: calc(var(--k-space-4) + env(safe-area-inset-bottom));
+  }
+
+  .order-detail-page__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
   }
 
   .order-detail-page__lots ul {

@@ -411,8 +411,20 @@
 
 <div class="profile-page">
   {#if pageLoading}
-    <Skeleton shape="card" height="14rem" />
-    <Skeleton shape="card" height="8rem" />
+    <div class="profile-page__skeleton" aria-hidden="true">
+      <div class="profile-page__skeleton-hero">
+        <Skeleton width="5rem" height="5rem" radius="50%" />
+        <div class="profile-page__skeleton-lines">
+          <Skeleton shape="text" width="55%" height="1.25rem" />
+          <Skeleton shape="text" width="40%" height="0.9rem" />
+          <Skeleton shape="text" width="65%" height="0.85rem" />
+        </div>
+      </div>
+      <div class="profile-page__skeleton-details">
+        <Skeleton height="3.5rem" radius="var(--k-radius-md)" />
+        <Skeleton height="3.5rem" radius="var(--k-radius-md)" />
+      </div>
+    </div>
   {/if}
   <!-- Top Identity & Hero Card -->
   <section class="profile-hero">
@@ -1002,6 +1014,31 @@
     margin-inline: auto;
     padding-inline: var(--k-space-3);
     padding-block: var(--k-space-4) var(--k-space-8);
+  }
+
+  .profile-page__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-4);
+  }
+
+  .profile-page__skeleton-hero {
+    display: flex;
+    align-items: center;
+    gap: var(--k-space-4);
+  }
+
+  .profile-page__skeleton-lines {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+  }
+
+  .profile-page__skeleton-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
   }
 
   /* --- Top Hero Section --- */

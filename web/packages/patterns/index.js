@@ -13,4 +13,6 @@
 export { default as Section } from './Section.svelte';
 export { default as Card } from './Card.svelte';
 export { default as Skeleton } from './Skeleton.svelte';
+export { default as SkeletonRow } from './SkeletonRow.svelte';
+export { default as SkeletonDetail } from './SkeletonDetail.svelte';
 export { default as QRFrame } from './QRFrame.svelte';

@@ -12,7 +12,7 @@
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, Checkbox, EmptyState, Money, VisuallyHidden, VoiceInput, showToast } from '@kalakriti/ui';
-  import { Card, Skeleton } from '@kalakriti/patterns';
+  import { Card, SkeletonRow } from '@kalakriti/patterns';
   import { searchVoice } from '@kalakriti/api';
   import StateBadge from '$lib/StateBadge.svelte';
   import {
@@ -231,9 +231,15 @@
 
   {#if loading && listings.length === 0}
     <div class="listings-page__skeletons">
-      <Skeleton shape="card" height="4rem" />
-      <Skeleton shape="card" height="4rem" />
-      <Skeleton shape="card" height="4rem" />
+      {#each Array(4) as _, i (i)}
+        <SkeletonRow
+          thumbnail
+          thumbnailSize="3.5rem"
+          lines={[{ width: '55%', height: '1rem' }, { width: '30%', height: '0.8rem' }]}
+          trailing
+          trailingWidth="5rem"
+        />
+      {/each}
     </div>
   {:else if totalCount === 0}
     <EmptyState

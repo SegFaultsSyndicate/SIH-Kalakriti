@@ -25,7 +25,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
-  import { Button, Money, EmptyState, Skeleton, Tabs } from '@kalakriti/ui';
+  import { Button, Money, EmptyState, Skeleton, SkeletonRow, Tabs } from '@kalakriti/ui';
   import { getOrder, getArtisanStorefront, watchOrderEvents, type components } from '@kalakriti/api';
   import {
     initialAllocationState,
@@ -139,7 +139,14 @@
 </svelte:head>
 
 {#if loading}
-  <Skeleton shape="card" height="20rem" />
+  <div class="alloc-skeleton" aria-hidden="true">
+    <Skeleton shape="text" width="45%" height="1.5rem" />
+    <Skeleton shape="text" width="30%" height="1rem" />
+    <Skeleton width="100%" height="0.75rem" radius="var(--k-radius-pill)" />
+    {#each Array(3) as _, i (i)}
+      <SkeletonRow lines={[{ width: '40%', height: '0.9rem' }, { width: '25%', height: '0.8rem' }]} trailing trailingWidth="4rem" />
+    {/each}
+  </div>
 {:else if !order}
   <EmptyState illustration="empty-error" heading={t('orders.notFound')} />
 {:else}
@@ -263,6 +270,12 @@
     flex-direction: column;
     gap: var(--k-space-1);
     margin-block-end: var(--k-space-4);
+  }
+
+  .alloc-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
   }
 
   .alloc-header__progress {

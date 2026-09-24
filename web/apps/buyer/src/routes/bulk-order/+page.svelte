@@ -155,7 +155,9 @@
       {/if}
       <h2>{t('bulkOrder.craft.label')}</h2>
       {#if loadingCrafts}
-        <Skeleton shape="text" height="2.5rem" />
+        <div class="bulk-order__craft-grid" aria-hidden="true">
+          {#each Array(6) as _, i (i)}<Skeleton height="3rem" radius="var(--k-radius-md)" />{/each}
+        </div>
       {:else if craftsFailed}
         <EmptyState illustration="empty-error" heading={t('api.error.unavailable')} />
       {:else}
@@ -187,7 +189,9 @@
         </p>
       {/if}
       {#if loadingListings}
-        <Skeleton shape="text" height="2.5rem" />
+        <div class="bulk-order__listing-grid" aria-hidden="true">
+          {#each Array(6) as _, i (i)}<Skeleton height="4.5rem" radius="var(--k-radius-md)" />{/each}
+        </div>
       {:else if listings.length === 0}
         <p>{t('bulkOrder.listing.empty')}</p>
       {:else}

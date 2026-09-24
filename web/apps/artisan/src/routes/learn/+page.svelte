@@ -26,6 +26,15 @@
   let failed = $state(false);
   let issuing = $state(false);
 
+  const MOCK_LESSONS: Lesson[] = LESSONS.map((lesson, i) => ({
+    code: lesson.code as Lesson['code'],
+    order: i,
+    has_practice: Boolean(lesson.practice),
+    practice_done: i < 3,
+    quiz_passed: i < 3,
+    completed: i < 3,
+  }));
+
   async function load(): Promise<void> {
     failed = false;
     try {
@@ -33,8 +42,14 @@
       progress = r.lessons ?? [];
       completed = r.completed_count ?? 0;
       if (r.certificate_issued) cert = (await getLiteracyCertificate()).certificate ?? null;
-    } catch {
-      failed = true;
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] listLessons:', cause);
+        progress = MOCK_LESSONS;
+        completed = MOCK_LESSONS.filter((l) => l.completed).length;
+      } else {
+        failed = true;
+      }
     }
   }
 
@@ -48,8 +63,19 @@
     issuing = true;
     try {
       cert = (await issueLiteracyCertificate()).certificate ?? null;
-    } catch {
-      showToast({ message: t('api.error.unknown'), variant: 'error' });
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] issueLiteracyCertificate:', cause);
+        cert = {
+          id: 'cert-mock-01',
+          short_code: 'MOCK1234',
+          issued_at: new Date().toISOString(),
+          download_url: '',
+          verification_url: '',
+        };
+      } else {
+        showToast({ message: t('api.error.unknown'), variant: 'error' });
+      }
     } finally {
       issuing = false;
     }
