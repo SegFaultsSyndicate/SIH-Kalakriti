@@ -257,6 +257,14 @@ func (c *client) otpLogin(phone string) (string, error) {
 }
 
 func (c *client) postJSON(path, token string, body any) (map[string]any, error) {
+	return c.doJSON(http.MethodPost, path, token, body)
+}
+
+func (c *client) putJSON(path, token string, body any) (map[string]any, error) {
+	return c.doJSON(http.MethodPut, path, token, body)
+}
+
+func (c *client) doJSON(method, path, token string, body any) (map[string]any, error) {
 	var reader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -265,7 +273,7 @@ func (c *client) postJSON(path, token string, body any) (map[string]any, error) 
 		}
 		reader = bytes.NewReader(b)
 	}
-	req, err := http.NewRequest(http.MethodPost, c.base+path, reader)
+	req, err := http.NewRequest(method, c.base+path, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +410,7 @@ func seedMosjeTier4(c *client, crafts []map[string]any, officerToken string) ([]
 			}
 
 			bracket := brackets[i%len(brackets)]
-			if _, err := c.postJSON("/api/v1/income/baseline", artisanToken, map[string]any{
+			if _, err := c.putJSON("/api/v1/income/baseline", artisanToken, map[string]any{
 				"monthly_bracket": bracket,
 			}); err != nil {
 				return nil, fmt.Errorf("setting income baseline for %s: %w", artisanID, err)
@@ -434,7 +442,7 @@ func seedMosjeTier4(c *client, crafts []map[string]any, officerToken string) ([]
 			// Verify roughly half of each group's links, so financeAdmin's
 			// review queue and the "checked" KPI both have real data.
 			if i%2 == 0 {
-				linkID := financeResp["id"].(string)
+				linkID := financeResp["link"].(map[string]any)["id"].(string)
 				if _, err := c.postJSON("/api/v1/admin/finance/links/"+linkID+"/review", officerToken, map[string]any{
 					"verified": true,
 				}); err != nil {

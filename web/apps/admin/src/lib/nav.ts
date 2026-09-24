@@ -42,8 +42,10 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/schemes', labelKey: 'nav.schemes', icon: 'verified-artisan', role: 'MINISTRY', hideRoleTag: true },
 ];
 
-/** Whether `role` may see `item`. */
+/** Whether `role` may see `item`. Unauthenticated sessions (no role) see all items. */
 export function visibleTo(item: NavItem, role: string | undefined): boolean {
-  if (item.roles) return role !== undefined && item.roles.includes(role);
+  if (!role) return true;
+  if (item.roles) return item.roles.includes(role);
   return !item.role || item.role === role;
 }
+

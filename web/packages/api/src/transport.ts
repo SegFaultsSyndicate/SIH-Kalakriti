@@ -31,6 +31,12 @@ export class ApiError extends Error {
 
   /** Worth retrying unchanged: a network failure, or a gateway/upstream failure (502/503/504). Not 4xx, not a bare 500. */
   get retryable(): boolean {
+    if (this.body && typeof this.body === 'object') {
+      const b = this.body as Record<string, unknown>;
+      if (b.message === 'bff is not reachable' || (b.error === 'unavailable' && typeof b.message === 'string' && b.message.includes('bff'))) {
+        return false;
+      }
+    }
     return this.status === 0 || this.status === 502 || this.status === 503 || this.status === 504;
   }
 }

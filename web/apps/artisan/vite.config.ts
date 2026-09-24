@@ -252,7 +252,7 @@ export default defineConfig({
 
   server: {
     port: 5173,
-    strictPort: false,
+    strictPort: true,
     fs: {
       allow: [searchForWorkspaceRoot(process.cwd())],
     },
@@ -267,11 +267,29 @@ export default defineConfig({
     // this; there is no reliable way to detect "am I on DrvFs" to gate it.
     watch: {
       usePolling: true,
-      interval: 300,
+      interval: 1000,
+      binaryInterval: 3000,
+      ignored: [
+        '**/.git/**',
+        '**/node_modules/**',
+        '**/.svelte-kit/**',
+        '**/build/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/services/**',
+        '**/cmd/**',
+        '**/proto/**',
+        '**/docs/**',
+        '**/migrations/**',
+        '**/.gemini/**',
+        '**/.agents/**',
+        '**/.claude/**',
+        '**/*.{jpeg,jpg,png,webp,gif,ico,zip,pdf,tar,gz}',
+      ],
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         configure: respondUnavailableOnProxyError,
       },

@@ -19,6 +19,7 @@
   import { Icon } from '@kalakriti/icons';
   import { enqueue } from '@kalakriti/offline';
   import { getIncomeSummary, getActingFor, type IncomeSummary } from '@kalakriti/api';
+  import { MOCK_INCOME_SUMMARY } from './mock-data';
   import BracketPicker from './BracketPicker.svelte';
   import LogSaleSheet from './LogSaleSheet.svelte';
 
@@ -67,9 +68,19 @@
   async function load(): Promise<void> {
     failed = false;
     try {
-      summary = (await getIncomeSummary()).summary ?? null;
-    } catch {
-      failed = true;
+      const res = await getIncomeSummary();
+      summary = res.summary ?? null;
+      if (!summary && (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV)) {
+        summary = MOCK_INCOME_SUMMARY;
+      }
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
+        console.warn('[mock fallback] income summary load:', cause);
+        summary = MOCK_INCOME_SUMMARY;
+        failed = false;
+      } else {
+        failed = true;
+      }
     }
   }
 

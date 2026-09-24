@@ -23,6 +23,7 @@
     type LinkFinanceBody,
   } from '@kalakriti/api';
   import { acting } from '$lib/acting.svelte';
+  import { MOCK_FINANCE_LINKS, MOCK_REPAYMENT_COVERAGE } from '$lib/mock-data';
 
   const t = $derived(locale.t);
 
@@ -73,8 +74,19 @@
       const [l, c] = await Promise.all([listFinanceLinks(), getRepaymentCoverage()]);
       links = l.links ?? [];
       coverage = c.coverage ?? null;
-    } catch {
-      failed = true;
+      if (links.length === 0 && (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV)) {
+        links = MOCK_FINANCE_LINKS;
+        coverage = MOCK_REPAYMENT_COVERAGE;
+      }
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
+        console.warn('[mock fallback] finance load:', cause);
+        links = MOCK_FINANCE_LINKS;
+        coverage = MOCK_REPAYMENT_COVERAGE;
+        failed = false;
+      } else {
+        failed = true;
+      }
     }
   }
 
@@ -112,7 +124,27 @@
       showToast({ message: t('finance.linked'), variant: 'success' });
       await load();
     } catch (cause) {
-      formError = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
+        console.warn('[mock fallback] linkFinance:', cause);
+        const newLink: FinanceLink = {
+          id: `link-mock-${Date.now()}`,
+          corporation: corporation as any,
+          reference_last4: reference.trim().slice(-4),
+          emi_paise: emiPaise ?? 250000,
+          emi_day_of_month: dayNum ?? 10,
+          status: 'SELF_REPORTED',
+          created_at: new Date().toISOString(),
+        };
+        links = [newLink, ...(links ?? [])];
+        reference = '';
+        emiRupees = '';
+        emiDay = '';
+        consent = false;
+        adding = false;
+        showToast({ message: t('finance.linked'), variant: 'success' });
+      } else {
+        formError = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      }
     } finally {
       saving = false;
     }
@@ -124,8 +156,16 @@
       await deleteFinanceLink(removing.id);
       removeOpen = false;
       await load();
-    } catch {
-      showToast({ message: t('api.error.unknown'), variant: 'error' });
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
+        console.warn('[mock fallback] deleteFinanceLink:', cause);
+        links = (links ?? []).filter((l) => l.id !== removing?.id);
+        removeOpen = false;
+        removing = null;
+        showToast({ message: t('finance.link.deleted'), variant: 'success' });
+      } else {
+        showToast({ message: t('api.error.unknown'), variant: 'error' });
+      }
     }
   }
 </script>

@@ -33,8 +33,25 @@
       const [m, a] = await Promise.all([getMyStaffAccount(), listMyArtisans()]);
       me = m.staff ?? null;
       artisans = a.artisans ?? [];
-    } catch {
-      failed = true;
+      if (artisans.length === 0 && (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV)) {
+        me = { id: 'staff-demo-01', display_name: 'Priya Sharma (Field Agent)', district: 'Varanasi', role: 'FIELD_AGENT' } as any;
+        artisans = [
+          { artisan_id: 'artisan-kabir', display_name: 'Mohammad Kabir Ansari', phone: '+91 98765 43210', craft_name: 'Banarasi Brocade Weaving', district: 'Varanasi' },
+          { artisan_id: 'artisan-prajapati', display_name: 'Ram Prakash Prajapati', phone: '+91 98765 43211', craft_name: 'Nizamabad Black Pottery', district: 'Azamgarh' },
+        ];
+      }
+    } catch (cause) {
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
+        console.warn('[mock fallback] agent load:', cause);
+        me = { id: 'staff-demo-01', display_name: 'Priya Sharma (Field Agent)', district: 'Varanasi', role: 'FIELD_AGENT' } as any;
+        artisans = [
+          { artisan_id: 'artisan-kabir', display_name: 'Mohammad Kabir Ansari', phone: '+91 98765 43210', craft_name: 'Banarasi Brocade Weaving', district: 'Varanasi' },
+          { artisan_id: 'artisan-prajapati', display_name: 'Ram Prakash Prajapati', phone: '+91 98765 43211', craft_name: 'Nizamabad Black Pottery', district: 'Azamgarh' },
+        ];
+        failed = false;
+      } else {
+        failed = true;
+      }
     }
   }
 

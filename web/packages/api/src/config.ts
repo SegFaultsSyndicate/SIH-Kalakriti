@@ -43,4 +43,4 @@ export function getSessionRefreshHandler(): SessionRefreshHandler | undefined {
 }
 
 /** Per-request AbortController timeout when the caller doesn't specify one. */
-export const DEFAULT_TIMEOUT_MS = 10_000;
+export const DEFAULT_TIMEOUT_MS = 5_000;

@@ -46,7 +46,7 @@ function jittered(baseMs: number, attempt: number): number {
  * injected unauthorized handler if the request remains unauthorized.
  */
 export async function call(path: string, options: CallOptions = {}): Promise<unknown> {
-  const { retries = 2, backoffMs = 300, idempotencyKey, timeoutMs, refreshToken, onBehalfOf, ...rest } = options;
+  const { retries = 2, backoffMs = 150, idempotencyKey, timeoutMs, refreshToken, onBehalfOf, ...rest } = options;
   const method = (rest.method ?? 'GET').toUpperCase();
   const key = idempotencyKey ?? (IDEMPOTENT_METHODS.has(method) ? uuid7() : undefined);
 

@@ -597,7 +597,7 @@
         <div class="doc-viewer-placeholder">
           <Icon name="income-statement" />
           <h3>Legitimacy &amp; Turnover Verification</h3>
-          <p>Document URL: <code>{selectedDocUrl}</code></p>
+          <p class="doc-url-line">Document URL: <code class="doc-url-code">{selectedDocUrl}</code></p>
           <div class="audit-checklist">
             <h4>Mandatory Audit Checklist:</h4>
             <ul>
@@ -1034,6 +1034,8 @@
     /* Doc Modal */
     .doc-modal-content {
       padding: 1.5rem;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .doc-viewer-placeholder {
@@ -1045,6 +1047,19 @@
       padding: 2rem;
       border: 1px dashed var(--k-border-hairline);
       background: var(--k-khadi);
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    .doc-url-line {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .doc-url-code {
+      word-break: break-all;
+      overflow-wrap: anywhere;
     }
 
     .audit-checklist {

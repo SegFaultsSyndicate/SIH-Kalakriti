@@ -16,9 +16,11 @@
 // (see components.schemas.Error in services/bff/openapi.json) so the app
 // shows its existing 'api.error.unavailable' copy instead.
 export function respondUnavailableOnProxyError(proxy) {
+  proxy.options.proxyTimeout = 1500;
+  proxy.options.timeout = 1500;
   proxy.on('error', (_err, _req, res) => {
     if (res.headersSent || res.writableEnded) return;
-    res.writeHead(503, { 'Content-Type': 'application/json' });
+    res.writeHead(503, { 'Content-Type': 'application/json', 'X-Vite-Proxy-Error': '1' });
     res.end(JSON.stringify({ error: 'unavailable', message: 'bff is not reachable' }));
   });
 }

@@ -41,6 +41,7 @@
     a11y,
   } from '@kalakriti/ui';
   import { ReadScreen } from '@kalakriti/voice';
+  import { Spinner } from '@kalakriti/icons';
   import { ErrorBoundary } from '@kalakriti/observability';
   import { env } from '$env/dynamic/public';
   import PwaUpdatePrompt from '$lib/PwaUpdatePrompt.svelte';
@@ -240,7 +241,9 @@
         {@render children()}
       </ErrorBoundary>
     {:else}
-      <p class="shell__boot" role="status" aria-live="polite">{t('state.loading')}</p>
+      <div class="shell__boot" role="status" aria-live="polite">
+        <Spinner title={t('state.loading')} />
+      </div>
     {/if}
   </main>
 
@@ -330,9 +333,15 @@
   }
 
   .shell__boot {
-    padding-block: var(--k-space-6);
-    text-align: center;
-    color: var(--k-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--k-space-8);
+  }
+
+  .shell__boot :global(.k-spinner) {
+    width: 3rem;
+    height: 3rem;
   }
 
   /* --k-float-lift: extra room for a wizard's pinned Back/Next bar, so the

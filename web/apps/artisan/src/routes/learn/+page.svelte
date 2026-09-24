@@ -43,7 +43,7 @@
       completed = r.completed_count ?? 0;
       if (r.certificate_issued) cert = (await getLiteracyCertificate()).certificate ?? null;
     } catch (cause) {
-      if (import.meta.env.VITE_USE_MOCKS === '1') {
+      if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
         console.warn('[mock fallback] listLessons:', cause);
         progress = MOCK_LESSONS;
         completed = MOCK_LESSONS.filter((l) => l.completed).length;

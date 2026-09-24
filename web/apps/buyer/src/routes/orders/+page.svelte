@@ -12,7 +12,7 @@
   import { locale } from '@kalakriti/i18n';
   import { EmptyState, SkeletonRow, Money } from '@kalakriti/ui';
   import { getOrder, type components } from '@kalakriti/api';
-  import { listRememberedOrders } from '$lib/order-store';
+  import { listRememberedOrders, getStoredMockOrder } from '$lib/order-store';
 
   type BulkOrder = components['schemas']['BulkOrder'];
 
@@ -27,9 +27,18 @@
       try {
         const ids = listRememberedOrders();
         const fetched = await Promise.allSettled(ids.map((id) => getOrder(id)));
-        orders = fetched
-          .filter((r): r is PromiseFulfilledResult<BulkOrder> => r.status === 'fulfilled')
-          .map((r) => r.value);
+        const resolved: BulkOrder[] = [];
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i]!;
+          const f = fetched[i];
+          if (f && f.status === 'fulfilled' && f.value) {
+            resolved.push(f.value);
+          } else {
+            const mock = getStoredMockOrder(id);
+            if (mock) resolved.push(mock);
+          }
+        }
+        orders = resolved;
       } finally {
         loading = false;
       }

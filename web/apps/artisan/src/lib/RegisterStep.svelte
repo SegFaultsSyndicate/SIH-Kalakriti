@@ -116,8 +116,6 @@
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
     padding-block: var(--k-space-3);
-    background: var(--k-premium-canvas, var(--k-surface-base));
-    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
   }
 
   .register-step__actions .register-step__next {

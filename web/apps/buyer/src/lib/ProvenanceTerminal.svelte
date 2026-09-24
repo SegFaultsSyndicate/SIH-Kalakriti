@@ -60,9 +60,9 @@
     },
   };
 
-  function toDisplayRecord(raw: RawRecord, codeOverride?: string) {
+  function toDisplayRecord(raw: RawRecord) {
     return {
-      code: codeOverride ?? raw.code,
+      code: raw.code,
       title: t(raw.titleKey),
       artisan: t(raw.artisanKey),
       location: t(raw.locationKey),
@@ -76,10 +76,16 @@
 
   let searchCode = $state('UP-VNS-2024-0982');
   let isChecking = $state(false);
-  let selectedRecordKey = $state<'vns' | 'ktc' | 'srn'>('vns');
-  let selectedCodeOverride = $state<string | undefined>(undefined);
+  let selectedRecordKey = $state<'vns' | 'ktc' | 'srn' | undefined>('vns');
+  let notFoundCode = $state<string | undefined>(undefined);
 
-  const verifiedRecord = $derived(toDisplayRecord(RECORDS[selectedRecordKey], selectedCodeOverride));
+  const verifiedRecord = $derived(selectedRecordKey ? toDisplayRecord(RECORDS[selectedRecordKey]) : undefined);
+
+  const CODE_TO_KEY: Record<string, 'vns' | 'ktc' | 'srn'> = {
+    [RECORDS.vns.code]: 'vns',
+    [RECORDS.ktc.code]: 'ktc',
+    [RECORDS.srn.code]: 'srn',
+  };
 
   const SAMPLE_CODES = [
     { code: 'UP-VNS-2024-0982', labelKey: 'home.provenanceTerminal.sample.vns.label' as MessageKey },
@@ -93,22 +99,18 @@
   }
 
   function verifyCode() {
-    if (!searchCode.trim()) return;
+    const trimmed = searchCode.trim();
+    if (!trimmed) return;
     isChecking = true;
 
     setTimeout(() => {
-      if (searchCode.includes('KTC')) {
-        selectedRecordKey = 'ktc';
-        selectedCodeOverride = undefined;
-      } else if (searchCode.includes('SRN')) {
-        selectedRecordKey = 'srn';
-        selectedCodeOverride = undefined;
-      } else if (searchCode.includes('VNS')) {
-        selectedRecordKey = 'vns';
-        selectedCodeOverride = undefined;
+      const matchedKey = CODE_TO_KEY[trimmed.toUpperCase()];
+      if (matchedKey) {
+        selectedRecordKey = matchedKey;
+        notFoundCode = undefined;
       } else {
-        selectedRecordKey = 'vns';
-        selectedCodeOverride = searchCode.trim().toUpperCase();
+        selectedRecordKey = undefined;
+        notFoundCode = trimmed.toUpperCase();
       }
       isChecking = false;
     }, 300);
@@ -228,6 +230,16 @@
             <Icon name="arrow-right" size="0.9rem" />
           </a>
         </div>
+      </div>
+    {:else if notFoundCode}
+      <div class="certificate-sheet certificate-sheet--invalid" role="alert">
+        <div class="cert-header">
+          <div class="cert-status cert-status--invalid">
+            <Icon name="error" size="1.25rem" />
+            <strong class="cert-verdict">{t('buyer.verify.invalid.title')}</strong>
+          </div>
+        </div>
+        <p class="cert-invalid-body">{t('buyer.verify.invalid.body', { code: notFoundCode })}</p>
       </div>
     {/if}
   </div>
@@ -372,6 +384,20 @@
     align-items: center;
     gap: var(--k-space-2);
     color: var(--k-accent-success);
+  }
+
+  .cert-status--invalid {
+    color: var(--k-accent-danger);
+  }
+
+  .certificate-sheet--invalid {
+    border-color: var(--k-accent-danger);
+  }
+
+  .cert-invalid-body {
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    margin: 0;
   }
 
   .cert-verdict {

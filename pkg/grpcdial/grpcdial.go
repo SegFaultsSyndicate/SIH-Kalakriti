@@ -6,6 +6,7 @@
 package grpcdial
 
 import (
+	"context"
 	"time"
 
 	"google.golang.org/grpc"
@@ -13,6 +14,21 @@ import (
 
 	"github.com/ZoroNewbie00/kalakriti/pkg/breaker"
 )
+
+// defaultRPCTimeout ensures downstream calls cannot hang indefinitely or consume
+// the full 30s HTTP request timeout when a backend is lagging or unreachable.
+const defaultRPCTimeout = 5 * time.Second
+
+func timeoutUnaryInterceptor(d time.Duration) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if _, ok := ctx.Deadline(); !ok {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, d)
+			defer cancel()
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
 
 // roundRobinServiceConfig is grpc-go's standard "loadBalancingConfig" JSON,
 // documented at https://github.com/grpc/grpc/blob/master/doc/service_config.md.
@@ -58,6 +74,9 @@ func Dial(addr string) (*grpc.ClientConn, error) {
 		"dns:///"+addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultServiceConfig(roundRobinServiceConfig),
-		grpc.WithChainUnaryInterceptor(breaker.UnaryClientInterceptor(b)),
+		grpc.WithChainUnaryInterceptor(
+			timeoutUnaryInterceptor(defaultRPCTimeout),
+			breaker.UnaryClientInterceptor(b),
+		),
 	)
 }
