@@ -620,6 +620,10 @@
     margin-block-end: var(--k-space-3);
   }
 
+  .clusters-row :global(.k-field-group) {
+    margin-block-end: 0;
+  }
+
   .clusters-error {
     color: var(--k-accent-danger);
   }

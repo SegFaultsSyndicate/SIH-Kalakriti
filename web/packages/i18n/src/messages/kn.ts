@@ -1657,6 +1657,8 @@ export const kn: Messages = {
   "faq.kicker": "ಪಾರದರ್ಶಕ ಗಿಲ್ಡ್ ಮಾನದಂಡಗಳು",
   "faq.title": "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು",
   "faq.ariaLabel": "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು",
+  "home.faq.kicker": "ಅಧಿಕೃತತೆ ಮತ್ತು ನ್ಯಾಯಯುತ ವ್ಯಾಪಾರ",
+  "home.faq.heading": "ಪದೇ ಪದೇ ಕೇಳುವ ಪ್ರಶ್ನೆಗಳು",
   "faq.giVerification.tag": "ಕ್ರಿಪ್ಟೋಗ್ರಾಫಿಕ್ ಪ್ರೊವೆನೆನ್ಸ್",
   "faq.giVerification.question": "ಕಲಾಕೃತಿಯಲ್ಲಿ ಭೌಗೋಳಿಕ ಸೂಚನೆ (ಜಿಐ) ದೃಢೀಕರಣವನ್ನು ಹೇಗೆ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ?",
   "faq.directPayouts.tag": "0% ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ ಶುಲ್ಕ",

@@ -219,7 +219,8 @@
   }
 
   .shell__nav-link {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
     align-items: center;
     gap: var(--k-space-2);
     padding: var(--k-space-2) var(--k-space-3);
@@ -227,6 +228,12 @@
     color: var(--k-text-secondary);
     font-size: var(--k-text-sm);
     font-weight: var(--k-weight-medium);
+  }
+
+  /* Fixed icon column so labels start at the same x regardless of an
+     item's icon intrinsic size (e.g. Badges' 1.75rem override). */
+  .shell__nav-link :global(.k-icon) {
+    justify-self: center;
   }
 
   .shell__nav-link[aria-current='page'] {

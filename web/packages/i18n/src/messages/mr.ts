@@ -1657,6 +1657,8 @@ export const mr: Messages = {
   "faq.kicker": "पारदर्शक गिल्ड मानके",
   "faq.title": "वारंवार विचारले जाणारे प्रश्न",
   "faq.ariaLabel": "वारंवार विचारले जाणारे प्रश्न",
+  "home.faq.kicker": "प्रामाणिकता आणि न्याय्य व्यापार",
+  "home.faq.heading": "वारंवार विचारले जाणारे प्रश्न",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक प्रोव्हनन्स",
   "faq.giVerification.question": "कलाकृतीवर भौगोलिक संकेत (GI) सत्यता कशी पडताळली जाते?",
   "faq.directPayouts.tag": "0% प्लॅटफॉर्म फी",

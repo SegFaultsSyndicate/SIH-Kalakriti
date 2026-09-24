@@ -1657,6 +1657,8 @@ export const ks: Messages = {
   "faq.kicker": "شفاف گلڈ معیارات",
   "faq.title": "اکثر پرژھنہٕ یِنہٕ وٲلۍ سوال",
   "faq.ariaLabel": "اکثر پرژھنہٕ یِنہٕ وٲلۍ سوال",
+  "home.faq.kicker": "اصالت تہ منصفانہ وپار",
+  "home.faq.heading": "اکثر پوچھنہ وول سوالات",
   "faq.giVerification.tag": "کرپٹوگرافک ماخذ",
   "faq.giVerification.question": "کَلاکریتی پٮ۪ٹھ کِتھ کٔنۍ چھِ جغرافیٲیی اِشارٕ (جی آئی) صداقتٕچ تصدیق یِوان کرنہٕ؟",
   "faq.directPayouts.tag": "0٪ پلیٹ فارم فیس",

@@ -1657,6 +1657,8 @@ export const ur: Messages = {
   "faq.kicker": "شفاف گلڈ کے معیارات",
   "faq.title": "اکثر پوچھے گئے سوالات",
   "faq.ariaLabel": "اکثر پوچھے گئے سوالات",
+  "home.faq.kicker": "اصالت اور منصفانہ تجارت",
+  "home.faq.heading": "اکثر پوچھے جانے والے سوالات",
   "faq.giVerification.tag": "کرپٹوگرافک پرووننس",
   "faq.giVerification.question": "کالکرتی پر جغرافیائی اشارے (GI) کی صداقت کی تصدیق کیسے کی جاتی ہے؟",
   "faq.directPayouts.tag": "0% پلیٹ فارم فیس",

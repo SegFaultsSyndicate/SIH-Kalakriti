@@ -6,7 +6,11 @@
   exist anywhere (core-svc hashes the rest on arrival), so that is all this
   page can show. The corporation summary on top is the same k>=5-suppressed
   aggregate the impact dashboard uses; the queue itself is individual rows
-  by necessity -- a reviewer has to see whose link they are verifying.
+  by necessity -- a reviewer has to see whose link they are verifying. When
+  VITE_USE_MOCKS=1 is set, $lib/stubs.ts appends sample rows to any section
+  real rows don't already cover (deduped) so the page never looks empty;
+  unreachable endpoints fall back to the stubs and review actions are
+  applied to the local queue (a "[mock fallback]" console.warn is logged).
 -->
 <script lang="ts">
   import { locale, formatDate, formatNumber, type MessageKey } from '@kalakriti/i18n';
@@ -21,6 +25,7 @@
     type FinanceLinkForReview,
     type FinanceCoverageRow,
   } from '@kalakriti/api';
+  import { FINANCE_LINKS_FOR_REVIEW, FINANCE_COVERAGE, mergeWithStubs } from '$lib/stubs';
 
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
@@ -55,10 +60,16 @@
         listFinanceLinksForReview({ ...filter, status: status || undefined }),
         getFinanceCoverage(filter),
       ]);
-      links = q.links ?? [];
-      summary = s.rows ?? [];
+      links = mergeWithStubs(q.links ?? [], FINANCE_LINKS_FOR_REVIEW, (x) => x.id);
+      summary = mergeWithStubs(s.rows ?? [], FINANCE_COVERAGE, (x) => x.corporation);
     } catch (cause) {
-      error = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] finance load:', cause);
+        links = FINANCE_LINKS_FOR_REVIEW;
+        summary = FINANCE_COVERAGE;
+      } else {
+        error = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      }
     } finally {
       loading = false;
     }
@@ -83,7 +94,14 @@
       showToast({ message: t('financeAdmin.reviewed'), variant: 'success' });
       await load();
     } catch (cause) {
-      showToast({ message: t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown'), variant: 'error' });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] reviewFinanceLink:', cause);
+        links = links.filter((l) => l.id !== current?.id);
+        open = false;
+        showToast({ message: t('financeAdmin.reviewed'), variant: 'success' });
+      } else {
+        showToast({ message: t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown'), variant: 'error' });
+      }
     } finally {
       saving = false;
     }
@@ -223,6 +241,10 @@
     grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: var(--k-space-3);
     align-items: end;
+  }
+
+  .fin__filters :global(.k-field-group) {
+    margin-block-end: 0;
   }
 
   .fin__muted {

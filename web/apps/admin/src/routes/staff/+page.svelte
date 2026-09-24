@@ -7,6 +7,11 @@
     - staff accounts (MINISTRY only): create, activate, deactivate. A phone
       on an active account logs in through ordinary OTP as that role.
   Cluster officers only ever see their own scope (clamped by core-svc).
+  When VITE_USE_MOCKS=1 is set, $lib/stubs.ts appends sample rows to any
+  table real rows don't already cover (deduped) so the page never looks
+  empty; unreachable endpoints fall back to the stubs and create/activate
+  actions are applied to the local list (a "[mock fallback]" console.warn is
+  logged).
 -->
 <script lang="ts">
   import { locale, formatDate, formatNumber, type MessageKey } from '@kalakriti/i18n';
@@ -27,6 +32,7 @@
     type StaffAccount,
     type CreateStaffBody,
   } from '@kalakriti/api';
+  import { AGENT_PRODUCTIVITY, LINKS_FOR_REVIEW, STAFF_ACCOUNTS, mergeWithStubs } from '$lib/stubs';
 
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
@@ -66,11 +72,18 @@
         listLinksForReview(),
         ministry ? listStaff() : Promise.resolve({ staff: [] as StaffAccount[] }),
       ]);
-      agents = a.agents ?? [];
-      reviews = r.links ?? [];
-      staff = s.staff ?? [];
+      agents = mergeWithStubs(a.agents ?? [], AGENT_PRODUCTIVITY, (x) => x.agent_id);
+      reviews = mergeWithStubs(r.links ?? [], LINKS_FOR_REVIEW, (x) => x.link_id);
+      staff = ministry ? mergeWithStubs(s.staff ?? [], STAFF_ACCOUNTS, (x) => x.id) : (s.staff ?? []);
     } catch (cause) {
-      error = fail(cause);
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] staff load:', cause);
+        agents = AGENT_PRODUCTIVITY;
+        reviews = LINKS_FOR_REVIEW;
+        staff = ministry ? STAFF_ACCOUNTS : [];
+      } else {
+        error = fail(cause);
+      }
     }
   }
 
@@ -113,7 +126,26 @@
       showToast({ message: t('staff.created'), variant: 'success' });
       await load();
     } catch (cause) {
-      showToast({ message: fail(cause), variant: 'error' });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] createStaff:', cause);
+        const fresh: StaffAccount = {
+          id: `staff-demo-${Date.now()}`,
+          phone_e164: phone.trim(),
+          display_name: name.trim(),
+          role: newRole as StaffAccount['role'],
+          state_code: stateCode.trim() || undefined,
+          district: district.trim() || undefined,
+          csc_id: csc.trim() || undefined,
+          active: true,
+          created_at: new Date().toISOString(),
+        };
+        staff = [fresh, ...staff];
+        phone = name = stateCode = district = csc = '';
+        newRole = 'FIELD_AGENT';
+        showToast({ message: t('staff.created'), variant: 'success' });
+      } else {
+        showToast({ message: fail(cause), variant: 'error' });
+      }
     } finally {
       creating = false;
     }
@@ -125,7 +157,12 @@
       await setStaffActive(s.id, !s.active);
       await load();
     } catch (cause) {
-      showToast({ message: fail(cause), variant: 'error' });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] setStaffActive:', cause);
+        staff = staff.map((x) => (x.id === s.id ? { ...x, active: !x.active } : x));
+      } else {
+        showToast({ message: fail(cause), variant: 'error' });
+      }
     }
   }
 
@@ -361,5 +398,9 @@
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
     gap: var(--k-space-3);
     align-items: end;
+  }
+
+  .staff__form :global(.k-field-group) {
+    margin-block-end: 0;
   }
 </style>

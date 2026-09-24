@@ -1657,6 +1657,8 @@ export const te: Messages = {
   "faq.kicker": "పారదర్శక గిల్డ్ ప్రమాణాలు",
   "faq.title": "తరచుగా అడిగే ప్రశ్నలు",
   "faq.ariaLabel": "తరచుగా అడిగే ప్రశ్నలు",
+  "home.faq.kicker": "ప్రామాణికత మరియు న్యాయమైన వాణిజ్యం",
+  "home.faq.heading": "తరచుగా అడిగే ప్రశ్నలు",
   "faq.giVerification.tag": "క్రిప్టోగ్రాఫిక్ ప్రోవెన్స్",
   "faq.giVerification.question": "కళాకృతిలో భౌగోళిక సూచిక (GI) ప్రామాణికత ఎలా ధృవీకరించబడింది?",
   "faq.directPayouts.tag": "0% ప్లాట్‌ఫారమ్ రుసుము",

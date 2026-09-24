@@ -1678,6 +1678,8 @@ export const en = {
   'faq.kicker': 'Transparent Guild Standards',
   'faq.title': 'Frequently Asked Questions',
   'faq.ariaLabel': 'Frequently Asked Questions',
+  'home.faq.kicker': 'Authenticity & Fair Trade',
+  'home.faq.heading': 'Frequently Answered Inquiries',
   'faq.giVerification.tag': 'Cryptographic Provenance',
   'faq.giVerification.question': 'How is Geographical Indication (GI) authenticity verified on Kalakriti?',
   'faq.directPayouts.tag': '0% Platform Fee',

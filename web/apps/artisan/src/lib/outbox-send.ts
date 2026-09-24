@@ -153,6 +153,13 @@ async function sendMediaUpload(entry: OutboxEntry): Promise<SendResult> {
     await db.media.update(localMediaId, { remoteId: media_id, uploaded: true });
     return { ok: true };
   } catch (cause) {
+    // See sendProfileUpdate's own comment on this flag: same opt-in, same
+    // unmistakable `mock:` id, only reachable with no real backend at all.
+    if (import.meta.env.VITE_USE_MOCKS === '1') {
+      console.warn('[mock fallback] media.upload:', cause);
+      await db.media.update(localMediaId, { remoteId: `mock:${crypto.randomUUID()}`, uploaded: true });
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }
@@ -189,6 +196,11 @@ async function sendListingCreate(entry: OutboxEntry): Promise<SendResult> {
     if (response.listing_id) await db.drafts.update(draftId, { remoteId: response.listing_id, updatedAt: Date.now() });
     return { ok: true };
   } catch (cause) {
+    if (import.meta.env.VITE_USE_MOCKS === '1') {
+      console.warn('[mock fallback] listing.create:', cause);
+      await db.drafts.update(draftId, { remoteId: `mock:${crypto.randomUUID()}`, updatedAt: Date.now() });
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }
@@ -224,6 +236,10 @@ async function sendListingMediaAttach(entry: OutboxEntry): Promise<SendResult> {
     );
     return { ok: true };
   } catch (cause) {
+    if (import.meta.env.VITE_USE_MOCKS === '1') {
+      console.warn('[mock fallback] listing.media.attach:', cause);
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }
@@ -285,6 +301,10 @@ async function sendIncomeSale(entry: OutboxEntry): Promise<SendResult> {
     await logOfflineSale(entry.payload as LogOfflineSaleBody, opts(entry));
     return { ok: true };
   } catch (cause) {
+    if (import.meta.env.VITE_USE_MOCKS === '1') {
+      console.warn('[mock fallback] income.sale:', cause);
+      return { ok: true };
+    }
     return fromApiError(cause);
   }
 }

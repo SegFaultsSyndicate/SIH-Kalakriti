@@ -1657,6 +1657,8 @@ export const pa: Messages = {
   "faq.kicker": "ਪਾਰਦਰਸ਼ੀ ਗਿਲਡ ਮਿਆਰ",
   "faq.title": "ਅਕਸਰ ਪੁੱਛੇ ਜਾਂਦੇ ਸਵਾਲ",
   "faq.ariaLabel": "ਅਕਸਰ ਪੁੱਛੇ ਜਾਂਦੇ ਸਵਾਲ",
+  "home.faq.kicker": "ਪ੍ਰਮਾਣਿਕਤਾ ਅਤੇ ਨਿਰਪੱਖ ਵਪਾਰ",
+  "home.faq.heading": "ਅਕਸਰ ਪੁੱਛੇ ਜਾਂਦੇ ਸਵਾਲ",
   "faq.giVerification.tag": "ਕ੍ਰਿਪਟੋਗ੍ਰਾਫਿਕ ਪ੍ਰੋਵੇਨੈਂਸ",
   "faq.giVerification.question": "ਕਾਲਕ੍ਰਿਤੀ 'ਤੇ ਭੂਗੋਲਿਕ ਸੰਕੇਤ (GI) ਪ੍ਰਮਾਣਿਕਤਾ ਦੀ ਪੁਸ਼ਟੀ ਕਿਵੇਂ ਕੀਤੀ ਜਾਂਦੀ ਹੈ?",
   "faq.directPayouts.tag": "0% ਪਲੇਟਫਾਰਮ ਫੀਸ",

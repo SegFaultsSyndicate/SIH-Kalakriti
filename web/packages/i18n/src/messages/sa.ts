@@ -1657,6 +1657,8 @@ export const sa: Messages = {
   "faq.kicker": "पारदर्शकाः श्रेणीमानकाः",
   "faq.title": "बहुधा पृष्टाः प्रश्नाः",
   "faq.ariaLabel": "बहुधा पृष्टाः प्रश्नाः",
+  "home.faq.kicker": "प्रामाणिकता न्याययुक्तव्यापारश्च",
+  "home.faq.heading": "पुनःपुनः पृष्टाः प्रश्नाः",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक उत्पत्ति",
   "faq.giVerification.question": "कलाकृते भौगोलिकसूचनस्य (GI) प्रामाणिकता कथं सत्याप्यते ?",
   "faq.directPayouts.tag": "0% मञ्चशुल्कम्",

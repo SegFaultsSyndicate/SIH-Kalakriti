@@ -1657,6 +1657,8 @@ export const or: Messages = {
   "faq.kicker": "ସ୍ୱଚ୍ଛ ଗିଲ୍ଡ ମାନକ |",
   "faq.title": "ବାରମ୍ବାର ପଚରାଯାଉଥିବା ପ୍ରଶ୍ନ |",
   "faq.ariaLabel": "ବାରମ୍ବାର ପଚରାଯାଉଥିବା ପ୍ରଶ୍ନ |",
+  "home.faq.kicker": "ପ୍ରାମାଣିକତା ଏବଂ ନ୍ୟାୟସଙ୍ଗତ ବ୍ୟାପାର",
+  "home.faq.heading": "ବାରମ୍ବାର ପଚରାଯାଇଥିବା ପ୍ରଶ୍ନ",
   "faq.giVerification.tag": "କ୍ରିପ୍ଟୋଗ୍ରାଫିକ୍ ପ୍ରୋଭେନାନ୍ସ |",
   "faq.giVerification.question": "କାଲାକ୍ରିତୀରେ ଭ ograph ଗୋଳିକ ସୂଚକାଙ୍କ (GI) ପ୍ରାମାଣିକତା କିପରି ଯାଞ୍ଚ କରାଯାଏ?",
   "faq.directPayouts.tag": "0% ପ୍ଲାଟଫର୍ମ ଦେୟ |",

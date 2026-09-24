@@ -690,7 +690,7 @@
 
 <!-- 19. FREQUENTLY ASKED QUESTIONS -->
 <Section variant="khadi-plain">
-  <SectionHeader kicker="Authenticity & Fair Trade" heading="Frequently Answered Inquiries" />
+  <SectionHeader kicker={t('home.faq.kicker')} heading={t('home.faq.heading')} />
   <FaqAccordion />
 </Section>
 
@@ -711,6 +711,13 @@
     color: var(--k-text-secondary);
     margin: 0 0 var(--k-space-5) 0;
     max-inline-size: 70ch;
+  }
+
+  /* Cuts the gap under CategorySubnav (its own 1rem bottom padding plus the
+     shell's usual 3rem page top-padding) for this page only -- other
+     routes keep the normal top gutter. */
+  :global(.shell__main) {
+    padding-block-start: var(--k-space-4);
   }
 
   /* 1. Government Telemetry Bar */

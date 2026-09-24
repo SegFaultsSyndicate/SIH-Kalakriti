@@ -1657,6 +1657,8 @@ export const ne: Messages = {
   "faq.kicker": "पारदर्शी गिल्ड मानकहरू",
   "faq.title": "बारम्बार सोधिने प्रश्नहरू",
   "faq.ariaLabel": "बारम्बार सोधिने प्रश्नहरू",
+  "home.faq.kicker": "प्रामाणिकता र न्यायपूर्ण व्यापार",
+  "home.faq.heading": "बारम्बार सोधिने प्रश्नहरू",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक प्रोभेनेन्स",
   "faq.giVerification.question": "कलाकृतिमा भौगोलिक संकेत (GI) प्रामाणिकता कसरी प्रमाणित हुन्छ?",
   "faq.directPayouts.tag": "०% प्लेटफर्म शुल्क",

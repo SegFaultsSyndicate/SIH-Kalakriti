@@ -84,10 +84,6 @@
     padding-block: var(--k-space-5);
   }
 
-  .listing-step__actions :global(.listing-step__back) {
-    flex: 1;
-  }
-
   .listing-step h1 {
     font-size: var(--k-text-xl);
   }
@@ -107,23 +103,13 @@
     font-size: var(--k-text-xs);
   }
 
-  /* Pinned above the bottom nav so Back/Next are always in thumb reach
-     without scrolling (the shell uses overflow-x: clip, so sticky works). */
   .listing-step__actions {
-    position: sticky;
-    inset-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-    z-index: 1;
-    display: flex;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--k-space-3);
     margin-block-start: var(--k-space-3);
     padding-block: var(--k-space-3);
-    background: var(--k-premium-canvas, var(--k-surface-base));
     border-block-start: var(--k-hairline) solid var(--k-border-hairline);
-  }
-
-  .listing-step__actions .listing-step__next {
-    flex: 1;
   }
 
   .listing-step__actions :global(button) {

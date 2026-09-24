@@ -1657,6 +1657,8 @@ export const gu: Messages = {
   "faq.kicker": "પારદર્શક ગિલ્ડ ધોરણો",
   "faq.title": "વારંવાર પૂછાતા પ્રશ્નો",
   "faq.ariaLabel": "વારંવાર પૂછાતા પ્રશ્નો",
+  "home.faq.kicker": "પ્રામાણિકતા અને ન્યાયી વેપાર",
+  "home.faq.heading": "વારંવાર પૂછાતા પ્રશ્નો",
   "faq.giVerification.tag": "ક્રિપ્ટોગ્રાફિક પ્રોવેનન્સ",
   "faq.giVerification.question": "કલાકૃતિ પર ભૌગોલિક સંકેત (GI) અધિકૃતતા કેવી રીતે ચકાસવામાં આવે છે?",
   "faq.directPayouts.tag": "0% પ્લેટફોર્મ ફી",

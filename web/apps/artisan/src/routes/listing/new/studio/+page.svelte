@@ -110,7 +110,7 @@
   }
 
   async function next(): Promise<void> {
-    await updateConfig();
+    if (!locked) await updateConfig();
     await goto(`/listing/new/video?d=${draftId}`);
   }
 </script>
@@ -329,7 +329,7 @@
   {/snippet}
 
   {#snippet actions()}
-    <Button size="xl" onclick={next} loading={saving} disabled={locked} tooltip={tooltip('tooltip.next')}>{t('listing.studio.apply')}</Button>
+    <Button size="xl" onclick={next} loading={saving} tooltip={tooltip('tooltip.next')}>{t('listing.studio.apply')}</Button>
   {/snippet}
 </ListingStep>
 

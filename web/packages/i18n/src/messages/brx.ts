@@ -1657,6 +1657,8 @@ export const brx: Messages = {
   "faq.kicker": "पारदर्शक गिल्ड मानदान्दा",
   "faq.title": "गले गले सोंजानाय सोंलुफोर",
   "faq.ariaLabel": "गले गले सोंजानाय सोंलुफोर",
+  "home.faq.kicker": "खेरमा आरो मोजां बेपार",
+  "home.faq.heading": "जाखो जा गोहोनाय सोंसोर",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक फोरमान",
   "faq.giVerification.question": "कलाकृतियाव जिअग्राफिकल इनदिकेसन (GI) नि सैथोथिखौ माबोरै फोरमान खालामनाय जायो?",
   "faq.directPayouts.tag": "0% प्लेटफर्म मासुल",

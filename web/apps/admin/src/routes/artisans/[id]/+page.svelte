@@ -31,7 +31,24 @@
       selectedBadgeId = '';
       showToast({ variant: 'success', message: 'Badge granted successfully' });
     } catch (err) {
-      showToast({ variant: 'error', message: err instanceof Error ? err.message : 'Failed to grant badge' });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] grantBadge:', err);
+        const badge = data.badgeCatalog.find((b) => b.id === selectedBadgeId);
+        if (badge) {
+          const grant: ArtisanBadge = {
+            badge,
+            granted_at: new Date().toISOString(),
+            granted_by: 'MINISTRY_OFFICER_01',
+          };
+          artisanBadges = [...artisanBadges, grant];
+          selectedBadgeId = '';
+          showToast({ variant: 'success', message: 'Badge granted successfully' });
+        } else {
+          showToast({ variant: 'error', message: err instanceof Error ? err.message : 'Failed to grant badge' });
+        }
+      } else {
+        showToast({ variant: 'error', message: err instanceof Error ? err.message : 'Failed to grant badge' });
+      }
     } finally {
       submitting = false;
     }
@@ -50,7 +67,15 @@
       activeRevokeCode = '';
       showToast({ variant: 'success', message: 'Badge revoked' });
     } catch (err) {
-      showToast({ variant: 'error', message: err instanceof Error ? err.message : 'Failed to revoke badge' });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] revokeBadge:', err);
+        artisanBadges = artisanBadges.filter((g) => g.badge.code !== code);
+        revokeReason = '';
+        activeRevokeCode = '';
+        showToast({ variant: 'success', message: 'Badge revoked' });
+      } else {
+        showToast({ variant: 'error', message: err instanceof Error ? err.message : 'Failed to revoke badge' });
+      }
     } finally {
       submitting = false;
     }

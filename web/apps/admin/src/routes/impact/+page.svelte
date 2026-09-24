@@ -4,10 +4,13 @@
   F13 ministry impact dashboard -- the console's landing page for MINISTRY
   and CLUSTER_OFFICER (an officer's filters are clamped to their own scope
   server-side, whatever this form sends). Every figure comes from
-  insight-svc's /impact/* endpoints, computed with pkg/impact's rules;
-  nothing here is invented or mocked. Any group of fewer than 5 artisans
-  arrives flagged `suppressed` and renders as "<5", never as a zero.
-  Baselines are self-reported and the page says so.
+  insight-svc's /impact/* endpoints, computed with pkg/impact's rules. When
+  VITE_USE_MOCKS=1 is set, $lib/stubs.ts appends sample rows to any section
+  real rows don't already cover (deduped) so the page never looks empty; if
+  the endpoints are unreachable the stubs fill the page and a
+  "[mock fallback]" console.warn is logged. Any group of fewer than 5
+  artisans arrives flagged `suppressed` and renders as "<5", never as a
+  zero. Baselines are self-reported and the page says so.
 -->
 <script lang="ts">
   import { locale, formatMoney, formatDate, formatNumber, type MessageKey } from '@kalakriti/i18n';
@@ -31,6 +34,16 @@
     type LiteracyFunnelRow,
   } from '@kalakriti/api';
   import BarChart, { type BarRow } from '$lib/BarChart.svelte';
+  import {
+    IMPACT_SUMMARY,
+    IMPACT_GROUPS,
+    IMPACT_GROUPS_BY_CORPORATION,
+    IMPACT_GROUPS_BY_CATEGORY,
+    SALES_MIX,
+    FINANCE_COVERAGE,
+    LITERACY_FUNNEL,
+    mergeWithStubs,
+  } from '$lib/stubs';
 
   type Summary = Awaited<ReturnType<typeof getImpactSummary>>;
 
@@ -86,6 +99,12 @@
     };
   }
 
+  const stubGroups: Record<ImpactGroupBy, ImpactGroupRow[]> = {
+    district: IMPACT_GROUPS,
+    corporation: IMPACT_GROUPS_BY_CORPORATION,
+    social_category: IMPACT_GROUPS_BY_CATEGORY,
+  };
+
   async function load(): Promise<void> {
     loading = true;
     error = '';
@@ -98,13 +117,26 @@
         getFinanceCoverage(q),
         getLiteracyFunnel(q),
       ]);
-      summary = s;
-      groups = g.rows ?? [];
-      mix = m.months ?? [];
-      finance = f.rows ?? [];
-      funnel = l.rows ?? [];
+      const groupsData = g.rows ?? [];
+      const mixData = m.months ?? [];
+      const financeData = f.rows ?? [];
+      const funnelData = l.rows ?? [];
+      summary = s ?? (import.meta.env.VITE_USE_MOCKS === '1' ? IMPACT_SUMMARY : null);
+      groups = mergeWithStubs(groupsData, stubGroups[groupBy], (r) => `${r.group ?? ''}|${r.state_code ?? ''}`);
+      mix = mergeWithStubs(mixData, SALES_MIX, (x) => x.month);
+      finance = mergeWithStubs(financeData, FINANCE_COVERAGE, (x) => x.corporation);
+      funnel = mergeWithStubs(funnelData, LITERACY_FUNNEL, (x) => `${x.state_code}|${x.district ?? ''}`);
     } catch (cause) {
-      error = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] impact load:', cause);
+        summary = IMPACT_SUMMARY;
+        groups = stubGroups[groupBy];
+        mix = SALES_MIX;
+        finance = FINANCE_COVERAGE;
+        funnel = LITERACY_FUNNEL;
+      } else {
+        error = t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown');
+      }
     } finally {
       loading = false;
     }
@@ -117,8 +149,12 @@
   async function refresh(): Promise<void> {
     refreshing = true;
     try {
-      await refreshInsights();
-      await load();
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        await load();
+      } else {
+        await refreshInsights();
+        await load();
+      }
     } catch (cause) {
       showToast({ message: t(cause instanceof ApiError ? messageKeyFor(cause) : 'api.error.unknown'), variant: 'error' });
     } finally {
@@ -402,6 +438,10 @@
     grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: var(--k-space-3);
     align-items: end;
+  }
+
+  .impact__filters :global(.k-field-group) {
+    margin-block-end: 0;
   }
 
   .impact__month {

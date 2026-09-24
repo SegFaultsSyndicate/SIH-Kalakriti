@@ -6,6 +6,11 @@
   schemes with criteria and manual checklists, edit existing definitions,
   and remove obsolete programs.
 
+  When VITE_USE_MOCKS=1 is set, $lib/stubs.ts appends sample rows real
+  results don't already cover (deduped) so the catalog never looks empty;
+  unreachable endpoints fall back to the stubs and save/delete actions are
+  applied to the local list (a "[mock fallback]" console.warn is logged).
+
   Design Law compliant: hairline rules, no shadow-card floating boxes, Svelte 5 runes.
 -->
 <script lang="ts">
@@ -20,6 +25,7 @@
     type GovernmentScheme,
     type UpsertSchemeBody,
   } from '@kalakriti/api';
+  import { GOVERNMENT_SCHEMES, mergeWithStubs } from '$lib/stubs';
   import type { PageData } from './$types';
 
   interface Props {
@@ -88,12 +94,17 @@
     loading = true;
     try {
       const res = await listSchemes();
-      schemes = res.schemes ?? [];
+      schemes = mergeWithStubs(res.schemes ?? [], GOVERNMENT_SCHEMES, (s) => s.id);
     } catch (err) {
-      showToast({
-        message: err instanceof Error ? err.message : 'Failed to refresh schemes',
-        variant: 'error',
-      });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] listSchemes:', err);
+        schemes = GOVERNMENT_SCHEMES;
+      } else {
+        showToast({
+          message: err instanceof Error ? err.message : 'Failed to refresh schemes',
+          variant: 'error',
+        });
+      }
     } finally {
       loading = false;
     }
@@ -190,10 +201,31 @@
       formOpen = false;
       await refresh();
     } catch (err) {
-      showToast({
-        message: err instanceof Error ? err.message : 'Failed to save scheme',
-        variant: 'error',
-      });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] upsertScheme:', err);
+        const saved: GovernmentScheme = {
+          id: editingId ?? `scheme-demo-${Date.now()}`,
+          code: code.trim(),
+          authority,
+          ministry: ministry.trim(),
+          official_url: officialUrl.trim(),
+          state_code: authority === 'STATE' && stateCode.trim() ? stateCode.trim().toUpperCase() : undefined,
+          name_text: nameText.trim(),
+          summary_text: summaryText.trim() || undefined,
+          sort_order: Number(sortOrder) || 10,
+        };
+        schemes = editingId ? schemes.map((s) => (s.id === editingId ? saved : s)) : [saved, ...schemes];
+        showToast({
+          message: editingId ? 'Scheme updated successfully.' : 'Scheme created successfully.',
+          variant: 'success',
+        });
+        formOpen = false;
+      } else {
+        showToast({
+          message: err instanceof Error ? err.message : 'Failed to save scheme',
+          variant: 'error',
+        });
+      }
     } finally {
       saving = false;
     }
@@ -210,10 +242,20 @@
       deleteConfirmId = null;
       await refresh();
     } catch (err) {
-      showToast({
-        message: err instanceof Error ? err.message : 'Failed to delete scheme',
-        variant: 'error',
-      });
+      if (import.meta.env.VITE_USE_MOCKS === '1') {
+        console.warn('[mock fallback] deleteScheme:', err);
+        schemes = schemes.filter((s) => s.id !== id);
+        showToast({
+          message: 'Scheme removed from catalog.',
+          variant: 'info',
+        });
+        deleteConfirmId = null;
+      } else {
+        showToast({
+          message: err instanceof Error ? err.message : 'Failed to delete scheme',
+          variant: 'error',
+        });
+      }
     } finally {
       deleting = false;
     }

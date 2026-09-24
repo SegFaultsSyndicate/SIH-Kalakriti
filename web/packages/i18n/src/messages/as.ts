@@ -1657,6 +1657,8 @@ export const as: Messages = {
   "faq.kicker": "স্বচ্ছ গিল্ড মানদণ্ড",
   "faq.title": "সঘনাই সোধা প্ৰশ্ন",
   "faq.ariaLabel": "সঘনাই সোধা প্ৰশ্ন",
+  "home.faq.kicker": "প্ৰামাণিকতা আৰু ন্যায্য বাণিজ্য",
+  "home.faq.heading": "বাৰে বাৰে সুধা প্ৰশ্নসমূহ",
   "faq.giVerification.tag": "ক্ৰিপ্টোগ্ৰাফিক প্ৰভেনেন্স",
   "faq.giVerification.question": "কলাকৃতিত ভৌগোলিক সূচক (জি আই)ৰ সত্যতা কেনেকৈ পৰীক্ষা কৰা হয়?",
   "faq.directPayouts.tag": "০% প্লেটফৰ্ম মাচুল",

@@ -1657,6 +1657,8 @@ export const sd: Messages = {
   "faq.kicker": "شفاف گئلڊ معيار",
   "faq.title": "اڪثر پڇيا ويا سوال",
   "faq.ariaLabel": "اڪثر پڇيا ويا سوال",
+  "home.faq.kicker": "اصليت ۽ منصفاڻو واپار",
+  "home.faq.heading": "اڪثر پڇيا ويل سوال",
   "faq.giVerification.tag": "Cryptographic Provenance (سنڌي)",
   "faq.giVerification.question": "جيوگرافيڪل انڊيڪيشن (GI) جي صداقت ڪلاڪرتي تي ڪيئن تصديق ٿيل آهي؟",
   "faq.directPayouts.tag": "0٪ پليٽ فارم فيس",

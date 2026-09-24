@@ -1657,6 +1657,8 @@ export const kok: Messages = {
   "faq.kicker": "पारदर्शक गिल्ड मानक",
   "faq.title": "वारंवार विचारिल्ले प्रस्न",
   "faq.ariaLabel": "वारंवार विचारिल्ले प्रस्न",
+  "home.faq.kicker": "प्रामाणिकताय आनी न्यायी वेपार",
+  "home.faq.heading": "सासणे विचारताले प्रश्न",
   "faq.giVerification.tag": "क्रिप्टोग्राफीक उत्पत्ती",
   "faq.giVerification.question": "कलाकृतीचेर भौगोलिक संकेत (जीआय) प्रामाणीकता कशी तपासतात?",
   "faq.directPayouts.tag": "0% प्लॅटफॉर्म शुल्क",

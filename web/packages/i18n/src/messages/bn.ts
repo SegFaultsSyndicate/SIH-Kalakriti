@@ -1657,6 +1657,8 @@ export const bn: Messages = {
   "faq.kicker": "স্বচ্ছ গিল্ড মান",
   "faq.title": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী",
   "faq.ariaLabel": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী",
+  "home.faq.kicker": "প্রামাণিকতা ও ন্যায্য বাণিজ্য",
+  "home.faq.heading": "সচরাচর জিজ্ঞাসিত প্রশ্নসমূহ",
   "faq.giVerification.tag": "ক্রিপ্টোগ্রাফিক প্রোভেন্যান্স",
   "faq.giVerification.question": "কালকৃতিতে কীভাবে ভৌগলিক ইঙ্গিত (জিআই) সত্যতা যাচাই করা হয়?",
   "faq.directPayouts.tag": "0% প্ল্যাটফর্ম ফি",

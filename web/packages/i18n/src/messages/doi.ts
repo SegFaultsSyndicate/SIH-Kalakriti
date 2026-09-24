@@ -1657,6 +1657,8 @@ export const doi: Messages = {
   "faq.kicker": "पारदर्शी गिल्ड दे मानक",
   "faq.title": "बार-बार पूछे जाने वाले सवाल",
   "faq.ariaLabel": "बार-बार पूछे जाने वाले सवाल",
+  "home.faq.kicker": "प्रमाणिकता ते न्याय संगत व्यापार",
+  "home.faq.heading": "अक्सर पुछे जाने वाले सवाल",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक उत्पत्ति",
   "faq.giVerification.question": "कलाकृति पर भौगोलिक संकेत (जीआई) दी प्रामाणिकता कि’यां सत्यापन कीती जंदी ऐ ?",
   "faq.directPayouts.tag": "0% प्लेटफार्म फीस",

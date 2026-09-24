@@ -1657,6 +1657,8 @@ export const mai: Messages = {
   "faq.kicker": "गिल्डक पारदर्शी मानक",
   "faq.title": "बार-बार पूछे जाने वाले प्रश्न",
   "faq.ariaLabel": "बार-बार पूछे जाने वाले प्रश्न",
+  "home.faq.kicker": "प्रामाणिकता आरु न्यायोचित व्यापार",
+  "home.faq.heading": "अक्सर पूछल जाय वाला प्रश्न",
   "faq.giVerification.tag": "क्रिप्टोग्राफिक उत्पत्ति",
   "faq.giVerification.question": "कलाकृति पर भौगोलिक संकेत (जीआई) प्रामाणिकता कें सत्यापन कोना कैल जायत छै?",
   "faq.directPayouts.tag": "0% प्लेटफॉर्म शुल्क",
