@@ -36,6 +36,7 @@
   type IncomeStatementSummary = components['schemas']['IncomeStatementSummary'];
 
   const t = $derived(locale.t);
+  const sih = getSihEarningsSummary();
 
   let loading = $state(true);
   let statements = $state<IncomeStatementSummary[]>([]);
@@ -109,7 +110,6 @@
   <IncomeGrowthChart />
 
   <!-- SIH Demo: concrete financial summary so there are zero ₹0 or placeholder values -->
-  {@const sih = getSihEarningsSummary()}
   <section class="earnings-page__sih-summary" aria-label="Your income on Kalakriti">
     <h2>Your Economic Growth on Kalakriti</h2>
     <div class="earnings-page__sih-grid">

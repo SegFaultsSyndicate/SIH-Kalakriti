@@ -1,182 +1,453 @@
-const fs = require('fs');
+<!--
+  apps/buyer/src/routes/orders/[id]/+page.svelte
 
-const CASE_STUDIES = [
-  {
-    id: 'dhamadka-ajrakh',
-    artisanName: 'Ismail Mohammad Khatri',
-    title: 'The Alchemists of Dhamadka',
-    subtitle: 'Revitalizing 16-stage natural indigo mud-resist and securing living wages for 42 master families.',
-    cluster: 'Kutch Artisans Collective',
-    region: 'Dhamadka, Gujarat',
-    giTag: 'GI-72 (Kutch Ajrakh)',
-    metrics: [
-      { label: 'Artisan Income Surge', value: '+337%' },
-      { label: 'Active Pit Vats', value: '18 Vats' },
-      { label: 'Middleman Deduction', value: '0%' },
-      { label: 'Sealed Provenance Proofs', value: '1,240' },
-    ],
-    beforeAfterRows: [
-      {
-        dimension: 'Monthly Household Income',
-        before: '₹7,200 (Extreme seasonal swings, poverty during monsoon)',
-        after: '₹28,400 (+294% steady recurring monthly income)',
-      },
-      {
-        dimension: 'Intermediary Deductions',
-        before: '38% retail margin retained by urban retail brokers',
-        after: '0% broker loss (100% direct DBT transfer to artisan bank)',
-      },
-      {
-        dimension: 'Market Reach',
-        before: 'Only 2 physical melas (Surajkund & Dilli Haat) per year',
-        after: 'Continuous 365-day digital storefront + QR stall placards',
-      },
-      {
-        dimension: 'Authenticity Proof',
-        before: 'No proof; undercut by ₹300 synthetic chemical screenprints',
-        after: 'Spectroscopic botanical indigo proof & cryptographic NFC seal',
-      },
-      {
-        dimension: 'Payment Settlement',
-        before: '6 to 9 months delayed payment on credit consignment',
-        after: 'Automated 48-hour escrow payout upon carrier scan',
-      },
-    ],
-    problem: 'For decades, synthetic chemical block-prints imported by commercial fast-fashion houses severely undercut authentic hand block-printers in Dhamadka. Chemical substitutes flooded markets at 20% of the price, forcing traditional masters to dilute ancient 16-stage botanical resist techniques.',
-    intervention: 'Through Kalakriti, the Dhamadka Guild implemented spectroscopic verification of real indigofera tinctoria vat fermentation and acacia arabica gum resists. Every stole and yardage length receives an immutable Ed25519 cryptographic seal and NFC QR tag before leaving the cluster.',
-    impact: 'Authenticity verification allowed the guild to sell directly to luxury design houses and foreign cultural missions. Household incomes rose by 3.37x, enabling the creation of a collective natural dye seed bank and apprenticeship fund for 14 young printers.',
-    quote: {
-      text: 'When buyers scan our cloth and see our hands in the indigo vat, they understand why 16 stages cannot be hurried. Kalakriti gave our honor back.',
-      author: 'Ismail Mohammad Khatri',
-      role: 'Master Craftsman & National Awardee, Dhamadka',
-    },
-  },
-  {
-    id: 'varanasi-kadwa',
-    artisanName: 'Eshaan',
-    title: 'Varanasi Kadwa Pit-Loom Revival',
-    subtitle: 'Eliminating predatory 38% broker fees and automating direct DBT payouts for heritage silk weavers.',
-    cluster: 'Varanasi Silk Weaver Facility Centre',
-    region: 'Varanasi, Uttar Pradesh',
-    giTag: 'GI-99 (Banarasi Kadwa)',
-    metrics: [
-      { label: 'Direct Disbursements', value: '₹1.48 Cr' },
-      { label: 'Broker Fee Cut', value: '0%' },
-      { label: 'Lead Time Reduction', value: '68%' },
-      { label: 'Active Pit Looms', value: '86 Looms' },
-    ],
-    beforeAfterRows: [
-      {
-        dimension: 'Monthly Weaver Earnings',
-        before: '₹8,200 (Forced to take moneylender loans at 36% APR)',
-        after: '₹32,600 (+298% increase, guaranteed living wage)',
-      },
-      {
-        dimension: 'Order Predictability',
-        before: 'Unpredictable bazaar spot sales, loom idle for 4 months/yr',
-        after: '86 pit-looms booked 10 months in advance via GeM lots',
-      },
-      {
-        dimension: 'Middleman Cut',
-        before: 'Bazaar traders pocketed 35-40% markups',
-        after: '0% middleman margin; 100% DBT bank settlement',
-      },
-      {
-        dimension: 'Institutional Access',
-        before: 'Zero access to government summits or corporate gifting',
-        after: 'Direct procurement by state delegations & hotel chains',
-      },
-    ],
-    problem: 'Master zari weavers in Varanasi were dependent on multi-tier bazaar intermediaries who retained 35-40% of retail margins and delayed payments for up to 9 months, forcing weaving families into cyclical monsoon indebtedness.',
-    intervention: 'Kalakriti’s institutional procurement hub allowed state summit hospitality groups and corporate gifting consortia to place collective bulk orders directly with the Pariwar Bunkar SHG. Payment escrow is automated with direct DBT transfers upon loom milestone confirmation.',
-    impact: 'Disbursements totaling ₹1.48 Cr reached weavers within 48 hours of dispatch. 86 pit-looms are now permanently booked across 12-month advance cycles, completely eliminating seasonal poverty.',
-    quote: {
-      text: 'For three generations, we never saw the face of the final buyer. Now our name and loom coordinates travel with every saree we interlock.',
-      author: 'Eshaan',
-      role: 'Lead Pit-Loom Weaver, Varanasi Silk Guild',
-    },
-  },
-  {
-    id: 'bastar-lost-wax',
-    artisanName: 'Budheshwar Ghadwa',
-    title: 'Preserving Bastar Lost-Wax Metallurgy',
-    subtitle: 'Sustaining 4,000-year-old Harappan cire-perdue casting through collective metal financing.',
-    cluster: 'Bastar Bell Metal Guild',
-    region: 'Kondagaon, Chhattisgarh',
-    giTag: 'GI-117 (Bastar Dhokra)',
-    metrics: [
-      { label: 'Raw Metal Financed', value: '14.2 Tons' },
-      { label: 'Apprentices Trained', value: '28' },
-      { label: 'Institutional Kits', value: '640 Lots' },
-      { label: 'Pehchan Verified', value: '100%' },
-    ],
-    beforeAfterRows: [
-      {
-        dimension: 'Monthly Artisan Wage',
-        before: '₹7,100 (Unviable due to 60% scrap metal price inflation)',
-        after: '₹24,500 (+245% uplift with raw material financing)',
-      },
-      {
-        dimension: 'Raw Material Financing',
-        before: 'Artisans had to borrow at exploitative rates to buy beeswax',
-        after: 'Ministry inventory credit line: 14.2 Tons financed upfront',
-      },
-      {
-        dimension: 'Youth Apprenticeship',
-        before: '0 young apprentices; youth migrating to construction labor',
-        after: '28 tribal youth trained in 4,000-year lost-wax casting',
-      },
-      {
-        dimension: 'Pehchan Recognition',
-        before: 'Anonymous tribal makers without government MSME cards',
-        after: '100% Pehchan & PM Vishwakarma verified ID cards',
-      },
-    ],
-    problem: 'Volatile copper and zinc scrap pricing made it nearly impossible for tribal Dhokra sculptors to afford raw beeswax, clay, and casting metals upfront, threatening to wipe out one of humanity’s oldest non-ferrous casting lineages.',
-    intervention: 'The platform introduced raw material inventory credits backed by institutional summit procurement kits. Sculptors record the molten pour on their artisan app, proving unadulterated bell metal alloys.',
-    impact: '28 new tribal apprentices have joined the Kondagaon furnaces. Bastar lost-wax sculptures now grace prominent institutional lobbies and diplomatic gifts worldwide.',
-    quote: {
-      text: 'Our ancestors used beeswax from the sal forests. Kalakriti ensures our furnaces burn bright for the next generation without fear of debt.',
-      author: 'Budheshwar Ghadwa',
-      role: 'Senior Cire-Perdue Metalworker, Kondagaon',
-    },
-  },
-];
+  The allocation view -- the demo centrepiece. GET /orders/{id} (fulfilment
+  proto's GetOrder) supplies the initial snapshot; GET /orders/{id}/events
+  (watchOrderEvents, @kalakriti/api) streams every lot_offered/accepted/
+  declined/expired/progressed/gave_up, qc_recorded, order_state_changed and
+  payment_settled event live over SSE, reconnecting with backoff and
+  resuming from Last-Event-ID on its own -- see packages/api/src/sse.svelte.ts
+  and services/bff/internal/bff/handler/api.go's WatchOrder (batch 12 wired
+  the id:/Last-Event-ID plumbing that makes the resume actually work).
 
-let out = "";
-for (const study of CASE_STUDIES) {
-  out += `  'caseStudies.${study.id}.title': ${JSON.stringify(study.title)},\n`;
-  out += `  'caseStudies.${study.id}.subtitle': ${JSON.stringify(study.subtitle)},\n`;
-  out += `  'caseStudies.${study.id}.cluster': ${JSON.stringify(study.cluster)},\n`;
-  out += `  'caseStudies.${study.id}.region': ${JSON.stringify(study.region)},\n`;
-  out += `  'caseStudies.${study.id}.giTag': ${JSON.stringify(study.giTag)},\n`;
-  
-  study.metrics.forEach((m, i) => {
-    out += `  'caseStudies.${study.id}.metrics.${i}.label': ${JSON.stringify(m.label)},\n`;
-    out += `  'caseStudies.${study.id}.metrics.${i}.value': ${JSON.stringify(m.value)},\n`;
+  $lib/allocation.ts's applyEvent is the single reducer both the card grid
+  and the table read from, keyed by lot id and de-duplicated by event_id, so
+  a reconnect backfill cannot double a row. A dropout is never a silent row
+  change: lot_gave_up and the lot_offered that follows it (carrying
+  reallocated_from_lot_id) are both narrated into the aria-live region and
+  the old lot stays visible, marked reallocated, rather than disappearing.
+
+  Non-visual equivalent: the aria-live region below announces every
+  transition as it lands, and the table view (toggle) renders the exact
+  same `lots` data a sighted user sees as cards -- neither is decorative for
+  the other, per the brief's "not visual-only" requirement.
+-->
+<script lang="ts">
+  import { page } from '$app/state';
+  import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
+  import { Button, Money, EmptyState, Skeleton, SkeletonRow, Tabs } from '@kalakriti/ui';
+  import { getOrder, getArtisanStorefront, watchOrderEvents, type components } from '@kalakriti/api';
+  import {
+    initialAllocationState,
+    applyEvent,
+    allocatedQuantity,
+    narrateEvent,
+    type AllocationState,
+    type RawOrderEvent,
+    type LiveLine,
+  } from '$lib/allocation';
+  import { getStoredMockOrder, createFallbackMockOrder } from '$lib/order-store';
+  import DisputeDialog from '$lib/DisputeDialog.svelte';
+
+  type BulkOrder = components['schemas']['BulkOrder'];
+
+  const t = $derived(locale.t);
+  const orderId = $derived(page.params.id ?? '');
+
+  const ORDER_STATE_KEY: Record<string, MessageKey> = {
+    ALLOCATING: 'allocation.state.ALLOCATING',
+    PARTIALLY_ALLOCATED: 'allocation.state.PARTIALLY_ALLOCATED',
+    CONFIRMED: 'allocation.state.CONFIRMED',
+    IN_PRODUCTION: 'allocation.state.IN_PRODUCTION',
+    AMENDMENT_PENDING: 'allocation.state.AMENDMENT_PENDING',
+    COMPLETED: 'allocation.state.COMPLETED',
+    CANCELLED: 'allocation.state.CANCELLED',
+  };
+
+  let loading = $state(true);
+  let order = $state<BulkOrder | undefined>(undefined);
+  let allocation = $state<AllocationState>(initialAllocationState([]));
+  let liveLines = $state<LiveLine[]>([]);
+  let names = $state<Record<string, string>>({});
+  let districts = $state<Record<string, string>>({});
+  let view = $state('cards');
+  let disputeOpen = $state(false);
+
+  // Re-subscribe when the route param changes. Capturing the watcher once
+  // bound the stream to the first order id the page ever saw.
+  let watcher = $state<ReturnType<typeof watchOrderEvents> | undefined>(undefined);
+  $effect(() => {
+    const w = watchOrderEvents(orderId);
+    watcher = w;
+    return () => w.stop();
   });
-  
-  study.beforeAfterRows.forEach((r, i) => {
-    out += `  'caseStudies.${study.id}.rows.${i}.dimension': ${JSON.stringify(r.dimension)},\n`;
-    out += `  'caseStudies.${study.id}.rows.${i}.before': ${JSON.stringify(r.before)},\n`;
-    out += `  'caseStudies.${study.id}.rows.${i}.after': ${JSON.stringify(r.after)},\n`;
+  const sseStatus = $derived(watcher?.state.status ?? 'connecting');
+
+  async function resolveArtisan(artisanId: string): Promise<void> {
+    if (!artisanId || names[artisanId] !== undefined) return;
+    try {
+      const profile = await getArtisanStorefront(artisanId);
+      names = { ...names, [artisanId]: profile.display_name ?? '' };
+      if (profile.district) districts = { ...districts, [artisanId]: profile.district };
+    } catch {
+      const fallbackNames: Record<string, { name: string; district: string }> = {
+        'artisan-kabir': { name: 'Mohammad Kabir Ansari', district: 'Varanasi, UP' },
+        'artisan-mir': { name: 'Ghulam Nabi Mir', district: 'Srinagar, J&K' },
+        'artisan-prajapati': { name: 'Ram Prakash Prajapati', district: 'Azamgarh, UP' },
+      };
+      const found = fallbackNames[artisanId];
+      names = { ...names, [artisanId]: found?.name ?? 'Master Artisan' };
+      districts = { ...districts, [artisanId]: found?.district ?? 'Craft Cluster' };
+    }
+  }
+
+  $effect(() => {
+    const id = orderId;
+    void (async () => {
+      loading = true;
+      try {
+        order = await getOrder(id);
+      } catch (cause) {
+        console.warn('[orders/[id]] getOrder failed, using mock order:', cause);
+        order = getStoredMockOrder(id) ?? createFallbackMockOrder(id);
+      }
+      if (order) {
+        allocation = initialAllocationState(
+          (order?.lots ?? []).map((l) => ({
+            id: l.id ?? '',
+            artisan_id: l.artisan_id ?? '',
+            cluster_id: l.cluster_id,
+            quantity: l.quantity ?? 0,
+            state: l.state ?? '',
+            progress_pct: l.progress_pct ?? 0,
+            reallocated_from_lot_id: l.reallocated_from_lot_id,
+            decline_reason: l.decline_reason,
+          })),
+        );
+        for (const l of order?.lots ?? []) void resolveArtisan(l.artisan_id ?? '');
+      }
+      loading = false;
+    })();
   });
-  
-  out += `  'caseStudies.${study.id}.problem': ${JSON.stringify(study.problem)},\n`;
-  out += `  'caseStudies.${study.id}.intervention': ${JSON.stringify(study.intervention)},\n`;
-  out += `  'caseStudies.${study.id}.impact': ${JSON.stringify(study.impact)},\n`;
-  out += `  'caseStudies.${study.id}.quote.text': ${JSON.stringify(study.quote.text)},\n`;
-  out += `  'caseStudies.${study.id}.quote.author': ${JSON.stringify(study.quote.author)},\n`;
-  out += `  'caseStudies.${study.id}.quote.role': ${JSON.stringify(study.quote.role)},\n`;
-}
 
-const enTsFile = "c:/projects/kalakriti/web/packages/i18n/src/messages/en.ts";
-let enTsContent = fs.readFileSync(enTsFile, 'utf8');
+  $effect(() => {
+    const ev = watcher?.state.lastEvent;
+    if (!ev) return;
+    let parsed: RawOrderEvent | undefined;
+    try {
+      parsed = JSON.parse(ev.data) as RawOrderEvent;
+    } catch {
+      return;
+    }
+    if (!parsed) return;
+    const changed = applyEvent(allocation, parsed);
+    if (!changed) return;
+    allocation = { ...allocation };
+    if (parsed.lot?.artisan_id) void resolveArtisan(parsed.lot.artisan_id);
+    const line = narrateEvent(parsed, names, districts);
+    if (line) liveLines = [...liveLines.slice(-19), line];
+  });
 
-if (!enTsContent.includes("'caseStudies.dhamadka-ajrakh.title'")) {
-  enTsContent = enTsContent.replace('} as const;', out + '} as const;');
-  fs.writeFileSync(enTsFile, enTsContent);
-  console.log("Updated en.ts");
-} else {
-  console.log("en.ts already updated");
-}
+
+  const lots = $derived(Object.values(allocation.lots));
+  const allocated = $derived(allocatedQuantity(allocation.lots));
+  const total = $derived(order?.quantity ?? 0);
+  const orderState = $derived(allocation.orderState ?? order?.state);
+  const paymentSplit = $derived(allocation.paymentSplit);
+</script>
+
+<svelte:head>
+  <title>{t('allocation.heading')} — {t('app.name')}</title>
+</svelte:head>
+
+{#if loading}
+  <div class="alloc-skeleton" aria-hidden="true">
+    <Skeleton shape="text" width="45%" height="1.5rem" />
+    <Skeleton shape="text" width="30%" height="1rem" />
+    <Skeleton width="100%" height="0.75rem" radius="var(--k-radius-pill)" />
+    {#each Array(3) as _, i (i)}
+      <SkeletonRow lines={[{ width: '40%', height: '0.9rem' }, { width: '25%', height: '0.8rem' }]} trailing trailingWidth="4rem" />
+    {/each}
+  </div>
+{:else if !order}
+  <EmptyState illustration="empty-error" heading={t('orders.notFound')} />
+{:else}
+  <header class="alloc-header">
+    <h1>{t('allocation.heading')}</h1>
+    <p class="alloc-header__progress">{t('allocation.progress', { allocated: String(allocated), total: String(total) })}</p>
+    {#if orderState && ORDER_STATE_KEY[orderState]}
+      <p class="alloc-header__state">{t(ORDER_STATE_KEY[orderState])}</p>
+    {/if}
+    {#if sseStatus === 'connecting'}
+      <p class="alloc-header__reconnecting" role="status">{t('allocation.reconnecting')}</p>
+    {/if}
+    {#if orderState === 'AMENDMENT_PENDING'}
+      <p class="alloc-header__amendment" role="status">{t('allocation.amendment.banner')}</p>
+    {/if}
+    <Button variant="secondary" onclick={() => (disputeOpen = true)} tooltip={tooltip('tooltip.dispute')}>{t('orders.dispute.entry')}</Button>
+  </header>
+
+  <div
+    class="alloc-progress-bar"
+    role="progressbar"
+    aria-valuenow={allocated}
+    aria-valuemin={0}
+    aria-valuemax={total}
+    aria-label={t('allocation.heading')}
+  >
+    <div class="alloc-progress-bar__fill" style:width="{total > 0 ? Math.min(100, (allocated / total) * 100) : 0}%"></div>
+  </div>
+
+  <div class="alloc-live" role="status" aria-live="polite">
+    {#each liveLines.slice(-1) as line (line.id)}
+      <p>{t(line.key, line.params)}</p>
+    {/each}
+  </div>
+
+  <Tabs
+    tabs={[
+      { id: 'cards', label: t('allocation.view.cards') },
+      { id: 'table', label: t('allocation.view.table') },
+    ]}
+    bind:selected={view}
+  >
+    {#snippet children(tabId)}
+      {#if tabId === 'cards'}
+        <ul class="alloc-lots" aria-label={t('allocation.heading')}>
+          {#each lots as lot (lot.id)}
+            <li class="alloc-lot" class:alloc-lot--reallocated={lot.state === 'REALLOCATED'}>
+              <p class="alloc-lot__artisan">{names[lot.artisan_id] || t('allocation.lot.unknownArtisan')}</p>
+              {#if districts[lot.artisan_id]}<p class="alloc-lot__district">{districts[lot.artisan_id]}</p>{/if}
+              <p class="alloc-lot__quantity">{t('orders.units', { count: String(lot.quantity) })}</p>
+              <p class="alloc-lot__state">{lot.state}</p>
+              {#if lot.progress_pct > 0}
+                <p class="alloc-lot__progress">{t('allocation.lot.progress', { pct: String(lot.progress_pct) })}</p>
+              {/if}
+              {#if lot.reallocated_from_lot_id}
+                <p class="alloc-lot__note">{t('allocation.lot.reallocatedFrom')}</p>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <div class="alloc-table-wrap">
+          <table class="alloc-table">
+            <thead>
+              <tr>
+                <th scope="col">{t('allocation.table.artisan')}</th>
+                <th scope="col">{t('allocation.table.district')}</th>
+                <th scope="col">{t('allocation.table.quantity')}</th>
+                <th scope="col">{t('allocation.table.state')}</th>
+                <th scope="col">{t('allocation.table.progress')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each lots as lot (lot.id)}
+                <tr>
+                  <td>{names[lot.artisan_id] || t('allocation.lot.unknownArtisan')}</td>
+                  <td>{districts[lot.artisan_id] ?? ''}</td>
+                  <td class="k-tabular">{lot.quantity}</td>
+                  <td>{lot.state}</td>
+                  <td class="k-tabular">{lot.progress_pct}%</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+    {/snippet}
+  </Tabs>
+
+  {#if paymentSplit}
+    <section class="alloc-payment">
+      <h2>{t('allocation.payment.heading')}</h2>
+      <dl class="alloc-payment__totals">
+        <div><dt>{t('allocation.payment.grossTotal')}</dt><dd><Money paise={paymentSplit.gross_total.amount_paise} /></dd></div>
+        <div><dt>{t('allocation.payment.commissionTotal')}</dt><dd><Money paise={paymentSplit.commission_total.amount_paise} /></dd></div>
+        <div><dt>{t('allocation.payment.netTotal')}</dt><dd><Money paise={paymentSplit.net_total.amount_paise} /></dd></div>
+      </dl>
+      <ul class="alloc-payment__bars">
+        {#each paymentSplit.lines as line (line.lot_id)}
+          <li>
+            <span>{names[line.payee_id] || t('allocation.lot.unknownArtisan')}</span>
+            <span
+              class="alloc-payment__bar"
+              style:width="{paymentSplit.net_total.amount_paise > 0 ? (line.net_amount.amount_paise / paymentSplit.net_total.amount_paise) * 100 : 0}%"
+            ></span>
+            <Money paise={line.net_amount.amount_paise} />
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {:else if orderState === 'COMPLETED' || orderState === 'IN_PRODUCTION'}
+    <p class="alloc-payment__pending">{t('allocation.payment.pending')}</p>
+  {/if}
+
+  <DisputeDialog bind:open={disputeOpen} {orderId} />
+{/if}
+
+<style>
+  .alloc-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+    margin-block-end: var(--k-space-4);
+  }
+
+  .alloc-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+  }
+
+  .alloc-header__progress {
+    font-size: var(--k-text-md);
+    font-weight: var(--k-weight-semibold);
+  }
+
+  .alloc-header__reconnecting {
+    color: var(--k-text-secondary);
+    font-size: var(--k-text-sm);
+  }
+
+  .alloc-header__amendment {
+    color: var(--k-accent-warning-text);
+    background: var(--k-accent-warning-bg);
+    padding: var(--k-space-2) var(--k-space-3);
+    border-radius: var(--k-radius-md);
+    font-size: var(--k-text-sm);
+    max-inline-size: 40rem;
+  }
+
+  .alloc-progress-bar {
+    block-size: var(--k-rule-heavy);
+    background: var(--k-surface-sunken);
+    border-radius: var(--k-radius-pill);
+    overflow: hidden;
+    margin-block-end: var(--k-space-4);
+  }
+
+  .alloc-progress-bar__fill {
+    block-size: 100%;
+    background: var(--k-accent-primary-bg);
+    transition: width var(--k-duration-slow) var(--k-ease-standard);
+  }
+
+  .alloc-live {
+    min-block-size: 1.5em;
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    margin-block-end: var(--k-space-3);
+  }
+
+  .alloc-lots {
+    list-style: none;
+    margin: var(--k-space-4) 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: var(--k-space-3);
+  }
+
+  .alloc-lot {
+    border: var(--k-hairline) solid var(--k-border-hairline);
+    border-radius: var(--k-radius-md);
+    padding: var(--k-space-3);
+  }
+
+  .alloc-lot--reallocated {
+    opacity: 0.6;
+  }
+
+  .alloc-lot__artisan {
+    font-weight: var(--k-weight-semibold);
+  }
+
+  .alloc-lot__district,
+  .alloc-lot__state,
+  .alloc-lot__progress,
+  .alloc-lot__note {
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+  }
+
+  .alloc-lot__note {
+    color: var(--k-accent-secondary);
+  }
+
+  .alloc-table-wrap {
+    overflow-x: auto;
+    margin-block: var(--k-space-4);
+  }
+
+  .alloc-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .alloc-table th,
+  .alloc-table td {
+    text-align: start;
+    padding: var(--k-space-2);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .alloc-payment {
+    margin-block-start: var(--k-space-6);
+    border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+    padding-block-start: var(--k-space-4);
+  }
+
+  .alloc-payment__totals {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+    margin-block-end: var(--k-space-4);
+  }
+
+  .alloc-payment__totals div {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .alloc-payment__bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-2);
+  }
+
+  .alloc-payment__bars li {
+    display: grid;
+    grid-template-columns: 8rem 1fr auto;
+    align-items: center;
+    gap: var(--k-space-2);
+  }
+
+  /* On a narrow phone the 8rem label + bar + amount stack into two rows:
+     label and amount on top, the progress bar spanning full width. */
+  @media (max-width: 30rem) {
+    .alloc-payment__bars li {
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'name amount'
+        'bar bar';
+    }
+
+    .alloc-payment__bars li > :nth-child(1) {
+      grid-area: name;
+    }
+
+    .alloc-payment__bars li > :nth-child(2) {
+      grid-area: bar;
+    }
+
+    .alloc-payment__bars li > :nth-child(3) {
+      grid-area: amount;
+    }
+  }
+
+  .alloc-payment__bar {
+    display: block;
+    block-size: var(--k-space-3);
+    background: var(--k-accent-primary-bg);
+    border-radius: var(--k-radius-sm);
+  }
+
+  .alloc-payment__pending {
+    color: var(--k-text-secondary);
+    margin-block-start: var(--k-space-4);
+  }
+</style>

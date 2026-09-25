@@ -135,7 +135,7 @@ func run() error {
 		Issuer:                 issuer,
 		Redis:                  rdb,
 		IdempStore:             idempStore,
-		RateLimitPerIP:         100,
+		RateLimitPerIP:         1000,
 		RateLimitPerPrincipal:  1000,
 		RateLimitWindow:        time.Minute,
 		// Unset/0 leaves the OTP route on its built-in 5-per-10-minutes; see

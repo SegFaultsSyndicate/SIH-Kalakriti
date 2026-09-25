@@ -201,7 +201,7 @@ function sihToListingSummary(item: SihListing): ListingSummary {
 export function getDemoListingsForBuyer(categoryFilter?: string): ListingSummary[] {
   const state = readState();
   const listings = state.listings.filter(
-    (l) => l.state === 'PUBLISHED' && (!categoryFilter || l.category === categoryFilter) && !l.title.includes('Kashi Kadwa Pure Silver-Gilt Pit-Loom Mulberry Silk Saree'),
+    (l) => l.state === 'PUBLISHED' && (!categoryFilter || l.category === categoryFilter),
   );
   listings.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
   return listings.map(sihToListingSummary);

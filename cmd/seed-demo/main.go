@@ -287,6 +287,7 @@ func (c *client) getJSON(path, token string) (map[string]any, error) {
 }
 
 func (c *client) doJSON(method, path, token string, body any) (map[string]any, error) {
+	time.Sleep(150 * time.Millisecond)
 	var reader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -521,8 +522,7 @@ func createDemoStaff(dsn string) error {
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			// Idempotent re-run tolerance: a unique-constraint conflict on a
-			// phone that already has a staff account is not a seeding failure.
-			if bytes.Contains(out, []byte("duplicate")) || bytes.Contains(out, []byte("unique")) {
+			if bytes.Contains(out, []byte("duplicate")) || bytes.Contains(out, []byte("unique")) || bytes.Contains(out, []byte("conflict")) {
 				log.Printf("staff account for %s already exists, skipping", a.phone)
 				continue
 			}

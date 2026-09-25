@@ -180,8 +180,6 @@ demo-up: proto sqlc ## Start full demo: infra + all services + migrate + seed
 	@echo "Seeding demo artisans/listings/orders through the real API..."
 	$(MAKE) seed-demo
 	@echo ""
-	@echo "✓ Demo environment ready!"
-	@echo ""
 	@echo "Services:"
 	@echo "  Web (NGINX):    http://localhost/  (buyer, /artisan/, /admin/)"
 	@echo "  BFF API:        http://localhost:8000  (also proxied at http://localhost/api/v1/*)"

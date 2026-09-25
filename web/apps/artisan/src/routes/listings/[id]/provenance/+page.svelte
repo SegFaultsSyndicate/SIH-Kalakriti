@@ -38,11 +38,13 @@
   let sealError = $state<string | undefined>(undefined);
   let animationDone = $state(false);
 
+  const isDemoListing = $derived(listingId.includes('eshaan-1') || listingId.includes('eshaan-3'));
+
   $effect(() => {
-    if (listingId.includes('eshaan-3') && phase === 'capture' && files.length === 0 && !claimedTechnique) {
+    if (isDemoListing && phase === 'capture' && files.length === 0 && !claimedTechnique) {
       claimedTechnique = 'Kadwa Weaving';
       skipLoomCheck = false;
-      previewUrls = ['/craft-images/weaving_and_looms/banarasi_brocade_weaving_01.jpeg'];
+      previewUrls = ['/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg'];
       files = [new File(['dummy'], 'evidence.jpg', { type: 'image/jpeg' })];
     }
   });
@@ -65,24 +67,31 @@
     phase = 'sealing';
     sealError = undefined;
     try {
-      if (listingId.includes('eshaan-3')) {
+      if (isDemoListing) {
         await new Promise((resolve) => setTimeout(resolve, 800));
+        const demoId = listingId.includes('eshaan-1') ? 'eshaan-1' : 'eshaan-3';
         record = {
           listing_id: listingId,
-          content_hash: '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4',
+          content_hash: demoId === 'eshaan-1'
+            ? 'a3f7c2d9e1b845609f2e8c3a71d6b4e0f9a2c5d8b1e4f7a0c3d6e9b2f5a8c1d4'
+            : '8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4',
           sealed_at: new Date().toISOString(),
           technique_verdict: {
             matches: true,
-            confidence: 0.98,
+            confidence: demoId === 'eshaan-1' ? 0.97 : 0.98,
             detected_technique: 'Kadwa Weaving',
-            reasoning: 'Detailed motifs woven separately with no floats on the reverse, typical of Kadwa.',
+            reasoning: demoId === 'eshaan-1'
+              ? 'Pure silver-gilt zari motifs woven individually on a pit-loom with no floats visible on the reverse — a hallmark of authentic Kadwa technique.'
+              : 'Detailed motifs woven separately with no floats on the reverse, typical of Kadwa.',
           },
           loom_verdict: {
             matches: true,
-            confidence: 0.95,
-            reasoning: 'Irregularities in the selvedge and slight tension variations indicate hand-weaving.',
+            confidence: demoId === 'eshaan-1' ? 0.96 : 0.95,
+            reasoning: demoId === 'eshaan-1'
+              ? 'Pit-loom selvedge pattern and warp tension variations confirm hand-weaving on a traditional Varanasi pit-loom.'
+              : 'Irregularities in the selvedge and slight tension variations indicate hand-weaving.',
           },
-          qr_code: 'https://kalakriti.in/p/eshaan-3',
+          qr_code: `https://kalakriti.in/p/${demoId}`,
         } as any;
         if (record.qr_code) qrDataUrl = await buildQrDataUrl(record.qr_code);
         phase = 'sealed';

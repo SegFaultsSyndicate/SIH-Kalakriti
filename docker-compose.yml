@@ -305,7 +305,7 @@ services:
       # host IP, so the default made `make demo-up` un-re-runnable for ten
       # minutes after each run. Raised here only; a real deploy leaves it unset
       # and gets the 5/10m default back.
-      OTP_RATE_LIMIT: ${OTP_RATE_LIMIT:-100}
+      OTP_RATE_LIMIT: ${OTP_RATE_LIMIT:-10000}
       OTP_RATE_LIMIT_WINDOW: ${OTP_RATE_LIMIT_WINDOW:-10m}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod-32bytes-minimum}
       OTLP_ENDPOINT: jaeger:4317

@@ -324,6 +324,12 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    align-items: stretch;
+  }
+
+  .register-item {
+    display: flex;
+    flex-direction: column;
   }
 
   .craft-anchor {
@@ -340,6 +346,8 @@
     font-size: var(--k-text-xs);
     font-weight: var(--k-weight-medium);
     transition: border-color 0.15s ease;
+    flex: 1;
+    min-height: 2.75rem;
   }
 
   .craft-anchor:hover {
