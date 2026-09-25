@@ -179,6 +179,14 @@
     void goto('/agent');
   }
 
+  $effect(() => {
+    // Reset scroll smoothly to top when switching routes
+    const _p = page.url.pathname;
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  });
+
   const showChrome = $derived(booted && page.url.pathname !== '/language');
   const showBottomNav = $derived(
     showChrome &&
@@ -238,7 +246,11 @@
         body={t('error.boundary.body')}
         retryLabel={t('error.boundary.retry')}
       >
-        {@render children()}
+        {#key page.url.pathname}
+          <div class="shell__page-content">
+            {@render children()}
+          </div>
+        {/key}
       </ErrorBoundary>
     {:else}
       <div class="shell__boot" role="status" aria-live="polite">
@@ -330,6 +342,28 @@
 
   .shell__main.has-bottom-nav {
     padding-block-end: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .shell__page-content {
+    animation: k-page-fade-in var(--k-duration-fast, 150ms) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
+  }
+
+  @keyframes k-page-fade-in {
+    from {
+      opacity: 0.2;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shell__page-content {
+      animation: none;
+    }
   }
 
   .shell__boot {

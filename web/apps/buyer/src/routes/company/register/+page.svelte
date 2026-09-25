@@ -30,34 +30,37 @@
     type RegisterCompanyBody,
     type Company,
   } from '@kalakriti/api';
+  import { locale } from '@kalakriti/i18n';
+
+  const t = $derived(locale.t);
 
   type CompanyType = 'RETAILER' | 'BOUTIQUE' | 'EXPORTER' | 'INSTITUTION';
 
-  const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
-    { value: 'RETAILER', label: 'Commercial Retailer / Heritage Brand (0.5% Platform Fee)' },
-    { value: 'BOUTIQUE', label: 'Curated Boutique Studio (0.5% Platform Fee)' },
-    { value: 'EXPORTER', label: 'International Craft Exporter (1.0% Platform Fee)' },
-    { value: 'INSTITUTION', label: 'Government / State Institution (0.5% Platform Fee)' },
-  ];
+  const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = $derived([
+    { value: 'RETAILER', label: t('company.type.RETAILER') },
+    { value: 'BOUTIQUE', label: t('company.type.BOUTIQUE') },
+    { value: 'EXPORTER', label: t('company.type.EXPORTER') },
+    { value: 'INSTITUTION', label: t('company.type.INSTITUTION') },
+  ]);
 
-  const CRAFT_OPTIONS = [
-    { id: 'craft-bagru', name: 'Bagru Hand Block Print', state: 'Rajasthan' },
-    { id: 'craft-sanganeri', name: 'Sanganeri Print', state: 'Rajasthan' },
-    { id: 'craft-chanderi', name: 'Chanderi Weaving', state: 'Madhya Pradesh' },
-    { id: 'craft-banarasi-brocade', name: 'Banarasi Brocade & Zari', state: 'Uttar Pradesh' },
-    { id: 'craft-paithani', name: 'Paithani Silk', state: 'Maharashtra' },
-    { id: 'craft-madhubani', name: 'Mithila / Madhubani Painting', state: 'Bihar' },
-    { id: 'craft-kutch-embroidery', name: 'Kutch Rogan & Embroidery', state: 'Gujarat' },
-    { id: 'craft-tanjore', name: 'Thanjavur Gold Leaf Painting', state: 'Tamil Nadu' },
-    { id: 'craft-pochampally', name: 'Pochampally Ikat', state: 'Telangana' },
-    { id: 'craft-dhokra', name: 'Dhokra Lost-Wax Bell Metal', state: 'Odisha / Chhattisgarh' },
-  ];
+  const CRAFT_OPTIONS = $derived([
+    { id: 'craft-bagru', name: t('company.craft.craft-bagru.name'), state: t('company.craft.craft-bagru.state') },
+    { id: 'craft-sanganeri', name: t('company.craft.craft-sanganeri.name'), state: t('company.craft.craft-sanganeri.state') },
+    { id: 'craft-chanderi', name: t('company.craft.craft-chanderi.name'), state: t('company.craft.craft-chanderi.state') },
+    { id: 'craft-banarasi-brocade', name: t('company.craft.craft-banarasi-brocade.name'), state: t('company.craft.craft-banarasi-brocade.state') },
+    { id: 'craft-paithani', name: t('company.craft.craft-paithani.name'), state: t('company.craft.craft-paithani.state') },
+    { id: 'craft-madhubani', name: t('company.craft.craft-madhubani.name'), state: t('company.craft.craft-madhubani.state') },
+    { id: 'craft-kutch-embroidery', name: t('company.craft.craft-kutch-embroidery.name'), state: t('company.craft.craft-kutch-embroidery.state') },
+    { id: 'craft-tanjore', name: t('company.craft.craft-tanjore.name'), state: t('company.craft.craft-tanjore.state') },
+    { id: 'craft-pochampally', name: t('company.craft.craft-pochampally.name'), state: t('company.craft.craft-pochampally.state') },
+    { id: 'craft-dhokra', name: t('company.craft.craft-dhokra.name'), state: t('company.craft.craft-dhokra.state') },
+  ]);
 
-  const STEP_TITLES = [
-    'Legal Entity & Contact',
-    'Legitimacy Audit & Documents',
-    'Sourcing & Studio Profile',
-  ];
+  const STEP_TITLES = $derived([
+    t('company.step.0'),
+    t('company.step.1'),
+    t('company.step.2'),
+  ]);
 
   let currentStep = $state(0);
   let submitting = $state(false);

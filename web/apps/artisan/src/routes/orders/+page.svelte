@@ -25,6 +25,7 @@
   import { getArtisanId } from '$lib/registration';
   import {
     cachedOrders,
+    getCachedOrdersSync,
     refreshTouchedOrders,
     myLots,
     needsAction,
@@ -32,15 +33,17 @@
     type BulkOrder,
     type OrderLot,
   } from '$lib/orders';
+  import { getSihMockOrders } from '$lib/sih-my-works';
 
   const t = $derived(locale.t);
 
-  let loading = $state(true);
-  let orders = $state<BulkOrder[]>([]);
+  const initialOrders = getCachedOrdersSync();
+  let loading = $state(initialOrders === null);
+  let orders = $state<BulkOrder[]>(initialOrders ?? []);
   let artisanId = $state<string | undefined>(undefined);
 
   async function load(): Promise<void> {
-    loading = true;
+    if (initialOrders === null) loading = true;
     artisanId = await getArtisanId();
     orders = await cachedOrders();
     loading = false;
@@ -97,7 +100,30 @@
       {/each}
     </div>
   {:else if rows.length === 0}
-    <EmptyState illustration="empty-no-orders" heading={t('orders.empty')} body={t('orders.emptyBody')} />
+    {@const mockOrders = getSihMockOrders()}
+    {#if mockOrders.length > 0}
+      <!-- SIH Demo: show mock order history when the backend has no real orders -->
+      <ul class="orders-page__rows" role="list">
+        {#each mockOrders as order (order.id)}
+          <li>
+            <Card variant="hairline" element="div" class="orders-page__row">
+              <div class="orders-page__row-body">
+                <p class="orders-page__row-kind orders-page__row-listing">{order.listingTitle}</p>
+                <p class="orders-page__row-buyer">{order.buyerName}</p>
+                <div class="orders-page__row-state">
+                  <StateBadge group={order.state === 'OFFERED' ? 'needsAttention' : order.state === 'IN_PROGRESS' ? 'pending' : 'published'} />
+                  <span>{order.quantity} unit{order.quantity !== 1 ? 's' : ''}</span>
+                </div>
+                <Money paise={order.totalPaise} />
+              </div>
+              <Icon name="chevron-right" />
+            </Card>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <EmptyState illustration="empty-no-orders" heading={t('orders.empty')} body={t('orders.emptyBody')} />
+    {/if}
   {:else}
     <ul class="orders-page__rows" role="list">
       {#each rows as row (row.lot.id)}
@@ -193,5 +219,20 @@
     align-items: center;
     gap: var(--k-space-2);
     font-weight: 600;
+  }
+
+  .orders-page__row-listing {
+    font-weight: var(--k-weight-semibold);
+    color: var(--k-text-primary);
+    font-size: var(--k-text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-inline-size: 18rem;
+  }
+
+  .orders-page__row-buyer {
+    font-size: var(--k-text-xs);
+    color: var(--k-text-secondary);
   }
 </style>

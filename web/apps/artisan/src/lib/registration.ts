@@ -29,14 +29,41 @@ export interface RegistrationDraft {
   incomeBracket?: string;
 }
 
+const STORAGE_DRAFT_KEY = 'kalakriti.registration.draft';
+
+export function getCachedDraftSync(): RegistrationDraft {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(STORAGE_DRAFT_KEY);
+      if (raw) return JSON.parse(raw);
+    }
+  } catch {}
+  return {};
+}
+
 export async function getDraft(): Promise<RegistrationDraft> {
-  return (await getPref<RegistrationDraft>(DRAFT_PREF_KEY)) ?? {};
+  const pref = await getPref<RegistrationDraft>(DRAFT_PREF_KEY);
+  if (pref !== undefined) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_DRAFT_KEY, JSON.stringify(pref));
+      }
+    } catch {}
+    return pref;
+  }
+  return getCachedDraftSync();
 }
 
 /** Merges into the stored draft immediately -- "every answer persists to Dexie immediately" is this call, made from each wizard step's onchange. */
 export async function patchDraft(patch: Partial<RegistrationDraft>): Promise<void> {
   const current = await getDraft();
-  await setPref(DRAFT_PREF_KEY, { ...current, ...patch });
+  const next = { ...current, ...patch };
+  await setPref(DRAFT_PREF_KEY, next);
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_DRAFT_KEY, JSON.stringify(next));
+    }
+  } catch {}
 }
 
 const STORAGE_ARTISAN_ID_KEY = 'kalakriti.artisan.id';

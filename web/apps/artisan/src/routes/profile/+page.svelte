@@ -16,7 +16,6 @@
   import { Icon } from '@kalakriti/icons';
   import {
     Button,
-    Skeleton,
     showToast,
     Tooltip,
     a11y,
@@ -41,7 +40,7 @@
     }
     return err instanceof Error && err.message ? err.message : fallback;
   }
-  import { getDraft, getArtisanId, setArtisanId } from '$lib/registration';
+  import { getDraft, getCachedDraftSync, getArtisanId, setArtisanId } from '$lib/registration';
   import { getPref, setPref } from '@kalakriti/offline';
   import { network } from '$lib/orders';
   import { DISTRICTS } from '$lib/ontology';
@@ -53,9 +52,37 @@
 
   const t = $derived(locale.t);
 
-  let name = $state('eshaan');
-  let phone = $state('+91 9999999999');
-  let avatarUrl = $state<string | undefined>(undefined);
+  function getInitialPhone(): string {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('kalakriti.artisan.phone') || localStorage.getItem('login.phone');
+        if (stored) return stored.startsWith('+91') ? stored : `+91 ${stored}`;
+      }
+    } catch {}
+    return '+91 9999999999';
+  }
+
+  function getInitialAvatar(): string | undefined {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem('kalakriti.artisan.avatar') || undefined;
+      }
+    } catch {}
+    return undefined;
+  }
+
+  function getInitialDistrict(draft: import('$lib/registration').RegistrationDraft): string {
+    if (draft.districtId) {
+      const found = DISTRICTS.find((d) => d.id === draft.districtId);
+      if (found) return `${found.name}, ${found.state}`;
+    }
+    return draft.districtFreeText || 'Varanasi, Uttar Pradesh';
+  }
+
+  const initialDraft = getCachedDraftSync();
+  let name = $state(initialDraft.name || 'Eshaan');
+  let phone = $state(getInitialPhone());
+  let avatarUrl = $state<string | undefined>(getInitialAvatar());
   let rawImageToCrop = $state<string>('');
   let showCropModal = $state(false);
   let showBusinessCardModal = $state(false);
@@ -71,13 +98,12 @@
     void loadSelfBadges().then((ids) => (selfBadgeIds = ids));
   });
   const selfBadges = $derived(SELF_BADGES.filter((b) => selfBadgeIds.includes(b.id)));
-  let craftId = $state<string | undefined>(undefined);
-  let craftName = $state('Weaving & Handloom (बुनकरी)');
-  let districtName = $state('Varanasi, Uttar Pradesh');
-  let clusterName = $state('Varanasi Silk Weaver Common Facility Centre');
-  let pehchanId = $state('UP-VNS-2024-0982');
+  let craftId = $state<string | undefined>(initialDraft.craftId);
+  let craftName = $state(initialDraft.craftName || 'Weaving & Handloom (बुनकरी)');
+  let districtName = $state(getInitialDistrict(initialDraft));
+  let clusterName = $state(initialDraft.clusterName || 'Varanasi Silk Weaver Common Facility Centre');
+  let pehchanId = $state(initialDraft.pehchanId || 'UP-VNS-2024-0982');
   let shgName = $state('Pariwar Bunkar SHG (12 Members)');
-  let pageLoading = $state(true);
 
   // Email and notification preferences
   let email = $state('');
@@ -99,12 +125,22 @@
       const storedPhone = await getPref<string>('login.phone');
       if (storedPhone) {
         phone = storedPhone.startsWith('+91') ? storedPhone : `+91 ${storedPhone}`;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('kalakriti.artisan.phone', phone);
+          }
+        } catch {}
       }
 
       // Restore avatar
       const storedAvatar = await getPref<string>('profile.avatar_url');
       if (storedAvatar) {
         avatarUrl = storedAvatar;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('kalakriti.artisan.avatar', storedAvatar);
+          }
+        } catch {}
       } else {
         try {
           if (typeof localStorage !== 'undefined') {
@@ -139,7 +175,6 @@
       } else if (draft.districtFreeText) {
         districtName = draft.districtFreeText;
       }
-      pageLoading = false;
     })();
   });
 
@@ -410,22 +445,6 @@
 </svelte:head>
 
 <div class="profile-page">
-  {#if pageLoading}
-    <div class="profile-page__skeleton" aria-hidden="true">
-      <div class="profile-page__skeleton-hero">
-        <Skeleton width="5rem" height="5rem" radius="50%" />
-        <div class="profile-page__skeleton-lines">
-          <Skeleton shape="text" width="55%" height="1.25rem" />
-          <Skeleton shape="text" width="40%" height="0.9rem" />
-          <Skeleton shape="text" width="65%" height="0.85rem" />
-        </div>
-      </div>
-      <div class="profile-page__skeleton-details">
-        <Skeleton height="3.5rem" radius="var(--k-radius-md)" />
-        <Skeleton height="3.5rem" radius="var(--k-radius-md)" />
-      </div>
-    </div>
-  {/if}
   <!-- Top Identity & Hero Card -->
   <section class="profile-hero">
     <div class="profile-hero__badge-rule"></div>
@@ -1014,31 +1033,6 @@
     margin-inline: auto;
     padding-inline: var(--k-space-3);
     padding-block: var(--k-space-4) var(--k-space-8);
-  }
-
-  .profile-page__skeleton {
-    display: flex;
-    flex-direction: column;
-    gap: var(--k-space-4);
-  }
-
-  .profile-page__skeleton-hero {
-    display: flex;
-    align-items: center;
-    gap: var(--k-space-4);
-  }
-
-  .profile-page__skeleton-lines {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--k-space-2);
-  }
-
-  .profile-page__skeleton-details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--k-space-2);
   }
 
   /* --- Top Hero Section --- */

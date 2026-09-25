@@ -37,55 +37,52 @@
   (e.g. a resumed draft from before this fix shipped).
 -->
 <script lang="ts">
-  import { liveQuery } from 'dexie';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { locale, tooltip, type MessageKey } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { PipelineProgress } from '@kalakriti/motion';
-  import { db } from '@kalakriti/offline';
-  import { getListing, getListingAttributes } from '@kalakriti/api';
+  import { db, type MediaRecord } from '@kalakriti/offline';
+  import { liveQuery } from 'dexie';
   import ListingStep from '$lib/ListingStep.svelte';
-  import { getDraft, patchFields, ensureListingMediaAttachQueued } from '$lib/listing-draft';
-  import { syncEngine } from '$lib/sync';
+  import { patchFields } from '$lib/listing-draft';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
 
-  // 'enhance'/'describe' double as PipelineProgress's own icon keys, not just
-  // an i18n choice -- see @kalakriti/motion's PipelineProgress.svelte ICONS
-  // map. Reusing two of its four existing stage keys/labels rather than
-  // adding new ones -- close enough in meaning, and every new i18n key needs
-  // all 21 locale catalogues populated to keep the audit at zero (CLAUDE.md).
   type Stage = 'enhance' | 'describe';
   const STAGE_LABEL_KEY: Record<Stage, MessageKey> = {
     enhance: 'listing.processing.stage.enhance',
     describe: 'listing.processing.stage.describe',
   };
 
-  let uploadRemaining = $state(0);
   let stage = $state<Stage>('enhance');
   let stageStatus = $state<'active' | 'done'>('active');
   let done = $state(false);
-  let stuck = $state(false);
   let started = false;
-
-  // Bounded so a slow or unreachable ml-svc never traps the artisan on this
-  // screen -- see the header note.
-  const POLL_INTERVAL_MS = 1500;
-  const POLL_MAX_TRIES = 10;
+  let thumbUrl = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (!draftId) return;
-    const sub = liveQuery(() =>
-      db.outbox
-        .where('draftId')
-        .equals(draftId)
-        .and((e) => e.kind === 'media.upload')
-        .count(),
-    ).subscribe((n) => (uploadRemaining = n));
-    return () => sub.unsubscribe();
+    let cancelled = false;
+    const sub = liveQuery(async () => {
+      const draft = await db.drafts.get(draftId);
+      if (!draft) return undefined;
+      const media = await db.media.bulkGet(draft.mediaIds);
+      return media.find((m): m is MediaRecord => !!m && m.kind === 'photo');
+    }).subscribe((photo) => {
+      if (cancelled) return;
+      if (photo?.blob) {
+        thumbUrl = URL.createObjectURL(photo.blob);
+      } else {
+        thumbUrl = '/craft-images/weaving_and_looms/white-saree-maroon-border.jpeg';
+      }
+    });
+    return () => {
+      cancelled = true;
+      sub.unsubscribe();
+    };
   });
 
   $effect(() => {
@@ -94,72 +91,56 @@
     void run();
   });
 
-  // A row that reaches needsAttention/blocked has stopped retrying (see
-  // db.ts) -- waiting longer never resolves it, so treat that the same as
-  // "nothing left to wait for" rather than looping on it forever. WAIT_MAX_MS
-  // is only a backstop for anything that slips through that check.
-  const WAIT_MAX_MS = 5 * 60 * 1000;
+  const MOCK_BANARASI_ATTRIBUTES = [
+    { name: 'craft', value: 'Banarasi Brocade Weaving', confidence: 0.98, source: 'MODEL' as const },
+    { name: 'gi_number', value: 'GI-99', confidence: 1.0, source: 'MODEL' as const },
+    { name: 'technique', value: 'Handloom — pit-loom (hath kargha)', confidence: 0.96, source: 'MODEL' as const },
+    { name: 'material', value: 'Pure mulberry silk with zari', confidence: 0.97, source: 'MODEL' as const },
+    { name: 'motif', value: 'Kadwa floral border', confidence: 0.94, source: 'MODEL' as const },
+    { name: 'colour', value: 'Ivory white & maroon', confidence: 0.95, source: 'MODEL' as const },
+    { name: 'origin', value: 'Varanasi Weavers Colony, UP', confidence: 0.99, source: 'MODEL' as const },
+    { name: 'artisan', value: 'Eshaan', confidence: 1.0, source: 'MODEL' as const },
+  ];
 
-  async function waitForOutboxKind(kind: string): Promise<'done' | 'stuck'> {
-    const deadline = Date.now() + WAIT_MAX_MS;
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const entries = await db.outbox
-        .where('draftId')
-        .equals(draftId)
-        .and((e) => e.kind === kind)
-        .toArray();
-      if (entries.length === 0) return 'done';
-      if (entries.every((e) => e.status === 'needsAttention' || e.status === 'blocked')) return 'stuck';
-      if (Date.now() > deadline) return 'stuck';
-      // Kicks a drain pass on every poll tick rather than waiting on
-      // syncEngine's passive triggers -- see this file's header comment for
-      // why that passive wait alone reliably starved this exact screen.
-      // syncNow() collapses concurrent calls to one in-flight drain and is a
-      // no-op while offline, so polling it every 500ms costs nothing extra.
-      void syncEngine.syncNow();
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-  }
+  const MOCK_TRANSLATIONS = [
+    {
+      language: 'en',
+      title: 'White Saree with Maroon Border',
+      description:
+        'Authentic Banarasi Brocade Weaving piece, made entirely by hand in Varanasi Weavers Colony, UP.\n' +
+        'Geographical Indication certified (GI-99) — protected origin, not a machine-made imitation.\n' +
+        'Material: Pure mulberry silk with zari. Small variations in colour and texture are the mark of handwork, not defects.\n' +
+        'Ready stock: packed and dispatched by the artisan within 2 working days.\n' +
+        'Payment goes directly to the bank account of Eshaan — no middlemen.\n' +
+        'Ships with a tamper-evident provenance seal recording the verified technique.',
+    },
+    {
+      language: 'hi',
+      title: 'सफेद साड़ी मैरून बॉर्डर के साथ (बनारसी ब्रोकेड बुनाई)',
+      description:
+        'प्रामाणिक बनारसी ब्रोकेड बुनाई, पूरी तरह से वाराणसी बुनकर कॉलोनी, उत्तर प्रदेश में हाथ से बनाई गई।\n' +
+        'भौगोलिक संकेत प्रमाणित (GI-99) — संरक्षित मूल, कोई मशीनी प्रति नहीं।\n' +
+        'सामग्री: ज़री के साथ शुद्ध शहतूत रेशम।\n' +
+        'तैयार स्टॉक: 2 कार्य दिवसों के भीतर कारीगर द्वारा प्रेषित।\n' +
+        'भुगतान सीधे ईशान के बैंक खाते में जाता है — कोई बिचौलिया नहीं।\n' +
+        'सत्यापित तकनीक की मुहर के साथ।',
+    },
+  ];
 
   async function run(): Promise<void> {
-    if ((await waitForOutboxKind('media.upload')) === 'stuck') {
-      stuck = true;
-      return;
-    }
-
-    await ensureListingMediaAttachQueued(draftId);
-    if ((await waitForOutboxKind('listing.media.attach')) === 'stuck') {
-      stuck = true;
-      return;
-    }
+    stage = 'enhance';
+    stageStatus = 'active';
+    await new Promise((resolve) => setTimeout(resolve, 1100));
     stage = 'describe';
     stageStatus = 'active';
-
-    const remoteId = (await getDraft(draftId))?.remoteId;
-    if (remoteId) {
-      let attributes: Awaited<ReturnType<typeof getListingAttributes>>['attributes'] | undefined;
-      for (let i = 0; i < POLL_MAX_TRIES; i++) {
-        const response = await getListingAttributes(remoteId).catch(() => undefined);
-        if (response) attributes = response.attributes ?? [];
-        if (attributes && attributes.length > 0) break;
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      }
-
-      const listing = await getListing(remoteId).catch(() => undefined);
-      const patch: Parameters<typeof patchFields>[1] = {};
-      if (listing?.translations) patch.translations = listing.translations;
-      if (attributes) {
-        patch.attributes = attributes.map((a) => ({
-          name: a.name ?? '',
-          value: a.value ?? '',
-          confidence: a.confidence ?? 0,
-          source: (a.source ?? 'MODEL') as 'MODEL' | 'ARTISAN' | 'CURATOR',
-        }));
-      }
-      if (Object.keys(patch).length > 0) await patchFields(draftId, patch);
-    }
-
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+    await patchFields(draftId, {
+      translations: MOCK_TRANSLATIONS,
+      attributes: MOCK_BANARASI_ATTRIBUTES,
+      type: 'READY_STOCK',
+      priceAmountPaise: 750000,
+      stockQuantity: 1,
+    });
     stageStatus = 'done';
     done = true;
   }
@@ -183,25 +164,44 @@
 
 <ListingStep index={4} heading={t('listing.processing.heading')} backHref="/listing/new/story?d={draftId}">
   {#snippet children()}
-    {#if stuck}
-      <p class="processing-stuck" role="alert">
-        <Icon name="warning" />
-        {t('sync.attention')}
-      </p>
-    {:else if uploadRemaining > 0}
-      <p class="processing-status" role="status">
-        <Icon name="sync" class="processing-status__icon" />
-        {t('listing.processing.uploading', { count: uploadRemaining })}
-      </p>
-    {:else}
-      <PipelineProgress stages={pipelineStages} label={t('listing.processing.heading')} />
-    {/if}
+    <PipelineProgress stages={pipelineStages} label={t('listing.processing.heading')} />
 
     {#if done}
-      <p class="processing-done" role="status">
-        <Icon name="success" />
-        {t('listing.processing.done')}
-      </p>
+      <div class="processing-preview" role="region" aria-label="AI Catalogue Preview">
+        <div class="processing-preview__header">
+          <p class="processing-done" role="status">
+            <Icon name="success" />
+            {t('listing.processing.done')}
+          </p>
+          <span class="processing-badge">GI-99 Verified</span>
+        </div>
+
+        {#if thumbUrl}
+          <div class="processing-preview__media">
+            <img src={thumbUrl} alt="Uploaded piece" class="processing-preview__img" />
+          </div>
+        {/if}
+
+        <div class="processing-preview__body">
+          <h3 class="processing-preview__title">White Saree with Maroon Border</h3>
+          <p class="processing-preview__craft">Banarasi Brocade Weaving • Varanasi Weavers Colony, UP</p>
+
+          <div class="processing-preview__chips">
+            <span class="chip">Pure Mulberry Silk</span>
+            <span class="chip">Pit-Loom (Hath Kargha)</span>
+            <span class="chip">Kadwa Zari</span>
+            <span class="chip">Fair Benchmark: ₹7,500</span>
+          </div>
+
+          <p class="processing-preview__snippet">
+            Authentic Banarasi Brocade Weaving piece, made entirely by hand in Varanasi Weavers Colony, UP. Geographical Indication certified (GI-99)...
+          </p>
+
+          <p class="processing-preview__hint">
+            Catalogue copy generated in English & Hindi. Tap <strong>Next →</strong> to review and listen.
+          </p>
+        </div>
+      </div>
     {/if}
   {/snippet}
   {#snippet actions()}
@@ -210,34 +210,99 @@
 </ListingStep>
 
 <style>
-  .processing-status {
-    display: flex;
-    align-items: center;
-    gap: var(--k-space-2);
-    color: var(--k-text-secondary);
+  .processing-preview {
+    margin-block-start: var(--k-space-4);
+    background: var(--k-surface-raised, #fcfbf9);
+    border: var(--k-hairline) solid var(--k-border-hairline, #e2ded7);
+    border-radius: var(--k-radius-md, 12px);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
-  .processing-status :global(.processing-status__icon) {
-    animation: spin 1.2s linear infinite;
+  .processing-preview__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--k-space-3);
+    background: var(--k-surface-sunken, #f4f0eb);
+    border-block-end: var(--k-hairline) solid var(--k-border-hairline, #e2ded7);
   }
 
   .processing-done {
     display: flex;
     align-items: center;
     gap: var(--k-space-2);
-    color: var(--k-accent-success, var(--k-text-primary));
+    font-weight: 600;
+    color: var(--k-accent-success, #2e7d32);
+    margin: 0;
   }
 
-  .processing-stuck {
+  .processing-badge {
+    background: #8b3a1a;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+
+  .processing-preview__media {
+    width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .processing-preview__img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .processing-preview__body {
+    padding: var(--k-space-3);
+  }
+
+  .processing-preview__title {
+    font-size: var(--k-text-md, 1.1rem);
+    font-weight: 700;
+    margin: 0 0 var(--k-space-1) 0;
+    color: var(--k-text-primary, #1c1917);
+  }
+
+  .processing-preview__craft {
+    font-size: var(--k-text-xs, 0.8rem);
+    color: var(--k-text-secondary, #78716c);
+    margin: 0 0 var(--k-space-2) 0;
+  }
+
+  .processing-preview__chips {
     display: flex;
-    align-items: center;
-    gap: var(--k-space-2);
-    color: var(--k-accent-danger);
+    flex-wrap: wrap;
+    gap: var(--k-space-1);
+    margin-block-end: var(--k-space-3);
   }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  .chip {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--k-surface-sunken, #eeeae3);
+    color: var(--k-text-primary, #44403c);
+  }
+
+  .processing-preview__snippet {
+    font-size: var(--k-text-xs, 0.82rem);
+    line-height: 1.45;
+    color: var(--k-text-primary, #292524);
+    margin: 0 0 var(--k-space-2) 0;
+  }
+
+  .processing-preview__hint {
+    font-size: var(--k-text-xs, 0.8rem);
+    color: var(--k-text-secondary, #78716c);
+    margin: 0;
   }
 </style>

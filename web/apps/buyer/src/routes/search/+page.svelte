@@ -29,6 +29,7 @@
   import ListingCard from '$lib/ListingCard.svelte';
   import ListingCardSkeleton from '$lib/ListingCardSkeleton.svelte';
   import { stubListingsForQuery } from '$lib/stub-listings';
+  import { getDemoListingsForBuyer, onDemoStateChange } from '$lib/sih-demo-injector';
 
   type SearchHit = components['schemas']['SearchHit'];
   type ListingSummary = components['schemas']['ListingSummary'];
@@ -51,7 +52,33 @@
   // Backend has no real listings yet (see CLAUDE.md); a category click from
   // ArtisanCraftGrid or a q= search that comes back empty falls back to the
   // real photographed pieces in stub-listings.ts instead of a blank page.
-  const fallbackResults = $derived(!loading && hits.length === 0 ? stubListingsForQuery(q, t) : []);
+  // SIH Demo: Eshaan's published pieces are prepended so the Weaving category
+  // always shows them (newest-first) including the Paithani listing once published.
+  let demoListings = $state<ListingSummary[]>(getDemoListingsForBuyer());
+
+  const fallbackResults = $derived.by((): ListingSummary[] => {
+    if (loading) return [];
+    const stub = hits.length === 0 ? stubListingsForQuery(q, t) : [];
+    // Inject demo listings at top when query touches weaving/Eshaan catalog.
+    const needle = q.trim().toLowerCase();
+    const isWeavingQuery =
+      !needle ||
+      needle.includes('weav') ||
+      needle.includes('saree') ||
+      needle.includes('sari') ||
+      needle.includes('silk') ||
+      needle.includes('banarasi') ||
+      needle.includes('paithani') ||
+      needle.includes('eshaan');
+    const demoToShow = isWeavingQuery ? demoListings : [];
+    const stubIds = new Set(stub.map((s) => s.id));
+    const novelDemo = demoToShow.filter((d) => !stubIds.has(d.id ?? ''));
+    return [...novelDemo, ...stub];
+  });
+
+  // Reactively update when artisan publishes Paithani on the other tab.
+  $effect(() => onDemoStateChange(() => { demoListings = getDemoListingsForBuyer(); }));
+
 
   async function runSearch(): Promise<void> {
     loading = true;

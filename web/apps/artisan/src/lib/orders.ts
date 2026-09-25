@@ -43,6 +43,12 @@ export async function fetchOrder(orderId: string): Promise<BulkOrder> {
   return order;
 }
 
+let inMemoryOrders: BulkOrder[] | null = null;
+
+export function getCachedOrdersSync(): BulkOrder[] | null {
+  return inMemoryOrders;
+}
+
 /** Last-known copy of one order, for an offline reopen. */
 export async function cachedOrder(orderId: string): Promise<BulkOrder | undefined> {
   return getCached<BulkOrder>(orderCacheKey(orderId));
@@ -56,6 +62,7 @@ export async function cachedOrders(): Promise<BulkOrder[]> {
     const order = await cachedOrder(id);
     if (order) orders.push(order);
   }
+  inMemoryOrders = orders;
   return orders;
 }
 

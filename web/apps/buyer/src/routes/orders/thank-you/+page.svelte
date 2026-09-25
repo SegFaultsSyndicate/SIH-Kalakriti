@@ -21,7 +21,7 @@
   // Derive mock or passed order parameters
   const orderId = $derived(page.url.searchParams.get('id') || 'ORD-KALA-2026-9812');
   const craftName = $derived(page.url.searchParams.get('craft') || 'Varanasi Kadwa Zari Brocade');
-  const artisanName = $derived(page.url.searchParams.get('artisan') || 'Mohammad Kabir Ansari');
+  const artisanName = $derived(page.url.searchParams.get('artisan') || 'Eshaan');
   const cluster = $derived(page.url.searchParams.get('cluster') || 'Varanasi Silk Weaver CFC');
 </script>
 

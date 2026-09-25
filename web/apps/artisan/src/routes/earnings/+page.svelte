@@ -31,6 +31,7 @@
   import { cachedOrders, network, type BulkOrder } from '$lib/orders';
   import { getArtisanId } from '$lib/registration';
   import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
+  import { getSihEarningsSummary } from '$lib/sih-my-works';
 
   type IncomeStatementSummary = components['schemas']['IncomeStatementSummary'];
 
@@ -106,6 +107,31 @@
   <h1>{t('earnings.heading')}</h1>
 
   <IncomeGrowthChart />
+
+  <!-- SIH Demo: concrete financial summary so there are zero ₹0 or placeholder values -->
+  {@const sih = getSihEarningsSummary()}
+  <section class="earnings-page__sih-summary" aria-label="Your income on Kalakriti">
+    <h2>Your Economic Growth on Kalakriti</h2>
+    <div class="earnings-page__sih-grid">
+      <div class="earnings-page__sih-stat">
+        <span class="earnings-page__sih-label">Total Sales Revenue</span>
+        <span class="earnings-page__sih-value">₹{(sih.totalSalesPaise / 100).toLocaleString('en-IN')}</span>
+      </div>
+      <div class="earnings-page__sih-stat">
+        <span class="earnings-page__sih-label">Orders Completed</span>
+        <span class="earnings-page__sih-value">{sih.totalOrdersCompleted}</span>
+      </div>
+      <div class="earnings-page__sih-stat">
+        <span class="earnings-page__sih-label">Active Orders</span>
+        <span class="earnings-page__sih-value">{sih.activeOrdersCount}</span>
+      </div>
+      <div class="earnings-page__sih-stat earnings-page__sih-stat--highlight">
+        <span class="earnings-page__sih-label">Income Growth</span>
+        <span class="earnings-page__sih-value">+{sih.growthPct}%</span>
+        <span class="earnings-page__sih-sub">vs. ₹{(sih.baselineMonthlyPaise / 100).toLocaleString('en-IN')}/month before Kalakriti</span>
+      </div>
+    </div>
+  </section>
 
   <section class="earnings-page__generate">
     <h2>{t('earnings.statement.heading')}</h2>
@@ -248,6 +274,71 @@
     display: flex;
     flex-direction: column;
     gap: var(--k-space-2);
+  }
+
+  .earnings-page__sih-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-3);
+    padding: var(--k-space-4);
+    border-radius: var(--k-radius-lg);
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f2d4a 100%);
+    color: #fff;
+  }
+
+  .earnings-page__sih-summary h2 {
+    font-size: var(--k-text-md);
+    font-weight: var(--k-weight-bold);
+    margin: 0;
+    color: #e2e8f0;
+    letter-spacing: 0.01em;
+  }
+
+  .earnings-page__sih-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--k-space-3);
+  }
+
+  .earnings-page__sih-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--k-space-3);
+    background: rgba(255,255,255,0.08);
+    border-radius: var(--k-radius-md);
+  }
+
+  .earnings-page__sih-stat--highlight {
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    grid-column: span 2;
+  }
+
+  .earnings-page__sih-label {
+    font-size: var(--k-text-xs);
+    color: rgba(255,255,255,0.65);
+    font-weight: var(--k-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .earnings-page__sih-value {
+    font-size: var(--k-text-xl);
+    font-weight: var(--k-weight-bold);
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .earnings-page__sih-stat--highlight .earnings-page__sih-value {
+    color: #fbbf24;
+    font-size: 1.75rem;
+  }
+
+  .earnings-page__sih-sub {
+    font-size: var(--k-text-xs);
+    color: rgba(255,255,255,0.55);
+    margin-block-start: 2px;
   }
 
   .earnings-page__scheme-note {

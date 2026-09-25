@@ -1,10 +1,8 @@
 <!--
   apps/admin/src/routes/+page.svelte
-  Dashboard landing: quick links to the console's surfaces. MINISTRY and
-  CLUSTER_OFFICER land on /impact instead (F13).
+  Dashboard landing: quick links to the console's surfaces.
 -->
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { session } from '@kalakriti/api';
@@ -13,12 +11,6 @@
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
   const items = $derived(NAV_ITEMS.filter((item) => visibleTo(item, role)));
-
-  // F13: the impact dashboard is the landing page for the two roles that
-  // can read it; everyone else keeps the quick-link tiles.
-  $effect(() => {
-    if (role === 'MINISTRY' || role === 'CLUSTER_OFFICER') void goto('/impact', { replaceState: true });
-  });
 </script>
 
 <svelte:head>

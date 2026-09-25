@@ -100,14 +100,16 @@ export class SyncEngine {
   }
 
   /** Drain now. Safe to call from a button; concurrent calls collapse to one. */
-  async syncNow(): Promise<void> {
+  async syncNow(manual = false): Promise<void> {
     if (!network.online) return;
     this.draining = true;
     try {
       await drainOutbox(this.#send);
-      const now = Date.now();
-      this.lastSyncAt = now;
-      await db.prefs.put({ key: LAST_SYNC_PREF_KEY, value: now, updatedAt: now });
+      if (manual) {
+        const now = Date.now();
+        this.lastSyncAt = now;
+        await db.prefs.put({ key: LAST_SYNC_PREF_KEY, value: now, updatedAt: now });
+      }
     } finally {
       this.draining = false;
     }

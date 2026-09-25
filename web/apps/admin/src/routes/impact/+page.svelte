@@ -1,8 +1,8 @@
 <!--
   apps/admin/src/routes/impact/+page.svelte
 
-  F13 ministry impact dashboard -- the console's landing page for MINISTRY
-  and CLUSTER_OFFICER (an officer's filters are clamped to their own scope
+  F13 ministry impact dashboard for MINISTRY and CLUSTER_OFFICER (an
+  officer's filters are clamped to their own scope
   server-side, whatever this form sends). Every figure comes from
   insight-svc's /impact/* endpoints, computed with pkg/impact's rules. When
   VITE_USE_MOCKS=1 is set, $lib/stubs.ts appends sample rows to any section

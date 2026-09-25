@@ -28,6 +28,7 @@
   } from '@kalakriti/api';
   import ListingCard from '$lib/ListingCard.svelte';
   import { RAW_FALLBACK_GI_LISTINGS, RAW_FALLBACK_NEW_ARRIVALS, toFallbackListing } from '$lib/demo-home-listings';
+  import { getDemoListingsForBuyer, onDemoStateChange } from '$lib/sih-demo-injector';
 
   // Modular cultural marketplace components
   import VoicesReelCarousel from '$lib/VoicesReelCarousel.svelte';
@@ -236,14 +237,25 @@
     RAW_FALLBACK_NEW_ARRIVALS.map((raw) => toFallbackListing(raw, t, locale.code))
   );
 
+  let demoListings = $state<ListingSummary[]>(getDemoListingsForBuyer());
+
   const displayCrafts = $derived(crafts.length > 0 ? crafts : FALLBACK_CRAFTS);
   const displayGiListings = $derived(giListings.length > 0 ? giListings : FALLBACK_GI_LISTINGS);
-  const displayNewArrivals = $derived(newArrivals.length > 0 ? newArrivals : FALLBACK_NEW_ARRIVALS);
+  const displayNewArrivals = $derived.by((): ListingSummary[] => {
+    const base = newArrivals.length > 0 ? newArrivals : FALLBACK_NEW_ARRIVALS;
+    // Prepend Eshaan's weaving listings (newest first), deduplicating
+    const baseIds = new Set(base.map((l) => l.id));
+    const novel = demoListings.filter((d) => !baseIds.has(d.id ?? ''));
+    return [...novel, ...base].slice(0, 8);
+  });
   const displayMadeToOrder = $derived(
     madeToOrder.length > 0
       ? madeToOrder
       : FALLBACK_GI_LISTINGS.filter((l) => l.type === 'MADE_TO_ORDER')
   );
+
+  // Reactively update when artisan publishes Paithani on the other tab.
+  $effect(() => onDemoStateChange(() => { demoListings = getDemoListingsForBuyer(); }));
 
   async function load(): Promise<void> {
     loading = true;

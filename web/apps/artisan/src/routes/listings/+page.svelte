@@ -20,6 +20,7 @@
     STATE_GROUP_LABEL,
     fetchMyListings,
     cachedListings,
+    getCachedListingsSync,
     groupFor,
     titleFor,
     localPrimaryImageUrl,
@@ -31,11 +32,23 @@
     type Listing,
     type StateGroup,
   } from '$lib/listings';
+  import { getSihMyWorks } from '$lib/sih-my-works';
+  import { loadDemoState } from '$lib/sih-demo-store';
+
+  /** Tiny cross-tab listener wired to the same localStorage key. */
+  function onDemoStateChange(cb: () => void): () => void {
+    function handler(e: StorageEvent): void {
+      if (e.key === 'kalakriti.sih.demo') cb();
+    }
+    if (typeof window !== 'undefined') window.addEventListener('storage', handler);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('storage', handler); };
+  }
 
   const t = $derived(locale.t);
 
-  let listings = $state<Listing[]>([]);
-  let loading = $state(true);
+  const initialListings = getCachedListingsSync();
+  let listings = $state<Listing[]>(initialListings ?? []);
+  let loading = $state(initialListings === null);
   let stateFilter = $state<StateGroup | 'all'>('all');
   let searchQuery = $state('');
   let voiceSearching = $state(false);
@@ -43,12 +56,32 @@
   let thumbnails = $state<Record<string, string>>({});
   let pauseable = $state<Record<string, boolean>>({});
 
+  /** Image URLs keyed by SIH listing id, for mock listings without IndexedDB blobs. */
+  const sihImageMap = $derived.by((): Record<string, string> => {
+    const state = loadDemoState();
+    const map: Record<string, string> = {};
+    for (const l of state.listings) {
+      if (l.imageUrl) map[l.id] = l.imageUrl;
+    }
+    return map;
+  });
+
+  /** Merges SIH mock listings with real/cached listings, deduplicating by id. */
+  function mergeSihListings(base: Listing[]): Listing[] {
+    const mock = getSihMyWorks();
+    const existingIds = new Set(base.map((l) => l.id));
+    const novel = mock.filter((m) => m.id && !existingIds.has(m.id));
+    return [...novel, ...base].filter((l) => !titleFor(l, locale.code).includes('White Saree with Mar'));
+  }
+
   async function load(): Promise<void> {
-    loading = true;
-    listings = await cachedListings();
+    if (initialListings === null) loading = true;
+    const cached = await cachedListings();
+    listings = mergeSihListings(cached);
     if (network.online) {
       try {
-        listings = await fetchMyListings();
+        const real = await fetchMyListings();
+        listings = mergeSihListings(real);
       } catch {
         // Backend has no real listing data in local/dev environments yet --
         // fall back to whatever's cached (usually empty) rather than
@@ -61,6 +94,8 @@
     const canPause: Record<string, boolean> = {};
     for (const listing of listings) {
       if (!listing.id) continue;
+      // SIH mock listings expose their imageUrl through translations as a data-attr workaround;
+      // real listings use localPrimaryImageUrl from IndexedDB.
       const url = await localPrimaryImageUrl(listing.id);
       if (url) urls[listing.id] = url;
       canPause[listing.id] = await canPauseOrResume(listing);
@@ -68,6 +103,10 @@
     thumbnails = urls;
     pauseable = canPause;
   }
+
+  // Reactively reload when the artisan publishes the Paithani listing
+  // (e.g. if they navigate back to this tab).
+  $effect(() => onDemoStateChange(() => void load()));
 
   $effect(() => {
     void load();
@@ -165,6 +204,13 @@
     if (group === 'pending') return t('listings.action.review');
     if (group === 'published' && !listing.provenance_id) return t('listings.action.seal');
     return t('listings.action.view');
+  }
+
+  function primaryActionTooltip(listing: Listing): string {
+    const group = groupFor(listing);
+    if (group === 'needsAttention' || group === 'draft') return tooltip('tooltip.editListing');
+    if (group === 'published' && !listing.provenance_id) return tooltip('tooltip.sealProvenance');
+    return tooltip('tooltip.viewListing');
   }
 </script>
 
@@ -268,8 +314,16 @@
                     <VisuallyHidden>{t('listings.selectRow', { title: titleFor(listing, locale.code) })}</VisuallyHidden>
                   </Checkbox>
 
-                  {#if listing.id && thumbnails[listing.id]}
-                    <img src={thumbnails[listing.id]} alt="" class="listings-page__thumb" />
+                  {@const imgSrc = (listing.id && thumbnails[listing.id]) || (listing.id && sihImageMap[listing.id])}
+                  {#if imgSrc}
+                    <img
+                      src={imgSrc}
+                      alt=""
+                      class="listings-page__thumb"
+                      onerror={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/craft-images/weaving_and_looms/banarasi-brocade-weaving.jpg';
+                      }}
+                    />
                   {:else}
                     <div class="listings-page__thumb listings-page__thumb--placeholder">
                       <Icon name="image" />
@@ -286,7 +340,7 @@
                     {/if}
                   </div>
 
-                  <Button size="sm" variant="secondary" onclick={() => goto(primaryActionHref(listing))} tooltip={tooltip('tooltip.viewListing')}>
+                  <Button size="sm" variant="secondary" onclick={() => goto(primaryActionHref(listing))} tooltip={primaryActionTooltip(listing)}>
                     {primaryActionLabel(listing)}
                   </Button>
                   {#if group === 'published'}

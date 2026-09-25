@@ -35,14 +35,7 @@
   import { Button, Select, Input, FieldGroup, VoiceInput } from '@kalakriti/ui';
   import { db, type MediaRecord } from '@kalakriti/offline';
   import ListingStep from '$lib/ListingStep.svelte';
-  import {
-    getDraft,
-    patchFields,
-    addCapturedMedia,
-    removeCapturedMedia,
-    ensureListingCreateQueued,
-    ensureListingMediaAttachQueued,
-  } from '$lib/listing-draft';
+  import { getDraft, patchFields, addCapturedMedia, removeCapturedMedia, ensureListingCreateQueued, ensureListingMediaAttachQueued } from '$lib/listing-draft';
   import { loadCrafts, type Craft } from '$lib/ontology';
 
   const t = $derived(locale.t);
@@ -66,6 +59,19 @@
       craftId = draft.fields.craftId as string | undefined ?? '';
       workingTitle = (draft.fields.workingTitle as string | undefined) ?? '';
     });
+  });
+
+  // SIH Demo: once crafts load, auto-select "Weaving" (or first match) and
+  // pre-fill the working title from the White Saree with Maroon Border listing.
+  $effect(() => {
+    if (crafts.length === 0 || craftId) return;
+    const weaving = crafts.find((c) =>
+      c.slug.includes('weav') || c.displayName.toLowerCase().includes('weav'),
+    );
+    if (weaving) {
+      craftId = weaving.id;
+      if (!workingTitle) workingTitle = 'White Saree with Maroon Border';
+    }
   });
 
   $effect(() => {

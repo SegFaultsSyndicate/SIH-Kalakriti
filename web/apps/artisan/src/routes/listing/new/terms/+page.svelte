@@ -16,6 +16,7 @@
   import { Button, FieldGroup, NumberStepper, Switch, Checkbox, showToast } from '@kalakriti/ui';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields, queueListingUpdate, publishListing, type ListingDraftFields } from '$lib/listing-draft';
+  import { publishPaithaniListing } from '$lib/sih-demo-store';
 
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
@@ -67,8 +68,13 @@
       await patchFields(draftId, { madeToOrderTerms, packaging, termsAccepted: true });
       await queueListingUpdate(draftId, { made_to_order_terms: madeToOrderTerms, packaging });
       await publishListing(draftId);
+
+      // SIH Demo: publish the Paithani listing to the shared cross-portal store
+      // so the buyer portal feed updates live when we switch tabs.
+      publishPaithaniListing();
+
       showToast({ message: t('listing.terms.queued'), variant: 'success' });
-      await goto('/');
+      await goto('/listings');
     } finally {
       publishing = false;
     }

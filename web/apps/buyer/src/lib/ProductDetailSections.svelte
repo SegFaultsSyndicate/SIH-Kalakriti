@@ -46,12 +46,19 @@
 
   // Frequently bought together: this piece + the next two from the same craft
   // (or from "also viewed" when the craft has nothing else).
-  const bundle = $derived([listing, ...[...related.sameCraft, ...related.alsoViewed].slice(0, 2)]);
+  // `bundleCompanions` are the 2 other picks shown alongside the current listing;
+  // they are excluded from "More from this craft" so nothing repeats.
+  const bundleCompanions = $derived(related.alsoViewed.filter((x) => x.id !== listing.id).slice(0, 2));
+  const bundle = $derived([listing, ...bundleCompanions]);
   let bundleOn = $state<Record<string, boolean>>({});
   const bundleTotal = $derived(
     bundle.reduce((sum, l) => sum + (bundleOn[l.id ?? ''] === false ? 0 : (l.price?.amount_paise ?? 0)), 0),
   );
   const bundleCount = $derived(bundle.filter((l) => bundleOn[l.id ?? ''] !== false).length);
+  // IDs already shown in FBT — excluded from the "More from craft" row below.
+  const bundleIds = $derived(new Set(bundle.map((l) => l.id)));
+  // sameCraft items with FBT picks removed so neither section repeats the other.
+  const sameCraftFiltered = $derived(related.sameCraft.filter((l) => !bundleIds.has(l.id)));
 
   // ponytail: no cart exists yet -- "add all" saves to the wishlist; orders are
   // still placed per piece via PurchaseForm.
@@ -78,12 +85,13 @@
 </script>
 
 <div class="pdp-below">
-  {#if bundle.length > 1}
+  {#if bundleCompanions.length > 0}
     <section class="pdp-section" aria-labelledby="fbt-heading">
       <h2 id="fbt-heading">{t('pdp.fbt.heading')}</h2>
       <div class="fbt">
+        <!-- Thumbnails: companion picks only (current listing is already the hero image above) -->
         <ul class="fbt__items">
-          {#each bundle as item, i (item.id)}
+          {#each bundleCompanions as item, i (item.id)}
             {#if i > 0}<li class="fbt__plus" aria-hidden="true">+</li>{/if}
             <li class="fbt__item">
               <a href="/listing/{item.id}"><img src={item.image_url} alt={titleOf(item)} loading="lazy" /></a>
@@ -96,6 +104,7 @@
             {t('pdp.fbt.saveAll', { count: bundleCount })}
           </button>
         </div>
+        <!-- Checklist: all 3 items including "This item" current listing -->
         <ul class="fbt__list">
           {#each bundle as item, i (item.id)}
             <li>
@@ -126,11 +135,11 @@
     </table>
   </section>
 
-  {#if related.sameCraft.length > 0}
+  {#if sameCraftFiltered.length > 0}
     <section class="pdp-section" aria-labelledby="same-craft-heading">
       <h2 id="same-craft-heading">{t('pdp.sameCraft.heading', { craft: listing.craft_name ?? '' })}</h2>
       <div class="pdp-row">
-        {#each related.sameCraft as l (l.id)}
+        {#each sameCraftFiltered as l (l.id)}
           <div class="pdp-row__cell"><ListingCard listing={l} href={`/listing/${l.id}`} /></div>
         {/each}
       </div>

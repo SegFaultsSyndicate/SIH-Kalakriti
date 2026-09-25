@@ -78,6 +78,12 @@ export async function hasPublishedOnce(): Promise<boolean> {
   return (await getPref<boolean>(HAS_PUBLISHED_PREF)) ?? false;
 }
 
+let inMemoryListings: Listing[] | null = null;
+
+export function getCachedListingsSync(): Listing[] | null {
+  return inMemoryListings;
+}
+
 /** Fetches the artisan's own listings across every state and caches the result for offline re-display. */
 export async function fetchMyListings(): Promise<Listing[]> {
   const artisanId = await getArtisanId();
@@ -85,6 +91,7 @@ export async function fetchMyListings(): Promise<Listing[]> {
   const res = await listListings({ artisan_id: artisanId });
   const listings = res.listings ?? [];
   await setCached(CACHE_KEY, listings);
+  inMemoryListings = listings;
   if (listings.some((l) => l.state === 'PUBLISHED')) {
     await setPref(HAS_PUBLISHED_PREF, true);
   }
@@ -93,7 +100,9 @@ export async function fetchMyListings(): Promise<Listing[]> {
 
 /** Last successful fetch, for an offline first paint -- real data, just not fresh. */
 export async function cachedListings(): Promise<Listing[]> {
-  return (await getCached<Listing[]>(CACHE_KEY)) ?? [];
+  const cached = (await getCached<Listing[]>(CACHE_KEY)) ?? [];
+  inMemoryListings = cached;
+  return cached;
 }
 
 /**

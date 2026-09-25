@@ -109,6 +109,7 @@
         onchange={onFreeTextChange}
         placeholder={t('register.district.notListed.label')}
         aria-label={t('register.district.notListed.label')}
+        onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void next(); } }}
       />
       <FieldGroup label={t('register.district.notListed.stateLabel')}>
         {#snippet children({ id })}
@@ -127,6 +128,13 @@
           type="search"
           placeholder={t('register.district.search')}
           aria-label={t('register.district.search')}
+          onkeydown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (selected !== '') { void next(); }
+              else if (filtered.length === 1) { void choose(filtered[0].id); }
+            }
+          }}
         />
         {#if listenSupported()}
           <button type="button" class="voice-alt" onclick={useVoice} disabled={listening}>

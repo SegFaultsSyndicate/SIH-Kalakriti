@@ -15,34 +15,51 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { liveQuery } from 'dexie';
-  import { formatRelativeTime, locale } from '@kalakriti/i18n';
+  import { formatRelativeTime, formatDate, locale } from '@kalakriti/i18n';
   import { OutboxView, network, db, getPref, type DraftRecord } from '@kalakriti/offline';
   import { Icon } from '@kalakriti/icons';
   import { syncEngine } from '$lib/sync';
-  import { getArtisanId, getDraft as getRegistrationDraft } from '$lib/registration';
-  import { cachedOrders, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
+  import { getArtisanId, getDraft as getRegistrationDraft, getCachedDraftSync } from '$lib/registration';
+  import { cachedOrders, getCachedOrdersSync, myLots, needsAction, type BulkOrder, type OrderLot } from '$lib/orders';
   import IncomeGrowthChart from '$lib/IncomeGrowthChart.svelte';
   import CoverageStrip from '$lib/CoverageStrip.svelte';
   import DigitalLiteracyTutorial from '$lib/DigitalLiteracyTutorial.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
-  import { launchDemoListing } from '$lib/demo-listing';
+  import { launchDemoListing, cleanupLegacyDraftsAndSeedPaithani } from '$lib/demo-listing';
+  import { ensureDemoState } from '$lib/sih-demo-store';
+
+  // Seed the SIH demo store on first load so both portals share the same
+  // Eshaan catalog from the very first frame of the recording.
+  if (typeof localStorage !== 'undefined') ensureDemoState();
 
   const t = $derived(locale.t);
 
   const outbox = new OutboxView();
   $effect(() => outbox.start());
 
+  const initialDraft = getCachedDraftSync();
+  const initialOrders = getCachedOrdersSync();
+
+  function getInitialAvatar(): string | undefined {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem('kalakriti.artisan.avatar') || undefined;
+      }
+    } catch {}
+    return undefined;
+  }
+
   let artisanId = $state<string | undefined>(undefined);
-  let orders = $state<BulkOrder[]>([]);
+  let orders = $state<BulkOrder[]>(initialOrders ?? []);
   let showTutorial = $state(false);
   let showStallModal = $state(false);
 
-  let artisanName = $state('Eshaan');
-  let craftName = $state('Weaving & Handloom');
-  let districtName = $state('Varanasi, Uttar Pradesh');
-  let clusterName = $state('Varanasi Silk Weaver Facility Centre');
-  let pehchanId = $state('UP-VNS-2024-0982');
-  let avatarUrl = $state<string | undefined>(undefined);
+  let artisanName = $state(initialDraft.name || 'Eshaan');
+  let craftName = $state(initialDraft.craftName || 'Weaving & Handloom');
+  let districtName = $state(initialDraft.districtFreeText || 'Varanasi, Uttar Pradesh');
+  let clusterName = $state(initialDraft.clusterName || 'Varanasi Silk Weaver Facility Centre');
+  let pehchanId = $state(initialDraft.pehchanId || 'UP-VNS-2024-0982');
+  let avatarUrl = $state<string | undefined>(getInitialAvatar());
 
   $effect(() => {
     void (async () => {
@@ -56,12 +73,21 @@
       if (reg.districtFreeText) districtName = reg.districtFreeText;
 
       const storedAvatar = await getPref<string>('profile.avatar_url');
-      if (storedAvatar) avatarUrl = storedAvatar;
+      if (storedAvatar) {
+        avatarUrl = storedAvatar;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('kalakriti.artisan.avatar', storedAvatar);
+          }
+        } catch {}
+      }
 
       const seen = await getPref<boolean>('literacy.tutorial_completed');
       if (!seen) {
         showTutorial = true;
       }
+
+      await cleanupLegacyDraftsAndSeedPaithani();
     })();
   });
 
@@ -121,15 +147,25 @@
     let cancelled = false;
     void (async () => {
       for (const d of inProgressDrafts) {
-        const media = await db.media.get(d.mediaIds[0]);
-        if (media?.blob) urls[d.id] = URL.createObjectURL(media.blob);
+        let url: string | undefined;
+        if (d.mediaIds[0]) {
+          const media = await db.media.get(d.mediaIds[0]);
+          if (media?.blob && media.blob.size > 0) {
+            url = URL.createObjectURL(media.blob);
+          }
+        }
+        urls[d.id] = url || '/craft-images/weaving_and_looms/paithani-saree-blue-green.jpeg';
       }
-      if (cancelled) for (const url of Object.values(urls)) URL.revokeObjectURL(url);
+      if (cancelled) for (const url of Object.values(urls)) {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      }
       else draftThumbs = urls;
     })();
     return () => {
       cancelled = true;
-      for (const url of Object.values(urls)) URL.revokeObjectURL(url);
+      for (const url of Object.values(urls)) {
+        if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+      }
     };
   });
 
@@ -137,7 +173,10 @@
     outbox.entries.filter(
       (entry) =>
         entry.kind.startsWith('listing.') &&
-        (entry.status === 'failed' || entry.status === 'needsAttention' || entry.status === 'blocked'),
+        (entry.status === 'failed' ||
+          entry.status === 'needsAttention' ||
+          entry.status === 'blocked' ||
+          (entry.status === 'syncing' && (entry.attempts > 0 || entry.lastError !== undefined))),
     ),
   );
 
@@ -148,34 +187,69 @@
     pending: 'clock',
     synced: 'success',
   };
+
+  let manualSyncing = $state(false);
+  const isSyncing = $derived(syncEngine.draining || manualSyncing);
+
+  const effectiveSyncState = $derived.by((): typeof syncEngine.state => {
+    if (!network.online) return 'offline';
+    if (isSyncing) return 'syncing';
+    return syncEngine.state;
+  });
+
+  async function handleSyncNow(): Promise<void> {
+    if (!network.online || isSyncing) return;
+    manualSyncing = true;
+    try {
+      // Guarantee a smooth minimum sync duration (600ms) so micro-second
+      // completions don't produce a jarring visual flash glitch.
+      await Promise.all([
+        syncEngine.syncNow(true),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
+    } catch (err) {
+      console.warn('Sync failed:', err);
+    } finally {
+      manualSyncing = false;
+    }
+  }
 </script>
 
 <svelte:head>
   <title>{t('app.name')}</title>
 </svelte:head>
 
-<h1 class="k-visually-hidden">{t('app.name')}</h1>
-
-<section class="sync-strip" aria-label={t('sync.pending')}>
-  <span class="sync-strip__status">
-    <Icon name={SYNC_ICON[syncEngine.state]} class="sync-strip__icon" />
-    {t(`sync.${syncEngine.state}`)}
-    {#if syncEngine.counts.total > 0}
-      <span class="sync-strip__count">({syncEngine.counts.total})</span>
-    {/if}
-  </span>
-  <span class="sync-strip__lastSync">
-    {syncEngine.lastSyncAt
-      ? t('home.sync.lastSynced', { time: formatRelativeTime(syncEngine.lastSyncAt, locale.code) })
-      : t('home.sync.never')}
-  </span>
+<section class="sync-strip sync-strip--{effectiveSyncState}" aria-label={t('sync.pending')}>
+  <div class="sync-strip__info">
+    <div class="sync-strip__status">
+      <span class="sync-strip__icon-wrap">
+        <Icon name={SYNC_ICON[effectiveSyncState]} class="sync-strip__icon" size="1rem" />
+      </span>
+      <span class="sync-strip__label">
+        {effectiveSyncState === 'attention' ? t('sync.needsAttention') : t(`sync.${effectiveSyncState}`)}
+      </span>
+      {#if syncEngine.counts.total > 0}
+        <span class="sync-strip__count">({syncEngine.counts.total})</span>
+      {/if}
+    </div>
+    <span class="sync-strip__last-sync">
+      {syncEngine.lastSyncAt
+        ? t('home.sync.lastSynced', { time: formatDate(syncEngine.lastSyncAt, locale.code, { timeStyle: 'short' }) })
+        : t('home.sync.never')}
+    </span>
+  </div>
   <button
     type="button"
     class="sync-strip__action"
-    onclick={() => syncEngine.syncNow()}
-    disabled={!network.online || syncEngine.draining}
+    class:is-spinning={isSyncing}
+    onclick={handleSyncNow}
+    disabled={!network.online || isSyncing}
+    aria-label={t('home.sync.manual')}
   >
-    {t('home.sync.manual')}
+    <span class="sync-strip__btn-icon">
+      <Icon name="sync" size="0.875rem" />
+    </span>
+    <span class="sync-strip__btn-text">{t('home.sync.manual')}</span>
   </button>
 </section>
 
@@ -343,42 +417,192 @@
   .sync-strip {
     display: flex;
     align-items: center;
-    gap: var(--k-space-3);
-    padding: var(--k-space-3) var(--k-space-4);
+    justify-content: space-between;
+    gap: var(--k-space-2);
+    padding: 0.375rem var(--k-space-4);
+    min-block-size: 2.75rem;
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
-    font-size: var(--k-text-sm);
+    background-color: var(--k-surface-base);
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .sync-strip--attention {
+    background-color: #fef7ed;
+    border-block-end-color: #fed7aa;
+  }
+
+  .sync-strip--syncing {
+    background-color: #f0f9ff;
+    border-block-end-color: #bae6fd;
+  }
+
+  .sync-strip--offline {
+    background-color: #f8fafc;
+  }
+
+  .sync-strip__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    min-inline-size: 0;
+    flex: 1;
   }
 
   .sync-strip__status {
     display: flex;
     align-items: center;
-    gap: var(--k-space-2);
+    gap: 0.375rem;
+    min-inline-size: 0;
+  }
+
+  .sync-strip__icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--k-text-secondary);
+  }
+
+  .sync-strip--attention .sync-strip__icon-wrap {
+    color: #c2410c;
+  }
+
+  .sync-strip--synced .sync-strip__icon-wrap {
+    color: #166534;
+  }
+
+  .sync-strip--syncing .sync-strip__icon-wrap {
+    color: #0284c7;
+    animation: sync-spin 0.8s linear infinite;
+  }
+
+  .sync-strip--pending .sync-strip__icon-wrap {
+    color: #b45309;
+  }
+
+  .sync-strip--offline .sync-strip__icon-wrap {
+    color: #64748b;
+  }
+
+  .sync-strip__label {
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-semibold);
     color: var(--k-text-primary);
-    font-weight: var(--k-weight-medium);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+
+  .sync-strip--attention .sync-strip__label {
+    color: #9a3412;
   }
 
   .sync-strip__count {
+    font-size: 0.6875rem;
+    font-weight: var(--k-weight-bold);
+    padding: 0.05rem 0.35rem;
+    border-radius: var(--k-radius-full);
+    background-color: var(--k-surface-sunken, #ece8df);
     color: var(--k-text-secondary);
+    line-height: 1.2;
+    flex-shrink: 0;
   }
 
-  .sync-strip__lastSync {
-    flex: 1;
+  .sync-strip--attention .sync-strip__count {
+    background-color: #ffedd5;
+    color: #c2410c;
+  }
+
+  .sync-strip__last-sync {
+    font-size: 0.6875rem;
     color: var(--k-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    padding-inline-start: calc(1rem + 0.375rem);
   }
 
   .sync-strip__action {
-    min-block-size: var(--k-touch-min);
-    padding-inline: var(--k-space-3);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-block-size: 1.875rem;
+    padding: 0.25rem 0.625rem;
     border: var(--k-hairline) solid var(--k-border-interactive);
-    border-radius: var(--k-radius-md);
-    background: none;
+    border-radius: var(--k-radius-full);
+    background-color: var(--k-surface-elevated, #ffffff);
     color: var(--k-text-primary);
+    font-size: var(--k-text-xs);
+    font-weight: var(--k-weight-medium);
     cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.2s ease, transform 0.1s ease;
+  }
+
+  /* Accessible hit target (44px) on touch screens without expanding visual footprint */
+  .sync-strip__action::after {
+    content: '';
+    position: absolute;
+    inset: -7px -4px;
+  }
+
+  .sync-strip__action:hover:not(:disabled) {
+    background-color: var(--k-surface-sunken);
+    border-color: var(--k-ink-500, #888);
+  }
+
+  .sync-strip__action:active:not(:disabled) {
+    transform: scale(0.96);
   }
 
   .sync-strip__action:disabled {
-    opacity: 0.5;
+    opacity: 0.65;
     cursor: not-allowed;
+  }
+
+  .sync-strip__btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sync-strip__action.is-spinning .sync-strip__btn-icon {
+    animation: sync-spin 0.8s linear infinite;
+  }
+
+  @keyframes sync-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (min-width: 480px) {
+    .sync-strip__info {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--k-space-3);
+    }
+    .sync-strip__last-sync {
+      padding-inline-start: 0;
+    }
+    .sync-strip__last-sync::before {
+      content: '·';
+      margin-inline-end: var(--k-space-2);
+      font-weight: bold;
+    }
   }
 
   .add-product {

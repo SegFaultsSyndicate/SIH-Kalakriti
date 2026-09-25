@@ -234,7 +234,7 @@
               {:else}
                 <p class="staff__muted">{t('staff.review.noRecording')}</p>
               {/if}
-              <Button size="sm" disabled={!r.link_id || !audio[r.link_id]} onclick={() => reviewed(r)}>{t('staff.review.done')}</Button>
+              <Button size="sm" onclick={() => reviewed(r)}>{t('staff.review.done')}</Button>
             </li>
           {/each}
         </ul>
@@ -281,7 +281,7 @@
               <Input {id} bind:value={csc} />
             {/snippet}
           </FieldGroup>
-          <Button type="submit" loading={creating} disabled={!phone.trim() || !name.trim()}>{t('staff.create')}</Button>
+          <Button type="submit" loading={creating}>{t('staff.create')}</Button>
         </form>
 
         <div class="staff__scroll">

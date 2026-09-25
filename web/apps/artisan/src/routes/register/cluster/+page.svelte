@@ -47,7 +47,7 @@
     <p class="hint">{t('register.cluster.body')}</p>
     <FieldGroup label={t('register.cluster.label')} optional>
       {#snippet children({ id })}
-        <Input {id} bind:value={clusterName} onchange={onchange} />
+        <Input {id} bind:value={clusterName} onchange={onchange} onkeydown={(e) => { if (e.key === 'Enter' && !submitting) { e.preventDefault(); void finish(); } }} />
       {/snippet}
     </FieldGroup>
   {/snippet}

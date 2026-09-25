@@ -11,7 +11,25 @@ import { createDraft, patchFields } from '$lib/listing-draft';
 /**
  * Creates a sample SVG canvas blob representing an authentic Ajrakh block-printed textile.
  */
-function createSampleCraftBlob(): Promise<Blob> {
+/**
+ * Creates a sample craft image blob representing the Paithani Silk Saree with golden zari border.
+ */
+async function createSampleCraftBlob(): Promise<Blob> {
+  // First attempt to fetch the actual white-saree-maroon-border image asset if reachable
+  try {
+    const urls = [
+      '/craft-images/weaving_and_looms/paithani-saree-blue-green.jpeg',
+      'http://localhost:5173/craft-images/weaving_and_looms/paithani-saree-blue-green.jpeg',
+    ];
+    for (const url of urls) {
+      const res = await fetch(url).catch(() => null);
+      if (res && res.ok) {
+        const b = await res.blob();
+        if (b.size > 100) return b;
+      }
+    }
+  } catch { /* ignore and use canvas */ }
+
   return new Promise((resolve) => {
     if (typeof document === 'undefined') {
       resolve(new Blob(['mock craft'], { type: 'image/jpeg' }));
@@ -27,49 +45,53 @@ function createSampleCraftBlob(): Promise<Blob> {
       return;
     }
 
-    // Rich Indigo Ground
-    ctx.fillStyle = '#1e3a8a';
+    // Elegant Cream/White Silk Ground
+    ctx.fillStyle = '#fbfbf9';
     ctx.fillRect(0, 0, 600, 600);
 
-    // Terracotta Madder Red Border
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(30, 30, 540, 540);
+    // Deep Maroon Border
+    ctx.fillStyle = '#831843';
+    ctx.fillRect(0, 480, 600, 120);
+    ctx.fillRect(0, 0, 600, 40);
 
-    // Deep Indigo Inner
-    ctx.fillStyle = '#172554';
-    ctx.fillRect(60, 60, 480, 480);
+    // Golden Zari Weft Bands
+    ctx.fillStyle = '#d97706';
+    ctx.fillRect(0, 470, 600, 10);
+    ctx.fillRect(0, 40, 600, 6);
 
-    // Geometric Star & Floral Block Motifs
-    ctx.fillStyle = '#fef08a';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    // Intricate Peacock & Oblique Border motifs in gold
+    ctx.fillStyle = '#f59e0b';
+    for (let x = 30; x < 580; x += 55) {
+      ctx.beginPath();
+      ctx.arc(x, 535, 14, 0, Math.PI * 2);
+      ctx.fill();
 
-    for (let x = 100; x <= 500; x += 80) {
-      for (let y = 100; y <= 500; y += 80) {
+      ctx.beginPath();
+      ctx.moveTo(x, 505);
+      ctx.lineTo(x + 10, 520);
+      ctx.lineTo(x - 10, 520);
+      ctx.closePath();
+      ctx.fillStyle = '#fbbf24';
+      ctx.fill();
+    }
+
+    // Saree Body Subtle Golden Buttis
+    ctx.fillStyle = '#b45309';
+    for (let x = 60; x <= 540; x += 80) {
+      for (let y = 90; y <= 430; y += 70) {
         ctx.beginPath();
-        ctx.arc(x, y, 16, 0, Math.PI * 2);
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.stroke();
-
-        // 8-pointed star petals
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-          const px = x + Math.cos(a) * 26;
-          const py = y + Math.sin(a) * 26;
-          ctx.beginPath();
-          ctx.arc(px, py, 6, 0, Math.PI * 2);
-          ctx.fillStyle = '#fed7aa';
-          ctx.fill();
-        }
       }
     }
 
-    // Central GI Seal Marker
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.fillRect(150, 520, 300, 36);
+    // GI Seal Marker
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillRect(130, 420, 340, 32);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('GI-72 • DHAMADKA KUTCH AJRAKH', 300, 544);
+    ctx.fillText('GI-350 \u2022 PAITHANI WEAVING \u2022 HANDLOOM', 300, 441);
 
     canvas.toBlob((blob) => {
       resolve(blob || new Blob(['mock craft'], { type: 'image/jpeg' }));
@@ -98,61 +120,88 @@ export async function launchDemoListing(): Promise<string> {
   });
 
   await patchFields(draft.id, {
-    craftId: 'ajrakh-block-print',
-    workingTitle: 'Kutch Natural Ajrakh Modal Silk Dupatta - 16-Stage Indigo Hand-Block',
+    craftId: 'paithani-weaving',
+    workingTitle: 'Paithani Silk Saree (Weaving)',
     dimensions: {
-      length_mm: 2400,
-      width_mm: 900,
+      length_mm: 5500,
+      width_mm: 1140,
       height_mm: 2,
-      weight_g: 220,
+      weight_g: 780,
     },
     type: 'READY_STOCK',
-    priceAmountPaise: 385000, // ₹3,850
-    stockQuantity: 12,
+    priceAmountPaise: 1850000, // ₹18,500
+    stockQuantity: 3,
     minOrderQuantity: 1,
     studioConfig: {
       backgroundMode: 'white',
       autoLightingApplied: true,
-      brightnessOffset: 18,
-      contrastOffset: 12,
+      brightnessOffset: 15,
+      contrastOffset: 10,
     },
     attributes: [
       {
         name: 'craft',
-        value: 'Kutch Ajrakh Hand-Block Print (GI-72)',
+        value: 'Paithani Silk Handloom Weaving (GI-350)',
         source: 'MODEL',
-        confidence: 0.96,
+        confidence: 0.98,
       },
       {
         name: 'material',
-        value: 'Pure Modal Silk with Botanical Indigofera Tinctoria & Madder Root',
+        value: 'Pure Mulberry Silk & Fine Gold Zari Weft',
         source: 'MODEL',
-        confidence: 0.91,
+        confidence: 0.95,
       },
       {
         name: 'technique',
-        value: '16-Stage Mud-Resist Hand-Block Printing using Carved Teak Blocks',
+        value: 'Tapestry Weaving & Hand-Interlocked Kadwa Border',
         source: 'MODEL',
-        confidence: 0.88,
+        confidence: 0.92,
       },
     ],
     translations: [
       {
         language: 'en',
-        title: 'Kutch Natural Ajrakh Modal Silk Dupatta',
+        title: 'Paithani Silk Saree (Weaving)',
         description:
-          'This authentic piece is crafted through traditional Kutch Ajrakh block printing. Hand-finished through 16 stages of botanical resist dyeing, it features pure modal silk with natural indigo and madder root.',
+          'Exquisite handwoven Paithani Silk Saree handcrafted by Eshaan in Varanasi. Woven from pure mulberry silk with traditional oblique square borders and delicate zari buttis.',
         machine_generated: true,
       },
       {
         language: 'hi',
-        title: 'कच्छ प्राकृतिक अजरख मोडल सिल्क दुपट्टा',
+        title: '\u092a\u0948\u0920\u0923\u0940 \u0938\u093f\u0932\u094d\u0915 \u0938\u093e\u0921\u093c\u0940 (\u0939\u0924\u0915\u0930\u0918\u093e)',
         description:
-          'यह प्रामाणिक कृति पारंपरिक कच्छ अजरख ब्लॉक प्रिंटिंग द्वारा हस्तनिर्मित है। 16 चरणों की प्राकृतिक डाई प्रक्रिया और शुद्ध मोडल सिल्क से तैयार।',
+          '\u0936\u0941\u0926\u094d\u0927 \u092e\u0932\u092c\u0930\u0940 \u0938\u093f\u0932\u094d\u0915 \u0914\u0930 \u0938\u0941\u0928\u0939\u0930\u0940 \u091c\u0930\u0940 \u092c\u0949\u0930\u094d\u0921\u0930 \u0915\u0947 \u0938\u093e\u0925 \u0939\u0938\u094d\u0924\u0928\u093f\u0930\u094d\u092e\u093f\u0924 \u092a\u0948\u0920\u0923\u0940 \u0938\u093e\u0921\u093c\u0940\u0964',
         machine_generated: true,
       },
     ],
   });
 
   return draft.id;
+}
+
+/**
+ * Removes obsolete Ajrakh drafts and ensures a clean Paithani Weaving draft exists.
+ */
+export async function cleanupLegacyDraftsAndSeedPaithani(): Promise<void> {
+  try {
+    const rows = await db.drafts.toArray();
+    let hasPaithaniDraft = false;
+    for (const row of rows) {
+      const title = String((row.fields as { workingTitle?: string })?.workingTitle || '');
+      const craftId = String((row.fields as { craftId?: string })?.craftId || '');
+      const isAjrakh = craftId === 'ajrakh-block-print' || title.toLowerCase().includes('ajrakh');
+      if (isAjrakh) {
+        await db.drafts.delete(row.id);
+        for (const mid of row.mediaIds) {
+          await db.media.delete(mid).catch(() => {});
+        }
+      } else if (craftId === 'paithani-weaving' || title.toLowerCase().includes('paithani')) {
+        hasPaithaniDraft = true;
+      }
+    }
+
+    if (!hasPaithaniDraft) {
+      await launchDemoListing();
+    }
+  } catch { /* ignore */ }
 }

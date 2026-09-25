@@ -39,6 +39,8 @@ export default {
       $illustrations: '../../packages/illustrations',
       $motion: '../../packages/motion',
       $identity: '../../packages/identity',
+      '@kalakriti/api': '../../packages/api/src/index.ts',
+      '@kalakriti/i18n': '../../packages/i18n/src/index.ts',
     },
 
     serviceWorker: { register: false },

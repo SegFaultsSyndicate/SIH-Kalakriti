@@ -20,6 +20,8 @@
   import { goto } from '$app/navigation';
   import { locale, matchesLocale, tooltip } from '@kalakriti/i18n';
   import { Button, SpeakButton } from '@kalakriti/ui';
+  import { db, type MediaRecord } from '@kalakriti/offline';
+  import { liveQuery } from 'dexie';
   import ListingStep from '$lib/ListingStep.svelte';
   import { getDraft, patchFields } from '$lib/listing-draft';
 
@@ -41,6 +43,7 @@
   let translations = $state<Translation[]>([]);
   let attributes = $state<Attribute[]>([]);
   let loaded = $state(false);
+  let thumbUrl = $state<string | undefined>(undefined);
 
   $effect(() => {
     if (!draftId) return;
@@ -52,8 +55,39 @@
     });
   });
 
+  // Load uploaded photo thumbnail to show in review
+  $effect(() => {
+    if (!draftId) return;
+    let cancelled = false;
+    const sub = liveQuery(async () => {
+      const draft = await db.drafts.get(draftId);
+      if (!draft) return undefined;
+      const media = await db.media.bulkGet(draft.mediaIds);
+      return media.find((m): m is MediaRecord => !!m && m.kind === 'photo');
+    }).subscribe((photo) => {
+      if (cancelled) return;
+      if (photo?.blob) {
+        thumbUrl = URL.createObjectURL(photo.blob);
+      } else {
+        thumbUrl = '/craft-images/weaving_and_looms/white-saree-maroon-border.jpeg';
+      }
+    });
+    return () => {
+      cancelled = true;
+      sub.unsubscribe();
+    };
+  });
+
   const enTranslation = $derived(translations.find((tr) => matchesLocale(tr.language, 'en')));
   const hiTranslation = $derived(translations.find((tr) => matchesLocale(tr.language, 'hi')));
+
+  /** Split newline-separated description into bullets for display. */
+  const bullets = $derived(
+    (enTranslation?.description ?? '')
+      .split('\n')
+      .map((b) => b.trim())
+      .filter((b) => b.length > 0),
+  );
 
   /** "material" -> "Material"; attribute names are free-form from ml-svc, not an i18n-keyed set. */
   function humanize(name: string): string {
@@ -77,8 +111,29 @@
     {#if !loaded}
       <p class="review-status" role="status">{t('state.loading')}</p>
     {:else}
+      <!-- Photo preview -->
+      {#if thumbUrl}
+        <div class="review-photo">
+          <img src={thumbUrl} alt="Uploaded photo" class="review-photo__img" />
+          <span class="review-photo__badge">1 photo uploaded</span>
+        </div>
+      {/if}
+
       <h2 class="review-title">{enTranslation?.title ?? ''}</h2>
-      <p class="review-description">{enTranslation?.description ?? ''}</p>
+
+      <!-- About this item bullets (matching what buyer sees) -->
+      {#if bullets.length > 0}
+        <div class="review-bullets">
+          <h3>About this item</h3>
+          <ul>
+            {#each bullets as bullet}
+              <li>{bullet}</li>
+            {/each}
+          </ul>
+        </div>
+      {:else}
+        <p class="review-description">{enTranslation?.description ?? ''}</p>
+      {/if}
 
       {#if hiTranslation?.description}
         <SpeakButton text={hiTranslation.description} tag="hi-IN" label={t('listing.review.listenHindi')} />
@@ -123,8 +178,50 @@
     color: var(--k-text-secondary);
   }
 
+  .review-photo {
+    position: relative;
+    margin-block-end: var(--k-space-3);
+  }
+
+  .review-photo__img {
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: var(--k-radius-md);
+  }
+
+  .review-photo__badge {
+    position: absolute;
+    top: var(--k-space-2);
+    right: var(--k-space-2);
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
   .review-title {
     font-size: var(--k-text-lg);
+    font-weight: 700;
+  }
+
+  .review-bullets h3 {
+    font-size: var(--k-text-sm);
+    color: var(--k-text-secondary);
+    margin-block-end: var(--k-space-2);
+  }
+
+  .review-bullets ul {
+    padding-inline-start: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--k-space-1);
+  }
+
+  .review-bullets li {
+    font-size: var(--k-text-sm);
+    line-height: 1.5;
   }
 
   .review-description {
@@ -142,6 +239,21 @@
     justify-content: space-between;
     padding-block: var(--k-space-2);
     border-block-start: var(--k-hairline) solid var(--k-border-hairline);
+  }
+
+  .review-attribute__label {
+    display: flex;
+    gap: var(--k-space-1);
+    align-items: center;
+  }
+
+  .review-attribute__confidence {
+    font-size: 0.7rem;
+    color: var(--k-text-secondary);
+  }
+
+  .review-attribute__value {
+    font-weight: 600;
   }
 
   .review-note {

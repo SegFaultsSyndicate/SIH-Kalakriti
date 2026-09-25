@@ -1,10 +1,6 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
-    "paths": {
-      "@kalakriti/api": ["../../packages/api/src/index.ts"],
-      "@kalakriti/i18n": ["../../packages/i18n/src/index.ts"]
-    },
     "target": "ES2020",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "module": "ESNext",

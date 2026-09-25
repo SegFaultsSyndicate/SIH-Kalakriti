@@ -67,6 +67,13 @@
         type="search"
         placeholder={t('register.craft.search')}
         aria-label={t('register.craft.search')}
+        onkeydown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selected !== '') { void next(); }
+            else if (filtered.length === 1) { choose(filtered[0]); void next(); }
+          }
+        }}
       />
       {#if listenSupported()}
         <button type="button" class="voice-alt" onclick={useVoice} disabled={listening}>

@@ -83,7 +83,7 @@
   }
 
   .register-step__actions :global(.register-step__back) {
-    flex: 1;
+    flex: 1 1 0;
   }
 
   .register-step h1 {
@@ -105,12 +105,7 @@
     font-size: var(--k-text-xs);
   }
 
-  /* Pinned to the viewport bottom (no bottom nav during onboarding) so
-     Back/Next are always in thumb reach without scrolling. */
   .register-step__actions {
-    position: sticky;
-    inset-block-end: env(safe-area-inset-bottom, 0px);
-    z-index: 1;
     display: flex;
     align-items: stretch;
     gap: var(--k-space-3);
@@ -119,7 +114,7 @@
   }
 
   .register-step__actions .register-step__next {
-    flex: 1;
+    flex: 1 1 0;
   }
 
   .register-step__actions :global(button) {

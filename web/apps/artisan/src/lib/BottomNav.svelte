@@ -34,6 +34,8 @@
       href={item.href}
       class="bottom-nav__item"
       aria-current={current === item.href ? 'page' : undefined}
+      data-sveltekit-preload-code="eager"
+      data-sveltekit-preload-data="tap"
     >
       <Icon name={item.icon} class="bottom-nav__icon" />
       <span class="bottom-nav__label">{t(item.labelKey)}</span>
@@ -66,6 +68,14 @@
     color: var(--k-text-secondary);
     text-decoration: none;
     font-size: var(--k-text-xs);
+    transition: color var(--k-duration-fast, 150ms) var(--k-ease-standard),
+                background-color var(--k-duration-fast, 150ms) var(--k-ease-standard);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .bottom-nav__item:active {
+    background-color: var(--k-surface-pressed);
   }
 
   .bottom-nav__item[aria-current='page'] {

@@ -61,24 +61,6 @@ export function toFallbackListing(
 
 export const RAW_FALLBACK_GI_LISTINGS: RawFallbackListing[] = [
   {
-    id: 'listing-gi-1',
-    product_id: 'prod-banarasi-kadwa',
-    artisan_id: 'artisan-kabir',
-    artisanNameKey: 'home.fallbackListing.gi1.artisanName',
-    craftNameKey: 'home.fallbackListing.gi1.craftName',
-    craft_slug: 'banarasi-brocade-weaving',
-    craft_gi_registration_no: 'GI-99',
-    gi_certified: true,
-    artisan_verified: true,
-    artisan_district: 'Varanasi',
-    artisan_state_code: 'UP',
-    type: 'READY_STOCK',
-    price: { amount_paise: 2450000, currency_code: 'INR' },
-    image_url: '/craft-images/weaving_and_looms/banarasi_brocade_weaving_02.jpeg',
-    titleKey: 'home.fallbackListing.gi1.title',
-    descriptionKey: 'home.fallbackListing.gi1.description',
-  },
-  {
     id: 'listing-gi-2',
     product_id: 'prod-pashmina-kani',
     artisan_id: 'artisan-mir',

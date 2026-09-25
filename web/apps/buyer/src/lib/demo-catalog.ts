@@ -24,6 +24,7 @@ import { locale, type MessageKey, type MessageValues } from '@kalakriti/i18n';
 import { RAW_FALLBACK_GI_LISTINGS, RAW_FALLBACK_NEW_ARRIVALS, toFallbackListing } from './demo-home-listings';
 import { GI_PRODUCTS, type GIProduct } from './demo-gi-products';
 import { allStubListings, stubListingById } from './stub-listings';
+import { getDemoListingsForBuyer, ESHAAN_BASE_LISTINGS, PAITHANI_LISTING } from './sih-demo-injector';
 
 type ListingSummary = components['schemas']['ListingSummary'];
 type TFn = (key: MessageKey, values?: MessageValues) => string;
@@ -142,6 +143,52 @@ const REEL_SLUGS = new Set([
 
 export function demoListingById(id: string, t: TFn): ListingSummary | undefined {
   if (!id) return undefined;
+
+  // SIH demo listings — Eshaan's artisan portal listings resolve here so
+  // clicking from the buyer feed leads to a real product page.
+  if (id.startsWith('eshaan')) {
+    const allSih = [...ESHAAN_BASE_LISTINGS, PAITHANI_LISTING];
+    const sih = allSih.find((l) => l.id === id);
+    if (sih) {
+      const listing: ListingSummary = {
+        id: sih.id,
+        product_id: `prod-${sih.id}`,
+        artisan_id: 'sih-artisan-eshaan',
+        artisan_name: sih.artisanName,
+        craft_name: sih.craftName,
+        craft_slug: sih.craftSlug,
+        craft_gi_registration_no: sih.giNo,
+        gi_certified: true,
+        artisan_verified: true,
+        artisan_district: sih.district,
+        artisan_state_code: sih.stateCode,
+        type: sih.madeToOrder ? 'MADE_TO_ORDER' : 'READY_STOCK',
+        price: { amount_paise: sih.pricePaise, currency_code: 'INR' },
+        image_url: sih.imageUrl,
+        // Single-photo: only the one the artisan uploaded, no extras borrowed.
+        media: [{ kind: 'IMAGE' as const, url: sih.imageUrl }],
+        translations: [
+          {
+            language: 'en',
+            title: sih.title,
+            description: [
+              `Authentic ${sih.craftName} piece, made entirely by hand in Varanasi Weavers Colony, UP.`,
+              `Geographical Indication certified (${sih.giNo}) — protected origin, not a machine-made imitation.`,
+              'Material: Pure mulberry silk with zari. Small variations in colour and texture are the mark of handwork, not defects.',
+              sih.madeToOrder
+                ? 'Made to order: Eshaan will weave this piece for you; allow 21–30 days.'
+                : 'Ready stock: packed and dispatched by the artisan within 2 working days.',
+              `Payment goes directly to the bank account of ${sih.artisanName} — no middlemen.`,
+              'Ships with a tamper-evident provenance seal recording the verified technique.',
+            ].join('\n'),
+          },
+        ],
+      } as ListingSummary;
+      return enrich(listing);
+    }
+    return undefined;
+  }
+
   const home = [...RAW_FALLBACK_GI_LISTINGS, ...RAW_FALLBACK_NEW_ARRIVALS].find((r) => r.id === id);
   if (home) return enrich(toFallbackListing(home, t, locale.code));
   const gi = GI_PRODUCTS.find((p) => p.id === id);
@@ -170,11 +217,25 @@ export function demoListingById(id: string, t: TFn): ListingSummary | undefined 
 
 /** Every demo piece a product page can link to, for the related-items rows. */
 export function allDemoListings(t: TFn): ListingSummary[] {
-  return [
+  const rawListings = [
+    ...getDemoListingsForBuyer(),
     ...[...RAW_FALLBACK_GI_LISTINGS, ...RAW_FALLBACK_NEW_ARRIVALS].map((r) => toFallbackListing(r, t, locale.code)),
     ...GI_PRODUCTS.map((p) => giToListing(p, t)),
     ...allStubListings(t),
   ];
+
+  const seenImages = new Set<string>();
+  const deduplicated: ListingSummary[] = [];
+
+  for (const listing of rawListings) {
+    if (listing.image_url) {
+      if (seenImages.has(listing.image_url)) continue;
+      seenImages.add(listing.image_url);
+    }
+    deduplicated.push(listing);
+  }
+
+  return deduplicated;
 }
 
 // ---------- product-page content ----------
@@ -232,6 +293,43 @@ function firstMatch(table: [RegExp, MessageKey][], hay: string, fallback: Messag
 
 /** "About this item" bullets + spec table, built from the listing's real fields -- safe for real listings too. */
 export function productDetails(l: ListingSummary, t: TFn): { bullets: string[]; specs: [string, string][] } {
+  // SIH demo listings: use the exact pre-approved "About this item" copy that
+  if (
+    l.artisan_name === 'Eshaan' ||
+    l.id?.includes('eshaan') ||
+    l.id?.startsWith('banarasi-brocade-weaving') ||
+    l.craft_slug === 'banarasi-brocade-weaving'
+  ) {
+    const madeToOrder = l.type === 'MADE_TO_ORDER';
+    const giNo = l.craft_gi_registration_no ?? 'GI-99';
+    const artisan = l.artisan_name ?? 'Eshaan';
+    const craft = l.craft_name ?? 'Banarasi Brocade Weaving';
+    const r2 = rng(`dims:${l.id}`);
+    const sihBullets = [
+      `Authentic ${craft} piece, made entirely by hand in Varanasi Weavers Colony, UP.`,
+      `Geographical Indication certified (${giNo}) \u2014 protected origin, not a machine-made imitation.`,
+      'Material: Pure mulberry silk with zari. Small variations in colour and texture are the mark of handwork, not defects.',
+      madeToOrder
+        ? `Made to order: ${artisan} will weave this piece for you; allow 21\u201330 days.`
+        : `Ready stock: packed and dispatched by the artisan within 2 working days.`,
+      `Payment goes directly to the bank account of ${artisan} \u2014 no middlemen.`,
+      'Ships with a tamper-evident provenance seal recording the verified technique.',
+    ];
+    const origin = [l.artisan_district, l.artisan_state_code].filter(Boolean).join(', ') || 'Varanasi, UP';
+    const sihSpecs: [string, string][] = [
+      ['Craft', craft],
+      ['GI Number', giNo],
+      ['Origin', origin],
+      ['Artisan', artisan],
+      ['Material', 'Pure mulberry silk with zari'],
+      ['Dimensions', `${550 + Math.floor(r2() * 50)} cm \u00d7 ${110 + Math.floor(r2() * 15)} cm`],
+      ['Care', 'Dry clean only'],
+      ['Availability', madeToOrder ? 'Made to order (21\u201330 days)' : 'In stock'],
+      ['Country of Origin', 'India'],
+    ];
+    return { bullets: sihBullets, specs: sihSpecs };
+  }
+
   const hay = `${l.craft_slug ?? ''} ${l.craft_name ?? ''} ${l.translations?.[0]?.title ?? ''}`.toLowerCase();
   const material = t(firstMatch(MATERIALS, hay, 'pdp.material.default'));
   const care = t(firstMatch(CARE, hay, 'pdp.care.default'));

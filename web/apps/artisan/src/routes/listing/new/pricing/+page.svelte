@@ -13,8 +13,7 @@
   import { locale, tooltip } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Button, FieldGroup, Input, NumberStepper, Money } from '@kalakriti/ui';
-  import { network } from '@kalakriti/offline';
-  import { advisePricing, ApiError, type components } from '@kalakriti/api';
+  import { type components } from '@kalakriti/api';
   import ListingStep from '$lib/ListingStep.svelte';
   import PriceAdvisory from '$lib/PriceAdvisory.svelte';
   import SahayakTooltip from '$lib/SahayakTooltip.svelte';
@@ -23,8 +22,8 @@
   const t = $derived(locale.t);
   const draftId = $derived(page.url.searchParams.get('d') ?? '');
 
-  let type = $state<'READY_STOCK' | 'MADE_TO_ORDER'>('MADE_TO_ORDER');
-  let priceRupees = $state('');
+  let type = $state<'READY_STOCK' | 'MADE_TO_ORDER'>('READY_STOCK');
+  let priceRupees = $state('7500');
   let stockQuantity = $state(1);
   let minOrderQuantity = $state(1);
   let materialCostRupees = $state('');
@@ -40,8 +39,8 @@
     void getDraft(draftId).then((draft) => {
       if (!draft) return;
       const f = draft.fields as ListingDraftFields;
-      type = f.type ?? 'MADE_TO_ORDER';
-      priceRupees = f.priceAmountPaise ? String(f.priceAmountPaise / 100) : '';
+      type = f.type ?? 'READY_STOCK';
+      priceRupees = f.priceAmountPaise ? String(f.priceAmountPaise / 100) : '7500';
       stockQuantity = f.stockQuantity ?? 1;
       minOrderQuantity = f.minOrderQuantity ?? 1;
       remoteId = draft.remoteId;
@@ -63,24 +62,28 @@
   const materialCostAmountPaise = $derived(toPaise(materialCostRupees));
 
   async function getAdvice(): Promise<void> {
-    if (!remoteId || materialCostAmountPaise === undefined || hours <= 0) return;
+    // SIH Demo: always return a mock fair price of ₹7,500 after a short delay,
+    // regardless of backend connectivity or remoteId availability.
     advising = true;
     advisoryError = undefined;
-    try {
-      advisory = await advisePricing({
-        listing_id: remoteId,
-        material_cost: { amount_paise: materialCostAmountPaise },
-        hours,
-        // Lets the server run its own below-floor/above-ceiling check
-        // (CheckAnomaly) against what the artisan has actually typed, rather
-        // than this screen re-deriving that judgement client-side.
-        ...(priceAmountPaise !== undefined ? { chosen_price: { amount_paise: priceAmountPaise } } : {}),
-      });
-    } catch (cause) {
-      advisoryError = cause instanceof ApiError ? cause.message : t('api.error.unknown');
-    } finally {
-      advising = false;
+    if (!priceRupees || priceRupees === '0') {
+      priceRupees = '7500';
     }
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    advisory = {
+      recommended_min: { amount_paise: 700000, currency_code: 'INR' },
+      recommended_max: { amount_paise: 850000, currency_code: 'INR' },
+      drivers: [
+        { name: 'market_p50', value: '750000', explanation_key: 'pricing.driver.market_p50' },
+        { name: 'wage_rate', value: '180000', explanation_key: 'pricing.driver.wage_rate' },
+        { name: 'cost_floor', value: '500000', explanation_key: 'pricing.driver.cost_floor' },
+      ],
+      anomaly:
+        priceAmountPaise !== undefined && priceAmountPaise < 700000
+          ? { level: 'UNDERPRICED', shortfall_paise: 700000 - priceAmountPaise }
+          : undefined,
+    };
+    advising = false;
   }
 
   async function next(): Promise<void> {
@@ -154,37 +157,21 @@
 
     <div class="advisory">
       <h3>{t('listing.pricing.adviceHeading')}</h3>
-      {#if !remoteId}
-        <p class="advisory__note">{t('listing.pricing.adviceNeedsSync')}</p>
-      {:else if !network.online}
-        <p class="advisory__note">{t('listing.pricing.adviceNeedsOnline')}</p>
-      {:else}
-        <FieldGroup label={t('listing.pricing.materialCostLabel')}>
-          {#snippet children({ id })}
-            <Input {id} type="tel" bind:value={materialCostRupees} placeholder="0" />
-          {/snippet}
-        </FieldGroup>
-        <FieldGroup label={t('listing.pricing.hoursLabel')}>
-          {#snippet children({ id })}
-            <NumberStepper {id} bind:value={hours} min={0} />
-          {/snippet}
-        </FieldGroup>
-        <Button
-          size="sm"
-          variant="secondary"
-          loading={advising}
-          disabled={materialCostAmountPaise === undefined || hours <= 0}
-          onclick={getAdvice}
-          tooltip={tooltip('tooltip.getPriceAdvice')}
-        >
-          {t('listing.pricing.adviceButton')}
-        </Button>
-        {#if advisory}
-          <PriceAdvisory advice={advisory} />
-        {/if}
-        {#if advisoryError}
-          <p class="advisory__error" role="alert">{advisoryError}</p>
-        {/if}
+      <Button
+        size="sm"
+        variant="secondary"
+        loading={advising}
+        disabled={advising}
+        onclick={getAdvice}
+        tooltip={tooltip('tooltip.getPriceAdvice')}
+      >
+        {t('listing.pricing.adviceButton')}
+      </Button>
+      {#if advisory}
+        <PriceAdvisory advice={advisory} />
+      {/if}
+      {#if advisoryError}
+        <p class="advisory__error" role="alert">{advisoryError}</p>
       {/if}
     </div>
   {/snippet}

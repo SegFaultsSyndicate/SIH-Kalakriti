@@ -113,13 +113,12 @@
       listing?.translations?.[0]?.description ??
       '',
   );
-  // Demo pieces only carry image_url; borrow same-craft photos so the gallery
-  // has thumbnails to flip through, like a real multi-photo listing.
+  // Only show the listing's own media/image. Do not borrow other products' photos
+  // into the gallery thumbnails, as single-photo artisan pieces should only display their own photo.
   const media = $derived.by(() => {
     if (listing?.media?.length) return listing.media;
     if (!listing?.image_url) return [];
-    const extra = demo ? (related?.sameCraft ?? []).map((l) => l.image_url).filter((u): u is string => !!u && u !== listing.image_url) : [];
-    return [listing.image_url, ...new Set(extra)].slice(0, 5).map((url) => ({ kind: 'IMAGE' as const, url }));
+    return [{ kind: 'IMAGE' as const, url: listing.image_url }];
   });
   const activeMedia = $derived(media[activeMediaIndex]);
 

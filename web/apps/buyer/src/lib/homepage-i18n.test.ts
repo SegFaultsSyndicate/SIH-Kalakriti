@@ -13,7 +13,7 @@ describe('Homepage products i18n localization', () => {
       'Kashi Kadwa Pure Silver-Gilt Pit-Loom Saree'
     );
     expect(locale.t('home.fallbackListing.gi1.craftName')).toBe('Banarasi Brocade Weaving');
-    expect(locale.t('home.fallbackListing.gi1.artisanName')).toBe('Mohammad Kabir Ansari');
+    expect(locale.t('home.fallbackListing.gi1.artisanName')).toBe('Eshaan');
 
     // Hindi
     await locale.set('hi');
