@@ -15,7 +15,7 @@
   Strictly adheres to Svelte 5 runes ($state, $derived) and GIGW 3.0 accessibility.
 -->
 <script lang="ts">
-  import { locale, tooltip } from '@kalakriti/i18n';
+  import { LOCALE_CODES, LOCALES, locale, tooltip, type LocaleCode } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
   import { Breadcrumbs, type BreadcrumbItem, showToast, Tooltip } from '@kalakriti/ui';
   import { session, setAccessToken, setRefreshToken } from '@kalakriti/api';
@@ -37,7 +37,6 @@
   let displayName = $state('Jaash');
   let email = $state('jaash.upadhayay@example.gov.in');
   let phone = $state('+91 98765 43210');
-  let preferredLanguage = $state('en');
   let emailAlerts = $state(true);
   let whatsappAlerts = $state(true);
 
@@ -527,13 +526,10 @@
             <div class="form-grid-2">
               <div class="form-field">
                 <label for="prof-lang" class="form-label">{t('account.page.personal.languageLabel')}</label>
-                <select id="prof-lang" class="form-input" bind:value={preferredLanguage}>
-                  <option value="en">English (India)</option>
-                  <option value="hi">हिन्दी (Hindi)</option>
-                  <option value="mr">मराठी (Marathi)</option>
-                  <option value="bn">বাংলা (Bengali)</option>
-                  <option value="ta">தமிழ் (Tamil)</option>
-                  <option value="te">తెలుగు (Telugu)</option>
+                <select id="prof-lang" class="form-input" value={locale.code} onchange={(event) => void locale.set(event.currentTarget.value as LocaleCode)}>
+                  {#each LOCALE_CODES as code (code)}
+                    <option value={code}>{LOCALES[code].endonym}</option>
+                  {/each}
                 </select>
               </div>
 
@@ -849,25 +845,25 @@
             <div class="order-rail-card">
               <div class="rail-card-head">
                 <div>
-                  <span class="order-id">Order #KLK-79402</span>
-                  <span class="order-date">Placed on 01 Sep 2026</span>
+                  <span class="order-id">{t('account.page.orders.orderNumber', { id: 'KLK-79402' })}</span>
+                  <span class="order-date">{t('account.page.orders.placedOn', { date: '01 Sep 2026' })}</span>
                 </div>
                 <div class="rail-price-wrap">
                   <span class="rail-price">₹18,500.00</span>
-                  <span class="rail-status-pill status-ship">Dispatched via India Post</span>
+                  <span class="rail-status-pill status-ship">{t('account.page.orders.dispatched')}</span>
                 </div>
               </div>
 
               <div class="rail-card-body">
                 <img
                   src="/craft-images/block_printing/ajrakh_dabu_monsoon_indigo_01.jpeg"
-                  alt="Dhamadka Ajrakh Saree"
+                  alt={t('account.page.orders.product.ajrakh')}
                   class="rail-thumb"
                 />
                 <div class="rail-prod-info">
-                  <h3 class="rail-prod-title">Dhamadka Natural Indigo Block-Printed Silk Saree</h3>
-                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Master Artisan Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
-                  <span class="rail-gi-tag">Certified GI Registered Craft (GI-184)</span>
+                  <h3 class="rail-prod-title">{t('account.page.orders.product.ajrakh')}</h3>
+                  <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Ismail Khatri</strong> • Ajrakhpur, Gujarat</p>
+                  <span class="rail-gi-tag">{t('account.page.orders.giCertified', { number: '184' })}</span>
 
                   <!-- 4-Stage Loom Progress Bar -->
                   <div class="rail-progress-track">
@@ -903,25 +899,25 @@
             <div class="order-rail-card">
               <div class="rail-card-head">
                 <div>
-                  <span class="order-id">Order #KLK-68190</span>
-                  <span class="order-date">Placed on 18 Aug 2026</span>
+                  <span class="order-id">{t('account.page.orders.orderNumber', { id: 'KLK-68190' })}</span>
+                  <span class="order-date">{t('account.page.orders.placedOn', { date: '18 Aug 2026' })}</span>
                 </div>
                 <div class="rail-price-wrap">
                   <span class="rail-price">₹12,200.00</span>
-                  <span class="rail-status-pill status-delivered">Delivered & Verified</span>
+                  <span class="rail-status-pill status-delivered">{t('account.page.orders.deliveredVerified')}</span>
                 </div>
               </div>
 
               <div class="rail-card-body">
                 <img
                   src="/craft-images/metalwork/dhokra-casting.jpg"
-                  alt="Bastar Brass Dhokra Nandi"
+                  alt={t('account.page.orders.product.dhokra')}
                   class="rail-thumb"
                 />
                 <div class="rail-prod-info">
-                  <h3 class="rail-prod-title">Bastar Hand-Cast Lost-Wax Bell Metal Dhokra Nandi</h3>
+                  <h3 class="rail-prod-title">{t('account.page.orders.product.dhokra')}</h3>
                   <p class="rail-artisan">{t('account.page.orders.craftedByLabel')} <strong>Sukchand Ghadwa</strong> • Bastar Tribal Collective, Chhattisgarh</p>
-                  <span class="rail-gi-tag">Certified GI Registered Craft (GI-83)</span>
+                  <span class="rail-gi-tag">{t('account.page.orders.giCertified', { number: '83' })}</span>
 
                   <div class="rail-progress-track">
                     <div class="track-step step-done"><span>{t('account.page.orders.step.ordered')}</span></div>
@@ -966,21 +962,21 @@
 
           <div class="consultation-card">
             <div class="consult-badge-row">
-              <span class="consult-status-badge">Confirmed • Tomorrow at 04:30 PM IST</span>
-              <span class="consult-type">Bespoke Loom Commission</span>
+              <span class="consult-status-badge">{t('account.page.consultations.confirmedTomorrow')}</span>
+              <span class="consult-type">{t('account.page.consultations.bespokeCommission')}</span>
             </div>
 
             <div class="consult-main">
               <div class="artisan-preview">
                 <div class="artisan-avatar-circle">RM</div>
                 <div>
-                  <h3 class="artisan-head-name">Master Weaver Ramdas Maurya</h3>
-                  <p class="artisan-guild">Varanasi Brocade Guild, Uttar Pradesh (National Awardee)</p>
+                  <h3 class="artisan-head-name">{t('account.page.consultations.masterWeaver', { name: 'Ramdas Maurya' })}</h3>
+                  <p class="artisan-guild">{t('account.page.consultations.guild')}</p>
                 </div>
               </div>
 
               <p class="consult-topic">
-                <strong>{t('account.page.consultations.topicLabel')}</strong> Custom Katan Silk weaving motif selection and gold zari thread selection for upcoming ceremonial attire.
+                <strong>{t('account.page.consultations.topicLabel')}</strong> {t('account.page.consultations.topic')}
               </p>
             </div>
 
@@ -1194,14 +1190,14 @@
             <div class="form-field">
               <label for="addr-state" class="form-label">{t('account.page.addresses.stateLabel')}</label>
               <select id="addr-state" class="form-input" bind:value={newAddressState}>
-                <option value="Delhi">Delhi</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="Gujarat">Gujarat</option>
-                <option value="Rajasthan">Rajasthan</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="West Bengal">West Bengal</option>
+                <option value="Delhi">{t('region.state.delhi')}</option>
+                <option value="Maharashtra">{t('region.state.maharashtra')}</option>
+                <option value="Uttar Pradesh">{t('region.state.uttarPradesh')}</option>
+                <option value="Gujarat">{t('region.state.gujarat')}</option>
+                <option value="Rajasthan">{t('region.state.rajasthan')}</option>
+                <option value="Karnataka">{t('region.state.karnataka')}</option>
+                <option value="Tamil Nadu">{t('region.state.tamilNadu')}</option>
+                <option value="West Bengal">{t('region.state.westBengal')}</option>
               </select>
             </div>
           </div>

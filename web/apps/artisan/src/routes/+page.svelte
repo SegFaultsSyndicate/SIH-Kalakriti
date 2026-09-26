@@ -26,11 +26,6 @@
   import DigitalLiteracyTutorial from '$lib/DigitalLiteracyTutorial.svelte';
   import StallCardModal from '$lib/StallCardModal.svelte';
   import { launchDemoListing, cleanupLegacyDraftsAndSeedPaithani } from '$lib/demo-listing';
-  import { ensureDemoState } from '$lib/sih-demo-store';
-
-  // Seed the SIH demo store on first load so both portals share the same
-  // Eshaan catalog from the very first frame of the recording.
-  if (typeof localStorage !== 'undefined') ensureDemoState();
 
   const t = $derived(locale.t);
 

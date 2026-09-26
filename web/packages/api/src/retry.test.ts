@@ -6,6 +6,7 @@ import { call } from './retry';
 import { ApiError } from './transport';
 import { getAccessToken, setAccessToken } from './auth';
 import { setUnauthorizedHandler } from './config';
+import { setRefreshToken } from './session-refresh';
 
 const server = setupServer();
 
@@ -15,6 +16,7 @@ afterAll(() => server.close());
 
 beforeEach(() => {
   setAccessToken(undefined);
+  setRefreshToken(undefined);
   setUnauthorizedHandler(undefined);
 });
 
@@ -162,5 +164,26 @@ describe('call retry behaviour', () => {
     );
 
     await expect(call('/listings', { method: 'GET' })).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('keeps local mock sessions out of real auth and login redirects', async () => {
+    const mockToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJyb2xlIjoiTUlOSVNUUlkiLCJleHAiOjQ3MDAwMDAwMDB9.mock';
+    const seenPaths: string[] = [];
+    let authorization: string | null = 'unexpected';
+    setAccessToken(mockToken);
+    setRefreshToken('mock-refresh-token');
+    setUnauthorizedHandler((path) => seenPaths.push(path));
+    server.use(
+      http.get('http://localhost/api/v1/listings', ({ request }) => {
+        authorization = request.headers.get('Authorization');
+        return new HttpResponse(null, { status: 401 });
+      }),
+    );
+
+    await expect(call('/listings', { method: 'GET' })).rejects.toMatchObject({ status: 401 });
+
+    expect(authorization).toBeNull();
+    expect(seenPaths).toEqual([]);
+    expect(getAccessToken()).toBe(mockToken);
   });
 });

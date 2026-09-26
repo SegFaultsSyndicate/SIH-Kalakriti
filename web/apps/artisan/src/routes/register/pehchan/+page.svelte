@@ -39,7 +39,7 @@
     <p class="hint">{t('register.pehchan.body')}</p>
     <FieldGroup label={t('register.pehchan.label')} optional>
       {#snippet children({ id })}
-        <Input {id} bind:value={pehchanId} onchange={onchange} onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void next(); } }} />
+        <Input {id} bind:value={pehchanId} onchange={onchange} onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); void next(); } }} />
       {/snippet}
     </FieldGroup>
   {/snippet}

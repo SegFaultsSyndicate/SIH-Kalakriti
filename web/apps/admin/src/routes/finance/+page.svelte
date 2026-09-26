@@ -155,8 +155,8 @@
       {#each summary as r (r.corporation)}
         <li>
           <strong>{corpLabel(r.corporation)}</strong>
-          {r.suppressed ? '<5' : formatNumber(r.beneficiaries ?? 0, locale.code)}
-          <span class="fin__muted">({t('impact.col.verified')}: {r.suppressed ? '<5' : formatNumber(r.verified ?? 0, locale.code)})</span>
+          {r.suppressed ? '—' : formatNumber(r.beneficiaries ?? 0, locale.code)}
+          <span class="fin__muted">({t('impact.col.verified')}: {r.suppressed ? '—' : formatNumber(r.verified ?? 0, locale.code)})</span>
         </li>
       {/each}
     </ul>

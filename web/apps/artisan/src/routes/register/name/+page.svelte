@@ -52,7 +52,7 @@
       onchange={onchange}
       placeholder={t('register.name.label')}
       aria-label={t('register.name.label')}
-      onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void next(); } }}
+      onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); void next(); } }}
     />
     {#if listenSupported()}
       <button type="button" class="voice-alt" onclick={useVoice} disabled={listening}>

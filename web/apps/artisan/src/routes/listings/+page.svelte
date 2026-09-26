@@ -32,8 +32,8 @@
     type Listing,
     type StateGroup,
   } from '$lib/listings';
-  import { getSihMyWorks } from '$lib/sih-my-works';
   import { loadDemoState } from '$lib/sih-demo-store';
+  import { getSihListingTitleKey, getSihMyWorks } from '$lib/sih-my-works';
 
   /** Tiny cross-tab listener wired to the same localStorage key. */
   function onDemoStateChange(cb: () => void): () => void {
@@ -45,6 +45,11 @@
   }
 
   const t = $derived(locale.t);
+
+  function displayTitle(listing: Listing): string {
+    const titleKey = getSihListingTitleKey(listing.id);
+    return titleKey ? t(titleKey) : titleFor(listing, locale.code);
+  }
 
   const initialListings = getCachedListingsSync();
   let listings = $state<Listing[]>(initialListings ?? []);
@@ -71,7 +76,11 @@
     const mock = getSihMyWorks();
     const existingIds = new Set(base.map((l) => l.id));
     const novel = mock.filter((m) => m.id && !existingIds.has(m.id));
-    return [...novel, ...base].filter((l) => !titleFor(l, locale.code).includes('White Saree with Mar'));
+    return [...novel, ...base].filter((listing) => {
+      const title = titleFor(listing, locale.code);
+      const price = listing.price?.amount_paise;
+      return !(listing.state === 'DRAFT' && !title && (price === 600000 || price === 500000));
+    });
   }
 
   async function load(): Promise<void> {
@@ -119,7 +128,7 @@
     const byGroup = new Map<StateGroup, Listing[]>(STATE_GROUPS.map((g) => [g, []]));
     const query = searchQuery.trim().toLowerCase();
     for (const listing of listings) {
-      if (query && !titleFor(listing, locale.code).toLowerCase().includes(query)) continue;
+      if (query && !displayTitle(listing).toLowerCase().includes(query)) continue;
       const group = groupFor(listing);
       if (stateFilter !== 'all' && stateFilter !== group) continue;
       byGroup.get(group)?.push(listing);
@@ -161,7 +170,7 @@
       try {
         await pauseSelling(listing);
       } catch {
-        showToast({ variant: 'error', message: t('listings.bulk.pauseError', { title: titleFor(listing, locale.code) }) });
+        showToast({ variant: 'error', message: t('listings.bulk.pauseError', { title: displayTitle(listing) }) });
       }
     }
     selected = new Set();
@@ -173,7 +182,7 @@
       try {
         await resumeSelling(listing);
       } catch {
-        showToast({ variant: 'error', message: t('listings.bulk.resumeError', { title: titleFor(listing, locale.code) }) });
+        showToast({ variant: 'error', message: t('listings.bulk.resumeError', { title: displayTitle(listing) }) });
       }
     }
     selected = new Set();
@@ -281,7 +290,11 @@
         <SkeletonRow
           thumbnail
           thumbnailSize="3.5rem"
-          lines={[{ width: '55%', height: '1rem' }, { width: '30%', height: '0.8rem' }]}
+          lines={[
+            { width: '55%', height: '1rem' },
+            { width: '30%', height: '0.8rem' },
+            { width: '25%', height: '1rem' },
+          ]}
           trailing
           trailingWidth="5rem"
         />
@@ -311,7 +324,7 @@
                     checked={listing.id ? selected.has(listing.id) : false}
                     onchange={() => listing.id && toggleSelect(listing.id)}
                   >
-                    <VisuallyHidden>{t('listings.selectRow', { title: titleFor(listing, locale.code) })}</VisuallyHidden>
+                    <VisuallyHidden>{t('listings.selectRow', { title: displayTitle(listing) })}</VisuallyHidden>
                   </Checkbox>
 
                   {@const imgSrc = (listing.id && thumbnails[listing.id]) || (listing.id && sihImageMap[listing.id])}
@@ -332,7 +345,7 @@
 
                   <div class="listings-page__row-body">
                     <p class="listings-page__row-title">
-                      {titleFor(listing, locale.code) || t('listings.untitled')}
+                      {displayTitle(listing) || t('listings.untitled')}
                     </p>
                     <StateBadge {group} />
                     {#if listing.price?.amount_paise != null}

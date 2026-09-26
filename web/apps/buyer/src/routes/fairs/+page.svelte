@@ -116,10 +116,10 @@
 </script>
 
 <svelte:head>
-  <title>National Craft Fairs & Exhibitions — Kalakriti</title>
+  <title>{t('fairs.page.title')}</title>
   <meta
     name="description"
-    content="Official calendar of national craft exhibitions (Shilp Samagam, Surajkund, Dilli Haat) connecting physical fair stalls to continuous digital storefronts."
+    content={t('fairs.page.description')}
   />
 </svelte:head>
 

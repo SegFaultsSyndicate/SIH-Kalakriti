@@ -570,14 +570,14 @@
           <div class="toolbar-select-wrap">
             <select bind:value={selectedState} aria-label={t('giTagged.selectStateAriaLabel')}>
               <option value="all">{t('giTagged.selectStateOption')}</option>
-              <option value="Uttarakhand">Uttarakhand</option>
-              <option value="Gujarat">Gujarat</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Jammu & Kashmir">Jammu & Kashmir</option>
-              <option value="Chhattisgarh">Chhattisgarh</option>
-              <option value="Rajasthan">Rajasthan</option>
-              <option value="Bihar">Bihar</option>
-              <option value="Karnataka">Karnataka</option>
+              <option value="Uttarakhand">{t('region.state.uttarakhand')}</option>
+              <option value="Gujarat">{t('region.state.gujarat')}</option>
+              <option value="Uttar Pradesh">{t('region.state.uttarPradesh')}</option>
+              <option value="Jammu & Kashmir">{t('region.state.jammuKashmir')}</option>
+              <option value="Chhattisgarh">{t('region.state.chhattisgarh')}</option>
+              <option value="Rajasthan">{t('region.state.rajasthan')}</option>
+              <option value="Bihar">{t('region.state.bihar')}</option>
+              <option value="Karnataka">{t('region.state.karnataka')}</option>
             </select>
           </div>
 

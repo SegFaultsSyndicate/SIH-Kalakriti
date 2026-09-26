@@ -13,9 +13,28 @@
  */
 
 import type { components } from '@kalakriti/api';
-import { ensureDemoState, type SihListing } from './sih-demo-store';
+import type { MessageKey } from '@kalakriti/i18n';
+import {
+  ensureDemoState,
+  ESHAAN_BASE_LISTINGS,
+  ESHAAN_MOCK_ORDERS,
+  isEshaanDemoAccount,
+  PAITHANI_LISTING,
+  type SihListing,
+} from './sih-demo-store';
 
 type Listing = components['schemas']['Listing'];
+
+const SIH_LISTING_TITLE_KEYS: Record<string, MessageKey> = {
+  'eshaan-1': 'stub.listing.60.title',
+  'eshaan-2': 'stub.listing.62.title',
+  'eshaan-3': 'stub.listing.64.title',
+  'eshaan-paithani': 'stub.listing.90.title',
+};
+
+export function getSihListingTitleKey(listingId: string | undefined): MessageKey | undefined {
+  return listingId ? SIH_LISTING_TITLE_KEYS[listingId] : undefined;
+}
 
 function sihToListing(item: SihListing): Listing {
   return {
@@ -45,9 +64,9 @@ function sihToListing(item: SihListing): Listing {
  * demo catalog is always visible regardless of backend state.
  */
 export function getSihMyWorks(): Listing[] {
+  if (!isEshaanDemoAccount()) return [];
   const state = ensureDemoState();
   const published = state.listings.filter((l) => l.state === 'PUBLISHED');
-  // Newest published first
   published.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
   return published.map(sihToListing);
 }
@@ -58,7 +77,9 @@ export function getSihMyWorks(): Listing[] {
  */
 export interface SihMockOrderRow {
   id: string;
+  listingId: string;
   listingTitle: string;
+  imageUrl?: string;
   buyerName: string;
   quantity: number;
   totalPaise: number;
@@ -67,16 +88,42 @@ export interface SihMockOrderRow {
 }
 
 export function getSihMockOrders(): SihMockOrderRow[] {
+  if (!isEshaanDemoAccount()) return [];
   const state = ensureDemoState();
+  const listingImages = new Map(
+    [...ESHAAN_BASE_LISTINGS, PAITHANI_LISTING].map((listing) => [listing.id, listing.imageUrl]),
+  );
   return state.orders.map((o) => ({
     id: o.id,
+    listingId: o.listingId,
     listingTitle: o.listingTitle,
+    imageUrl: listingImages.get(o.listingId),
     buyerName: o.buyerName,
     quantity: o.quantity,
     totalPaise: o.totalPaise,
     state: o.state,
     placedAt: o.placedAt,
   }));
+}
+
+export type SihMockOrderDetails = SihOrder & { imageUrl?: string };
+
+export function getSihMockOrderDetails(orderId: string): SihMockOrderDetails | undefined {
+  if (!isEshaanDemoAccount()) return undefined;
+  const storedOrder = ensureDemoState().orders.find((order) => order.id === orderId);
+  const fixtureOrder = ESHAAN_MOCK_ORDERS.find((order) => order.id === orderId);
+  if (!storedOrder && !fixtureOrder) return undefined;
+
+  const order = {
+    ...fixtureOrder,
+    ...storedOrder,
+    shipping: storedOrder?.shipping ?? fixtureOrder?.shipping,
+  } as SihOrder;
+  const listing = [...ESHAAN_BASE_LISTINGS, PAITHANI_LISTING].find(
+    (item) => item.id === order.listingId,
+  );
+
+  return { ...order, imageUrl: listing?.imageUrl };
 }
 
 /** Financial summary derived from mock orders, for the earnings dashboard. */
@@ -91,6 +138,17 @@ export interface SihEarningsSummary {
 }
 
 export function getSihEarningsSummary(): SihEarningsSummary {
+  if (!isEshaanDemoAccount()) {
+    return {
+      totalSalesPaise: 0,
+      totalOrdersCompleted: 0,
+      activeOrdersCount: 0,
+      pendingOrdersCount: 0,
+      growthPct: 0,
+      currentMonthPaise: 0,
+      baselineMonthlyPaise: 0,
+    };
+  }
   const state = ensureDemoState();
   const orders = state.orders;
   const completed = orders.filter((o) => o.state === 'COMPLETED');

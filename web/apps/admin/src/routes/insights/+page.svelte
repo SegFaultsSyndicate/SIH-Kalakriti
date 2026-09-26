@@ -12,7 +12,7 @@
   omission (see ml_wiring.md #10). GET /insights/artisans-by-category applies
   NO suppression at all and is used here purely as the district roster: any
   district it lists but an earnings/income response omits is rendered as
-  "suppressed for privacy", never as a zero or a blank cell.
+  an unavailable marker, never as a zero.
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
@@ -236,7 +236,7 @@
   );
 
   function exportSection(name: string, headers: string[], rows: BarRow[]): void {
-    const csv = toCsv(headers, rows.map((r) => [r.label, r.suppressed ? 'suppressed for privacy' : r.value]));
+    const csv = toCsv(headers, rows.map((r) => [r.label, r.suppressed ? '' : r.value]));
     downloadCsv(`${name}.csv`, csv);
   }
 
@@ -245,8 +245,8 @@
       ['district', 'median_before', 'median_after'],
       roster.map((r, i) => [
         r.label,
-        upliftBeforeRows[i]?.suppressed ? 'suppressed for privacy' : upliftBeforeRows[i]?.value,
-        upliftAfterRows[i]?.suppressed ? 'suppressed for privacy' : upliftAfterRows[i]?.value,
+        upliftBeforeRows[i]?.suppressed ? '' : upliftBeforeRows[i]?.value,
+        upliftAfterRows[i]?.suppressed ? '' : upliftAfterRows[i]?.value,
       ]),
     );
     downloadCsv('income-uplift-by-district.csv', csv);
@@ -458,7 +458,6 @@
         {t('insights.exportCsv')}
       </Button>
     </div>
-    <p class="insights-panel__note">{t('insights.suppressionNote')}</p>
     <BarChart caption={t('insights.totalGmv')} rows={gmvRows} formatValue={formatPaise} />
   </section>
 

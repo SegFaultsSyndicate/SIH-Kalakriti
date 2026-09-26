@@ -15,11 +15,12 @@
 -->
 <script lang="ts">
   import { locale, type MessageKey } from '@kalakriti/i18n';
-  import { Tabs, Button, Money, Sheet, Skeleton, showToast } from '@kalakriti/ui';
+  import { Tabs, Button, Card, Money, Sheet, Skeleton, showToast } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { enqueue } from '@kalakriti/offline';
   import { getIncomeSummary, getActingFor, type IncomeSummary } from '@kalakriti/api';
-  import { MOCK_INCOME_SUMMARY } from './mock-data';
+  import { MOCK_ESHAAN_INCOME_SUMMARY, MOCK_INCOME_SUMMARY } from './mock-data';
+  import { isEshaanDemoAccount } from './sih-demo-store';
   import BracketPicker from './BracketPicker.svelte';
   import LogSaleSheet from './LogSaleSheet.svelte';
 
@@ -69,14 +70,19 @@
     failed = false;
     try {
       const res = await getIncomeSummary();
-      summary = res.summary ?? null;
+      const apiSummary = res.summary ?? null;
+      const emptyEshaanSummary =
+        isEshaanDemoAccount() &&
+        apiSummary?.insufficient_data === 'NO_BASELINE' &&
+        (apiSummary.current_monthly_paise ?? 0) === 0;
+      summary = emptyEshaanSummary ? MOCK_ESHAAN_INCOME_SUMMARY : apiSummary;
       if (!summary && (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV)) {
-        summary = MOCK_INCOME_SUMMARY;
+        summary = isEshaanDemoAccount() ? MOCK_ESHAAN_INCOME_SUMMARY : MOCK_INCOME_SUMMARY;
       }
     } catch (cause) {
       if (import.meta.env.VITE_USE_MOCKS === '1' || import.meta.env.DEV) {
         console.warn('[mock fallback] income summary load:', cause);
-        summary = MOCK_INCOME_SUMMARY;
+        summary = isEshaanDemoAccount() ? MOCK_ESHAAN_INCOME_SUMMARY : MOCK_INCOME_SUMMARY;
         failed = false;
       } else {
         failed = true;
@@ -261,7 +267,7 @@
   {/if}
 </section>
 
-<section class="income" aria-labelledby="income-title">
+<Card variant="hairline" element="section" class="income" aria-labelledby="income-title">
   <header class="income__head">
     <h2 id="income-title" class="income__title">{t('income.card.title')}</h2>
     <Button size="md" variant="secondary" onclick={() => (saleOpen = true)}>{t('income.sale.log')}</Button>
@@ -282,7 +288,13 @@
     {#if summary.insufficient_data}
       <p class="income__note">{t(REASONS[summary.insufficient_data] ?? 'income.card.noSales')}</p>
       {#if summary.insufficient_data === 'NO_BASELINE'}
-        <Button size="md" onclick={() => (baselineOpen = true)}>{t('income.card.addBaseline')}</Button>
+        <Button
+          class="income__baseline-cta"
+          size="md"
+          onclick={() => (baselineOpen = true)}
+        >
+          {t('income.card.addBaseline')}
+        </Button>
       {/if}
     {:else if summary.uplift_pct !== undefined}
       <div class="income__hero">
@@ -346,7 +358,7 @@
       <p class="income__foot">{t('income.card.selfReported')}</p>
     {/if}
   {/if}
-</section>
+</Card>
 
 <LogSaleSheet bind:open={saleOpen} />
 
@@ -770,9 +782,6 @@
     flex-direction: column;
     gap: var(--k-space-3);
     padding: var(--k-space-4);
-    border: var(--k-hairline) solid var(--k-border-hairline);
-    border-radius: var(--k-radius-lg, 1rem);
-    background: var(--k-surface-raised);
   }
 
   .income__head {
@@ -807,6 +816,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--k-space-3);
+  }
+
+  :global(.income__baseline-cta) {
+    inline-size: 100%;
+    justify-content: center;
   }
 
   .income__pair,

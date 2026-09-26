@@ -19,3 +19,20 @@ export function decodeJwtClaims(token: string): Record<string, unknown> | null {
     return null;
   }
 }
+
+/** Identifies the unsigned token format used only by establishMockSession(). */
+export function isLocalMockToken(token: string | undefined): boolean {
+  if (token === undefined) return false;
+  const [header, payload, signature, extra] = token.split('.');
+  if (header === undefined || payload === undefined || signature !== 'mock' || extra !== undefined) {
+    return false;
+  }
+
+  try {
+    const base64 = header.replace(/-/g, '+').replace(/_/g, '/');
+    const value: unknown = JSON.parse(atob(base64));
+    return typeof value === 'object' && value !== null && 'alg' in value && value.alg === 'none';
+  } catch {
+    return false;
+  }
+}

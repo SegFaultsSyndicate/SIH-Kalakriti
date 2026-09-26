@@ -7,12 +7,11 @@
   The global "read this screen" control. Reads buildReadingOrder()'s output
   (headings, then labels and values) one utterance at a time via speak(),
   awaiting each before starting the next so a slow phone doesn't overlap two
-  utterances. If no voice matches the active locale, this says so instead of
-  silently doing nothing when pressed -- see speak.ts's voiceAvailable().
+  utterances. The browser receives the active locale tag and chooses its voice.
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
-  import { speak, stopSpeaking, voiceAvailable } from './speak';
+  import { speak, stopSpeaking } from './speak';
   import { buildReadingOrder } from './screen-reader';
 
   interface Props {
@@ -36,11 +35,6 @@
     }
 
     unavailable = false;
-    if (!voiceAvailable(locale.meta.tag)) {
-      unavailable = true;
-      return;
-    }
-
     const root = document.querySelector(containerSelector);
     if (!root) return;
 
@@ -50,7 +44,10 @@
       if (stopRequested) break;
       try {
         await speak(part, { tag: locale.meta.tag });
-      } catch {
+      } catch (error) {
+        if (!stopRequested && (!(error instanceof Error) || !['canceled', 'interrupted'].includes(error.message))) {
+          unavailable = true;
+        }
         break;
       }
     }

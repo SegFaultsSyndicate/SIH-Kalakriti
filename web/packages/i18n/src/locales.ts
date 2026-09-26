@@ -71,7 +71,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'hi-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   as: {
     tag: 'as-IN',
@@ -80,7 +80,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Beng',
     numberLocale: 'as-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   bn: {
     tag: 'bn-IN',
@@ -89,7 +89,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Beng',
     numberLocale: 'bn-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   brx: {
     tag: 'brx-IN',
@@ -98,7 +98,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'brx-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   doi: {
     tag: 'doi-IN',
@@ -107,7 +107,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'doi-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   gu: {
     tag: 'gu-IN',
@@ -116,7 +116,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Gujr',
     numberLocale: 'gu-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   kn: {
     tag: 'kn-IN',
@@ -125,7 +125,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Knda',
     numberLocale: 'kn-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   ks: {
     tag: 'ks-IN',
@@ -134,7 +134,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'ks-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   kok: {
     tag: 'kok-IN',
@@ -143,7 +143,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'kok-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   mai: {
     tag: 'mai-IN',
@@ -152,7 +152,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'mai-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   ml: {
     tag: 'ml-IN',
@@ -161,7 +161,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Mlym',
     numberLocale: 'ml-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   mr: {
     tag: 'mr-IN',
@@ -170,7 +170,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'mr-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   ne: {
     tag: 'ne-IN',
@@ -179,7 +179,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'ne-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   or: {
     tag: 'or-IN',
@@ -188,7 +188,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Orya',
     numberLocale: 'or-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   pa: {
     tag: 'pa-IN',
@@ -197,7 +197,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Guru',
     numberLocale: 'pa-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   sa: {
     tag: 'sa-IN',
@@ -206,7 +206,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Deva',
     numberLocale: 'sa-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   sd: {
     tag: 'sd-IN',
@@ -215,7 +215,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'sd-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   ta: {
     tag: 'ta-IN',
@@ -224,7 +224,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Taml',
     numberLocale: 'ta-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   te: {
     tag: 'te-IN',
@@ -233,7 +233,7 @@ export const LOCALES = {
     dir: 'ltr',
     script: 'Telu',
     numberLocale: 'te-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
   ur: {
     tag: 'ur-IN',
@@ -242,7 +242,7 @@ export const LOCALES = {
     dir: 'rtl',
     script: 'Arab',
     numberLocale: 'ur-IN',
-    coverage: 'fallback',
+    coverage: 'machine',
   },
 } as const satisfies Record<string, LocaleMeta>;
 

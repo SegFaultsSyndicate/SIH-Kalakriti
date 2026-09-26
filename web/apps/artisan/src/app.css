@@ -132,9 +132,8 @@ body {
   }
 
   .net--offline .net__mark {
-    /* A square outline, not a red dot: distinguishable without colour. */
-    border-radius: var(--k-radius-none);
-    background-color: transparent;
-    color: var(--k-accent-warning-text);
+    border-radius: var(--k-radius-pill);
+    background-color: currentcolor;
+    color: var(--k-accent-danger);
   }
 }

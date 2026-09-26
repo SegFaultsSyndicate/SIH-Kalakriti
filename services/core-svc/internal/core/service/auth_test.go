@@ -139,6 +139,36 @@ func TestVerifyOtpRejectsABadCode(t *testing.T) {
 	}
 }
 
+func TestVerifyOtpAcceptsSIHDemoCodesOnlyInDevMode(t *testing.T) {
+	for _, test := range []struct {
+		phone string
+		code  string
+	}{
+		{phone: devBypassPhone, code: devBypassCode},
+		{phone: devSignupPhone, code: devSignupCode},
+	} {
+		t.Run(test.phone, func(t *testing.T) {
+			svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{devMode: true})
+			if _, err := svc.VerifyOtp(context.Background(), "challenge-1", test.phone, test.code, ""); err != nil {
+				t.Fatalf("dev demo code should be accepted: %v", err)
+			}
+		})
+	}
+
+	for _, test := range []struct {
+		phone string
+		code  string
+	}{
+		{phone: devBypassPhone, code: devBypassCode},
+		{phone: devSignupPhone, code: devSignupCode},
+	} {
+		svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{devMode: false})
+		if _, err := svc.VerifyOtp(context.Background(), "challenge-1", test.phone, test.code, ""); !errors.Is(err, pkgdomain.ErrForbidden) {
+			t.Errorf("demo code for %s should be rejected outside dev mode, got %v", test.phone, err)
+		}
+	}
+}
+
 func TestVerifyOtpValidatesItsArguments(t *testing.T) {
 	svc := newTestIdentity(newFakeStore(), newFakeTokens(), &fakeOTP{acceptCode: "123456"})
 

@@ -177,8 +177,7 @@ demo-up: proto sqlc ## Start full demo: infra + all services + migrate + seed
 	$(COMPOSE) restart core-svc search-svc collab-svc channel-svc insight-svc bff
 	@echo "Waiting for the BFF to accept requests..."
 	@t=60; until curl -sf $(BFF_BASE_URL)/healthz >/dev/null 2>&1; do t=$$((t-1)); if [ $$t -le 0 ]; then echo "  BFF never became ready; check '$(COMPOSE) logs bff'"; exit 1; fi; sleep 1; done; echo "  BFF ready"
-	@echo "Seeding demo artisans/listings/orders through the real API..."
-	$(MAKE) seed-demo
+	@log=$$(mktemp); trap 'rm -f "$$log"' EXIT; if ! $(MAKE) --silent --no-print-directory seed-demo >"$$log" 2>&1; then cat "$$log"; echo "Demo seeding failed."; exit 1; fi
 	@echo ""
 	@echo "Services:"
 	@echo "  Web (NGINX):    http://localhost/  (buyer, /artisan/, /admin/)"

@@ -46,6 +46,7 @@
   // call falls through to English -- then re-renders in the real language a
   // tick later. See I18N_PLAN.md's F-1.
   let localeReady = $state(false);
+  let sessionReady = $state(false);
 
   $effect(() => {
     void locale.init().then(() => {
@@ -70,6 +71,7 @@
     void (async () => {
       const token = await restoreAccessToken();
       if (token) session.establish(token);
+      sessionReady = true;
     })();
   });
 </script>
@@ -127,7 +129,7 @@
     </nav>
 
     <main class="shell__main" id="main-content" tabindex="-1">
-      {#if localeReady}
+      {#if localeReady && sessionReady}
         <Breadcrumb />
         {#key currentPath}
           <ErrorBoundary

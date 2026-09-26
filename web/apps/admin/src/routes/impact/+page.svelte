@@ -9,8 +9,8 @@
   real rows don't already cover (deduped) so the page never looks empty; if
   the endpoints are unreachable the stubs fill the page and a
   "[mock fallback]" console.warn is logged. Any group of fewer than 5
-  artisans arrives flagged `suppressed` and renders as "<5", never as a
-  zero. Baselines are self-reported and the page says so.
+  artisans arrives flagged `suppressed` and renders as an em dash, never as
+  a zero. Baselines are self-reported and the page says so.
 -->
 <script lang="ts">
   import { locale, formatMoney, formatDate, formatNumber, type MessageKey } from '@kalakriti/i18n';
@@ -50,7 +50,7 @@
   const t = $derived(locale.t);
   const role = $derived(session.claims?.['role'] as string | undefined);
   const authorized = $derived(role === 'MINISTRY' || role === 'CLUSTER_OFFICER');
-  const SMALL = '<5';
+  const UNAVAILABLE = '—';
 
   let stateCode = $state('');
   let district = $state('');
@@ -216,8 +216,6 @@
   {#if !authorized}
     <p>{t('admin.home.noAccess')}</p>
   {:else}
-    <p class="impact__muted">{t('impact.subtitle')}</p>
-
     <form
       class="impact__filters"
       onsubmit={(e) => {
@@ -278,25 +276,24 @@
       {#if summary.refreshed_at}
         <p class="impact__muted">{t('impact.refreshedAt', { time: formatDate(summary.refreshed_at, locale.code, { dateStyle: 'medium', timeStyle: 'short' }) })}</p>
       {/if}
-      {#if hidden}
-        <p class="impact__note" role="status">{t('impact.suppressedNote')}</p>
+      {#if !hidden}
+        <dl class="kpis">
+          <div class="kpi"><dt>{t('impact.kpi.beneficiaries')}</dt><dd>{num(summary.beneficiaries)}</dd></div>
+          <div class="kpi"><dt>{t('impact.kpi.active')}</dt><dd>{num(summary.active_sellers_90d)}</dd></div>
+          <div class="kpi">
+            <dt>{t('impact.kpi.uplift')}</dt>
+            <dd>{summary.median_uplift_pct === undefined ? UNAVAILABLE : pct(summary.median_uplift_pct)}</dd>
+            <p class="impact__muted">{t('impact.kpi.upliftSample', { n: num(summary.uplift_sample) })}</p>
+          </div>
+          <div class="kpi"><dt>{t('impact.kpi.digitalShare')}</dt><dd>{summary.digital_share_pct === undefined ? '—' : `${Math.round(summary.digital_share_pct)}%`}</dd></div>
+          <div class="kpi"><dt>{t('impact.kpi.certificates')}</dt><dd>{num(summary.certificates_issued)}</dd></div>
+          <div class="kpi">
+            <dt>{t('impact.kpi.financeLinked')}</dt>
+            <dd>{num(summary.finance_linked)}</dd>
+            <p class="impact__muted">{t('impact.kpi.financeVerified', { n: num(summary.finance_verified) })}</p>
+          </div>
+        </dl>
       {/if}
-      <dl class="kpis">
-        <div class="kpi"><dt>{t('impact.kpi.beneficiaries')}</dt><dd>{hidden ? SMALL : num(summary.beneficiaries)}</dd></div>
-        <div class="kpi"><dt>{t('impact.kpi.active')}</dt><dd>{hidden ? SMALL : num(summary.active_sellers_90d)}</dd></div>
-        <div class="kpi">
-          <dt>{t('impact.kpi.uplift')}</dt>
-          <dd>{hidden || summary.median_uplift_pct === undefined ? SMALL : pct(summary.median_uplift_pct)}</dd>
-          <p class="impact__muted">{t('impact.kpi.upliftSample', { n: hidden ? SMALL : num(summary.uplift_sample) })}</p>
-        </div>
-        <div class="kpi"><dt>{t('impact.kpi.digitalShare')}</dt><dd>{hidden || summary.digital_share_pct === undefined ? '—' : `${Math.round(summary.digital_share_pct)}%`}</dd></div>
-        <div class="kpi"><dt>{t('impact.kpi.certificates')}</dt><dd>{hidden ? SMALL : num(summary.certificates_issued)}</dd></div>
-        <div class="kpi">
-          <dt>{t('impact.kpi.financeLinked')}</dt>
-          <dd>{hidden ? SMALL : num(summary.finance_linked)}</dd>
-          <p class="impact__muted">{t('impact.kpi.financeVerified', { n: hidden ? SMALL : num(summary.finance_verified) })}</p>
-        </div>
-      </dl>
       <p class="impact__muted">{t('impact.selfReported')}</p>
 
       <section class="impact__section">
@@ -352,9 +349,9 @@
               {#each finance as r (r.corporation)}
                 <tr>
                   <th scope="row">{corpLabel(r.corporation ?? '')}</th>
-                  <td>{r.suppressed ? SMALL : num(r.beneficiaries)}</td>
-                  <td>{r.suppressed ? SMALL : num(r.verified)}</td>
-                  <td>{r.suppressed ? SMALL : num(r.active_sellers_90d)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.beneficiaries)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.verified)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.active_sellers_90d)}</td>
                   <td>{r.suppressed || r.median_coverage_ratio === undefined ? '—' : `${Math.round(r.median_coverage_ratio * 100)}%`}</td>
                 </tr>
               {:else}
@@ -382,10 +379,10 @@
               {#each funnel as r (`${r.state_code}:${r.district}`)}
                 <tr>
                   <th scope="row">{[r.district || t('insights.unknownDistrict'), r.state_code].filter(Boolean).join(', ')}</th>
-                  <td>{r.suppressed ? SMALL : num(r.artisans)}</td>
-                  <td>{r.suppressed ? SMALL : num(r.started)}</td>
-                  <td>{r.suppressed ? SMALL : num(r.half_way)}</td>
-                  <td>{r.suppressed ? SMALL : num(r.certified)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.artisans)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.started)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.half_way)}</td>
+                  <td>{r.suppressed ? UNAVAILABLE : num(r.certified)}</td>
                 </tr>
               {:else}
                 <tr><td colspan="5">{t('insights.noData')}</td></tr>

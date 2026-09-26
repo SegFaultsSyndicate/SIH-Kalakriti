@@ -8,6 +8,7 @@
  */
 
 import type { components } from '@kalakriti/api';
+import { ESHAAN_MOCK_ORDERS } from './sih-demo-store';
 
 type IncomeSummary = components['schemas']['IncomeSummary'];
 type FinanceLink = components['schemas']['FinanceLink'];
@@ -58,6 +59,48 @@ export const MOCK_INCOME_SUMMARY: IncomeSummary = {
   uplift_pct: 142, // +142% uplift over baseline
   insufficient_data: '',
   digital_share_pct: 82,
+};
+
+const eshaanCompletedSalesByMonth = new Map<string, number>();
+for (const order of ESHAAN_MOCK_ORDERS) {
+  if (order.state !== 'COMPLETED') continue;
+  const month = order.placedAt.slice(0, 7);
+  eshaanCompletedSalesByMonth.set(
+    month,
+    (eshaanCompletedSalesByMonth.get(month) ?? 0) + order.totalPaise,
+  );
+}
+
+const eshaanIncomeMonths = ['2026-06', '2026-07', '2026-08', '2026-09'].map((month) => {
+  const platformPaise = eshaanCompletedSalesByMonth.get(month) ?? 0;
+  return {
+    month,
+    platform_paise: platformPaise,
+    offline_paise: 0,
+    fair_paise: 0,
+    total_paise: platformPaise,
+  };
+});
+
+const eshaanRecentSalesPaise = eshaanIncomeMonths
+  .slice(-3)
+  .reduce((total, month) => total + month.platform_paise, 0);
+
+export const MOCK_ESHAAN_INCOME_SUMMARY: IncomeSummary = {
+  baseline_monthly_paise: 1200000,
+  months: eshaanIncomeMonths,
+  platform_paise_90d: eshaanRecentSalesPaise,
+  offline_paise_90d: 0,
+  fair_paise_90d: 0,
+  platform_pending_paise: ESHAAN_MOCK_ORDERS
+    .filter((order) => order.state === 'IN_PROGRESS')
+    .reduce((total, order) => total + order.totalPaise, 0),
+  current_monthly_paise: eshaanIncomeMonths[eshaanIncomeMonths.length - 1].platform_paise,
+  uplift_pct: Math.round(
+    ((eshaanIncomeMonths[eshaanIncomeMonths.length - 1].platform_paise - 1200000) / 1200000) * 100,
+  ),
+  insufficient_data: '',
+  digital_share_pct: 100,
 };
 
 /* ==========================================================================

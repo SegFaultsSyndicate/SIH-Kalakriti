@@ -179,9 +179,7 @@ export async function launchDemoListing(): Promise<string> {
   return draft.id;
 }
 
-/**
- * Removes obsolete Ajrakh drafts and ensures a clean Paithani Weaving draft exists.
- */
+/** Removes obsolete drafts and keeps the Paithani demo draft available on home. */
 export async function cleanupLegacyDraftsAndSeedPaithani(): Promise<void> {
   try {
     const rows = await db.drafts.toArray();
@@ -192,8 +190,8 @@ export async function cleanupLegacyDraftsAndSeedPaithani(): Promise<void> {
       const isAjrakh = craftId === 'ajrakh-block-print' || title.toLowerCase().includes('ajrakh');
       if (isAjrakh) {
         await db.drafts.delete(row.id);
-        for (const mid of row.mediaIds) {
-          await db.media.delete(mid).catch(() => {});
+        for (const mediaId of row.mediaIds) {
+          await db.media.delete(mediaId).catch(() => {});
         }
       } else if (craftId === 'paithani-weaving' || title.toLowerCase().includes('paithani')) {
         hasPaithaniDraft = true;
@@ -205,3 +203,4 @@ export async function cleanupLegacyDraftsAndSeedPaithani(): Promise<void> {
     }
   } catch { /* ignore */ }
 }
+

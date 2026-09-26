@@ -159,7 +159,7 @@
       incomeFileName = file.name;
 
       showToast({
-        message: 'Income statement uploaded successfully for legitimacy audit.',
+        message: t('company.signup.toast.uploadSuccess'),
         variant: 'success',
       });
     } catch {
@@ -167,7 +167,7 @@
       incomeFileName = file.name;
       incomeStatementUrl = `https://cdn.kalakriti.org.in/statements/${encodeURIComponent(file.name)}`;
       showToast({
-        message: 'Statement queued for verification.',
+        message: t('company.signup.toast.uploadQueued'),
         variant: 'info',
       });
     } finally {
@@ -177,7 +177,7 @@
 
   function detectLocation(): void {
     if (!navigator.geolocation) {
-      showToast({ message: 'Geolocation is not supported by your browser', variant: 'error' });
+      showToast({ message: t('company.signup.toast.geoUnsupported'), variant: 'error' });
       return;
     }
     locating = true;
@@ -186,14 +186,14 @@
         storeLat = Number(pos.coords.latitude.toFixed(6));
         storeLng = Number(pos.coords.longitude.toFixed(6));
         locating = false;
-        showToast({ message: 'GPS coordinates attached to boutique studio.', variant: 'success' });
+        showToast({ message: t('company.signup.toast.geoAttached'), variant: 'success' });
       },
       () => {
         locating = false;
         // Sane fallback for boutique studio coordinate (e.g. Mumbai Kala Ghoda)
         storeLat = 18.9298;
         storeLng = 72.8333;
-        showToast({ message: 'Default studio coordinates assigned.', variant: 'info' });
+        showToast({ message: t('company.signup.toast.geoDefault'), variant: 'info' });
       },
       { timeout: 10000 },
     );
@@ -235,7 +235,7 @@
       const registered = await registerCompany(payload);
       registrationResult = registered;
       showToast({
-        message: 'Company registration submitted successfully for Ministry audit.',
+        message: t('company.signup.toast.registered'),
         variant: 'success',
       });
     } catch (err) {
@@ -254,7 +254,7 @@
         income_statement_url: incomeStatementUrl,
       };
       showToast({
-        message: err instanceof Error ? err.message : 'Registration recorded in offline cache.',
+        message: err instanceof Error ? err.message : t('company.signup.toast.offline'),
         variant: 'info',
       });
     } finally {
@@ -264,16 +264,16 @@
 </script>
 
 <svelte:head>
-  <title>Enterprise &amp; Boutique Registration — Kalakriti</title>
+  <title>{t('company.signup.title')} — {t('app.name')}</title>
 </svelte:head>
 
 <section class="company-register" aria-labelledby="register-heading">
   <!-- Editorial Breadcrumb & Kicker -->
   <header class="register-header">
-    <div class="kicker">institutional &amp; boutique sourcing partnership</div>
-    <h1 id="register-heading" class="title">Enterprise &amp; Boutique Registration</h1>
+    <div class="kicker">{t('company.signup.kicker')}</div>
+    <h1 id="register-heading" class="title">{t('company.signup.title')}</h1>
     <p class="subtitle">
-      Connect your retail brand, independent boutique studio, export house, or public institution directly with verified master artisan clusters across India for sustainable, year-round procurement.
+      {t('company.signup.subheading')}
     </p>
   </header>
 
@@ -283,76 +283,76 @@
       <div class="success-icon-wrap">
         <Icon name="check" />
       </div>
-      <div class="kicker">application reference: {registrationResult.id}</div>
-      <h2 class="success-title">Registration Submitted for Ministry Audit</h2>
+      <div class="kicker">{t('company.signup.applicationReference', { id: registrationResult.id })}</div>
+      <h2 class="success-title">{t('company.signup.successTitle')}</h2>
       <p class="success-body">
-        Thank you for partnering with Kalakriti. Your statutory credentials (GSTIN: <code>{registrationResult.gstin}</code>) and income statement have been submitted to the Ministry of Social Justice &amp; Empowerment cluster development officers for legitimacy verification.
+        {t('company.signup.successBody')} (GSTIN: <code>{registrationResult.gstin}</code>)
       </p>
 
       <div class="audit-summary-box">
         <div class="summary-row">
-          <span class="summary-label">Entity Name:</span>
+          <span class="summary-label">{t('company.signup.summary.entity')}</span>
           <span class="summary-val">{registrationResult.name}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">Partner Classification:</span>
-          <span class="summary-val">{registrationResult.type}</span>
+          <span class="summary-label">{t('company.signup.summary.classification')}</span>
+          <span class="summary-val">{t(`company.type.${registrationResult.type}` as 'company.type.RETAILER' | 'company.type.BOUTIQUE' | 'company.type.EXPORTER' | 'company.type.INSTITUTION')}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">Platform Fee Schedule:</span>
+          <span class="summary-label">{t('company.signup.summary.feeSchedule')}</span>
           <span class="summary-val highlight">
-            {registrationResult.commission_rate_bps === 100 ? '1.0%' : '0.5%'} Platform Fee on settled sales
+            {t('company.signup.summary.fee', { rate: registrationResult.commission_rate_bps === 100 ? '1.0%' : '0.5%' })}
           </span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">Audit Status:</span>
-          <span class="summary-val pending-tag">PENDING ADMINISTRATIVE AUDIT</span>
+          <span class="summary-label">{t('company.signup.summary.auditStatus')}</span>
+          <span class="summary-val pending-tag">{t('company.signup.summary.pending')}</span>
         </div>
       </div>
 
       <div class="whatsapp-alert">
         <Icon name="whatsapp" />
         <div>
-          <strong>WhatsApp Notification Activated:</strong>
-          <span>Real-time verification milestones and artisan lead dispatches will be delivered to <strong>{registrationResult.contact_phone}</strong>.</span>
+          <strong>{t('company.signup.whatsappTitle')}</strong>
+          <span>{t('company.signup.whatsappBody', { phone: registrationResult.contact_phone })}</span>
         </div>
       </div>
 
       <div class="success-actions">
-        <a href="/catalog" class="k-btn k-btn--primary">Browse Master Artisan Catalog</a>
-        <a href="/" class="k-btn k-btn--secondary">Return to Marketplace Home</a>
+        <a href="/catalog" class="k-btn k-btn--primary">{t('company.signup.browseCatalog')}</a>
+        <a href="/" class="k-btn k-btn--secondary">{t('company.signup.returnHome')}</a>
       </div>
     </div>
   {:else}
     <!-- Multi-Step Guided Form Shell -->
     <div class="form-container">
       <div class="stepper-wrap">
-        <Stepper label="Registration progress" steps={STEP_TITLES} current={currentStep} />
+        <Stepper label={t('company.signup.progress')} steps={STEP_TITLES} current={currentStep} />
       </div>
 
       <!-- Step 0: Business Identity & Statutory Details -->
       {#if currentStep === 0}
         <div class="step-card">
           <div class="step-intro">
-            <h2 class="step-title">1. Legal Entity &amp; Contact Credentials</h2>
+            <h2 class="step-title">1. {t('company.signup.step.0')}</h2>
             <p class="step-desc">
-              Provide registered business details as listed on your Ministry of Corporate Affairs or GST portal registration.
+              {t('company.signup.step.0Desc')}
             </p>
           </div>
 
           <div class="field-stack">
-            <FieldGroup label="Legal Entity / Brand Name" description="Official registered commercial trade name">
+            <FieldGroup label={t('company.signup.legalName')} description={t('company.signup.legalNameDesc')}>
               {#snippet children({ id, describedBy })}
                 <Input
                   {id}
                   aria-describedby={describedBy}
-                  placeholder="e.g., Anokhi Heritage Handlooms Pvt Ltd"
+                  placeholder={t('company.signup.exampleName')}
                   bind:value={name}
                 />
               {/snippet}
             </FieldGroup>
 
-            <FieldGroup label="Business Classification" description="Determines procurement channels and platform commission schedule">
+            <FieldGroup label={t('company.signup.businessType')} description={t('company.signup.businessTypeDesc')}>
               {#snippet children({ id, describedBy })}
                 <Select
                   {id}
@@ -364,33 +364,33 @@
             </FieldGroup>
 
             <FieldGroup
-              label="GSTIN (15-Character Statutory Code)"
-              description="Format: 2 digits state code, 10 alphanumeric PAN, 1 entity code, Z, 1 checksum"
-              error={!isGstinValid ? 'Please enter a valid 15-character statutory GSTIN' : undefined}
+              label={t('company.signup.gstin')}
+              description={t('company.signup.gstinDesc')}
+              error={!isGstinValid ? t('company.signup.gstinError') : undefined}
             >
               {#snippet children({ id, describedBy })}
                 <Input
                   {id}
                   aria-describedby={describedBy}
-                  placeholder="e.g., 07AAAAA0000A1Z5"
+                  placeholder={t('company.signup.exampleGstin')}
                   bind:value={gstin}
                 />
               {/snippet}
             </FieldGroup>
 
             <div class="two-col-grid">
-              <FieldGroup label="Authorized Signatory / Contact Person">
+              <FieldGroup label={t('company.signup.signatory')}>
                 {#snippet children({ id, describedBy })}
                   <Input
                     {id}
                     aria-describedby={describedBy}
-                    placeholder="Full Name"
+                    placeholder={t('company.signup.fullName')}
                     bind:value={contactName}
                   />
                 {/snippet}
               </FieldGroup>
 
-              <FieldGroup label="Mobile Phone (WhatsApp Notifications Enabled)">
+              <FieldGroup label={t('company.signup.phone')}>
                 {#snippet children({ id, describedBy })}
                   <Input
                     {id}
@@ -404,25 +404,25 @@
             </div>
 
             <div class="two-col-grid">
-              <FieldGroup label="Official Work Email">
+              <FieldGroup label={t('company.signup.workEmail')}>
                 {#snippet children({ id, describedBy })}
                   <Input
                     {id}
                     type="email"
                     aria-describedby={describedBy}
-                    placeholder="procurement@company.com"
+                    placeholder={t('company.signup.emailPlaceholder')}
                     bind:value={contactEmail}
                   />
                 {/snippet}
               </FieldGroup>
 
-              <FieldGroup label="Company Website / Lookbook URL" optional>
+              <FieldGroup label={t('company.signup.website')} optional>
                 {#snippet children({ id, describedBy })}
                   <Input
                     {id}
                     type="url"
                     aria-describedby={describedBy}
-                    placeholder="https://company.com"
+                    placeholder="https://example.com"
                     bind:value={website}
                   />
                 {/snippet}
@@ -438,7 +438,7 @@
               disabled={!canProceedStep1}
               onclick={() => (currentStep = 1)}
             >
-              <span>Continue to Financial Audit</span>
+              <span>{t('company.signup.continueFinancial')}</span>
               <Icon name="arrow-right" />
             </Button>
           </div>
@@ -449,30 +449,30 @@
       {#if currentStep === 1}
         <div class="step-card">
           <div class="step-intro">
-            <h2 class="step-title">2. Financial Legitimacy &amp; Commission Acknowledgment</h2>
+            <h2 class="step-title">2. {t('company.signup.step.1')}</h2>
             <p class="step-desc">
-              To safeguard marginalized artisans against non-payment or fraudulent bulk tenders, the Ministry requires an audited income statement, P&amp;L sheet, or latest GST return.
+              {t('company.signup.step.1Desc')}
             </p>
           </div>
 
           <!-- Document Upload Box -->
           <div class="upload-section">
-            <span class="upload-label">Audited Income Statement / Annual P&amp;L (PDF format)</span>
+            <span class="upload-label">{t('company.signup.incomeStatement')}</span>
             <div class="upload-box" class:has-file={incomeStatementUrl.length > 0}>
               <Icon name="income-statement" />
               <div class="upload-text">
                 {#if uploadingDoc}
-                  <span class="upload-status">Uploading statement to secure Ministry vault...</span>
+                  <span class="upload-status">{t('company.signup.uploading')}</span>
                 {:else if incomeFileName}
                   <span class="upload-filename">{incomeFileName}</span>
-                  <span class="upload-sub">Audited statement attached</span>
+                  <span class="upload-sub">{t('company.signup.attached')}</span>
                 {:else}
-                  <span class="upload-prompt">Click to select or drag and drop your statement PDF</span>
-                  <span class="upload-sub">Max file size: 10MB. Certified PDF or scanned balance sheet</span>
+                  <span class="upload-prompt">{t('company.signup.uploadPrompt')}</span>
+                  <span class="upload-sub">{t('company.signup.uploadLimits')}</span>
                 {/if}
               </div>
               <label class="k-btn k-btn--secondary file-picker-label">
-                <span>{incomeFileName ? 'Change Document' : 'Upload Statement'}</span>
+                <span>{incomeFileName ? t('company.signup.changeDocument') : t('company.signup.uploadStatement')}</span>
                 <input
                   type="file"
                   accept="application/pdf"
@@ -487,29 +487,29 @@
           <div class="commission-policy-box">
             <div class="policy-header">
               <Icon name="info" />
-              <span class="policy-title">Platform Commission Schedule Disclosure</span>
+              <span class="policy-title">{t('company.signup.commissionDisclosure')}</span>
             </div>
             <div class="policy-content">
               <p>
-                In accordance with Ministry of Social Justice &amp; Empowerment guidelines, the Kalakriti platform operates as a non-profit cultural trust:
+                {t('company.signup.commissionIntro')}
               </p>
               <ul class="policy-list">
                 <li class:selected={type !== 'EXPORTER'}>
-                  <strong>0.5% Platform Commission:</strong> Applicable to Commercial Retailers, Boutique Studios, and Public Institutions on settled order values.
+                  <strong>{t('company.signup.retailerCommission')}</strong> {t('company.signup.retailerCommissionDesc')}
                 </li>
                 <li class:selected={type === 'EXPORTER'}>
-                  <strong>1.0% Platform Commission:</strong> Applicable to International Exporters, covering cross-border export provenance documentation and handloom certificate attestations.
+                  <strong>{t('company.signup.exporterCommission')}</strong> {t('company.signup.exporterCommissionDesc')}
                 </li>
               </ul>
               <p class="policy-footer-note">
-                Commission is deducted automatically upon order completion and credited to the platform rural logistics reserve. Zero upfront listing fees.
+                {t('company.signup.commissionNote')}
               </p>
             </div>
 
             <div class="terms-checkbox-wrap">
               <Checkbox id="terms-agree" bind:checked={termsAccepted}>
                 <span class="checkbox-text">
-                  I accept the <strong>{type === 'EXPORTER' ? '1.0%' : '0.5%'} platform commission schedule</strong> and certify that all submitted income statements and GSTIN credentials represent legitimate business turnover.
+                  {t('company.signup.terms', { rate: type === 'EXPORTER' ? '1.0%' : '0.5%' })}
                 </span>
               </Checkbox>
             </div>
@@ -518,7 +518,7 @@
           <div class="step-nav">
             <Button variant="secondary" size="lg" onclick={() => (currentStep = 0)}>
               <Icon name="arrow-left" />
-              <span>Back</span>
+              <span>{t('company.signup.back')}</span>
             </Button>
             <Button
               variant="primary"
@@ -526,7 +526,7 @@
               disabled={!canProceedStep2 || uploadingDoc}
               onclick={() => (currentStep = 2)}
             >
-              <span>Continue to Sourcing Preferences</span>
+              <span>{t('company.signup.continueSourcing')}</span>
               <Icon name="arrow-right" />
             </Button>
           </div>
@@ -537,9 +537,9 @@
       {#if currentStep === 2}
         <div class="step-card">
           <div class="step-intro">
-            <h2 class="step-title">3. Craft Sourcing &amp; Boutique Studio Profile</h2>
+            <h2 class="step-title">3. {t('company.signup.step.2')}</h2>
             <p class="step-desc">
-              Specify your procurement volume and preferred craft traditions to receive curated collective order lots and direct artisan matchmaking.
+              {t('company.signup.step.2Desc')}
             </p>
           </div>
 
@@ -548,49 +548,49 @@
             <div class="boutique-location-box">
               <div class="box-header">
                 <Icon name="location" />
-                <h3>Boutique Studio Physical Location</h3>
+                <h3>{t('company.signup.boutiqueLocation')}</h3>
               </div>
               <p class="box-desc">
-                Artisans within your regional corridor can view your boutique on their directory for direct consignment partnerships.
+                {t('company.signup.boutiqueLocationDesc')}
               </p>
 
               <div class="field-stack">
-                <FieldGroup label="Studio / Shop Street Address">
+                <FieldGroup label={t('company.signup.streetAddress')}>
                   {#snippet children({ id, describedBy })}
                     <Input
                       {id}
                       aria-describedby={describedBy}
-                      placeholder="e.g., Studio 4, Heritage Lane, Kala Ghoda"
+                      placeholder={t('company.signup.exampleAddress')}
                       bind:value={storeAddress}
                     />
                   {/snippet}
                 </FieldGroup>
 
                 <div class="three-col-grid">
-                  <FieldGroup label="City">
+                  <FieldGroup label={t('company.signup.city')}>
                     {#snippet children({ id, describedBy })}
                       <Input
                         {id}
                         aria-describedby={describedBy}
-                        placeholder="e.g., Mumbai"
+                        placeholder={t('company.signup.exampleCity')}
                         bind:value={storeCity}
                       />
                     {/snippet}
                   </FieldGroup>
 
-                  <FieldGroup label="Pincode">
+                  <FieldGroup label={t('company.signup.pincode')}>
                     {#snippet children({ id, describedBy })}
                       <Input
                         {id}
                         aria-describedby={describedBy}
-                        placeholder="e.g., 400001"
+                        placeholder={t('company.signup.examplePincode')}
                         bind:value={storePincode}
                       />
                     {/snippet}
                   </FieldGroup>
 
                   <div class="geo-action-cell">
-                    <span class="geo-label">GPS Mapping</span>
+                    <span class="geo-label">{t('company.signup.gpsMapping')}</span>
                     <Button
                       variant="secondary"
                       size="md"
@@ -598,7 +598,7 @@
                       onclick={detectLocation}
                     >
                       <Icon name="location" />
-                      <span>{locating ? 'Detecting...' : storeLat ? `${storeLat}, ${storeLng}` : 'Attach Coordinates'}</span>
+                      <span>{locating ? t('company.signup.detecting') : storeLat ? `${storeLat}, ${storeLng}` : t('company.signup.attachCoordinates')}</span>
                     </Button>
                   </div>
                 </div>
@@ -608,8 +608,8 @@
 
           <!-- Preferred Crafts Multi-Select -->
           <div class="crafts-section">
-            <span class="section-label">Target GI Crafts &amp; Handloom Traditions</span>
-            <p class="section-sub">Select the crafts your entity frequently curates or procures:</p>
+            <span class="section-label">{t('company.signup.targetCrafts')}</span>
+            <p class="section-sub">{t('company.signup.targetCraftsDesc')}</p>
             <div class="craft-chips-grid">
               {#each CRAFT_OPTIONS as craft (craft.id)}
                 <button
@@ -630,8 +630,8 @@
           <div class="procurement-terms-grid">
             <div class="term-col">
               <FieldGroup
-                label="Typical Minimum Order Value (₹)"
-                description="Minimum commitment per collective procurement lot"
+                label={t('company.signup.minimumOrderValue')}
+                description={t('company.signup.minimumOrderValueDesc')}
               >
                 {#snippet children({ id, describedBy })}
                   <Input
@@ -648,16 +648,16 @@
                 {/snippet}
               </FieldGroup>
               <div class="paise-indicator">
-                <span>Calculated Volume: </span>
+                <span>{t('company.signup.calculatedVolume')} </span>
                 <span class="paise-val"><Money paise={minOrderPaise} /></span>
               </div>
             </div>
 
             <div class="term-col">
-              <span class="term-label">Consignment Procurement</span>
-              <p class="term-desc">Are you open to stocking authenticated craft pieces under an artisan-retained consignment model?</p>
+              <span class="term-label">{t('company.signup.consignment')}</span>
+              <p class="term-desc">{t('company.signup.consignmentDesc')}</p>
               <Checkbox id="consignment-toggle" bind:checked={acceptsConsignment}>
-                <span>Accept artisan consignment batches with monthly reconciliation</span>
+                <span>{t('company.signup.acceptConsignment')}</span>
               </Checkbox>
             </div>
           </div>
@@ -665,7 +665,7 @@
           <div class="step-nav">
             <Button variant="secondary" size="lg" onclick={() => (currentStep = 1)}>
               <Icon name="arrow-left" />
-              <span>Back</span>
+              <span>{t('company.signup.back')}</span>
             </Button>
             <Button
               variant="primary"
@@ -674,9 +674,9 @@
               onclick={handleSubmit}
             >
               {#if submitting}
-                <span>Submitting Registration...</span>
+                <span>{t('company.signup.submitting')}</span>
               {:else}
-                <span>Submit for Ministry Verification</span>
+                <span>{t('company.signup.submit')}</span>
                 <Icon name="check" />
               {/if}
             </Button>

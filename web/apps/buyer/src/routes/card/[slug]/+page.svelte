@@ -11,7 +11,7 @@
   import { Icon } from '@kalakriti/icons';
   import { Button } from '@kalakriti/ui';
   import { CardEdge, KolamCorner } from '@kalakriti/ornament';
-  import { locale, tooltip } from '@kalakriti/i18n';
+  import { locale, matchesLocale, tooltip } from '@kalakriti/i18n';
   import {
     getArtisanStorefront,
     listListings,
@@ -223,7 +223,9 @@
             <div class="mini-catalog-grid">
               {#if listings.length > 0}
                 {#each listings as item}
-                  {@const itemTitle = item.translations?.[0]?.title || item.craft_name || 'Handcrafted Collection'}
+                  {@const itemTitle = item.translations?.find((translation) => matchesLocale(translation.language, locale.code))?.title ??
+                    item.translations?.find((translation) => matchesLocale(translation.language, 'hi'))?.title ??
+                    item.translations?.[0]?.title ?? item.craft_name ?? t('shareCard.catalogHeading')}
                   <a href="/listing/{item.id}" class="mini-product-card">
                     {#if item.image_url}
                       <img src={item.image_url} alt={itemTitle} class="mini-img" />
@@ -245,21 +247,21 @@
                 <div class="mini-product-card">
                   <div class="mini-img-fallback"><Icon name="weaving" size="1.2rem" /></div>
                   <div class="mini-info">
-                    <span class="mini-title">Pure Katan Silk Kadwa Saree</span>
+                    <span class="mini-title">{t('shareCard.sample.katanSaree')}</span>
                     <strong class="mini-price">₹18,500</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
                   <div class="mini-img-fallback"><Icon name="embroidery" size="1.2rem" /></div>
                   <div class="mini-info">
-                    <span class="mini-title">Zari Brocade Stole Yardage</span>
+                    <span class="mini-title">{t('shareCard.sample.zariStole')}</span>
                     <strong class="mini-price">₹4,200</strong>
                   </div>
                 </div>
                 <div class="mini-product-card">
                   <div class="mini-img-fallback"><Icon name="pottery" size="1.2rem" /></div>
                   <div class="mini-info">
-                    <span class="mini-title">Hand-Spun Raw Silk Dupatta</span>
+                    <span class="mini-title">{t('shareCard.sample.silkDupatta')}</span>
                     <strong class="mini-price">₹3,850</strong>
                   </div>
                 </div>

@@ -19,6 +19,8 @@
  * localStorage key: "kalakriti.sih.demo"
  */
 
+import { session } from '@kalakriti/api';
+
 // ---------- types ----------
 
 export interface SihListing {
@@ -48,6 +50,14 @@ export interface SihOrder {
   totalPaise: number;
   state: 'COMPLETED' | 'IN_PROGRESS' | 'OFFERED';
   placedAt: string;
+  shipping?: {
+    phone: string;
+    addressLines: string[];
+    carrier: string;
+    trackingCode: string;
+    deliveredAt: string;
+    milestones: { label: string; at: string }[];
+  };
 }
 
 export interface SihDemoState {
@@ -67,6 +77,10 @@ export interface SihDemoState {
 // ---------- storage key ----------
 
 const STORE_KEY = 'kalakriti.sih.demo.v4';
+
+export function isEshaanDemoAccount(): boolean {
+  return session.claims?.phone === '+918779279060';
+}
 
 // ---------- canonical fixtures ----------
 
@@ -171,6 +185,18 @@ export const ESHAAN_MOCK_ORDERS: SihOrder[] = [
     totalPaise: 1200000,
     state: 'COMPLETED',
     placedAt: '2026-09-10T11:00:00+05:30',
+    shipping: {
+      phone: '+91 98765 43210',
+      addressLines: ['House 12, Silk Lane, Sigra', 'Varanasi, Uttar Pradesh 221010'],
+      carrier: 'Kalakriti Demo Logistics',
+      trackingCode: 'KLT-DEMO-003',
+      deliveredAt: '2026-09-16T16:30:00+05:30',
+      milestones: [
+        { label: 'Order placed', at: '2026-09-10T11:00:00+05:30' },
+        { label: 'Handed to courier', at: '2026-09-13T09:15:00+05:30' },
+        { label: 'Delivered to Anita', at: '2026-09-16T16:30:00+05:30' },
+      ],
+    },
   },
   {
     id: 'sih-order-004',
@@ -203,7 +229,25 @@ export function loadDemoState(): SihDemoState {
   try {
     if (typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return JSON.parse(raw) as SihDemoState;
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<SihDemoState>;
+        const sanitized = {
+          artisan: parsed.artisan ?? buildDefaultState().artisan,
+          listings: Array.isArray(parsed.listings) ? parsed.listings : [],
+          orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+          paithaniPublished: Boolean(parsed.paithaniPublished),
+        } satisfies SihDemoState;
+
+        // Migrate the temporary empty store created by the earlier cleanup so
+        // Eshaan's legitimate published catalog comes back immediately.
+        if (sanitized.listings.length === 0 && sanitized.orders.length === 0 && !sanitized.paithaniPublished) {
+          const defaults = buildDefaultState();
+          localStorage.setItem(STORE_KEY, JSON.stringify(defaults));
+          return defaults;
+        }
+
+        return sanitized;
+      }
     }
   } catch { /* ignore */ }
   return buildDefaultState();
@@ -242,18 +286,7 @@ export function saveDemoState(state: SihDemoState): void {
 
 /** Seeds the store if absent, then returns the current state. */
 export function ensureDemoState(): SihDemoState {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (!raw) {
-        const defaults = buildDefaultState();
-        localStorage.setItem(STORE_KEY, JSON.stringify(defaults));
-        return defaults;
-      }
-      return JSON.parse(raw) as SihDemoState;
-    }
-  } catch { /* ignore */ }
-  return buildDefaultState();
+  return loadDemoState();
 }
 
 /**

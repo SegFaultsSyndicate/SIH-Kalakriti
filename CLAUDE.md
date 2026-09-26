@@ -467,7 +467,7 @@ both; canonical is the bare `Idempotency-Key`.)
 ## Internationalization (i18n) verification and ratchet convention
 
 Kalakriti supports 20 Eighth Schedule scheduled Indian languages plus English (21 locales total).
-The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 3,342 keys).
+The source of truth for message keys is `web/packages/i18n/src/messages/en.ts` (currently 3,727 keys).
 
 ### Audit Command
 Run the audit script to verify catalogue completeness, script correctness, and placeholder consistency:
@@ -478,14 +478,12 @@ npm run audit
 node scripts/audit.mjs --locale <code_or_tag>
 ```
 
-### Ratchet Ceiling & Baseline Convention — the baseline is NOT 0, don't trust an old claim that it is
+### Ratchet Ceiling & Baseline Convention
 - `web/packages/i18n/i18n-baseline.json` defines the ratchet ceiling for allowed issues per locale.
-- **The baseline is not 0 for any locale and hasn't been since the MegaMenuNav batch (2026-09-23,
-  ~132 keys merged with an English fallback in all 21 locales — real translations for that batch
-  are still outstanding).** Most locales currently sit at 264 issues (the MegaMenuNav floor); a few
-  (doi 334, mai 469, mr 329, ne 352, kok 298, sa 269) carry additional older debt. If you see a
-  doc or comment claiming "0 issues / 100% coverage", it's stale — re-run `npm run audit` and trust
-  the live `i18n-baseline.json`, not prose.
+- **As of 2026-09-26, every non-English locale audits at 0 issues / 100% catalogue coverage** across
+  3,727 keys. Most recently added UI copy was machine-translated; low-resource languages still need
+  native-speaker review before the translations are treated as publish-quality. Always rerun
+  `npm run audit` and trust the live `i18n-baseline.json` for current status.
 - CI and vitest (`catalogue-audit.test.ts`) enforce that a locale's issues must never exceed its baseline count.
 - If you add new keys to `en.ts`, every locale is "missing" them until its own translation batch
   lands — raise that locale's baseline number by the new key count in the same commit that adds the

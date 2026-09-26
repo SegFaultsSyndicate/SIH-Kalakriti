@@ -12,6 +12,7 @@ import { DEFAULT_TIMEOUT_MS, getUnauthorizedHandler } from './config';
 import { uuid7 } from './uuid7';
 import { onBehalfHeader } from './acting';
 import { getRefreshToken, refreshSession } from './session-refresh';
+import { isLocalMockToken } from './jwt';
 
 const IDEMPOTENT_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
@@ -52,13 +53,14 @@ export async function call(path: string, options: CallOptions = {}): Promise<unk
 
   for (let attempt = 0; ; attempt++) {
     const token = getAccessToken();
+    const localMockToken = isLocalMockToken(token);
     try {
       return await request(path, {
         ...rest,
         idempotencyKey: key,
         timeoutMs: timeoutMs ?? DEFAULT_TIMEOUT_MS,
         headers: {
-          ...(token === undefined ? {} : { Authorization: `Bearer ${token}` }),
+          ...(token === undefined || localMockToken ? {} : { Authorization: `Bearer ${token}` }),
           ...onBehalfHeader(method, path, onBehalfOf),
           ...rest.headers,
         },
@@ -66,12 +68,14 @@ export async function call(path: string, options: CallOptions = {}): Promise<unk
     } catch (cause) {
       if (!(cause instanceof ApiError)) throw cause;
 
+      if (cause.status === 401 && localMockToken) throw cause;
+
       if (cause.status === 401 && attempt === 0 && (refreshToken ?? getRefreshToken())) {
         if (await refreshSession(refreshToken)) continue;
       }
 
       if (cause.status === 401) {
-        if (!(import.meta.env?.DEV && (token?.includes('devsignature') || token?.includes('dev-')))) {
+        if (!((import.meta.env as any)?.DEV && (token?.includes('devsignature') || token?.includes('dev-')))) {
           getUnauthorizedHandler()?.(path);
         }
         throw cause;

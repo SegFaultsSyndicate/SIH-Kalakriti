@@ -8,15 +8,13 @@
   onboarding flow (Batch 7) is behind one of these rather than a mounted
   speak() call, per the do-not on auto-playing audio without a gesture.
 
-  Same voiceAvailable()-gated pattern as @kalakriti/voice's ReadScreen.svelte,
-  duplicated rather than shared because ReadScreen reads a whole screen in one
-  continuous pass and this reads one short string per press -- different
-  enough state machines that sharing one would mean branching, not reusing.
+  Speech is sent to the browser with the requested locale even when its voice
+  list does not advertise that locale; some engines can still resolve it.
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
   import { Icon } from '@kalakriti/icons';
-  import { speak, stopSpeaking, voiceAvailable } from '@kalakriti/voice';
+  import { speak, stopSpeaking } from '@kalakriti/voice';
 
   interface Props {
     /** The string spoken aloud. Never the raw i18n key -- pass t(key). */
@@ -44,16 +42,13 @@
       return;
     }
     unavailable = false;
-    if (!voiceAvailable(effectiveTag)) {
-      unavailable = true;
-      return;
-    }
     speaking = true;
     try {
       await speak(text, { tag: effectiveTag });
-    } catch {
-      // Cancelled by a newer utterance elsewhere, or the engine errored --
-      // either way there is nothing left to announce.
+    } catch (error) {
+      if (!(error instanceof Error) || !['canceled', 'interrupted'].includes(error.message)) {
+        unavailable = true;
+      }
     } finally {
       speaking = false;
     }
@@ -76,7 +71,7 @@
 
 {#if unavailable}
   <p class="k-speak__unavailable" role="status">
-    {t('voice.unavailable', { language: locale.meta.endonym })}
+    {t('voice.unavailable', { language: label })}
   </p>
 {/if}
 

@@ -110,13 +110,16 @@
         scanned.map((l) => (l.id ? getListingSummary(l.id).catch(() => undefined) : undefined)),
       );
       const resolved = summaries.filter((s): s is Summary => s !== undefined);
-      resolved.sort((a, b) => Number(isFlagged(b)) - Number(isFlagged(a)));
-      for (const item of resolved) {
+      const available = import.meta.env.VITE_USE_MOCKS === '1'
+        ? [...resolved, ...MOCK_MODERATION_ITEMS.filter((mock) => !resolved.some((item) => item.id === mock.id))]
+        : resolved;
+      available.sort((a, b) => Number(isFlagged(b)) - Number(isFlagged(a)));
+      for (const item of available) {
         if (item.id && reasonDrafts[item.id] === undefined) {
           reasonDrafts[item.id] = '';
         }
       }
-      items = resolved;
+      items = available;
     } catch (cause) {
       if (import.meta.env.VITE_USE_MOCKS === '1') {
         console.warn('[mock fallback] load moderation queue:', cause);

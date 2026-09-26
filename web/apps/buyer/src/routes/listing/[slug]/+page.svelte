@@ -294,10 +294,10 @@
           setTimeout(() => {
             copied = false;
           }, 2000);
-          showToast({ message: 'Artisan piece link copied to clipboard!', variant: 'success' });
+          showToast({ message: t('listing.share.copied'), variant: 'success' });
         })
         .catch(() => {
-          showToast({ message: 'Failed to copy link', variant: 'error' });
+          showToast({ message: t('listing.share.copyFailed'), variant: 'error' });
         });
     }
   }

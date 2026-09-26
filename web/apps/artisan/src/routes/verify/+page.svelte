@@ -32,7 +32,7 @@
   } from '@kalakriti/api';
   import { getPref, network } from '@kalakriti/offline';
   import { OtpInput, SpeakButton } from '@kalakriti/ui';
-  import { getArtisanId } from '$lib/registration';
+  import { getArtisanId, setArtisanId } from '$lib/registration';
   import { REGISTER_FIRST_STEP, HOME_PATH } from '$lib/route-guard';
   import { toE164 } from '$lib/phone';
 
@@ -46,6 +46,8 @@
   let error = $state('');
   let resendIn = $state(RESEND_SECONDS);
   let resending = $state(false);
+
+  const isNewDemoAccount = $derived(phone.replace(/\D/g, '') === '9821891185');
 
   $effect(() => {
     void getPref<string>('login.phone').then((value) => {
@@ -73,6 +75,13 @@
       if (ok) {
         const sub = session.claims?.sub;
         const tokenRegistered = typeof sub === 'string' && sub !== '';
+        // If the token has no `sub`, the server says this is an unregistered
+        // artisan. Clear any stale artisan-id from a previous session so the
+        // route guard (and our own check here) can't treat that leftover as
+        // "registered" and skip straight to home.
+        if (!tokenRegistered) {
+          await setArtisanId(undefined);
+        }
         const registered = tokenRegistered || (await getArtisanId()) !== undefined;
         await goto(registered ? HOME_PATH : REGISTER_FIRST_STEP);
       } else {
@@ -80,8 +89,8 @@
         code = '';
       }
     } catch (cause) {
-      // core-svc's real dev-mode OTP acceptance (AUTH_DEV_OTP_ENABLED, code
-      // 000000/123456) already goes through completeOtpVerification above --
+      // core-svc's real dev-mode OTP acceptance already goes through
+      // completeOtpVerification above --
       // this used to also forge an unsigned client-side JWT on any failure,
       // which never actually worked in any environment: pkg/auth.Issuer.Verify
       // checks a real HMAC signature regardless of environment, so it just
@@ -96,7 +105,11 @@
       if (import.meta.env.VITE_USE_MOCKS === '1') {
         console.warn('[mock fallback] completeOtpVerification:', cause);
         establishMockSession('ARTISAN', toE164(phone));
-        await goto('/');
+        // The mock ARTISAN token has no `sub` (see mock-session.ts), so treat
+        // this the same as the real path: clear any stale artisan id so the
+        // guard doesn't mistake a previous session's id for "registered".
+        await setArtisanId(undefined);
+        await goto(REGISTER_FIRST_STEP);
         return;
       }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
@@ -135,7 +148,7 @@
   {#if !network.online}
     <p class="verify__offline" role="status">{t('verify.offline')}</p>
   {:else}
-    <OtpInput bind:value={code} label={t('verify.code.label')} disabled={verifying} oncomplete={submit} autofocus />
+    <OtpInput bind:value={code} length={isNewDemoAccount ? 4 : 6} label={t('verify.code.label')} disabled={verifying} oncomplete={submit} autofocus />
 
     {#if verifying}
       <p role="status" aria-live="polite">{t('verify.submitting')}</p>

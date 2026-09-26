@@ -11,9 +11,8 @@
   <table> holding the same rows -- the acceptance criterion is a keyboard-
   accessible table equivalent for every chart, not a screen-reader label
   bolted onto a canvas. A suppressed row never gets a bar and never reads as
-  0: it renders as a hatched placeholder in the chart and the literal text
-  "Suppressed for privacy" in the table, in both value cells. Bars carry
-  their value as text next to them, not colour alone.
+  0: it renders with an unavailable marker in both chart and table views.
+  Bars carry their value as text next to them, not colour alone.
 -->
 <script lang="ts">
   import { locale } from '@kalakriti/i18n';
@@ -76,8 +75,7 @@
               <li class="barchart__row" class:barchart__row--grouped={grouped}>
                 <span class="barchart__label">{row.label}</span>
                 {#if row.suppressed}
-                  <span class="barchart__suppressed-bar" role="img" aria-label={t('insights.suppressed')}></span>
-                  <span class="barchart__value barchart__value--suppressed">{t('insights.suppressed')}</span>
+                  <span class="barchart__value" aria-label={t('insights.noData')}>—</span>
                 {:else}
                   <div class="barchart__bar-group">
                     <span class="barchart__track">
@@ -117,9 +115,9 @@
               {#each rows as row, i (row.label + '-' + i)}
                 <tr>
                   <th scope="row">{row.label}</th>
-                  <td>{row.suppressed ? t('insights.suppressed') : formatValue(row.value)}</td>
+                  <td>{row.suppressed ? '—' : formatValue(row.value)}</td>
                   {#if grouped && secondaryRows}
-                    <td>{secondaryRows[i]?.suppressed ? t('insights.suppressed') : formatValue(secondaryRows[i]?.value ?? 0)}</td>
+                    <td>{secondaryRows[i]?.suppressed ? '—' : formatValue(secondaryRows[i]?.value ?? 0)}</td>
                   {/if}
                 </tr>
               {:else}
@@ -214,8 +212,7 @@
       text-overflow: clip;
     }
 
-    .barchart__track,
-    .barchart__suppressed-bar {
+    .barchart__track {
       grid-area: track;
     }
 
@@ -268,29 +265,10 @@
     font-weight: 600;
   }
 
-  .barchart__suppressed-bar {
-    display: block;
-    block-size: 0.85rem;
-    border-radius: var(--k-radius-xs, 0.2rem);
-    background: repeating-linear-gradient(
-      45deg,
-      var(--k-surface-sunken),
-      var(--k-surface-sunken) 4px,
-      var(--k-border-hairline) 4px,
-      var(--k-border-hairline) 8px
-    );
-  }
-
   .barchart__value {
     font-variant-numeric: var(--k-numeric-tabular);
     text-align: end;
     color: var(--k-text-primary);
-  }
-
-  .barchart__value--suppressed {
-    color: var(--k-text-secondary);
-    font-style: italic;
-    text-align: start;
   }
 
   .barchart__table-scroll {

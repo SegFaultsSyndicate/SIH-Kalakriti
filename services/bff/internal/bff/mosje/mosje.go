@@ -242,7 +242,7 @@ func optQuery(r *http.Request, key string) *string {
 }
 
 // exportImpactCSV streams GetImpactByGroup as CSV. A suppressed group keeps
-// its label and says "<5" -- its numbers never leave insight-svc.
+// its label but exports blank values; its numbers never leave insight-svc.
 func (h *Handler) exportImpactCSV(w http.ResponseWriter, r *http.Request) {
 	groupBy := r.URL.Query().Get("group_by")
 	if groupBy == "" {
@@ -264,7 +264,7 @@ func (h *Handler) exportImpactCSV(w http.ResponseWriter, r *http.Request) {
 	inr := func(p int64) string { return strconv.FormatFloat(float64(p)/100, 'f', 2, 64) }
 	for _, row := range resp.GetRows() {
 		if row.GetSuppressed() {
-			_ = cw.Write([]string{row.GetGroup(), row.GetStateCode(), "<5", "", "", "", "", "", "", "", ""})
+			_ = cw.Write([]string{row.GetGroup(), row.GetStateCode(), "", "", "", "", "", "", "", "", ""})
 			continue
 		}
 		uplift := ""

@@ -11,7 +11,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { locale, tooltip } from '@kalakriti/i18n';
+  import { locale, matchesLocale, tooltip } from '@kalakriti/i18n';
   import {
     Button,
     Select,
@@ -26,6 +26,7 @@
   } from '@kalakriti/ui';
   import { Icon } from '@kalakriti/icons';
   import { craftIcon } from '$lib/craft-icon';
+  import { ARTISAN_CRAFT_CATEGORIES } from '$lib/craft-categories';
   import {
     createBulkOrder,
     listCrafts,
@@ -67,22 +68,52 @@
   let selectedCategory = $state('all');
 
   const CATEGORIES = [
-    { id: 'all', label: 'All Crafts' },
-    { id: 'Weaving', label: 'Weaving & Looms' },
-    { id: 'Block printing', label: 'Block Printing' },
-    { id: 'Pottery', label: 'Pottery' },
-    { id: 'Woodwork', label: 'Woodwork' },
-    { id: 'Embroidery', label: 'Embroidery' },
-    { id: 'Jewellery', label: 'Jewellery' },
-    { id: 'Bamboo craft', label: 'Bamboo & Cane' },
-    { id: 'Basketry', label: 'Basketry' },
-    { id: 'Leatherwork', label: 'Leatherwork' },
-    { id: 'Metalwork', label: 'Metalwork' },
+    { id: 'all', label: 'bulkOrder.page.category.all' },
+    { id: 'Weaving', label: 'bulkOrder.page.category.weaving' },
+    { id: 'Block printing', label: 'bulkOrder.page.category.blockPrinting' },
+    { id: 'Pottery', label: 'bulkOrder.page.category.pottery' },
+    { id: 'Woodwork', label: 'bulkOrder.page.category.woodwork' },
+    { id: 'Embroidery', label: 'bulkOrder.page.category.embroidery' },
+    { id: 'Jewellery', label: 'bulkOrder.page.category.jewellery' },
+    { id: 'Bamboo craft', label: 'bulkOrder.page.category.bamboo' },
+    { id: 'Basketry', label: 'bulkOrder.page.category.basketry' },
+    { id: 'Leatherwork', label: 'bulkOrder.page.category.leatherwork' },
+    { id: 'Metalwork', label: 'bulkOrder.page.category.metalwork' },
   ];
+
+  const CRAFT_SAMPLE_IMAGES: Record<string, string> = {
+    'assam-muga-weaving': '/craft-images/weaving_and_looms/tussar-silk-saree-beige-embroidered.jpeg',
+    'bagru-block-printing': '/craft-images/block_printing/sanganeri-block-print-kurta-white.jpeg',
+    bandhani: '/craft-images/weaving_and_looms/white-saree-maroon-border.jpeg',
+    'block-printing': '/craft-images/block_printing/sanganeri-block-print-kurta-pink.jpeg',
+    'channapatna-toys': '/craft-images/woodwork/channapatna-toys.jpg',
+    'dhokra-casting': '/craft-images/metalwork/dhokra-casting.jpg',
+    'handloom-weaving': '/craft-images/weaving_and_looms/chanderi-saree-aqua.jpeg',
+    'madhubani-painting': '/craft-images/paintings/madhubani_mithila_painting_01.jpeg',
+    'pashmina-weaving': '/craft-images/embroidery/kashmir_pashmina_sozni_02.jpeg',
+    pattachitra: '/craft-images/paintings/pattachitra_01.jpeg',
+    pottery: '/craft-images/pottery/terracotta-bowls-green-glaze.jpeg',
+  };
+
+  const BUDGET_OPTIONS = $derived([
+    { value: '', label: t('bulkOrder.page.budget.optional') },
+    { value: 'under-1l', label: t('bulkOrder.page.budget.under1l') },
+    { value: '1l-5l', label: t('bulkOrder.page.budget.1l5l') },
+    { value: '5l-15l', label: t('bulkOrder.page.budget.5l15l') },
+    { value: 'over-15l', label: t('bulkOrder.page.budget.over15l') },
+  ]);
+  const selectedBudgetLabel = $derived(BUDGET_OPTIONS.find((option) => option.value === budgetBand)?.label ?? budgetBand);
 
   let loadingListings = $state(false);
   let listings = $state<ListingSummary[]>([]);
   let selectedListing = $state<ListingSummary | undefined>(undefined);
+
+  function listingTitle(listing: ListingSummary | undefined): string {
+    return listing?.translations?.find((translation) => matchesLocale(translation.language, locale.code))?.title ??
+      listing?.translations?.find((translation) => matchesLocale(translation.language, 'hi'))?.title ??
+      listing?.translations?.[0]?.title ??
+      '';
+  }
 
   // Quantity parameter handoff from /bulk-order?quantity=120 or default 50
   const urlQty = Number(page.url.searchParams.get('quantity'));
@@ -151,10 +182,14 @@
           // Merge with sample image & categories from bulk catalog fixtures
           crafts = res.crafts.map((c) => {
             const match = FALLBACK_BULK_CRAFTS.find((f) => f.slug === c.slug);
+            const icon = c.slug === 'channapatna-toys'
+              ? 'woodwork'
+              : craftIcon(`${c.slug ?? ''} ${c.display_name ?? ''}`);
+            const category = ARTISAN_CRAFT_CATEGORIES.find((item) => item.icon === icon);
             return {
               ...c,
-              category: match?.category ?? 'Weaving',
-              sample_image: match?.sample_image ?? '/craft-images/weaving_and_looms/category_cover.jpg',
+              category: match?.category ?? category?.name ?? 'Weaving',
+              sample_image: match?.sample_image ?? CRAFT_SAMPLE_IMAGES[c.slug ?? ''],
               artisan_count: match?.artisan_count ?? 12,
               highlight: match?.highlight ?? 'GI Certified Authentic Cluster Craft',
             } as BulkCraftItem;
@@ -173,6 +208,7 @@
 
   async function chooseCraft(slug: string): Promise<void> {
     loadingListings = true;
+    listings = [];
     selectedListing = undefined;
     selectedCraft = crafts.find((c) => c.slug === slug) ?? FALLBACK_BULK_CRAFTS.find((c) => c.slug === slug);
     current = 1;
@@ -285,9 +321,9 @@
 <div class="bulk-order-page">
   <header class="bulk-order-header">
     <div class="bulk-order-header__text">
-      <span class="bulk-order-kicker">Government & Enterprise Procurement</span>
+      <span class="bulk-order-kicker">{t('bulkOrder.page.headerKicker')}</span>
       <h1>{t('bulkOrder.heading')}</h1>
-      <p class="bulk-order-sub">Direct cluster procurement with parallel loom-allocation, verified GI certification, and transparent delivery milestones.</p>
+      <p class="bulk-order-sub">{t('bulkOrder.page.subheading')}</p>
     </div>
   </header>
 
@@ -318,7 +354,7 @@
 
         <div class="bulk-order-step-heading">
           <h2>{t('bulkOrder.craft.label')}</h2>
-          <p class="bulk-order-step-sub">Select from India's registered Geographical Indication (GI) craft traditions for bulk production.</p>
+          <p class="bulk-order-step-sub">{t('bulkOrder.page.craftIntro')}</p>
         </div>
 
         <!-- Filter & Search Toolbar -->
@@ -331,11 +367,11 @@
             <input
               type="search"
               bind:value={craftSearch}
-              placeholder="Search craft by name, material, or state..."
+              placeholder={t('bulkOrder.page.searchPlaceholder')}
               class="bulk-order-search-input"
             />
             {#if craftSearch}
-              <button type="button" class="search-clear-btn" onclick={() => (craftSearch = '')}>×</button>
+              <button type="button" class="search-clear-btn" aria-label={t('bulkOrder.page.clearSearch')} onclick={() => (craftSearch = '')}>×</button>
             {/if}
           </div>
 
@@ -347,7 +383,7 @@
                 class:active={selectedCategory === cat.id}
                 onclick={() => (selectedCategory = cat.id)}
               >
-                {cat.label}
+                {t(cat.label)}
               </button>
             {/each}
           </div>
@@ -367,9 +403,9 @@
           </div>
         {:else if filteredCrafts.length === 0}
           <div class="bulk-order-empty-filter">
-            <p>No crafts found matching "{craftSearch}".</p>
+            <p>{t('bulkOrder.page.noCrafts', { query: craftSearch })}</p>
             <Button variant="secondary" onclick={() => { craftSearch = ''; selectedCategory = 'all'; }}>
-              Reset Filters
+              {t('bulkOrder.page.resetFilters')}
             </Button>
           </div>
         {:else}
@@ -410,9 +446,9 @@
                       <div class="craft-card__footer">
                         <span class="craft-card__capacity">
                           <Icon name="verified-artisan" size="0.85rem" />
-                          {craftItem.artisan_count || 12} artisans active
+                          {t('bulkOrder.page.artisansActive', { count: String(craftItem.artisan_count || 12) })}
                         </span>
-                        <span class="craft-card__cta">Select &rarr;</span>
+                        <span class="craft-card__cta">{t('bulkOrder.page.select')} &rarr;</span>
                       </div>
                     </div>
                   </button>
@@ -428,14 +464,14 @@
       <section class="bulk-order-step">
         <div class="craft-selection-bar">
           <div class="craft-selection-meta">
-            <span class="craft-selection-kicker">Selected Craft Tradition</span>
-            <h2 class="craft-selection-title">{selectedCraft?.display_name ?? 'Selected Craft'}</h2>
+            <span class="craft-selection-kicker">{t('bulkOrder.page.selectedCraftTradition')}</span>
+            <h2 class="craft-selection-title">{selectedCraft?.display_name ?? t('bulkOrder.page.selectedCraft')}</h2>
             {#if selectedCraft?.regions?.[0]}
-              <span class="craft-selection-region">Cluster: {selectedCraft.regions[0]}</span>
+              <span class="craft-selection-region">{t('bulkOrder.page.cluster', { region: selectedCraft.regions[0] })}</span>
             {/if}
           </div>
           <Button variant="secondary" onclick={() => (current = 0)} tooltip={tooltip('tooltip.back')}>
-            &larr; {t('bulkOrder.back')} (Change Craft)
+            &larr; {t('bulkOrder.back')} ({t('bulkOrder.page.changeCraft')})
           </Button>
         </div>
 
@@ -454,13 +490,13 @@
                 {t('bulkOrder.feasibility', { count: String(artisanCount) })}
               {/if}
             </strong>
-            <span>Direct parallel allocation: large institutional orders are automatically split across cluster looms for on-time delivery.</span>
+            <span>{t('bulkOrder.page.allocationInfo')}</span>
           </div>
         </div>
 
         <div class="bulk-order-step-heading">
           <h2>{t('bulkOrder.listing.label')}</h2>
-          <p class="bulk-order-step-sub">Select the master craft piece design for your bulk order specifications.</p>
+          <p class="bulk-order-step-sub">{t('bulkOrder.page.listingIntro')}</p>
         </div>
 
         {#if loadingListings}
@@ -479,7 +515,7 @@
         {:else if listings.length === 0}
           <div class="bulk-order-empty-filter">
             <p>{t('bulkOrder.listing.empty')}</p>
-            <Button variant="secondary" onclick={() => (current = 0)}>Choose Another Craft</Button>
+            <Button variant="secondary" onclick={() => (current = 0)}>{t('bulkOrder.page.chooseAnotherCraft')}</Button>
           </div>
         {:else}
           <div class="bulk-order__listing-grid">
@@ -497,26 +533,26 @@
                         <img src={listing.image_url} alt={listing.translations?.[0]?.title ?? ''} class="listing-card__img" loading="lazy" />
                       {/if}
                       {#if listing.gi_certified}
-                        <span class="listing-card__badge"><Icon name="gi-tagged" size="0.75rem" /> GI Tagged</span>
+                        <span class="listing-card__badge"><Icon name="gi-tagged" size="0.75rem" /> {t('bulkOrder.page.giTagged')}</span>
                       {/if}
                     </div>
 
                     <div class="listing-card__body">
                       <div class="listing-card__artisan">
                         <Icon name="verified-artisan" size="0.85rem" />
-                        {listing.artisan_name ?? 'Master Artisan'} • {listing.artisan_district ?? 'Cluster'}
+                        {listing.artisan_name ?? t('bulkOrder.page.masterArtisan')} • {listing.artisan_district ?? t('bulkOrder.page.clusterFallback')}
                       </div>
-                      <h3 class="listing-card__title">{listing.translations?.[0]?.title}</h3>
+                      <h3 class="listing-card__title">{listingTitle(listing)}</h3>
                       <div class="listing-card__price-row">
                         <span class="listing-card__price">
                           <Money paise={listing.price?.amount_paise ?? 0} />
-                          <small>/ unit</small>
+                          <small>{t('bulkOrder.page.perUnit')}</small>
                         </span>
                         <span class="listing-card__moq">
-                          MOQ: {listing.min_order_quantity ?? 25} units
+                          {t('bulkOrder.page.moq', { count: String(listing.min_order_quantity ?? 25) })}
                         </span>
                       </div>
-                      <div class="listing-card__btn">Select Design for RFQ &rarr;</div>
+                      <div class="listing-card__btn">{t('bulkOrder.page.selectDesign')} &rarr;</div>
                     </div>
                   </button>
                 {/snippet}
@@ -534,15 +570,15 @@
             <img src={selectedListing.image_url} alt="" class="selected-banner__img" />
           {/if}
           <div class="selected-banner__info">
-            <span class="selected-banner__kicker">Selected Piece Design</span>
-            <h3 class="selected-banner__title">{selectedListing.translations?.[0]?.title}</h3>
-            <p class="selected-banner__artisan">By {selectedListing.artisan_name} • {selectedListing.craft_name}</p>
+            <span class="selected-banner__kicker">{t('bulkOrder.page.selectedDesign')}</span>
+            <h3 class="selected-banner__title">{listingTitle(selectedListing)}</h3>
+            <p class="selected-banner__artisan">{t('bulkOrder.page.byArtisan', { artisan: selectedListing.artisan_name ?? '', craft: selectedListing.craft_name ?? '' })}</p>
             <div class="selected-banner__price">
-              Unit Reference Price: <strong><Money paise={unitPricePaise} /></strong>
+              {t('bulkOrder.page.unitReferencePrice')}: <strong><Money paise={unitPricePaise} /></strong>
             </div>
           </div>
           <button type="button" class="change-selection-link" onclick={() => (current = 1)}>
-            Change Item &rarr;
+            {t('bulkOrder.page.changeItem')} &rarr;
           </button>
         </div>
 
@@ -553,11 +589,11 @@
               <span class="field-label">{t('bulkOrder.quantity')}</span>
               <div class="quantity-input-row">
                 <NumberStepper bind:value={quantity} min={selectedListing.min_order_quantity ?? 1} />
-                <span class="units-badge">{quantity} units total</span>
+                <span class="units-badge">{t('bulkOrder.page.unitsTotal', { count: String(quantity) })}</span>
               </div>
               <!-- Volume shortcut pills -->
               <div class="volume-presets">
-                <span class="volume-presets__label">Quick Presets:</span>
+                <span class="volume-presets__label">{t('bulkOrder.page.quickPresets')}</span>
                 {#each [25, 50, 100, 250, 500, 1000] as vol}
                   <button
                     type="button"
@@ -575,9 +611,9 @@
               <span class="field-label">{t('bulkOrder.deadline')}</span>
               <input type="date" bind:value={deadline} class="bulk-order__date" min={defaultDeadline(7)} />
               <div class="deadline-shortcuts">
-                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(15))}>Express (15d)</button>
-                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(30))}>Standard (30d)</button>
-                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(60))}>Festival Batch (60d)</button>
+                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(15))}>{t('bulkOrder.page.deadline.express')}</button>
+                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(30))}>{t('bulkOrder.page.deadline.standard')}</button>
+                <button type="button" class="shortcut-btn" onclick={() => (deadline = defaultDeadline(60))}>{t('bulkOrder.page.deadline.festival')}</button>
               </div>
             </label>
 
@@ -585,13 +621,7 @@
               <span class="field-label">{t('bulkOrder.budgetBand')}</span>
               <Select
                 bind:value={budgetBand}
-                options={[
-                  { value: '', label: 'Select estimated budget band (optional)' },
-                  { value: 'under-1l', label: 'Under ₹1,00,000' },
-                  { value: '1l-5l', label: '₹1,00,000 – ₹5,00,000' },
-                  { value: '5l-15l', label: '₹5,00,000 – ₹15,00,000' },
-                  { value: 'over-15l', label: 'Over ₹15,00,000 (Ministry / High Volume)' },
-                ]}
+                options={BUDGET_OPTIONS}
               />
               <span class="bulk-order__hint">{t('bulkOrder.budgetBand.hint')}</span>
             </label>
@@ -601,7 +631,7 @@
               <Textarea
                 bind:value={delivery}
                 rows={4}
-                placeholder="Institutional delivery destination, recipient department, packaging specifications, GSTIN for institutional invoice, custom branding requests..."
+                placeholder={t('bulkOrder.page.deliveryPlaceholder')}
               />
             </label>
 
@@ -610,39 +640,39 @@
                 &larr; {t('bulkOrder.back')}
               </Button>
               <Button onclick={() => (current = 3)} tooltip={tooltip('tooltip.next')}>
-                {t('bulkOrder.next')} (Review RFQ) &rarr;
+                {t('bulkOrder.next')} ({t('bulkOrder.page.reviewRfq')}) &rarr;
               </Button>
             </div>
           </div>
 
           <!-- Dynamic Lead-Time & Value Summary Sidebar -->
           <aside class="order-estimator-sidebar">
-            <h3 class="estimator-heading">Capacity & Value Calculation</h3>
+            <h3 class="estimator-heading">{t('bulkOrder.page.estimator.heading')}</h3>
 
             <div class="estimator-metric">
-              <span class="metric-label">Estimated Order Value</span>
+              <span class="metric-label">{t('bulkOrder.page.estimator.orderValue')}</span>
               <div class="metric-value-huge">
                 <Money paise={totalOrderValuePaise} />
               </div>
-              <span class="metric-note">({quantity} units × <Money paise={unitPricePaise} />)</span>
+              <span class="metric-note">{t('bulkOrder.page.estimator.unitsTimes', { count: String(quantity) })}<Money paise={unitPricePaise} />)</span>
             </div>
 
             <div class="estimator-row">
               <div class="estimator-submetric">
-                <span class="submetric-title">Estimated Lead-Time</span>
-                <strong>{leadWeeks} weeks</strong>
+                <span class="submetric-title">{t('bulkOrder.page.estimator.leadTime')}</span>
+                <strong>{t('bulkOrder.page.estimator.weeks', { count: String(leadWeeks) })}</strong>
               </div>
               <div class="estimator-submetric">
-                <span class="submetric-title">Smart Loom Batching</span>
-                <strong>{Math.ceil(quantity / 20)} Looms Parallel</strong>
+                <span class="submetric-title">{t('bulkOrder.page.estimator.batching')}</span>
+                <strong>{t('bulkOrder.page.estimator.looms', { count: String(Math.ceil(quantity / 20)) })}</strong>
               </div>
             </div>
 
             <div class="cluster-guarantee-box">
               <div class="guarantee-icon"><Icon name="verified-artisan" size="1.1rem" /></div>
               <div class="guarantee-text">
-                <strong>Zero Intermediary Margins</strong>
-                <p>100% direct artisan remuneration via digital escrow upon milestone completion.</p>
+                <strong>{t('bulkOrder.page.zeroMargins')}</strong>
+                <p>{t('bulkOrder.page.paymentInfo')}</p>
               </div>
             </div>
           </aside>
@@ -654,7 +684,7 @@
       <section class="bulk-order-step">
         <div class="bulk-order-step-heading">
           <h2>{t('bulkOrder.review.heading')}</h2>
-          <p class="bulk-order-step-sub">Please verify your requirement details before submitting to the Artisan Fulfillment Network.</p>
+          <p class="bulk-order-step-sub">{t('bulkOrder.page.reviewIntro')}</p>
         </div>
 
         <div class="review-layout">
@@ -665,11 +695,11 @@
               {/if}
               <div>
                 <span class="review-product__kicker">{selectedListing.craft_name}</span>
-                <h3 class="review-product__title">{selectedListing.translations?.[0]?.title}</h3>
-                <p class="review-product__artisan">Master Artisan: {selectedListing.artisan_name} • {selectedListing.artisan_district}</p>
+                <h3 class="review-product__title">{listingTitle(selectedListing)}</h3>
+                <p class="review-product__artisan">{t('bulkOrder.page.artisanLabel', { artisan: selectedListing.artisan_name ?? '', district: selectedListing.artisan_district ?? '' })}</p>
                 {#if selectedListing.craft_gi_registration_no}
                   <span class="review-product__gi">
-                    <Icon name="gi-tagged" size="0.8rem" /> GI Certification #{selectedListing.craft_gi_registration_no}
+                    <Icon name="gi-tagged" size="0.8rem" /> {t('bulkOrder.page.giCertification', { number: selectedListing.craft_gi_registration_no })}
                   </span>
                 {/if}
               </div>
@@ -678,24 +708,24 @@
             <dl class="bulk-order__review-dl">
               <div class="review-row">
                 <dt>{t('bulkOrder.quantity')}</dt>
-                <dd><strong>{quantity} units</strong></dd>
+                <dd><strong>{t('bulkOrder.page.unitsTotal', { count: String(quantity) })}</strong></dd>
               </div>
               <div class="review-row">
-                <dt>Unit Reference Price</dt>
+                <dt>{t('bulkOrder.page.unitReferencePrice')}</dt>
                 <dd><Money paise={unitPricePaise} /></dd>
               </div>
               <div class="review-row review-row--highlight">
-                <dt>Total Estimated Value</dt>
+                <dt>{t('bulkOrder.page.totalEstimatedValue')}</dt>
                 <dd><strong><Money paise={totalOrderValuePaise} /></strong></dd>
               </div>
               <div class="review-row">
                 <dt>{t('bulkOrder.deadline')}</dt>
-                <dd>{deadline} ({leadWeeks} weeks production window)</dd>
+                <dd>{deadline} ({t('bulkOrder.page.productionWindow', { weeks: String(leadWeeks) })})</dd>
               </div>
               {#if budgetBand}
                 <div class="review-row">
                   <dt>{t('bulkOrder.budgetBand')}</dt>
-                  <dd>{budgetBand}</dd>
+                  <dd>{selectedBudgetLabel}</dd>
                 </div>
               {/if}
               {#if delivery}
@@ -709,8 +739,8 @@
             <div class="review-allocation-seal">
               <div class="seal-icon-box"><Icon name="verified-artisan" size="1.4rem" /></div>
               <div class="seal-content">
-                <strong>Transparent Guild Capacity Allocation</strong>
-                <p>Upon submission, this order is decomposed into balanced cluster batches and assigned to verified artisans in {selectedListing.artisan_district || 'the cluster'}. Real-time loom progress and stage inspection tracking will be enabled immediately.</p>
+                <strong>{t('bulkOrder.page.capacityAllocation')}</strong>
+                <p>{t('bulkOrder.page.allocationDetails', { district: selectedListing.artisan_district || t('bulkOrder.page.clusterFallback') })}</p>
               </div>
             </div>
 
@@ -719,7 +749,7 @@
                 &larr; {t('bulkOrder.back')}
               </Button>
               <Button onclick={() => void submit()} loading={submitting} tooltip={tooltip('tooltip.submit')}>
-                {submitting ? 'Submitting to Guild Network…' : t('bulkOrder.submit')} &rarr;
+                {submitting ? t('bulkOrder.page.submitting') : t('bulkOrder.submit')} &rarr;
               </Button>
             </div>
           </div>

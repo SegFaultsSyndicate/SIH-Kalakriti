@@ -319,7 +319,7 @@ export function getStubListingsForCraft(slug: string, t: TFn): ListingSummary[] 
   // Broad category match
   const craftDef = FALLBACK_BULK_CRAFTS.find((c) => c.slug === slug);
   if (craftDef?.category) {
-    const catMatches = all.filter((l) => l.category?.toLowerCase() === craftDef.category.toLowerCase());
+    const catMatches = all.filter((l) => (l as any).category?.toLowerCase() === craftDef.category.toLowerCase());
     if (catMatches.length > 0) return catMatches.slice(0, 6);
   }
 

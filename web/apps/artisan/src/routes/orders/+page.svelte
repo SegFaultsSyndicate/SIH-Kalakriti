@@ -23,6 +23,7 @@
   import { Icon } from '@kalakriti/icons';
   import StateBadge from '$lib/StateBadge.svelte';
   import { getArtisanId } from '$lib/registration';
+  import { localPrimaryImageUrl } from '$lib/listings';
   import {
     cachedOrders,
     getCachedOrdersSync,
@@ -33,7 +34,7 @@
     type BulkOrder,
     type OrderLot,
   } from '$lib/orders';
-  import { getSihMockOrders } from '$lib/sih-my-works';
+  import { getSihListingTitleKey, getSihMockOrders } from '$lib/sih-my-works';
 
   const t = $derived(locale.t);
 
@@ -41,18 +42,39 @@
   let loading = $state(initialOrders === null);
   let orders = $state<BulkOrder[]>(initialOrders ?? []);
   let artisanId = $state<string | undefined>(undefined);
+  let orderImages = $state<Record<string, string>>({});
+  let orderImageUrls: string[] = [];
+
+  async function loadOrderImages(currentOrders: BulkOrder[]): Promise<void> {
+    for (const url of orderImageUrls) URL.revokeObjectURL(url);
+    orderImageUrls = [];
+    const images: Record<string, string> = {};
+    for (const order of currentOrders) {
+      if (!order.id || !order.listing_id) continue;
+      const imageUrl = await localPrimaryImageUrl(order.listing_id);
+      if (!imageUrl) continue;
+      images[order.id] = imageUrl;
+      orderImageUrls.push(imageUrl);
+    }
+    orderImages = images;
+  }
 
   async function load(): Promise<void> {
     if (initialOrders === null) loading = true;
     artisanId = await getArtisanId();
     orders = await cachedOrders();
+    await loadOrderImages(orders);
     loading = false;
     await refreshTouchedOrders();
     orders = await cachedOrders();
+    await loadOrderImages(orders);
   }
 
   $effect(() => {
     void load();
+    return () => {
+      for (const url of orderImageUrls) URL.revokeObjectURL(url);
+    };
   });
 
   interface Row {
@@ -95,7 +117,12 @@
     <div class="orders-page__skeletons">
       {#each Array(3) as _, i (i)}
         <SkeletonRow
+          thumbnail
+          thumbnailSize="3.5rem"
           lines={[{ width: '40%', height: '0.9rem' }, { width: '55%', height: '0.85rem' }, { width: '30%', height: '1rem' }]}
+          trailing
+          trailingWidth="1rem"
+          trailingHeight="1rem"
         />
       {/each}
     </div>
@@ -105,18 +132,33 @@
       <!-- SIH Demo: show mock order history when the backend has no real orders -->
       <ul class="orders-page__rows" role="list">
         {#each mockOrders as order (order.id)}
+          {@const listingTitleKey = getSihListingTitleKey(order.listingId)}
           <li>
-            <Card variant="hairline" element="div" class="orders-page__row">
+            <Card
+              variant="hairline"
+              element={order.id === 'sih-order-003' ? 'a' : 'div'}
+              class="orders-page__row {order.id === 'sih-order-003' ? 'orders-page__row-link' : ''}"
+              href={order.id === 'sih-order-003' ? `/orders/${order.id}` : undefined}
+            >
+              {#if order.imageUrl}
+                <img class="orders-page__thumb" src={order.imageUrl} alt="" />
+              {:else}
+                <div class="orders-page__thumb orders-page__thumb--placeholder" aria-hidden="true">
+                  <Icon name="image" />
+                </div>
+              {/if}
               <div class="orders-page__row-body">
-                <p class="orders-page__row-kind orders-page__row-listing">{order.listingTitle}</p>
+                <p class="orders-page__row-kind orders-page__row-listing">
+                  {listingTitleKey ? t(listingTitleKey) : order.listingTitle}
+                </p>
                 <p class="orders-page__row-buyer">{order.buyerName}</p>
                 <div class="orders-page__row-state">
                   <StateBadge group={order.state === 'OFFERED' ? 'needsAttention' : order.state === 'IN_PROGRESS' ? 'pending' : 'published'} />
-                  <span>{order.quantity} unit{order.quantity !== 1 ? 's' : ''}</span>
+                  <span>{t('orders.units', { count: String(order.quantity) })}</span>
                 </div>
                 <Money paise={order.totalPaise} />
               </div>
-              <Icon name="chevron-right" />
+              <Icon name="chevron-right" aria-hidden="true" />
             </Card>
           </li>
         {/each}
@@ -130,6 +172,13 @@
         <li>
           <a href={lotHref(row)} class="orders-page__row-link">
             <Card variant="hairline" element="div" class="orders-page__row">
+              {#if orderImages[row.order.id ?? '']}
+                <img class="orders-page__thumb" src={orderImages[row.order.id ?? '']} alt="" />
+              {:else}
+                <div class="orders-page__thumb orders-page__thumb--placeholder" aria-hidden="true">
+                  <Icon name="image" />
+                </div>
+              {/if}
               <div class="orders-page__row-body">
                 <p class="orders-page__row-kind">
                   {row.kind === 'direct' ? t('orders.kind.direct') : t('orders.kind.collective')}
@@ -179,34 +228,77 @@
     gap: var(--k-space-2);
   }
 
-  .orders-page__row-link {
+  :global(.orders-page__row-link) {
     color: inherit;
     text-decoration: none;
   }
 
+  :global(.orders-page__row-link:visited) {
+    color: inherit;
+  }
+
+  :global(.orders-page__row-link.k-card:hover),
+  :global(.orders-page__row-link.k-card:focus-visible),
+  :global(.orders-page__row-link.orders-page__row:hover),
+  :global(.orders-page__row-link.orders-page__row:focus-visible),
+  :global(.orders-page__row-link:hover .orders-page__row),
+  :global(.orders-page__row-link:focus-visible .orders-page__row) {
+    border-color: var(--k-accent-primary-bg);
+    background-color: color-mix(in srgb, var(--k-accent-primary-bg) 8%, var(--k-surface-raised));
+  }
+
+  .orders-page__row-link:focus-visible {
+    outline: 2px solid var(--k-accent-primary-bg);
+    outline-offset: 2px;
+  }
+
+  :global(.orders-page__row-link:hover svg),
+  :global(.orders-page__row-link:focus-visible svg) {
+    color: var(--k-accent-primary-text);
+  }
+
   :global(.orders-page__row) {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-between;
     gap: var(--k-space-3);
-    padding: var(--k-space-3);
+    padding: var(--k-space-2);
+  }
+
+  :global(.orders-page__row > svg) {
+    align-self: center;
+    flex-shrink: 0;
   }
 
   @media (max-width: 30rem) {
     .orders-page {
       padding: var(--k-space-3);
     }
-    :global(.orders-page__row) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--k-space-2);
-    }
   }
 
   .orders-page__row-body {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: var(--k-space-1);
+    min-inline-size: 0;
+  }
+
+  .orders-page__thumb {
+    flex-shrink: 0;
+    inline-size: 4.5rem;
+    block-size: auto;
+    min-block-size: 4.5rem;
+    align-self: stretch;
+    border-radius: var(--k-radius-md);
+    object-fit: cover;
+  }
+
+  .orders-page__thumb--placeholder {
+    display: grid;
+    place-items: center;
+    background-color: var(--k-surface-sunken);
+    color: var(--k-text-secondary);
   }
 
   .orders-page__row-kind {
@@ -228,7 +320,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-inline-size: 18rem;
+    max-inline-size: 100%;
   }
 
   .orders-page__row-buyer {

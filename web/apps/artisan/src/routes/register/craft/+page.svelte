@@ -67,7 +67,7 @@
         type="search"
         placeholder={t('register.craft.search')}
         aria-label={t('register.craft.search')}
-        onkeydown={(e) => {
+        onkeydown={(e: KeyboardEvent) => {
           if (e.key === 'Enter') {
             e.preventDefault();
             if (selected !== '') { void next(); }
