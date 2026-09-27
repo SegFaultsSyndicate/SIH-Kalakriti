@@ -21,8 +21,9 @@ desktop.ini
 *.swp
 *.swo
 
-# Claude Code worktrees (local-only, never meant to be committed)
-.claude/worktrees/
+# Local AI assistant directories
+.claude/
+.agents/
 
 # Go build output and test artifacts
 bin/
