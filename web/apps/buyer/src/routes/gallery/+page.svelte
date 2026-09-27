@@ -12,9 +12,17 @@
 
   const t = $derived(locale.t);
 
+  const seenImages = new Set<string>();
   const groups = ARTISAN_CRAFT_CATEGORIES.map((c) => {
     const folder = c.sampleImage.split('/')[2];
-    return { category: c, images: (GALLERY_IMAGES[folder] ?? []).map((f) => `/craft-images/${folder}/${f}`) };
+    const images = (GALLERY_IMAGES[folder] ?? [])
+      .map((f) => `/craft-images/${folder}/${f}`)
+      .filter((src) => {
+        if (seenImages.has(src)) return false;
+        seenImages.add(src);
+        return true;
+      });
+    return { category: c, images };
   }).filter((g) => g.images.length > 0);
 
   let open = $state<{ src: string; label: string } | null>(null);

@@ -67,7 +67,7 @@
 
 {#if Component}
   <Component
-    class="k-icon {className || ''}"
+    class="k-icon {name === 'badge' ? 'k-icon--badge k-icon--bold' : ''} {className || ''}"
     data-icon={name}
     role={title ? 'img' : undefined}
     aria-label={title}

@@ -43,6 +43,7 @@
     gap: var(--k-space-4);
     padding: var(--k-space-4) var(--k-gutter);
     border-block-end: var(--k-hairline) solid var(--k-border-hairline);
+    background-color: var(--k-surface-base);
   }
 
   .shell__lockup {

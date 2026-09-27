@@ -104,12 +104,19 @@
       // real backend problem.
       if (import.meta.env.VITE_USE_MOCKS === '1') {
         console.warn('[mock fallback] completeOtpVerification:', cause);
-        establishMockSession('ARTISAN', toE164(phone));
+        const normalizedPhone = toE164(phone);
+        const isRegisteredDemoArtisan = normalizedPhone === '+918779279060';
+        establishMockSession('ARTISAN', normalizedPhone);
         // The mock ARTISAN token has no `sub` (see mock-session.ts), so treat
         // this the same as the real path: clear any stale artisan id so the
         // guard doesn't mistake a previous session's id for "registered".
-        await setArtisanId(undefined);
-        await goto(REGISTER_FIRST_STEP);
+        if (isRegisteredDemoArtisan) {
+          await setArtisanId('sih-artisan-eshaan');
+          await goto(HOME_PATH);
+        } else {
+          await setArtisanId(undefined);
+          await goto(REGISTER_FIRST_STEP);
+        }
         return;
       }
       error = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');

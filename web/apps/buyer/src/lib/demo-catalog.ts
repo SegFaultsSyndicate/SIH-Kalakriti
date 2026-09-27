@@ -24,7 +24,12 @@ import { locale, type MessageKey, type MessageValues } from '@kalakriti/i18n';
 import { RAW_FALLBACK_GI_LISTINGS, RAW_FALLBACK_NEW_ARRIVALS, toFallbackListing } from './demo-home-listings';
 import { GI_PRODUCTS, type GIProduct } from './demo-gi-products';
 import { allStubListings, stubListingById } from './stub-listings';
-import { getDemoListingsForBuyer, ESHAAN_BASE_LISTINGS, PAITHANI_LISTING } from './sih-demo-injector';
+import {
+  getDemoListingsForBuyer,
+  ESHAAN_BASE_LISTINGS,
+  PAITHANI_LISTING,
+  isPaithaniLive,
+} from './sih-demo-injector';
 
 type ListingSummary = components['schemas']['ListingSummary'];
 type TFn = (key: MessageKey, values?: MessageValues) => string;
@@ -147,7 +152,7 @@ export function demoListingById(id: string, t: TFn): ListingSummary | undefined 
   // SIH demo listings — Eshaan's artisan portal listings resolve here so
   // clicking from the buyer feed leads to a real product page.
   if (id.startsWith('eshaan')) {
-    const allSih = [...ESHAAN_BASE_LISTINGS, PAITHANI_LISTING];
+    const allSih = [...ESHAAN_BASE_LISTINGS, ...(isPaithaniLive() ? [PAITHANI_LISTING] : [])];
     const sih = allSih.find((l) => l.id === id);
     if (sih) {
       const listing: ListingSummary = {

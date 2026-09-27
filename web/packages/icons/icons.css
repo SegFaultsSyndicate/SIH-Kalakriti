@@ -37,6 +37,8 @@
 .k-icon--dense.k-icon { --k-icon-stroke: 1.25; }
 .k-icon--bold svg,
 .k-icon--bold.k-icon { --k-icon-stroke: 2; }
+.k-icon--bold.k-icon--badge svg,
+.k-icon--badge.k-icon--bold { filter: contrast(1.08) drop-shadow(0.3px 0 currentColor) drop-shadow(-0.3px 0 currentColor) drop-shadow(0 0.3px currentColor) drop-shadow(0 -0.3px currentColor); }
 .k-icon [stroke="currentColor"],
 .k-icon svg [stroke="currentColor"] {
   stroke-width: var(--k-icon-stroke, 1.5);

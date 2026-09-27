@@ -9,7 +9,9 @@ services:
       POSTGRES_USER: kalakriti
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kalakriti}
     ports:
-      - "5432:5432"
+      # Windows reserves the 5391-5490 range on some machines; keep the
+      # container port unchanged and expose PostgreSQL on a free host port.
+      - "15432:5432"
     volumes:
       - pg_data:/var/lib/postgresql
     healthcheck:

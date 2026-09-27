@@ -17,7 +17,7 @@ GO_SERVICES := core-svc search-svc collab-svc bff insight-svc channel-svc
 POSTGRES_USER     ?= kalakriti
 POSTGRES_PASSWORD ?= kalakriti
 POSTGRES_DB       ?= kalakriti
-POSTGRES_PORT     ?= 5432
+POSTGRES_PORT     ?= 15432
 POSTGRES_DSN      ?= postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
 # Must match whatever docker-compose.yml's bff/core-svc containers were

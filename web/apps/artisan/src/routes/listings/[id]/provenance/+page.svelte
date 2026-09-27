@@ -93,8 +93,14 @@
           },
           qr_code: `https://kalakriti.in/p/${demoId}`,
         } as any;
-        if (record.qr_code) qrDataUrl = await buildQrDataUrl(record.qr_code);
         phase = 'sealed';
+        if (record.qr_code) {
+          try {
+            qrDataUrl = await buildQrDataUrl(record.qr_code);
+          } catch {
+            qrDataUrl = undefined;
+          }
+        }
         return;
       }
 

@@ -172,7 +172,6 @@ const ITEMS: StubItem[] = [
   { category: 'Weaving', craftSlug: 'tussar-silk-weaving', craftName: 'Tussar Silk Weaving', craftNameKey: 'stub.craftName.tussarSilkWeaving', giNo: 'GI-351', artisan: 'Prabha Devi Jha', artisanNameKey: 'stub.artisanName.tussarSilkWeaving', district: 'Bhagalpur', state: 'BR', titleKey: 'stub.listing.87.title', image: img('weaving_and_looms', 'purple-tussar-silk-saree.jpeg'), pricePaise: 1240800 },
   { category: 'Weaving', craftSlug: 'tussar-silk-weaving', craftName: 'Tussar Silk Weaving', craftNameKey: 'stub.craftName.tussarSilkWeaving', giNo: 'GI-351', artisan: 'Prabha Devi Jha', artisanNameKey: 'stub.artisanName.tussarSilkWeaving', district: 'Narsinghpur', state: 'MP', titleKey: 'stub.listing.88.title', image: img('weaving_and_looms', 'blue-mp-tussar-saree.jpeg'), pricePaise: 1060300 },
   { category: 'Weaving', craftSlug: 'zari-work', craftName: 'Zari Work', craftNameKey: 'stub.craftName.zariWork', giNo: 'GI-433', artisan: 'Ashok Kumar Gupta', artisanNameKey: 'stub.artisanName.zariWork', district: 'Surat', state: 'GJ', titleKey: 'stub.listing.89.title', image: img('weaving_and_looms', 'orange-zari-border-silk-saree.jpeg'), pricePaise: 900000 },
-  { category: 'Weaving', craftSlug: 'banarasi-brocade-weaving', craftName: 'Banarasi Brocade Weaving', craftNameKey: 'stub.craftName.banarasiBrocadeWeaving', giNo: 'GI-99', artisan: 'Eshaan', artisanNameKey: 'stub.artisanName.banarasiBrocadeWeaving', district: 'Varanasi Weavers Colony', state: 'UP', titleKey: 'stub.listing.90.title', image: img('weaving_and_looms', 'white-saree-maroon-border.jpeg'), pricePaise: 750000 },
 ];
 
 // Id is the item's fixed position in ITEMS, so the same piece always gets the
@@ -223,6 +222,22 @@ export function categoryCoverImage(zipCategoryId: string): string {
  * titles/descriptions are built fresh in the active language on every call,
  * rather than baked in once at module load.
  */
+const HIDE_FROM_BUYER_FEED = new Set([
+  // Keep only the canonical demo versions in the buyer feed. The Eshaan and
+  // Tussar clusters each had repeated variations that were showing up in the
+  // Weaving search results alongside the same artisan listing already surfaced
+  // from the SIH demo state bridge.
+  'stub.listing.60.title',
+  'stub.listing.62.title',
+  'stub.listing.64.title',
+  'stub.listing.81.title',
+  'stub.listing.82.title',
+  'stub.listing.87.title',
+  'stub.listing.88.title',
+  'stub.listing.83.title',
+  'stub.listing.86.title',
+]);
+
 export function stubListingsForQuery(q: string, t: TFn): ListingSummary[] {
   const needle = q.trim().toLowerCase();
   if (!needle) return [];
@@ -234,13 +249,13 @@ export function stubListingsForQuery(q: string, t: TFn): ListingSummary[] {
       item.craftSlug.toLowerCase().includes(needle) ||
       t(item.titleKey).toLowerCase().includes(needle),
   )
-    .filter((item) => item.titleKey !== 'stub.listing.60.title')
+    .filter((item) => !HIDE_FROM_BUYER_FEED.has(item.titleKey))
     .map((item) => toListing(item, t));
 }
 
 /** Every stub piece, in catalogue order -- for "customers also viewed" style rows. */
 export function allStubListings(t: TFn): ListingSummary[] {
-  return ITEMS.filter((item) => item.titleKey !== 'stub.listing.60.title').map((item) => toListing(item, t));
+  return ITEMS.filter((item) => !HIDE_FROM_BUYER_FEED.has(item.titleKey)).map((item) => toListing(item, t));
 }
 
 /** Resolves a `stub-<craftSlug>-<n>` id produced by toListing() above. */

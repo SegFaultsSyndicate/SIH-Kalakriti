@@ -74,17 +74,36 @@ export class NetworkStatus {
     const timeout = window.setTimeout(() => controller.abort(), REACHABILITY_TIMEOUT_MS);
     this.#probeTimeout = timeout;
     try {
-      const [appResponse, internetResponse] = await Promise.all([
-        fetch('/healthz', { cache: 'no-store', signal: controller.signal }),
-        fetch(INTERNET_CHECK_URL, {
+      let appReachable = false;
+      let internetReachable = false;
+
+      try {
+        const appResponse = await fetch('/healthz?_=' + Date.now(), {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        appReachable = appResponse.ok || appResponse.status === 404;
+      } catch {
+        appReachable = false;
+      }
+
+      try {
+        const internetResponse = await fetch(INTERNET_CHECK_URL + '?_=' + Date.now(), {
           cache: 'no-store',
           mode: 'no-cors',
           signal: controller.signal,
-        }),
-      ]);
-      const internetReachable = internetResponse.ok || internetResponse.type === 'opaque';
+        });
+        internetReachable = internetResponse.ok || internetResponse.type === 'opaque';
+      } catch {
+        internetReachable = false;
+      }
+
       if (this.#probe === controller) {
-        this.online = navigator.onLine && appResponse.ok && internetReachable;
+        // When running locally, the app server (localhost) is always reachable even if the user 
+        // turns off their Wi-Fi to test offline mode. Require internet reachability to accurately 
+        // reflect offline testing state.
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        this.online = navigator.onLine && (isLocalhost ? internetReachable : (appReachable || internetReachable));
       }
     } catch {
       if (this.#probe === controller) this.online = false;

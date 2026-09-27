@@ -314,7 +314,7 @@
     {t('home.sourcing.desc')}
   </p>
   <div class="b2b-actions">
-    <a href="/orders" class="b2b-btn">{t('home.sourcing.viewLots')}</a>
+    <a href="/orders" class="b2b-btn secondary">{t('home.sourcing.viewLots')}</a>
     <a href="/trends" class="b2b-btn secondary">{t('home.sourcing.viewTrends')}</a>
   </div>
 </div>

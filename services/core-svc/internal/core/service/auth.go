@@ -23,7 +23,7 @@ const (
 	devBypassPhone = "+918779279060"
 	devBypassCode  = "123456"
 	devSignupPhone = "+919821891185"
-	devSignupCode  = "9012"
+	devSignupCode  = "901234"
 )
 
 // RequestOtp issues a login challenge for a phone number. It deliberately does

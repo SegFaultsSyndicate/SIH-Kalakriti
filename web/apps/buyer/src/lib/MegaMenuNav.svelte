@@ -500,9 +500,6 @@
         <a href="/gi-tagged" class="mobile-cat-link mobile-cat-link--gi" onclick={() => (isMobileMenuOpen = false)}>
           <Icon name="gi-tagged" size="0.9rem" /> {t('nav.mobile.giProducts')}
         </a>
-        <a href="/search?q=home" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
-          {t('nav.mobile.home')}
-        </a>
         <a href="/search?q=women" class="mobile-cat-link" onclick={() => (isMobileMenuOpen = false)}>
           {t('nav.mobile.women')}
         </a>

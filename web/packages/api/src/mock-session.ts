@@ -22,13 +22,14 @@ function base64url(json: unknown): string {
 /** Fakes a signed-in session locally, for UI/nav work with no backend running. Never sent to a real API call's benefit. */
 export function establishMockSession(role: string, phone: string): void {
   const header = base64url({ alg: 'none', typ: 'JWT' });
+  const isRegisteredDemoArtisan = role === 'ARTISAN' && phone === '+918779279060';
   // Mirror core-svc's VerifyOtp: an ARTISAN token only carries `sub` once a
   // profile exists, and the artisan app's route guard reads a `sub` as
   // "already registered". A fake sub here skipped the whole /register/*
   // wizard straight to home. Mock registration sets its own local artisan id
   // (outbox-send.ts), so the guard still lets a registered mock user through.
   const payload = base64url({
-    ...(role === 'ARTISAN' ? {} : { sub: `mock-${phone}` }),
+    ...(role !== 'ARTISAN' || isRegisteredDemoArtisan ? { sub: `mock-${phone}` } : {}),
     role,
     phone,
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,

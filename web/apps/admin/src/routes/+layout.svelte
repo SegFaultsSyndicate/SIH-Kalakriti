@@ -40,6 +40,7 @@
   const currentPath = $derived($page.url.pathname);
 
   let paletteOpen = $state(false);
+  let sidebarOpen = $state(true);
 
   // Gates {@render children()} below: locale.init() is async, so without
   // this a page's first paint runs with an empty catalogue -- every t()
@@ -47,6 +48,25 @@
   // tick later. See I18N_PLAN.md's F-1.
   let localeReady = $state(false);
   let sessionReady = $state(false);
+  const HIDE_AT = 80;
+  const REVEAL_DELTA = 60;
+  let headerHidden = $state(false);
+  let stickyHeight = $state(0);
+  let lastScrollY = 0;
+  let upAccum = 0;
+
+  function onScroll(): void {
+    const y = window.scrollY;
+    const dy = y - lastScrollY;
+    if (dy > 0) {
+      upAccum = 0;
+      if (y > HIDE_AT) headerHidden = true;
+    } else if (dy < 0) {
+      upAccum += -dy;
+      if (upAccum > REVEAL_DELTA || y <= HIDE_AT) headerHidden = false;
+    }
+    lastScrollY = y;
+  }
 
   $effect(() => {
     void locale.init().then(() => {
@@ -82,9 +102,38 @@
 
 <SkipLink target="main-content" />
 <RouteAnnouncer />
+<svelte:window onscroll={onScroll} />
 
 <div class="shell">
+  {#if !sidebarOpen}
+    <div
+      class="shell__sidebar-reveal-zone"
+      aria-hidden="true"
+      onpointerenter={(event) => {
+        if (event.pointerType === 'mouse') sidebarOpen = true;
+      }}
+    ></div>
+  {/if}
+  <div class="shell__sticky-spacer" style:block-size="{stickyHeight}px"></div>
+  <div
+    class="shell__sticky-wrap"
+    class:shell__sticky-wrap--hidden={headerHidden}
+    bind:clientHeight={stickyHeight}
+  >
   <header class="shell__header">
+    {#if !sidebarOpen}
+      <button
+        type="button"
+        class="shell__sidebar-reopen"
+        aria-label={t('nav.shell.openMenu')}
+        title={t('nav.shell.openMenu')}
+        aria-controls="admin-dashboard-nav"
+        aria-expanded={sidebarOpen}
+        onclick={() => (sidebarOpen = true)}
+      >
+        <Icon name="menu" />
+      </button>
+    {/if}
     <a class="shell__lockup" href="/">
       <img class="shell__emblem" src="/favicon.svg" alt="" width="28" height="28" />
       <span class="shell__wordmark">
@@ -107,26 +156,40 @@
       <AccessibilityControl statementHref="/accessibility" />
     </div>
   </header>
+  </div>
 
-  <div class="shell__body">
-    <nav class="shell__sidebar" aria-label={t('nav.dashboard')}>
-      <ul class="shell__nav-list">
-        {#each visibleItems as item (item.href)}
-          <li>
-            <a
-              href={item.href}
-              class="shell__nav-link"
-              aria-current={currentPath === item.href || currentPath.startsWith(item.href + '/')
-                ? 'page'
-                : undefined}
-            >
-              <Icon name={item.icon} size={item.iconSize} />
-              {t(item.labelKey)}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </nav>
+  <div class="shell__body" class:shell__body--sidebar-hidden={!sidebarOpen}>
+    <aside class="shell__sidebar" hidden={!sidebarOpen}>
+      <button
+        type="button"
+        class="shell__sidebar-toggle"
+        aria-label={t('nav.shell.closeMenu')}
+        title={t('nav.shell.closeMenu')}
+        aria-controls="admin-dashboard-nav"
+        aria-expanded={sidebarOpen}
+        onclick={() => (sidebarOpen = false)}
+      >
+        <Icon name="close" size="0.8rem" />
+      </button>
+      <nav id="admin-dashboard-nav" aria-label={t('nav.dashboard')}>
+        <ul class="shell__nav-list">
+          {#each visibleItems as item (item.href)}
+            <li>
+              <a
+                href={item.href}
+                class="shell__nav-link"
+                aria-current={currentPath === item.href || currentPath.startsWith(item.href + '/')
+                  ? 'page'
+                  : undefined}
+              >
+                <Icon name={item.icon} size={item.iconSize} />
+                {t(item.labelKey)}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </nav>
+    </aside>
 
     <main class="shell__main" id="main-content" tabindex="-1">
       {#if localeReady && sessionReady}
@@ -156,11 +219,64 @@
 <CommandPalette bind:open={paletteOpen} />
 
 <style>
+  .shell__sticky-wrap {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 90;
+    transition: transform 0.25s ease;
+  }
+
+  .shell__sticky-wrap--hidden {
+    transform: translateY(-100%);
+  }
+
   .shell__actions {
     display: flex;
     align-items: center;
     gap: var(--k-space-3);
     margin-inline-start: auto;
+  }
+
+  .shell__sidebar-toggle,
+  .shell__sidebar-reopen {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--k-radius-sm);
+    background: transparent;
+    color: var(--k-text-secondary);
+    cursor: pointer;
+  }
+
+  .shell__sidebar-reveal-zone {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 80;
+    inline-size: 0.75rem;
+  }
+
+  .shell__sidebar-toggle:hover,
+  .shell__sidebar-reopen:hover {
+    background: var(--k-surface-sunken);
+    color: var(--k-text-primary);
+  }
+
+  .shell__sidebar-toggle {
+    position: absolute;
+    inset-inline-end: var(--k-space-3);
+    inset-block-start: var(--k-space-2);
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  .shell__body.shell__body--sidebar-hidden {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .shell__palette-trigger {
@@ -265,7 +381,7 @@
     }
 
     .shell__sidebar {
-      position: static;
+      position: relative;
       border-inline-end: none;
       border-block-end: var(--k-hairline) solid var(--k-border-hairline);
     }

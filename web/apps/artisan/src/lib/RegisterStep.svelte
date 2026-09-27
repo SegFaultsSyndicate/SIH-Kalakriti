@@ -82,9 +82,6 @@
     padding-block: var(--k-space-5);
   }
 
-  .register-step__actions :global(.register-step__back) {
-    flex: 1 1 0;
-  }
 
   .register-step h1 {
     font-size: var(--k-text-xl);
@@ -114,10 +111,10 @@
   }
 
   .register-step__actions .register-step__next {
-    flex: 1 1 0;
+    display: contents;
   }
 
   .register-step__actions :global(button) {
-    inline-size: 100%;
+    flex: 1 1 0;
   }
 </style>
