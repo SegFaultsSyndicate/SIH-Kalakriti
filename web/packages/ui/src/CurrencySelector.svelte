@@ -8,9 +8,7 @@
   card's price line via the shared `currency` store.
 -->
 <script lang="ts">
-  import { locale, CURRENCY_META, type CurrencyCode } from '@kalakriti/i18n';
-  import { Icon } from '@kalakriti/icons';
-  import { currency, CURRENCY_RATES } from '../../../apps/buyer/src/lib/currency.svelte';
+  import { locale, CURRENCY_META, type CurrencyCode, currency, CURRENCY_RATES } from '@kalakriti/i18n';
   import Popover from './Popover.svelte';
   import Button, { type ButtonSize } from './Button.svelte';
 

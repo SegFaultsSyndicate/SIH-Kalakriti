@@ -36,3 +36,9 @@ export {
   type CurrencyCode,
   type CurrencyMeta,
 } from './format';
+export {
+  currency,
+  CURRENCY_RATES,
+  DEFAULT_CURRENCY,
+  convertPaise,
+} from './currency.svelte';
