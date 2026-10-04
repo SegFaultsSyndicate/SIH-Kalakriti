@@ -13,6 +13,14 @@
 
 ---
 
+## 🌐 Live Deployments
+
+| Application | Subdomain | Status |
+| :--- | :--- | :--- |
+| **Buyer (Main Web)** | [kalakriti.me](https://kalakriti.me) | Production |
+| **Artisan Portal** | [artisan.kalakriti.me](https://artisan.kalakriti.me) | Production |
+| **Admin Dashboard** | [admin.kalakriti.me](https://admin.kalakriti.me) | Production |
+
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
