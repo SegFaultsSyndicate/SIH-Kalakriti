@@ -121,7 +121,7 @@
       const mixData = m.months ?? [];
       const financeData = f.rows ?? [];
       const funnelData = l.rows ?? [];
-      summary = s ?? (import.meta.env.VITE_USE_MOCKS === '1' ? IMPACT_SUMMARY : null);
+      summary = import.meta.env.VITE_USE_MOCKS === '1' && (s?.beneficiaries ?? 0) < 100 ? IMPACT_SUMMARY : (s ?? null);
       groups = mergeWithStubs(groupsData, stubGroups[groupBy], (r) => `${r.group ?? ''}|${r.state_code ?? ''}`);
       mix = mergeWithStubs(mixData, SALES_MIX, (x) => x.month);
       finance = mergeWithStubs(financeData, FINANCE_COVERAGE, (x) => x.corporation);

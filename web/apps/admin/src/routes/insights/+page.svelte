@@ -99,6 +99,39 @@
     return [k.district, k.state_code].filter(Boolean).join(', ') || t('insights.unknownDistrict');
   }
 
+  // Sample data, used when the backend is unreachable or has too little real data.
+  function useMockData(): void {
+    const filtered = MOCK_DISTRICT_DATA.filter((d) => {
+      const matchState = !stateCode || d.stateCode.toLowerCase().includes(stateCode.trim().toLowerCase());
+      const matchDistrict = !district || d.district.toLowerCase().includes(district.trim().toLowerCase());
+      return matchState && matchDistrict;
+    });
+
+    roster = filtered.map((d) => ({
+      key: { stateCode: d.stateCode, district: d.district },
+      label: `${d.district}, ${d.stateCode}`,
+      artisanCount: d.artisanCount,
+    }));
+
+    earningsRows = filtered.map((d) => ({
+      state_code: d.stateCode,
+      district: d.district,
+      total_gmv: { amount_paise: d.gmv },
+      avg_earnings: { amount_paise: d.avgEarnings },
+    }));
+
+    incomeRows = filtered.map((d) => ({
+      state_code: d.stateCode,
+      district: d.district,
+      median_before: { amount_paise: d.medianBefore },
+      median_after: { amount_paise: d.medianAfter },
+      artisan_count: d.artisanCount,
+    }));
+
+    craftRows = MOCK_CRAFTS;
+    dyingRows = MOCK_DYING_CRAFTS;
+  }
+
   async function load(): Promise<void> {
     loading = true;
     loadError = '';
@@ -132,38 +165,14 @@
       incomeRows = income.data ?? [];
       craftRows = craftMonth.data ?? [];
       dyingRows = [...(dying.data ?? [])].sort((a, b) => Math.abs(b.decline_rate ?? 0) - Math.abs(a.decline_rate ?? 0));
+
+      // Thin real data (a fresh or barely seeded database): show the sample figures instead.
+      const realArtisans = roster.reduce((n, r) => n + r.artisanCount, 0);
+      if (import.meta.env.VITE_USE_MOCKS === '1' && realArtisans < 100) useMockData();
     } catch (cause) {
       if (import.meta.env.VITE_USE_MOCKS === '1') {
         console.warn('[mock fallback] load insights:', cause);
-        const filtered = MOCK_DISTRICT_DATA.filter((d) => {
-          const matchState = !stateCode || d.stateCode.toLowerCase().includes(stateCode.trim().toLowerCase());
-          const matchDistrict = !district || d.district.toLowerCase().includes(district.trim().toLowerCase());
-          return matchState && matchDistrict;
-        });
-
-        roster = filtered.map((d) => ({
-          key: { stateCode: d.stateCode, district: d.district },
-          label: `${d.district}, ${d.stateCode}`,
-          artisanCount: d.artisanCount,
-        }));
-
-        earningsRows = filtered.map((d) => ({
-          state_code: d.stateCode,
-          district: d.district,
-          total_gmv: { amount_paise: d.gmv },
-          avg_earnings: { amount_paise: d.avgEarnings },
-        }));
-
-        incomeRows = filtered.map((d) => ({
-          state_code: d.stateCode,
-          district: d.district,
-          median_before: { amount_paise: d.medianBefore },
-          median_after: { amount_paise: d.medianAfter },
-          artisan_count: d.artisanCount,
-        }));
-
-        craftRows = MOCK_CRAFTS;
-        dyingRows = MOCK_DYING_CRAFTS;
+        useMockData();
       } else {
         loadError = cause instanceof ApiError ? t(messageKeyFor(cause)) : t('api.error.unknown');
       }
